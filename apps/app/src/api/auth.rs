@@ -301,6 +301,7 @@ pub async fn begin_yggdrasil_login(
     login: String,
     password: String,
 ) -> Result<minecraft_auth::YggdrasilLoginResult> {
+    let api_root = normalize_starlight_yggdrasil_api_root(&api_root)?;
     Ok(
         minecraft_auth::begin_yggdrasil_login(&api_root, &login, &password)
             .await?,
@@ -323,6 +324,21 @@ pub struct SavedYggdrasilLogin {
     pub login: String,
 }
 
+const STARLIGHT_YGGDRASIL_API_ROOT: &str =
+    "https://skin.starlight.cool/yggdrasil";
+
+fn normalize_starlight_yggdrasil_api_root(api_root: &str) -> Result<String> {
+    let normalized = minecraft_auth::normalize_yggdrasil_api_root(api_root)?;
+    if normalized != STARLIGHT_YGGDRASIL_API_ROOT {
+        return Err(theseus::ErrorKind::InputError(
+            "Only the StarLight skin server is supported".to_string(),
+        )
+        .as_error()
+        .into());
+    }
+    Ok(normalized)
+}
+
 #[tauri::command]
 pub fn list_yggdrasil_saved_logins() -> Result<Vec<SavedYggdrasilLogin>> {
     read_yggdrasil_saved_logins()
@@ -333,6 +349,7 @@ pub fn get_yggdrasil_password(
     api_root: String,
     login: String,
 ) -> Result<Option<String>> {
+    let api_root = normalize_starlight_yggdrasil_api_root(&api_root)?;
     let entry = yggdrasil_password_entry(&api_root, &login)?;
     match entry.get_password() {
         Ok(password) => Ok(Some(password)),
@@ -411,7 +428,7 @@ fn normalize_saved_yggdrasil_login(
         .into());
     }
     Ok(SavedYggdrasilLogin {
-        api_root: minecraft_auth::normalize_yggdrasil_api_root(api_root)?,
+        api_root: normalize_starlight_yggdrasil_api_root(api_root)?,
         login: login.to_string(),
     })
 }
@@ -426,8 +443,15 @@ fn yggdrasil_saved_logins_entry() -> Result<keyring::Entry> {
 
 fn read_yggdrasil_saved_logins() -> Result<Vec<SavedYggdrasilLogin>> {
     match yggdrasil_saved_logins_entry()?.get_password() {
-        Ok(saved_logins) => match serde_json::from_str(&saved_logins) {
-            Ok(saved_logins) => Ok(saved_logins),
+        Ok(saved_logins) => match serde_json::from_str::<Vec<SavedYggdrasilLogin>>(
+            &saved_logins,
+        ) {
+            Ok(saved_logins) => Ok(saved_logins
+                .into_iter()
+                .filter(|saved_login| {
+                    saved_login.api_root == STARLIGHT_YGGDRASIL_API_ROOT
+                })
+                .collect()),
             Err(error) => {
                 tracing::warn!(
                     "Ignoring an invalid saved Yggdrasil login index: {error}"
@@ -515,13 +539,15 @@ fn parse_custom_uuid(uuid: Option<String>) -> Result<Option<uuid::Uuid>> {
 
 #[tauri::command]
 pub async fn add_offline_user(
-    username: String,
-    uuid: Option<String>,
+    _username: String,
+    _uuid: Option<String>,
 ) -> Result<Credentials> {
-    Ok(
-        minecraft_auth::add_offline_user(&username, parse_custom_uuid(uuid)?)
-            .await?,
+    Err(theseus::ErrorKind::InputError(
+        "Offline accounts are disabled; use Microsoft or StarLight skin login"
+            .to_string(),
     )
+    .as_error()
+    .into())
 }
 
 #[tauri::command]

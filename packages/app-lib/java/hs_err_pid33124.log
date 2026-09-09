@@ -1,0 +1,258 @@
+#
+# There is insufficient memory for the Java Runtime Environment to continue.
+# Native memory allocation (mmap) failed to map 264241152 bytes. Error detail: G1 virtual space
+# Possible reasons:
+#   The system is out of physical RAM or swap space
+#   This process is running with CompressedOops enabled, and the Java Heap may be blocking the growth of the native heap
+# Possible solutions:
+#   Reduce memory load on the system
+#   Increase physical memory or swap space
+#   Check if swap backing store is full
+#   Decrease Java heap size (-Xmx/-Xms)
+#   Decrease number of Java threads
+#   Decrease Java thread stack sizes (-Xss)
+#   Set larger code cache with -XX:ReservedCodeCacheSize=
+#   JVM is running with Zero Based Compressed Oops mode in which the Java heap is
+#     placed in the first 32GB address space. The Java Heap base address is the
+#     maximum limit for the native heap growth. Please use -XX:HeapBaseMinAddress
+#     to set the Java Heap base and to place the Java Heap above 32GB virtual address.
+# This output file may be truncated or incomplete.
+#
+#  Out of Memory Error (os_windows.cpp:3736), pid=33124, tid=31956
+#
+# JRE version:  (21.0.7+6) (build )
+# Java VM: OpenJDK 64-Bit Server VM (21.0.7+6-LTS, mixed mode, sharing, tiered, compressed oops, compressed class ptrs, g1 gc, windows-amd64)
+# No core dump will be written. Minidumps are not enabled by default on client versions of Windows
+#
+
+---------------  S U M M A R Y ------------
+
+Command Line: 
+
+Host: 12th Gen Intel(R) Core(TM) i5-12450H, 12 cores, 15G,  Windows 11 , 64 bit Build 26100 (10.0.26100.9168)
+Time: Wed Sep  9 21:15:46 2026  Windows 11 , 64 bit Build 26100 (10.0.26100.9168) elapsed time: 1.634748 seconds (0d 0h 0m 1s)
+
+---------------  T H R E A D  ---------------
+
+Current thread (0x0000026306a95f90):  JavaThread "Unknown thread" [_thread_in_vm, id=31956, stack(0x0000007f0c500000,0x0000007f0c600000) (1024K)]
+
+Stack: [0x0000007f0c500000,0x0000007f0c600000]
+Native frames: (J=compiled Java code, j=interpreted, Vv=VM code, C=native code)
+V  [jvm.dll+0x6d4bb9]
+V  [jvm.dll+0x8afa11]
+V  [jvm.dll+0x8b1f3e]
+V  [jvm.dll+0x8b2623]
+V  [jvm.dll+0x280816]
+V  [jvm.dll+0x6d1385]
+V  [jvm.dll+0x6c552a]
+V  [jvm.dll+0x35b978]
+V  [jvm.dll+0x3635f6]
+V  [jvm.dll+0x3b4b9e]
+V  [jvm.dll+0x3b4e48]
+V  [jvm.dll+0x32f9bc]
+V  [jvm.dll+0x33051b]
+V  [jvm.dll+0x878909]
+V  [jvm.dll+0x3c1b91]
+V  [jvm.dll+0x861973]
+V  [jvm.dll+0x456b7e]
+V  [jvm.dll+0x4587c1]
+C  [jli.dll+0x52a0]
+C  [ucrtbase.dll+0x2cd30]
+C  [KERNEL32.DLL+0x2ccb7]
+C  [ntdll.dll+0xaad6c]
+
+
+---------------  P R O C E S S  ---------------
+
+Threads class SMR info:
+_java_thread_list=0x00007ffcadcc2108, length=0, elements={
+}
+
+Java Threads: ( => current thread )
+Total: 0
+
+Other Threads:
+  0x0000026306afb4d0 WorkerThread "GC Thread#0"                     [id=33736, stack(0x0000007f0c600000,0x0000007f0c700000) (1024K)]
+  0x0000026306b0dda0 ConcurrentGCThread "G1 Main Marker"            [id=8180, stack(0x0000007f0c700000,0x0000007f0c800000) (1024K)]
+  0x0000026306b0e740 WorkerThread "G1 Conc#0"                       [id=22992, stack(0x0000007f0c800000,0x0000007f0c900000) (1024K)]
+
+[error occurred during error reporting (printing all threads), id 0xc0000005, EXCEPTION_ACCESS_VIOLATION (0xc0000005) at pc=0x00007ffcad3c2327]
+VM state: not at safepoint (not fully initialized)
+
+VM Mutex/Monitor currently owned by a thread:  ([mutex/lock_event])
+[0x00007ffcadd36578] Heap_lock - owner thread: 0x0000026306a95f90
+
+Heap address: 0x0000000704400000, size: 4028 MB, Compressed Oops mode: Zero based, Oop shift amount: 3
+
+CDS archive(s) mapped at: [0x0000000000000000-0x0000000000000000-0x0000000000000000), size 0, SharedBaseAddress: 0x0000000800000000, ArchiveRelocationMode: 1.
+Narrow klass base: 0x0000000000000000, Narrow klass shift: 0, Narrow klass range: 0x0
+
+GC Precious Log:
+ CardTable entry size: 512
+ Card Set container configuration: InlinePtr #cards 4 size 8 Array Of Cards #cards 16 size 48 Howl #buckets 8 coarsen threshold 3686 Howl Bitmap #cards 512 size 80 coarsen threshold 460 Card regions per heap region 1 cards per card region 4096
+
+Heap:
+ garbage-first heap   total 0K, used 0K [0x0000000704400000, 0x0000000800000000)
+  region size 2048K, 0 young (0K), 0 survivors (0K)
+
+[error occurred during error reporting (printing heap information), id 0xc0000005, EXCEPTION_ACCESS_VIOLATION (0xc0000005) at pc=0x00007ffcad7aea59]
+GC Heap History (0 events):
+No events
+
+Dll operation events (1 events):
+Event: 0.419 Loaded shared library C:\Users\28579\AppData\Roaming\.minecraft\runtime\java-runtime-delta\bin\java.dll
+
+Deoptimization events (0 events):
+No events
+
+Classes loaded (0 events):
+No events
+
+Classes unloaded (0 events):
+No events
+
+Classes redefined (0 events):
+No events
+
+Internal exceptions (0 events):
+No events
+
+ZGC Phase Switch (0 events):
+No events
+
+VM Operations (0 events):
+No events
+
+Memory protections (0 events):
+No events
+
+Nmethod flushes (0 events):
+No events
+
+Events (0 events):
+No events
+
+
+Dynamic libraries:
+0x00007ff7afa20000 - 0x00007ff7afa2e000 	C:\Users\28579\AppData\Roaming\.minecraft\runtime\java-runtime-delta\bin\java.exe
+0x00007ffdf45c0000 - 0x00007ffdf4826000 	C:\WINDOWS\SYSTEM32\ntdll.dll
+0x00007ffdf24f0000 - 0x00007ffdf25b9000 	C:\WINDOWS\System32\KERNEL32.DLL
+0x00007ffdf1a20000 - 0x00007ffdf1e1f000 	C:\WINDOWS\System32\KERNELBASE.dll
+0x00007ffdc2a20000 - 0x00007ffdc2a38000 	C:\Users\28579\AppData\Roaming\.minecraft\runtime\java-runtime-delta\bin\jli.dll
+0x00007ffdb0630000 - 0x00007ffdb064d000 	C:\Users\28579\AppData\Roaming\.minecraft\runtime\java-runtime-delta\bin\VCRUNTIME140.dll
+0x00007ffdf18c0000 - 0x00007ffdf1a0c000 	C:\WINDOWS\System32\ucrtbase.dll
+0x00007ffdf4130000 - 0x00007ffdf42f6000 	C:\WINDOWS\System32\USER32.dll
+0x00007ffdf17d0000 - 0x00007ffdf17f7000 	C:\WINDOWS\System32\win32u.dll
+0x00007ffdf4550000 - 0x00007ffdf457b000 	C:\WINDOWS\System32\GDI32.dll
+0x00007ffddd2a0000 - 0x00007ffddd531000 	C:\WINDOWS\WinSxS\amd64_microsoft.windows.common-controls_6595b64144ccf1df_6.0.26100.8972_none_3e0da176e32f9d4b\COMCTL32.dll
+0x00007ffdf21c0000 - 0x00007ffdf22e9000 	C:\WINDOWS\System32\gdi32full.dll
+0x00007ffdf2630000 - 0x00007ffdf26d9000 	C:\WINDOWS\System32\msvcrt.dll
+0x00007ffdf2110000 - 0x00007ffdf21b3000 	C:\WINDOWS\System32\msvcp_win.dll
+0x00007ffdf4410000 - 0x00007ffdf4442000 	C:\WINDOWS\System32\IMM32.DLL
+0x00007ffdd96a0000 - 0x00007ffdd96ac000 	C:\Users\28579\AppData\Roaming\.minecraft\runtime\java-runtime-delta\bin\vcruntime140_1.dll
+0x00007ffd809e0000 - 0x00007ffd80a6d000 	C:\Users\28579\AppData\Roaming\.minecraft\runtime\java-runtime-delta\bin\msvcp140.dll
+0x00007ffcad080000 - 0x00007ffcade18000 	C:\Users\28579\AppData\Roaming\.minecraft\runtime\java-runtime-delta\bin\server\jvm.dll
+0x00007ffdf23a0000 - 0x00007ffdf245c000 	C:\WINDOWS\System32\ADVAPI32.dll
+0x00007ffdf22f0000 - 0x00007ffdf239a000 	C:\WINDOWS\System32\sechost.dll
+0x00007ffdf3630000 - 0x00007ffdf3748000 	C:\WINDOWS\System32\RPCRT4.dll
+0x00007ffdf37e0000 - 0x00007ffdf3862000 	C:\WINDOWS\System32\WS2_32.dll
+0x00007ffdf1630000 - 0x00007ffdf168e000 	C:\WINDOWS\SYSTEM32\POWRPROF.dll
+0x00007ffdee460000 - 0x00007ffdee496000 	C:\WINDOWS\SYSTEM32\WINMM.dll
+0x00007ffde8320000 - 0x00007ffde832b000 	C:\WINDOWS\SYSTEM32\VERSION.dll
+0x00007ffdf1610000 - 0x00007ffdf1625000 	C:\WINDOWS\SYSTEM32\UMPDC.dll
+0x00007ffdf0420000 - 0x00007ffdf043b000 	C:\WINDOWS\SYSTEM32\kernel.appcore.dll
+0x00007ffdd9640000 - 0x00007ffdd964a000 	C:\Users\28579\AppData\Roaming\.minecraft\runtime\java-runtime-delta\bin\jimage.dll
+0x00007ffdeef80000 - 0x00007ffdef1c2000 	C:\WINDOWS\SYSTEM32\DBGHELP.DLL
+0x00007ffdf3870000 - 0x00007ffdf3bf5000 	C:\WINDOWS\System32\combase.dll
+0x00007ffdf3550000 - 0x00007ffdf3629000 	C:\WINDOWS\System32\OLEAUT32.dll
+0x00007ffde6810000 - 0x00007ffde684b000 	C:\WINDOWS\SYSTEM32\dbgcore.DLL
+0x00007ffdf1800000 - 0x00007ffdf18ac000 	C:\WINDOWS\System32\bcryptPrimitives.dll
+0x00007ffdf0770000 - 0x00007ffdf07b9000 	C:\WINDOWS\SYSTEM32\SspiCli.dll
+0x00007ffdaac90000 - 0x00007ffdaacb0000 	C:\Users\28579\AppData\Roaming\.minecraft\runtime\java-runtime-delta\bin\java.dll
+
+dbghelp: loaded successfully - version: 4.0.5 - missing functions: none
+symbol engine: initialized successfully - sym options: 0x614 - pdb path: .;C:\Users\28579\AppData\Roaming\.minecraft\runtime\java-runtime-delta\bin;C:\WINDOWS\SYSTEM32;C:\WINDOWS\WinSxS\amd64_microsoft.windows.common-controls_6595b64144ccf1df_6.0.26100.8972_none_3e0da176e32f9d4b;C:\Users\28579\AppData\Roaming\.minecraft\runtime\java-runtime-delta\bin\server
+
+VM Arguments:
+java_command: <unknown>
+java_class_path (initial): <not set>
+Launcher Type: SUN_STANDARD
+
+[Global flags]
+     intx CICompilerCount                          = 4                                         {product} {ergonomic}
+     uint ConcGCThreads                            = 3                                         {product} {ergonomic}
+     uint G1ConcRefinementThreads                  = 10                                        {product} {ergonomic}
+   size_t G1HeapRegionSize                         = 2097152                                   {product} {ergonomic}
+    uintx GCDrainStackTargetSize                   = 64                                        {product} {ergonomic}
+   size_t InitialHeapSize                          = 264241152                                 {product} {ergonomic}
+   size_t MarkStackSize                            = 4194304                                   {product} {ergonomic}
+   size_t MaxHeapSize                              = 4223664128                                {product} {ergonomic}
+   size_t MinHeapDeltaBytes                        = 2097152                                   {product} {ergonomic}
+   size_t MinHeapSize                              = 8388608                                   {product} {ergonomic}
+    uintx NonNMethodCodeHeapSize                   = 5839372                                {pd product} {ergonomic}
+    uintx NonProfiledCodeHeapSize                  = 122909434                              {pd product} {ergonomic}
+    uintx ProfiledCodeHeapSize                     = 122909434                              {pd product} {ergonomic}
+    uintx ReservedCodeCacheSize                    = 251658240                              {pd product} {ergonomic}
+     bool SegmentedCodeCache                       = true                                      {product} {ergonomic}
+   size_t SoftMaxHeapSize                          = 4223664128                             {manageable} {ergonomic}
+     bool UseCompressedOops                        = true                           {product lp64_product} {ergonomic}
+     bool UseG1GC                                  = true                                      {product} {ergonomic}
+     bool UseLargePagesIndividualAllocation        = false                                  {pd product} {ergonomic}
+
+Logging:
+Log output configuration:
+ #0: stdout all=warning uptime,level,tags foldmultilines=false
+ #1: stderr all=off uptime,level,tags foldmultilines=false
+
+Environment Variables:
+PATH=D:\Project\Starlight_Lancher\target\debug;D:\Project\Starlight_Lancher\target\debug\deps;C:\Users\28579\.rustup\toolchains\1.95.0-x86_64-pc-windows-msvc\lib\rustlib\x86_64-pc-windows-msvc\lib;D:\Project\Starlight_Lancher\apps\app\node_modules\.bin;C:\Users\28579\AppData\Roaming\npm\node_modules\pnpm\dist\node-gyp-bin;D:\Project\Starlight_Lancher\node_modules\.bin;D:\Project\Starlight_Lancher\node_modules\.bin;C:\Users\28579\AppData\Roaming\npm\node_modules\pnpm\dist\node-gyp-bin;D:\Project\Starlight_Lancher\node_modules\.bin;C:\Users\28579\.cargo\bin;C:\Program Files\nodejs;c:\Users\28579\AppData\Roaming\Code\User\globalStorage\github.copilot-chat\debugCommand;c:\Users\28579\AppData\Roaming\Code\User\globalStorage\github.copilot-chat\copilotCli;C:\Program Files (x86)\Microsoft\Edge\Application;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;D:\Git\cmd;C:\Program Files\dotnet\;C:\Users\28579\AppData\Roaming\.minecraft\runtime\java-runtime-delta\bin;C:\Users\28579\Documents\ffmpeg-master-latest-win64-gpl-shared\bin;C:\Program Files\nodejs\;C:\Users\28579\AppData\Local\Programs\Python\Python313\Scripts\;C:\Users\28579\AppData\Local\Programs\Python\Python313\;C:\Users\28579\AppData\Local\Programs\Python\Launcher\;C:\Users\28579\.cargo\bin;C:\Users\28579\AppData\Local\Microsoft\WindowsApps;D:\Git\cmd;C:\Users\28579\AppData\Local\Programs\Ollama;C:\Users\28579\Documents\ffmpeg-master-latest-win64-gpl-shared\bin;C:\Users\28579\AppData\Roaming\npm;C:\Users\28579\.rustup\toolchains\1.95.0-x86_64-pc-windows-msvc\bin
+LD_LIBRARY_PATH=C:\Users\28579\.rustup\toolchains\1.95.0-x86_64-pc-windows-msvc\lib
+LANG=en_US.UTF-8
+TMP=C:\Users\28579\AppData\Local\Temp
+TEMP=C:\Users\28579\AppData\Local\Temp
+
+
+
+
+Periodic native trim disabled
+
+---------------  S Y S T E M  ---------------
+
+OS:
+ Windows 11 , 64 bit Build 26100 (10.0.26100.9168)
+OS uptime: 9 days 8:27 hours
+
+CPU: total 12 (initial active 12) (6 cores per cpu, 2 threads per core) family 6 model 154 stepping 3 microcode 0x42c, cx8, cmov, fxsr, ht, mmx, 3dnowpref, sse, sse2, sse3, ssse3, sse4.1, sse4.2, popcnt, lzcnt, tsc, tscinvbit, avx, avx2, aes, erms, clmul, bmi1, bmi2, adx, sha, fma, vzeroupper, clflush, clflushopt, clwb, serialize, rdtscp, rdpid, fsrm, f16c, pku, cet_ibt, cet_ss
+Processor Information for processor 0
+  Max Mhz: 2000, Current Mhz: 2000, Mhz Limit: 2000
+Processor Information for processor 1
+  Max Mhz: 2000, Current Mhz: 1520, Mhz Limit: 2000
+Processor Information for processor 2
+  Max Mhz: 2000, Current Mhz: 2000, Mhz Limit: 2000
+Processor Information for processor 3
+  Max Mhz: 2000, Current Mhz: 1520, Mhz Limit: 2000
+Processor Information for processor 4
+  Max Mhz: 2000, Current Mhz: 2000, Mhz Limit: 2000
+Processor Information for processor 5
+  Max Mhz: 2000, Current Mhz: 2000, Mhz Limit: 2000
+Processor Information for processor 6
+  Max Mhz: 2000, Current Mhz: 2000, Mhz Limit: 2000
+Processor Information for processor 7
+  Max Mhz: 2000, Current Mhz: 2000, Mhz Limit: 2000
+Processor Information for processor 8
+  Max Mhz: 2000, Current Mhz: 1500, Mhz Limit: 1500
+Processor Information for processor 9
+  Max Mhz: 2000, Current Mhz: 1500, Mhz Limit: 1500
+Processor Information for processor 10
+  Max Mhz: 2000, Current Mhz: 1500, Mhz Limit: 1500
+Processor Information for processor 11
+  Max Mhz: 2000, Current Mhz: 1500, Mhz Limit: 1500
+
+Memory: 4k page, system-wide physical 16108M (572M free)
+TotalPageFile size 32492M (AvailPageFile size 131M)
+current process WorkingSet (physical memory assigned to process): 13M, peak: 13M
+current process commit charge ("private bytes"): 64M, peak: 316M
+
+vm_info: OpenJDK 64-Bit Server VM (21.0.7+6-LTS) for windows-amd64 JRE (21.0.7+6-LTS), built on 2025-04-09T22:17:25Z by "MicrosoftCorporation" with unknown MS VC++:1939
+
+END.

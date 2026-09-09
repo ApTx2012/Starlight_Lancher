@@ -31,12 +31,6 @@
 				{{ formatMessage(messages.addThirdPartyAccount) }}
 			</button>
 		</ButtonStyled>
-		<ButtonStyled>
-			<button :disabled="loginDisabled" @click="showOfflineAccountModal()">
-				<PlusIcon />
-				{{ formatMessage(messages.addOfflineAccount) }}
-			</button>
-		</ButtonStyled>
 	</div>
 	<Accordion
 		v-else
@@ -154,88 +148,10 @@
 						{{ formatMessage(messages.addThirdPartyAccount) }}
 					</button>
 				</ButtonStyled>
-				<ButtonStyled v-if="accounts.length > 0" class="w-full">
-					<button :disabled="loginDisabled" @click="showOfflineAccountModal()">
-						<PlusIcon />
-						{{ formatMessage(messages.addOfflineAccount) }}
-					</button>
-				</ButtonStyled>
 			</div>
 		</div>
 	</Accordion>
 	<MinecraftLoginModal ref="minecraftLoginModal" @complete="onMicrosoftLogin" />
-	<ModalWrapper ref="offlineAccountModal" :header="formatMessage(messages.offlineModalTitle)">
-		<div class="flex min-w-[22rem] flex-col gap-4">
-			<p class="m-0 text-secondary">{{ formatMessage(messages.offlineModalDescription) }}</p>
-			<label class="flex flex-col gap-2 font-semibold">
-				{{ formatMessage(messages.usernameLabel) }}
-				<StyledInput
-					v-model="offlineUsername"
-					:disabled="loginDisabled"
-					:placeholder="formatMessage(messages.usernamePlaceholder)"
-					autocomplete="off"
-					maxlength="16"
-					@keyup.enter="addOfflineAccount()"
-				/>
-			</label>
-			<p v-if="offlineUsername.length > 0 && !offlineUsernameValid" class="m-0 text-sm text-red">
-				{{ formatMessage(messages.usernameValidation) }}
-			</p>
-			<p
-				v-if="offlineUsernameContainsChinese"
-				class="m-0 rounded-lg border border-solid border-orange bg-highlight-orange p-3 text-sm text-contrast"
-			>
-				{{ formatMessage(messages.chineseUsernameWarning) }}
-			</p>
-			<Checkbox
-				v-model="offlineCustomUuid"
-				:disabled="loginDisabled"
-				:label="formatMessage(messages.customUuidLabel)"
-			/>
-			<Admonition
-				v-if="offlineCustomUuid"
-				type="warning"
-				:body="formatMessage(messages.customUuidWarning)"
-			/>
-			<label v-if="offlineCustomUuid" class="flex flex-col gap-2 font-semibold">
-				{{ formatMessage(messages.customUuidInputLabel) }}
-				<StyledInput
-					v-model="offlineUuid"
-					:disabled="loginDisabled"
-					:placeholder="formatMessage(messages.customUuidPlaceholder)"
-					autocomplete="off"
-					spellcheck="false"
-					maxlength="36"
-					@keyup.enter="addOfflineAccount()"
-				/>
-			</label>
-			<p
-				v-if="offlineCustomUuid && offlineUuid.length > 0 && !offlineUuidValid"
-				class="m-0 text-sm text-red"
-			>
-				{{ formatMessage(messages.customUuidValidation) }}
-			</p>
-			<Admonition
-				v-if="offlineUuidDuplicate"
-				type="critical"
-				:body="formatMessage(messages.customUuidDuplicate)"
-			/>
-			<div class="input-group push-right">
-				<ButtonStyled>
-					<button :disabled="loginDisabled" @click="offlineAccountModal?.hide()">
-						{{ formatMessage(commonMessages.cancelButton) }}
-					</button>
-				</ButtonStyled>
-				<ButtonStyled color="brand">
-					<button :disabled="loginDisabled || !offlineFormValid" @click="addOfflineAccount()">
-						<SpinnerIcon v-if="loginDisabled" class="animate-spin" />
-						<PlusIcon v-else />
-						{{ formatMessage(messages.createOfflineAccount) }}
-					</button>
-				</ButtonStyled>
-			</div>
-		</div>
-	</ModalWrapper>
 	<ModalWrapper ref="yggdrasilAccountModal" :header="formatMessage(messages.thirdPartyModalTitle)">
 		<div class="flex min-w-[24rem] flex-col gap-4">
 			<p class="m-0 text-secondary">{{ formatMessage(messages.thirdPartyModalDescription) }}</p>
@@ -265,16 +181,12 @@
 					</ButtonStyled>
 				</div>
 			</div>
-			<ButtonStyled class="w-full">
-				<button :disabled="loginDisabled" @click="useLittleSkinPreset()">
-					{{ formatMessage(messages.useLittleSkin) }}
-				</button>
-			</ButtonStyled>
 			<label class="flex flex-col gap-2 font-semibold">
 				{{ formatMessage(messages.apiRootLabel) }}
 				<StyledInput
 					v-model="yggdrasilApiRoot"
-					:disabled="loginDisabled"
+					:disabled="true"
+					readonly
 					:placeholder="formatMessage(messages.apiRootPlaceholder)"
 					inputmode="url"
 					@blur="loadRememberedYggdrasilPassword()"
@@ -348,10 +260,8 @@ import {
 } from '@modrinth/assets'
 import {
 	Accordion,
-	Admonition,
 	Avatar,
 	ButtonStyled,
-	Checkbox,
 	commonMessages,
 	defineMessages,
 	injectNotificationManager,
@@ -372,7 +282,6 @@ import { useNetworkStatus } from '@/composables/useNetworkStatus'
 import { compareMinecraftAccounts } from '@/helpers/accounts'
 import { trackEvent } from '@/helpers/analytics'
 import {
-	add_offline_user,
 	begin_yggdrasil_login,
 	delete_yggdrasil_password,
 	finish_yggdrasil_login,
@@ -453,7 +362,7 @@ type YggdrasilLoginResult =
 	| { status: 'complete'; credentials: MinecraftCredential }
 	| { status: 'select_profile'; flow_id: string; profiles: YggdrasilProfile[] }
 
-const LITTLE_SKIN_API_ROOT = 'https://littleskin.cn/api/yggdrasil'
+const STARLIGHT_YGGDRASIL_API_ROOT = 'https://skin.starlight.cool/yggdrasil'
 
 const accounts: Ref<MinecraftCredential[]> = ref([])
 const loginDisabled = ref(false)
@@ -467,29 +376,9 @@ let refreshGeneration = 0
 let headRefreshTimer: ReturnType<typeof setTimeout> | undefined
 let defaultUserUpdateQueue = Promise.resolve()
 const minecraftLoginModal = ref<InstanceType<typeof MinecraftLoginModal> | null>(null)
-const offlineAccountModal = ref<InstanceType<typeof ModalWrapper> | null>(null)
-const offlineUsername = ref('')
-const offlineCustomUuid = ref(false)
-const offlineUuid = ref('')
-const offlineUuidDuplicate = ref(false)
-const offlineUsernameValid = computed(() =>
-	/^[\p{L}\p{N}_]{1,16}$/u.test(offlineUsername.value.trim()),
-)
-const offlineUuidValid = computed(() =>
-	/^[a-fA-F0-9]{32}$/u.test(offlineUuid.value.replaceAll('-', '')),
-)
-const offlineFormValid = computed(
-	() => offlineUsernameValid.value && (!offlineCustomUuid.value || offlineUuidValid.value),
-)
-watch([offlineUuid, offlineCustomUuid], () => {
-	offlineUuidDuplicate.value = false
-})
-const offlineUsernameContainsChinese = computed(() =>
-	/\p{Script=Han}/u.test(offlineUsername.value.trim()),
-)
 const yggdrasilAccountModal = ref<InstanceType<typeof ModalWrapper> | null>(null)
 const yggdrasilProfileModal = ref<InstanceType<typeof ModalWrapper> | null>(null)
-const yggdrasilApiRoot = ref(LITTLE_SKIN_API_ROOT)
+const yggdrasilApiRoot = ref(STARLIGHT_YGGDRASIL_API_ROOT)
 const yggdrasilLogin = ref('')
 const yggdrasilPassword = ref('')
 const rememberYggdrasilPassword = ref(true)
@@ -573,7 +462,12 @@ async function refreshValues(headRefreshAttempt = 0) {
 	// carry this refinement. The double cast is deliberate — the shape is
 	// correct and verified at runtime by the backend.
 	accounts.value = Array.isArray(userList)
-		? [...(userList as unknown as MinecraftCredential[])]
+		? [...(userList as unknown as MinecraftCredential[])].filter(
+				(account) =>
+					account.account_type === 'microsoft' ||
+					(account.account_type === 'yggdrasil' &&
+						account.yggdrasil?.api_root.replace(/\/+$/, '') === STARLIGHT_YGGDRASIL_API_ROOT),
+			)
 		: []
 	accounts.value.sort(compareMinecraftAccounts)
 	await renderAccountHeads(accounts.value, generation)
@@ -792,16 +686,8 @@ async function onMicrosoftLogin(account: MinecraftCredential) {
 	}
 }
 
-function showOfflineAccountModal() {
-	offlineUsername.value = ''
-	offlineCustomUuid.value = false
-	offlineUuid.value = ''
-	offlineUuidDuplicate.value = false
-	offlineAccountModal.value?.show()
-}
-
 async function showYggdrasilAccountModal() {
-	yggdrasilApiRoot.value = LITTLE_SKIN_API_ROOT
+	yggdrasilApiRoot.value = STARLIGHT_YGGDRASIL_API_ROOT
 	yggdrasilLogin.value = ''
 	yggdrasilPassword.value = ''
 	rememberYggdrasilPassword.value = true
@@ -813,13 +699,21 @@ async function showYggdrasilAccountModal() {
 
 async function loadSavedYggdrasilLogins() {
 	const storedLogins = await list_yggdrasil_saved_logins().catch(handleError)
-	const savedLogins: SavedYggdrasilLogin[] = Array.isArray(storedLogins) ? [...storedLogins] : []
+	const savedLogins: SavedYggdrasilLogin[] = Array.isArray(storedLogins)
+		? [...storedLogins].filter(
+				(savedLogin) => savedLogin.api_root.replace(/\/+$/, '') === STARLIGHT_YGGDRASIL_API_ROOT,
+			)
+		: []
 	const savedLoginKeys = new Set(
 		savedLogins.map((savedLogin) => `${savedLogin.api_root}\n${savedLogin.login}`),
 	)
 
 	for (const account of accounts.value) {
-		if (!account.yggdrasil) continue
+		if (
+			!account.yggdrasil ||
+			account.yggdrasil.api_root.replace(/\/+$/, '') !== STARLIGHT_YGGDRASIL_API_ROOT
+		)
+			continue
 		const savedLogin = {
 			api_root: account.yggdrasil.api_root,
 			login: account.yggdrasil.login,
@@ -888,10 +782,6 @@ async function removeSavedYggdrasilLogin(savedLogin: SavedYggdrasilLogin) {
 	}
 }
 
-function useLittleSkinPreset() {
-	yggdrasilApiRoot.value = LITTLE_SKIN_API_ROOT
-}
-
 async function loadRememberedYggdrasilPassword() {
 	if (
 		!rememberYggdrasilPassword.value ||
@@ -930,6 +820,7 @@ async function persistYggdrasilPasswordPreference() {
 
 async function addYggdrasilAccount() {
 	if (!yggdrasilFormValid.value || loginDisabled.value) return
+	if (yggdrasilApiRoot.value.trim().replace(/\/+$/, '') !== STARLIGHT_YGGDRASIL_API_ROOT) return
 
 	loginDisabled.value = true
 	try {
@@ -974,37 +865,6 @@ async function selectYggdrasilProfile(profileId: string) {
 	} finally {
 		loginDisabled.value = false
 	}
-}
-
-async function addOfflineAccount() {
-	if (!offlineFormValid.value || loginDisabled.value) return
-
-	loginDisabled.value = true
-	offlineUuidDuplicate.value = false
-	try {
-		const account = await add_offline_user(
-			offlineUsername.value.trim(),
-			offlineCustomUuid.value ? offlineUuid.value.replaceAll('-', '') : undefined,
-		)
-		offlineAccountModal.value?.hide()
-		await setAccount(account)
-		trackEvent('OfflineAccountAdd')
-	} catch (error) {
-		offlineUuidDuplicate.value = isDuplicateUuidError(error)
-		if (!offlineUuidDuplicate.value) handleError(error as Error)
-	} finally {
-		loginDisabled.value = false
-	}
-}
-
-function isDuplicateUuidError(error: unknown) {
-	const rawMessage =
-		error instanceof Error
-			? error.message
-			: typeof error === 'string'
-				? error
-				: JSON.stringify(error)
-	return rawMessage?.includes('An account with this UUID already exists') ?? false
 }
 
 async function logout(account: MinecraftCredential) {
@@ -1069,31 +929,27 @@ const messages = defineMessages({
 	},
 	thirdPartyAccount: {
 		id: 'minecraft-account.third-party-account',
-		defaultMessage: 'Third-party Minecraft account',
+		defaultMessage: 'StarLight skin account',
 	},
 	thirdPartyBadge: {
 		id: 'minecraft-account.third-party-badge',
-		defaultMessage: 'Third-party',
+		defaultMessage: 'StarLight skin',
 	},
 	thirdPartyModalTitle: {
 		id: 'minecraft-account.third-party-modal.title',
-		defaultMessage: 'Sign in with a third-party service',
+		defaultMessage: 'Sign in with StarLight skin',
 	},
 	thirdPartyModalDescription: {
 		id: 'minecraft-account.third-party-modal.description',
-		defaultMessage: 'Use LittleSkin or another compatible Yggdrasil authentication service.',
-	},
-	useLittleSkin: {
-		id: 'minecraft-account.third-party-modal.littleskin',
-		defaultMessage: 'Use LittleSkin',
+		defaultMessage: 'Sign in with your StarLight skin account.',
 	},
 	apiRootLabel: {
 		id: 'minecraft-account.third-party-modal.api-root',
-		defaultMessage: 'Yggdrasil API address',
+		defaultMessage: 'StarLight skin API address',
 	},
 	apiRootPlaceholder: {
 		id: 'minecraft-account.third-party-modal.api-root-placeholder',
-		defaultMessage: 'https://example.com/api/yggdrasil',
+		defaultMessage: 'https://skin.starlight.cool/yggdrasil',
 	},
 	accountLabel: {
 		id: 'minecraft-account.third-party-modal.account',
@@ -1130,10 +986,6 @@ const messages = defineMessages({
 	selectProfileDescription: {
 		id: 'minecraft-account.third-party-profile.description',
 		defaultMessage: 'Choose the Minecraft profile to use with this account.',
-	},
-	addOfflineAccount: {
-		id: 'minecraft-account.add-offline-account',
-		defaultMessage: 'Add offline account',
 	},
 	offlineAccount: {
 		id: 'minecraft-account.offline-account',

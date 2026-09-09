@@ -10167,10 +10167,10 @@
     "message": "登录 Minecraft"
   },
   "minecraft-account.third-party-account": {
-    "message": "Minecraft 第三方账号"
+    "message": "StarLight 皮肤站账号"
   },
   "minecraft-account.third-party-badge": {
-    "message": "第三方"
+    "message": "StarLight 皮肤站"
   },
   "minecraft-account.third-party-modal.account": {
     "message": "账号或邮箱"
@@ -10179,16 +10179,13 @@
     "message": "请输入账号或邮箱"
   },
   "minecraft-account.third-party-modal.api-root": {
-    "message": "Yggdrasil API 地址"
+    "message": "StarLight 皮肤站 API 地址"
   },
   "minecraft-account.third-party-modal.api-root-placeholder": {
-    "message": "https://example.com/api/yggdrasil"
+    "message": "https://skin.starlight.cool/yggdrasil"
   },
   "minecraft-account.third-party-modal.description": {
-    "message": "使用 LittleSkin 或其他兼容的 Yggdrasil 外置登录服务。"
-  },
-  "minecraft-account.third-party-modal.littleskin": {
-    "message": "使用 LittleSkin"
+    "message": "使用 StarLight 皮肤站账号登录。"
   },
   "minecraft-account.third-party-modal.password": {
     "message": "密码"
@@ -10206,7 +10203,7 @@
     "message": "登录"
   },
   "minecraft-account.third-party-modal.title": {
-    "message": "登录第三方账号"
+    "message": "登录 StarLight 皮肤站"
   },
   "minecraft-account.third-party-profile.description": {
     "message": "请选择此账号要使用的 Minecraft 角色。"
