@@ -1,8 +1,11 @@
 <template>
 	<Transition name="splash-fade" @after-leave="onAfterLeave">
 		<div v-if="!doneLoading" class="fixed inset-0 z-[10000] dark">
-			<div class="absolute h-screen w-full flex flex-col justify-center items-center gap-4 z-[9998]" data-tauri-drag-region>
-				<img class="app-logo" src="@/assets/axolotl.png" alt="Axolotl Launcher" />
+			<div
+				class="absolute h-screen w-full flex flex-col justify-center items-center gap-4 z-[9998]"
+				data-tauri-drag-region
+			>
+				<img class="app-logo" src="@/assets/netherstar.png" alt="Starlight Launcher" />
 				<ProgressBar class="max-w-xs" :progress="Math.min(loadingProgress, 100)" />
 				<span v-if="message">{{ message }}</span>
 			</div>
@@ -132,5 +135,4 @@ loading_listener(async (e) => {
 
 	z-index: 9996;
 }
-
 </style>

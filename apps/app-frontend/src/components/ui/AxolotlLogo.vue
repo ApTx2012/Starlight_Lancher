@@ -6,7 +6,7 @@
 </template>
 
 <script setup lang="ts">
-import axolotlVisual from '@modrinth/assets/branding/axolotl.png'
+import axolotlVisual from '@modrinth/assets/branding/netherstar.png'
 
 defineProps<{
 	iconOnly?: boolean

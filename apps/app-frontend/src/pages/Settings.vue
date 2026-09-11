@@ -371,7 +371,7 @@ const pageTitle: MessageDescriptor = settingsPageTitle
 							:class="themeStore.devMode ? 'text-brand' : 'text-secondary'"
 							@click="toggleDeveloperMode"
 						>
-							<img class="size-8 object-contain" src="@/assets/axolotl.png" alt="" />
+							<img class="size-8 object-contain" src="@/assets/netherstar.png" alt="" />
 						</button>
 						<div class="settings-footer-version min-w-0">
 							<p class="m-0 break-words">{{ AxolotlBrandConfig.productName }} {{ version }}</p>

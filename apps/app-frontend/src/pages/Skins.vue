@@ -1164,7 +1164,7 @@ await loadSkins()
 			class="relative mx-auto flex w-full max-w-xl flex-col gap-5 rounded-lg bg-bg-raised p-7 shadow-lg"
 		>
 			<img
-				src="@/assets/axolotl.png"
+				src="@/assets/netherstar.png"
 				:alt="formatMessage(messages.axolotlAlt)"
 				class="absolute -top-32 right-8 h-36 w-36 object-contain md:right-20"
 			/>

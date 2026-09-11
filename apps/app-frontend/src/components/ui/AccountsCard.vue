@@ -274,7 +274,7 @@ import type { Ref } from 'vue'
 import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
-import axolotlLogo from '@/assets/axolotl.png'
+import axolotlLogo from '@/assets/netherstar.png'
 import steveSkinTexture from '@/assets/skins/steve.png?inline'
 import MinecraftLoginModal from '@/components/ui/MinecraftLoginModal.vue'
 import ModalWrapper from '@/components/ui/modal/ModalWrapper.vue'
