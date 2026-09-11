@@ -376,6 +376,7 @@ const pageTitle: MessageDescriptor = settingsPageTitle
 						<div class="settings-footer-version min-w-0">
 							<p class="m-0 break-words">{{ AxolotlBrandConfig.productName }} {{ version }}</p>
 							<p class="m-0 truncate">{{ platformName() }} {{ osVersion }}</p>
+							<p class="m-0 text-xs text-secondary">Powered by Axolotl</p>
 						</div>
 					</div>
 				</footer>

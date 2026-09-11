@@ -21,7 +21,7 @@ import QqIcon from '@/assets/external/qq.svg?component'
 import EasterEggContributorsModal from '@/components/ui/easteregg/EasterEggContributorsModal.vue'
 import EasterEggGameModal from '@/components/ui/easteregg/EasterEggGameModal.vue'
 import { AxolotlBrandConfig } from '@/config'
-import { contributors, type TeamMember, teamMembers } from '@/data/about'
+import { contributors, type TeamMember } from '@/data/about'
 
 import AboutScene from '../AboutScene.vue'
 import { type AboutMemberExperience, getAboutMemberExperience } from './about-member-experiences'
@@ -100,9 +100,16 @@ let typedBuffer = ''
 const secretCodes = ['cyf112233', 'cxkcxkckx']
 
 const konamiSequence = [
-	'ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown',
-	'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight',
-	'KeyB', 'KeyA',
+	'ArrowUp',
+	'ArrowUp',
+	'ArrowDown',
+	'ArrowDown',
+	'ArrowLeft',
+	'ArrowRight',
+	'ArrowLeft',
+	'ArrowRight',
+	'KeyB',
+	'KeyA',
 ]
 let konamiIndex = 0
 
@@ -146,7 +153,11 @@ const messages = defineMessages({
 	},
 	productDescription: {
 		id: 'app.settings.about.description',
-		defaultMessage: 'Your last launcher.',
+		defaultMessage: 'Starlight Launcher',
+	},
+	copyright: {
+		id: 'app.settings.about.copyright',
+		defaultMessage: 'Copyright © Axolotl All Rights Reserved.',
 	},
 	version: {
 		id: 'app.settings.about.version',
@@ -302,40 +313,9 @@ const projectLinks = [
 			<p class="m-0 mt-3 text-center text-primary">
 				{{ formatMessage(messages.productDescription) }}
 			</p>
-		</section>
-
-		<section>
-			<h3 class="m-0 mb-3 flex items-center gap-2 text-base font-semibold text-contrast">
-				<UsersIcon class="size-5 text-secondary" />
-				{{ formatMessage(messages.developmentTeam) }}
-			</h3>
-			<ul class="m-0 grid list-none grid-cols-2 gap-3 p-0 sm:grid-cols-3">
-				<li v-for="member in teamMembers" :key="member.name" class="min-w-0">
-					<component
-						:is="member.url ? 'a' : 'div'"
-						:href="member.url"
-						:target="member.url ? '_blank' : undefined"
-						:rel="member.url ? 'noopener noreferrer' : undefined"
-						class="flex min-w-0 select-none flex-col items-center gap-3 rounded-xl bg-surface-4 p-4"
-						:class="[
-							member.url ? 'transition-colors hover:bg-surface-5' : 'cursor-default',
-							pressingMemberName === member.name ? 'ring-4 ring-brand-shadow' : '',
-						]"
-						@pointerdown="startMemberLongPress(member, $event)"
-						@pointermove="moveMemberLongPress"
-						@pointerup="cancelMemberLongPress"
-						@pointercancel="cancelMemberLongPress"
-						@dragstart="cancelMemberLongPress"
-						@click="handleMemberClick"
-						@contextmenu="handleMemberContextMenu(member, $event)"
-					>
-						<Avatar :src="member.avatarUrl" :alt="member.name" size="4rem" circle no-shadow />
-						<span class="block truncate text-center font-semibold text-contrast">{{
-							member.name
-						}}</span>
-					</component>
-				</li>
-			</ul>
+			<p class="m-0 mt-2 text-center text-xs text-secondary">
+				{{ formatMessage(messages.copyright) }}
+			</p>
 		</section>
 
 		<section>
