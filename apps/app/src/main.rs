@@ -478,7 +478,10 @@ fn is_dev() -> bool {
 
 #[tauri::command]
 fn are_updates_enabled() -> bool {
-    true
+    // StarLight launcher ships without the built-in update checker.
+    // Keep the backend interface in place for a future user-supplied
+    // update URL to be wired in by replacing this no-op gate later.
+    false
 }
 
 #[cfg(feature = "updater")]
@@ -693,21 +696,6 @@ fn main() {
             blockbench_skin_response(request.uri().path(), &resource_dir)
         },
     );
-
-    #[cfg(feature = "updater")]
-    {
-        use tauri_plugin_http::reqwest::header::{HeaderValue, USER_AGENT};
-        use theseus::launcher_user_agent;
-        builder = builder.plugin(
-            tauri_plugin_updater::Builder::new()
-                .header(
-                    USER_AGENT,
-                    HeaderValue::from_str(&launcher_user_agent()).unwrap(),
-                )
-                .unwrap()
-                .build(),
-        );
-    }
 
     builder = builder
         .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {

@@ -1,5 +1,9 @@
 use crate::api::Result;
 
+// Future update URL hook: keep a stable string slot for a user-provided
+// launcher update endpoint without activating the built-in updater path.
+pub const FUTURE_UPDATE_URL: &str = "";
+
 #[derive(Default)]
 pub struct PendingUpdateData(());
 
