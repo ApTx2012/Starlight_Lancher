@@ -199,11 +199,6 @@ export default new createRouter({
 					component: () => import('@/pages/library/Modpacks.vue'),
 				},
 				{
-					path: 'servers',
-					name: 'LibraryServers',
-					component: () => import('@/pages/library/Servers.vue'),
-				},
-				{
 					path: 'custom',
 					name: 'Custom',
 					component: () => import('@/pages/library/Custom.vue'),
