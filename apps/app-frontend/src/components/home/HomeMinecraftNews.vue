@@ -33,7 +33,9 @@ async function openSkinSite() {
 </script>
 
 <template>
-	<section class="flex min-w-0 flex-col gap-3 border-0 border-b-[1px] border-solid border-[--brand-gradient-border] p-4">
+	<section
+		class="flex min-w-0 flex-col gap-3 border-0 border-b-[1px] border-solid border-[--brand-gradient-border] p-4"
+	>
 		<div class="flex items-center gap-2">
 			<ExternalIcon class="size-4 shrink-0 text-secondary" aria-hidden="true" />
 			<h2 class="m-0 truncate text-lg">
