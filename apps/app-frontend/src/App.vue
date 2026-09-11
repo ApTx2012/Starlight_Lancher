@@ -19,7 +19,6 @@ import {
 	SettingsIcon,
 	SpinnerIcon,
 	UserIcon,
-	UsersIcon,
 	WorldIcon,
 } from '@modrinth/assets'
 import {
@@ -702,7 +701,7 @@ const messages = defineMessages({
 	},
 	closeLauncherTitle: {
 		id: 'app.close-launcher.title',
-		defaultMessage: 'Choose how to close Axolotl Launcher',
+		defaultMessage: 'Choose how to close Starlight Launcher',
 	},
 	closeLauncherDirect: {
 		id: 'app.close-launcher.direct',
@@ -2314,13 +2313,6 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 					to="/skins"
 				>
 					<ChangeSkinIcon />
-				</NavButton>
-				<NavButton
-					v-tooltip.right="formatMessage(messages.multiplayer)"
-					to="/multiplayer"
-					:is-primary="(r) => r.path.startsWith('/multiplayer')"
-				>
-					<UsersIcon />
 				</NavButton>
 				<NavButton
 					v-tooltip.right="formatMessage(messages.library)"
