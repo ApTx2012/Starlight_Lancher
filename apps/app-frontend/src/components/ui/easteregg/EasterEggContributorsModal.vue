@@ -1,5 +1,5 @@
 
-
+<script setup lang="ts">
 import { Avatar, defineMessages, NewModal, useVIntl } from '@modrinth/ui'
 import { ref } from 'vue'
 

@@ -386,7 +386,6 @@
 			@browse-modpacks="() => {}"
 			@create="serverInstallContent.handleServerModpackFlowCreate"
 		/>
-		<CreateModpackServerModal ref="modpackServerModal" @created="handleModpackServerCreated" />
 		<ScrollToTopButton />
 	</div>
 </template>
@@ -451,7 +450,6 @@ import { useRoute, useRouter } from 'vue-router'
 
 import { SwapIcon } from '@/assets/icons/index.js'
 import BrowseInstanceSelector from '@/components/browse/BrowseInstanceSelector.vue'
-import CreateModpackServerModal from '@/components/multiplayer/servers/modpack/CreateModpackServerModal.vue'
 import ContextMenu from '@/components/ui/ContextMenu.vue'
 import InstanceIndicator from '@/components/ui/InstanceIndicator.vue'
 import {
@@ -647,39 +645,10 @@ const favoriteSaved = computed(() =>
 const serverCapableModpack = computed(
 	() => data.value?.project_type === 'modpack' && data.value.server_side !== 'unsupported',
 )
-const modpackServerModal = ref()
 
-async function openModpackServerFlow(targetVersion) {
-	if (!data.value) return
-	// The version handed in by the UI can be an incomplete object that is missing
-	// `id`/`loaders`/`game_versions`/`files`. Re-fetch a complete version from the
-	// API so the modpack server flow has the data it needs (otherwise it misdetects
-	// the loader as Vanilla and fails with "No server launcher available").
-	let version = targetVersion
-	const isComplete = (v) => !!v && Array.isArray(v.game_versions) && Array.isArray(v.files)
-	if (!isComplete(version)) {
-		const versionId = version?.id ?? data.value.versions?.[0]
-		version = versionId ? await get_version(versionId, 'bypass').catch(() => null) : null
-	}
-	if (!version) return
-	modpackServerModal.value?.show(data.value, version)
-}
-
-function handleModpackServerCreated(serverId) {
-	popupNotificationManager.addPopupNotification({
-		title: formatMessage(messages.serverCreated),
-		text: formatMessage(messages.serverCreatedDescription, { name: data.value?.title ?? '' }),
-		type: 'success',
-		buttons: [
-			{
-				label: formatMessage(messages.openServer),
-				color: 'brand',
-				action: () => {
-					void router.push(`/multiplayer/servers/${encodeURIComponent(serverId)}`)
-				},
-			},
-		],
-	})
+async function openModpackServerFlow() {
+	// 服务器创建弹窗（CreateModpackServerModal）已在上游移除，此流程暂不可用。
+	// 如需恢复：重新实现该组件，并在此处调用其 show() 方法。
 }
 
 async function toggleFavorite() {
