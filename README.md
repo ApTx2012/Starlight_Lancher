@@ -1,17 +1,17 @@
 <div align="center">
-  <img src="./apps/app/icons/128x128.png" width="128" height="128" alt="Axolotl Launcher Logo" />
-  <h1>Axolotl Launcher</h1>
-  <p><strong>次世代 Minecraft 桌面客户端，全能、美观、全平台覆盖。</strong></p>
+  <img src="./apps/app/icons/128x128.png" width="128" height="128" alt="Starlight Launcher Logo" />
+  <h1>Starlight Launcher</h1>
+  <p><strong>StarLight Server 官方定制 Minecraft 启动器 —— 为星光玩家打造的一站式游戏体验。</strong></p>
 
   <p>
-    <a href="https://github.com/Mystic-Stars/Axolotl/actions">
-      <img src="https://img.shields.io/github/actions/workflow/status/Mystic-Stars/Axolotl/axolotl-ci.yml?style=for-the-badge&logo=github" alt="Desktop CI" />
+    <a href="https://github.com/ApTx2012/Starlight_Lancher/actions">
+      <img src="https://img.shields.io/github/actions/workflow/status/ApTx2012/Starlight_Lancher/axolotl-ci.yml?style=for-the-badge&logo=github" alt="Desktop CI" />
     </a>
-    <a href="https://github.com/Mystic-Stars/Axolotl/releases">
-      <img src="https://img.shields.io/github/downloads/Mystic-Stars/Axolotl/total?style=for-the-badge&logo=github" alt="Downloads" />
+    <a href="https://github.com/ApTx2012/Starlight_Lancher/releases">
+      <img src="https://img.shields.io/github/downloads/ApTx2012/Starlight_Lancher/total?style=for-the-badge&logo=github" alt="Downloads" />
     </a>
-    <a href="https://github.com/Mystic-Stars/Axolotl/stargazers">
-      <img src="https://img.shields.io/github/stars/Mystic-Stars/Axolotl?style=for-the-badge&logo=github&color=ffb800" alt="Stars" />
+    <a href="https://github.com/ApTx2012/Starlight_Lancher/stargazers">
+      <img src="https://img.shields.io/github/stars/ApTx2012/Starlight_Lancher?style=for-the-badge&logo=github&color=ffb800" alt="Stars" />
     </a>
     <a href="COPYING.md">
       <img src="https://img.shields.io/badge/License-GPL_3.0-blue.svg?style=for-the-badge" alt="License" />
@@ -19,89 +19,107 @@
   </p>
 
   <p>
-    <a href="https://www.axlmc.org">官方网站</a> ｜
-    <a href="https://github.com/Mystic-Stars/Axolotl/releases/latest">下载最新版</a> ｜
-    <a href="CONTRIBUTING.md">参与贡献</a>
-    ｜ <a href="CODE_OF_CONDUCT.md">行为准则</a>
+    <a href="https://github.com/ApTx2012/Starlight_Lancher/releases/latest">下载最新版</a> ｜
+    <a href="https://www.starlight.cool/">StarLight 官网</a> ｜
+    <a href="https://sls.wiki/">服务器 Wiki</a> ｜
+    <a href="https://skin.starlight.cool/">皮肤站</a>
   </p>
 </div>
 
-<details open>
-<summary><strong>赞助与合作</strong></summary>
-
-感谢以下赞助商与合作伙伴对 Axolotl Launcher 的支持。
-
-<table>
-  <tr>
-    <td><img src="./.github/assets/codeflow-logo.png" width="72" alt="Codeflow Logo" /></td>
-    <td><strong>Codeflow</strong><br>更稳、更省地调用顶级 AI 模型<br>原生协议转发 · 无需海外网络 · 支付宝即充即用</td>
-    <td><a href="https://codeflow.asia/register?invite=4UHP2KYH">访问 Codeflow</a></td>
-  </tr>
-</table>
-
-<a href="https://www.netlify.com">
-  <img src="https://www.netlify.com/assets/badges/netlify-badge-color-accent.svg" alt="Deploys by Netlify" />
-</a>
-
-- [在爱发电支持 Axolotl Launcher](https://ifdian.net/a/Mystic-Stars) — 你的支持将帮助项目持续维护与改进
-
-</details>
-
 ---
 
-**Axolotl Launcher（美西螈启动器）** 是一款免费、开源、跨平台的 Minecraft Java 版第三方启动器，支持在一个客户端中搜索、安装和更新来自 Modrinth 与 CurseForge 的模组、整合包、资源包和光影，并提供实例管理、多种账户认证、个性化外观与 Axolotl 实验室工具。
+## 简介
 
-本项目基于 [Modrinth App](https://github.com/modrinth/code) 构建，移除了不适用于本项目的商业化模块，专注于提供纯净、无广告的桌面启动体验。
+**Starlight Launcher** 是基于 [Axolotl Launcher](https://github.com/Mystic-Stars/Axolotl) 深度定制的 Minecraft Java 版桌面启动器，专为 **[StarLight Server](https://www.starlight.cool/)**（星光服务器）玩家量身打造。
 
-本项目与客户端项目 Axolotl Client 无任何关联。
+在保留 Axolotl 全部核心能力的基础上，Starlight Launcher 进行了面向 SLS 生态的二开与创新：
 
-_(注：本项目是调用 Modrinth 公开 API 的独立客户端，与 Rinth, Inc. 无任何关联。)_
+- **SLS 专属集成** —— 预置 StarLight Server 连接配置，开箱即用，无需手动填入服务器地址。
+- **皮肤站无缝对接** —— 内置 [SLS 皮肤站](https://skin.starlight.cool/) 快捷入口，换装更方便。
+- **Wiki 深度链接** —— 一键跳转 [SLS Wiki](https://sls.wiki/)，查阅服务器规则、玩法指南与历史。
+- **定制化视觉体验** —— 围绕 StarLight 品牌重新设计主题与配色，为星光玩家带来统一的视觉语言。
+- **持续跟进上游更新** —— 同步 Axolotl Launcher 的功能迭代与 Bug 修复，保障长期可用性。
 
-## 核心优势
+## 关于 StarLight Server
 
-- **真跨平台体验**：告别繁琐的环境配置，原生支持 Windows、macOS（完美兼容 Intel 与 Apple Silicon）及各类主流 Linux 发行版。
-- **现代化内容生态**：集成 Modrinth 和 CurseForge，可在启动器中一键浏览。游戏实例、整合包、模组、资源包及光影均可一键安装与升级，彻底告别手动管理依赖的痛苦。
-- **高度定制化**：无论是主题色调、背景图片，还是离线皮肤，核心功能与视觉展现均由你自由支配。
-- **All in one 全新体验**：启动器内置 “实验室” 功能，囊括种子地图、投影工坊等海量使用工具，带来全新原生轮椅体验。
+**StarLight Server（SLS）** 是 [The Land of StarLight（TLSL）](https://sls.wiki/) 旗下的 Minecraft 综合服务器，始建于 2014 年，前身为 2012 年的凋灵服务器（TWS）。
+
+| 特性 | 说明 |
+|---|---|
+| **高性能硬件** | AMD 9950X（16 核 4.4GHz 锁频）、128GB DDR4、三星 990Pro SSD |
+| **多版本兼容** | Java 版 1.9.X ~ 1.21.X，以及基岩版跨版本接入 |
+| **生电 + 生存分离** | 外服提供领地系统供休闲玩家，内服面向硬核生电玩家 |
+| **完善的防熊机制** | 领地保护 + 内外服审核分离，守护你的每一块方块 |
+
+> 加入 [StarLight 官网](https://www.starlight.cool/) 了解更多信息，或通过官网指引加入审核群获取白名单。
+
+## 核心功能
+
+| 功能 | 描述 |
+|---|---|
+| **Modrinth + CurseForge 集成** | 在启动器内浏览、安装、更新模组、整合包、资源包与光影 |
+| **实例管理** | 轻松创建、导入和管理多个游戏实例，支持符号链接导入 |
+| **多账户认证** | Microsoft 登录、离线账户、Yggdrasil 认证（LittleSkin 预设 + 自定义服务器） |
+| **个性化主题** | 亮色 / 暗色 / OLED / 跟随系统，自定义强调色、背景与透明度 |
+| **Axolotl 实验室** | 内置种子地图、渐变文字生成器、3D 投影工坊等实用工具 |
+| **自动更新** | 基于 Tauri 签名校验，后台静默更新，无需手动操作 |
+| **跨平台** | 原生支持 Windows、macOS（Intel & Apple Silicon）及主流 Linux 发行版 |
 
 ## 下载与安装
 
-请前往 [GitHub Releases](https://github.com/Mystic-Stars/Axolotl/releases/latest) 下载适合你操作系统的最新安装包。
-已安装的用户每次均可通过内置的 Tauri 签名校验机制，自动在后台完成更新，无需手动下载安装更新。
+前往 [GitHub Releases](https://github.com/ApTx2012/Starlight_Lancher/releases/latest) 下载适合你操作系统的最新版本。
 
-| 系统平台                | 推荐下载文件                              |
-| ----------------------- | ----------------------------------------- |
-| **Windows** (10/11 x64) | 下载 `.exe` (NSIS) 安装程序               |
-| **macOS**               | 下载 `通用 .dmg` 镜像文件                 |
-| **Linux** (x64)         | 提供 `.AppImage`，`.deb`，`.rpm` 多种格式 |
+| 系统平台 | 推荐下载 |
+|---|---|
+| **Windows** (10/11 x64) | `.exe` (NSIS) 安装程序 |
+| **macOS** | 通用 `.dmg` 镜像 |
+| **Linux** (x64) | `.AppImage` / `.deb` / `.rpm` |
 
 <details>
-<summary><b>Linux 包管理器快捷安装指令</b></summary>
-<br>
+<summary><b>Linux 包管理器安装</b></summary>
 
 **Arch Linux (AUR)**：
 
 ```bash
 # 源码构建版
-yay -S axolotl-launcher
+yay -S starlight-launcher
 
-# 预编译二进制版
-yay -S axolotl-launcher-bin
+# 预编译版
+yay -S starlight-launcher-bin
 ```
 
 **Debian / Ubuntu (APT)**：
 
 ```bash
 curl -fsSL https://ppa.axlmc.org/setup.sh | sudo bash
-sudo apt install axolotl-launcher
+sudo apt install starlight-launcher
 ```
 
 </details>
 
-## 参与项目开发
+## 参与开发
 
-Axolotl Launcher 的进步离不开社区的反馈与贡献。
-如果遇到 Bug 或有新的功能点子，欢迎提交 Issue。如需搭建本地开发环境或查阅打包发布规范，请阅读详细的 [贡献指南 (CONTRIBUTING.md)](CONTRIBUTING.md)。
-参与社区和贡献代码前，也请先阅读[行为准则 (CODE_OF_CONDUCT.md)](CODE_OF_CONDUCT.md)。
+Starlight Launcher 的进步离不开社区的支持。
+
+- 遇到 Bug 或有功能建议？欢迎提交 [Issue](https://github.com/ApTx2012/Starlight_Lancher/issues)
+- 想贡献代码？请先阅读 [贡献指南 (CONTRIBUTING.md)](CONTRIBUTING.md) 与 [行为准则 (CODE_OF_CONDUCT.md)](CODE_OF_CONDUCT.md)
+
+## 许可证
+
+本项目基于 **GPL-3.0** 许可证开源。详见 [COPYING.md](COPYING.md)。
+
+## 致谢
+
+- **[Axolotl Launcher](https://github.com/Mystic-Stars/Axolotl)** —— Starlight Launcher 的上游项目，感谢 Mystic-Stars 团队提供的优秀开源基础。
+- **[Modrinth](https://github.com/modrinth/code)** —— Axolotl Launcher 的原始构建基础。
+- 所有 [StarLight Server](https://www.starlight.cool/) 的玩家与贡献者 —— 你们是星光持续闪耀的动力。
 
 ---
+
+<div align="center">
+  <p>
+    <strong>StarLight Server · The Land of StarLight</strong><br>
+    <a href="https://www.starlight.cool/">官网</a> · <a href="https://sls.wiki/">Wiki</a> · <a href="https://skin.starlight.cool/">皮肤站</a>
+  </p>
+  <p><sub>本项目是调用 Modrinth 公开 API 的独立客户端，与 Rinth, Inc. 无任何关联。</sub></p>
+</div>
