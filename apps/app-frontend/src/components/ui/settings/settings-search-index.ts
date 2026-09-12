@@ -24,7 +24,7 @@ export const settingsSearchEntries: SettingsSearchEntry[] = [
 		label: message('app.appearance-settings.color-theme.title', 'Color theme'),
 		description: message(
 			'app.appearance-settings.color-theme.description',
-			'Select your preferred color theme for Axolotl Launcher.',
+			'Select your preferred color theme for Starlight Launcher.',
 		),
 	},
 	{
@@ -118,7 +118,7 @@ export const settingsSearchEntries: SettingsSearchEntry[] = [
 		targetId: 'settings-target-appearance-close-behavior',
 		label: message(
 			'app.appearance-settings.close-behavior.title',
-			'Choose how to close Axolotl Launcher',
+			'Choose how to close Starlight Launcher',
 		),
 		keywords: [
 			message('app.appearance-settings.close-behavior.close', 'Close directly'),

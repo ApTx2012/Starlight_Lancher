@@ -1,7 +1,7 @@
 <template>
 	<span class="inline-flex items-center gap-2.5 text-[var(--color-contrast)] text-[1.375rem] font-extrabold tracking-[-0.035em] leading-none">
 		<img src="/axolotl.png" alt="" />
-		<span>Axolotl</span>
+		<span>Starlight</span>
 	</span>
 </template>
 

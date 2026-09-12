@@ -295,20 +295,20 @@ const messages = defineMessages({
 	},
 	downloadAxolotl: {
 		id: 'axolotl-marketing.hero.download',
-		defaultMessage: 'Axolotl Launcher',
+		defaultMessage: 'Starlight Launcher',
 	},
 	downloadAxolotlForOs: {
 		id: 'axolotl-marketing.hero.download-for-os',
-		defaultMessage: 'Axolotl Launcher for {os}',
+		defaultMessage: 'Starlight Launcher for {os}',
 	},
 	description: {
 		id: 'app-marketing.hero.description',
 		defaultMessage:
-			'Axolotl Launcher is a free, open-source, ad-free, cross-platform Minecraft Java Edition launcher for searching, installing, and updating mods, modpacks, resource packs, and shaders from Modrinth and CurseForge, with Axolotl Labs built in.',
+			'Starlight Launcher is a free, open-source, ad-free, cross-platform Minecraft Java Edition launcher for searching, installing, and updating mods, modpacks, resource packs, and shaders from Modrinth and CurseForge, with Starlight Labs built in.',
 	},
 	heroScreenshotAlt: {
 		id: 'axolotl-marketing.hero.screenshot-alt',
-		defaultMessage: 'Axolotl Launcher home screen.',
+		defaultMessage: 'Starlight Launcher home screen.',
 	},
 	builtOnModrinth: {
 		id: 'axolotl-marketing.highlights.eyebrow',
@@ -334,7 +334,7 @@ const messages = defineMessages({
 	adFreeDescription: {
 		id: 'axolotl-marketing.highlights.ad-free.description',
 		defaultMessage:
-			'GPL-3.0, free to use, and ad-free. Axolotl is not an official Modrinth client.',
+			'GPL-3.0, free to use, and ad-free. Starlight is not an official Modrinth client.',
 	},
 	localized: {
 		id: 'axolotl-marketing.highlights.localized.title',
@@ -370,29 +370,29 @@ const messages = defineMessages({
 	},
 	translation: {
 		id: 'axolotl-marketing.showcase.translation.title',
-		defaultMessage: 'Axolotl Lab, inside the launcher',
+		defaultMessage: 'Starlight Lab, inside the launcher',
 	},
 	translationDescription: {
 		id: 'axolotl-marketing.showcase.translation.description',
 		defaultMessage:
-			'Use the gradient text generator, Java Edition seed map, and 3D schematic workshop directly in Axolotl, not through external web pages.',
+			'Use the gradient text generator, Java Edition seed map, and 3D schematic workshop directly in Starlight, not through external web pages.',
 	},
 	translateLabel: { id: 'axolotl-marketing.showcase.translation.label', defaultMessage: 'Lab' },
 	offlineScreenshotAlt: {
 		id: 'axolotl-marketing.showcase.offline.alt',
-		defaultMessage: 'Axolotl Launcher offline account dialog.',
+		defaultMessage: 'Starlight Launcher offline account dialog.',
 	},
 	themesScreenshotAlt: {
 		id: 'axolotl-marketing.showcase.themes.alt',
-		defaultMessage: 'Axolotl Launcher theme customization settings.',
+		defaultMessage: 'Starlight Launcher theme customization settings.',
 	},
 	translationScreenshotAlt: {
 		id: 'axolotl-marketing.showcase.translation.alt',
-		defaultMessage: 'Axolotl Launcher Lab.',
+		defaultMessage: 'Starlight Launcher Lab.',
 	},
 	downloadAxolotlButton: {
 		id: 'axolotl-marketing.hero.download-button',
-		defaultMessage: 'Download Axolotl',
+		defaultMessage: 'Download Starlight',
 	},
 	fetchingDownloadLinks: {
 		id: 'axolotl-marketing.download.fetching-links',
@@ -478,7 +478,7 @@ const messages = defineMessages({
 	performantDescription: {
 		id: 'app-marketing.features.performance.description',
 		defaultMessage:
-			'Axolotl stays out of your way with a responsive interface and a lightweight desktop core.',
+			'Starlight stays out of your way with a responsive interface and a lightweight desktop core.',
 	},
 	profileImporting: {
 		id: 'app-marketing.features.importing.title',
@@ -512,7 +512,7 @@ const messages = defineMessages({
 	},
 	downloadAxolotlTitle: {
 		id: 'axolotl-marketing.download.title',
-		defaultMessage: 'Download Axolotl Launcher',
+		defaultMessage: 'Download Starlight Launcher',
 	},
 	downloadDescription: {
 		id: 'app-marketing.download.description',
@@ -562,7 +562,7 @@ const messages = defineMessages({
 	downloadTerms: {
 		id: 'app-marketing.download.terms',
 		defaultMessage:
-			'Axolotl is free software released under <terms-link>GPL-3.0</terms-link>. Read the <privacy-link>Privacy Policy</privacy-link> before installing.',
+			'Starlight is free software released under <terms-link>GPL-3.0</terms-link>. Read the <privacy-link>Privacy Policy</privacy-link> before installing.',
 	},
 	linuxDisclaimer: {
 		id: 'app-marketing.download.linux-disclaimer',
@@ -572,16 +572,16 @@ const messages = defineMessages({
 	seoTitle: {
 		id: 'axolotl-site.seo.title',
 		defaultMessage:
-			'Axolotl Launcher - Free Open-Source Modrinth plus Curseforge Minecraft Launcher',
+			'Starlight Launcher - Free Open-Source Modrinth plus Curseforge Minecraft Launcher',
 	},
 	seoDescription: {
 		id: 'axolotl-site.seo.description',
 		defaultMessage:
-			'Download Axolotl Launcher, a free, open-source Tauri v2 Minecraft launcher for Windows, macOS, and Linux with Modrinth and CurseForge content management, themes, accounts, and more.',
+			'Download Starlight Launcher, a free, open-source Tauri v2 Minecraft launcher for Windows, macOS, and Linux with Modrinth and CurseForge content management, themes, accounts, and more.',
 	},
 	socialImageAlt: {
 		id: 'axolotl-site.seo.social-image-alt',
-		defaultMessage: 'Axolotl Launcher showing a Minecraft instance and its installed content.',
+		defaultMessage: 'Starlight Launcher showing a Minecraft instance and its installed content.',
 	},
 	faqEyebrow: {
 		id: 'axolotl-site.faq.eyebrow',
@@ -589,7 +589,7 @@ const messages = defineMessages({
 	},
 	faqTitle: {
 		id: 'axolotl-site.faq.title',
-		defaultMessage: 'Everything you need to know about Axolotl',
+		defaultMessage: 'Everything you need to know about Starlight',
 	},
 	faqDescription: {
 		id: 'axolotl-site.faq.description',
@@ -597,21 +597,21 @@ const messages = defineMessages({
 	},
 	faqPlatformsQuestion: {
 		id: 'axolotl-site.faq.platforms.question',
-		defaultMessage: 'Which operating systems does Axolotl Launcher support?',
+		defaultMessage: 'Which operating systems does Starlight Launcher support?',
 	},
 	faqPlatformsAnswer: {
 		id: 'axolotl-site.faq.platforms.answer',
 		defaultMessage:
-			'Axolotl Launcher supports Windows 10 and 11 on x64, macOS on Intel and Apple Silicon, and Linux x64 through AppImage, DEB, and RPM packages.',
+			'Starlight Launcher supports Windows 10 and 11 on x64, macOS on Intel and Apple Silicon, and Linux x64 through AppImage, DEB, and RPM packages.',
 	},
 	faqFreeQuestion: {
 		id: 'axolotl-site.faq.free.question',
-		defaultMessage: 'Is Axolotl Launcher free and open source?',
+		defaultMessage: 'Is Starlight Launcher free and open source?',
 	},
 	faqFreeAnswer: {
 		id: 'axolotl-site.faq.free.answer',
 		defaultMessage:
-			'Yes. Axolotl Launcher is free software released under GPL-3.0. Its source code and release history are publicly available on GitHub.',
+			'Yes. Starlight Launcher is free software released under GPL-3.0. Its source code and release history are publicly available on GitHub.',
 	},
 	faqAccountsQuestion: {
 		id: 'axolotl-site.faq.accounts.question',
@@ -620,20 +620,20 @@ const messages = defineMessages({
 	faqAccountsAnswer: {
 		id: 'axolotl-site.faq.accounts.answer',
 		defaultMessage:
-			'Yes. Axolotl supports Microsoft Minecraft accounts, local offline accounts, and third-party Yggdrasil authentication, including LittleSkin presets and custom servers.',
+			'Yes. Starlight supports Microsoft Minecraft accounts, local offline accounts, and third-party Yggdrasil authentication, including LittleSkin presets and custom servers.',
 	},
 	faqContentQuestion: {
 		id: 'axolotl-site.faq.content.question',
-		defaultMessage: 'Where does Axolotl get mods and other Minecraft content?',
+		defaultMessage: 'Where does Starlight get mods and other Minecraft content?',
 	},
 	faqContentAnswer: {
 		id: 'axolotl-site.faq.content.answer',
 		defaultMessage:
-			'Axolotl helps you search, inspect, choose versions for, install, update, and manage content from Modrinth and CurseForge. Files with CurseForge distribution restrictions may require a manual download.',
+			'Starlight helps you search, inspect, choose versions for, install, update, and manage content from Modrinth and CurseForge. Files with CurseForge distribution restrictions may require a manual download.',
 	},
 	faqDownloadQuestion: {
 		id: 'axolotl-site.faq.download.question',
-		defaultMessage: 'Where should I download Axolotl Launcher?',
+		defaultMessage: 'Where should I download Starlight Launcher?',
 	},
 	faqDownloadAnswer: {
 		id: 'axolotl-site.faq.download.answer',
@@ -642,7 +642,7 @@ const messages = defineMessages({
 	},
 	appScreenshotAlt: {
 		id: 'app-marketing.hero.app-screenshot-alt',
-		defaultMessage: `Axolotl Launcher instance content preview.`,
+		defaultMessage: `Starlight Launcher instance content preview.`,
 	},
 	structuredFeatureContentSources: {
 		id: 'axolotl-site.structured-data.feature.content-sources',
@@ -652,7 +652,7 @@ const messages = defineMessages({
 	structuredFeatureLab: {
 		id: 'axolotl-site.structured-data.feature.lab',
 		defaultMessage:
-			'Axolotl Labs with gradient text generator, Java Edition seed map, and 3D schematic workshop',
+			'Starlight Labs with gradient text generator, Java Edition seed map, and 3D schematic workshop',
 	},
 	structuredFeatureInstances: {
 		id: 'axolotl-site.structured-data.feature.instances',
@@ -664,26 +664,26 @@ const messages = defineMessages({
 	},
 	faqLabQuestion: {
 		id: 'axolotl-site.faq.lab.question',
-		defaultMessage: 'What is Axolotl Labs?',
+		defaultMessage: 'What is Starlight Labs?',
 	},
 	faqLabAnswer: {
 		id: 'axolotl-site.faq.lab.answer',
 		defaultMessage:
-			'Axolotl Labs is a collection of built-in launcher tools, including a gradient text generator, Java Edition seed map, and 3D schematic workshop.',
+			'Starlight Labs is a collection of built-in launcher tools, including a gradient text generator, Java Edition seed map, and 3D schematic workshop.',
 	},
 	faqProjectDisclaimerQuestion: {
 		id: 'axolotl-site.faq.project-disclaimer.question',
-		defaultMessage: 'Is Axolotl Launcher and Axolotl Client the same project?',
+		defaultMessage: 'Is Starlight Launcher and Starlight Client the same project?',
 	},
 	faqProjectDisclaimerAnswer: {
 		id: 'axolotl-site.faq.project-disclaimer.answer',
 		defaultMessage:
-			'No. Axolotl Launcher and Axolotl Client are separate projects. Axolotl Launcher is an independent, unofficial downstream launcher based on the Modrinth monorepo. It is not affiliated with other Minecraft projects named Axolotl Client.',
+			'No. Starlight Launcher and Starlight Client are separate projects. Starlight Launcher is an independent, unofficial downstream launcher based on the Modrinth monorepo. It is not affiliated with other Minecraft projects named Axolotl Client.',
 	},
 	seoKeywords: {
 		id: 'axolotl-site.seo.keywords',
 		defaultMessage:
-			'Axolotl Launcher, Minecraft Launcher, Modrinth, CurseForge, Minecraft Java Edition, Axolotl Labs',
+			'Starlight Launcher, Minecraft Launcher, Modrinth, CurseForge, Minecraft Java Edition, Starlight Labs',
 	},
 })
 
@@ -736,7 +736,7 @@ const structuredData = computed(() => ({
 			'@type': 'WebSite',
 			'@id': `${canonicalUrl}#website`,
 			url: canonicalUrl,
-			name: 'Axolotl Launcher',
+			name: 'Starlight Launcher',
 			description: description.value,
 			inLanguage: locale.value,
 			publisher: { '@id': `${canonicalUrl}#organization` },
@@ -744,7 +744,7 @@ const structuredData = computed(() => ({
 		{
 			'@type': 'Organization',
 			'@id': `${canonicalUrl}#organization`,
-			name: 'Axolotl Launcher Team',
+			name: 'Starlight Launcher Team',
 			url: canonicalUrl,
 			logo: {
 				'@type': 'ImageObject',
@@ -757,7 +757,7 @@ const structuredData = computed(() => ({
 		{
 			'@type': 'SoftwareApplication',
 			'@id': `${canonicalUrl}#software`,
-			name: 'Axolotl Launcher',
+			name: 'Starlight Launcher',
 			alternateName: ['美西螈启动器', 'AXL Launcher'],
 			sameAs: [githubUrl],
 			description: description.value,
@@ -799,15 +799,15 @@ useSeoMeta({
 	title: () => title.value,
 	description: () => description.value,
 	robots: 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1',
-	author: 'Axolotl Launcher Team',
-	applicationName: 'Axolotl Launcher',
+	author: 'Starlight Launcher Team',
+	applicationName: 'Starlight Launcher',
 	themeColor: '#ff82b2',
 	colorScheme: 'dark light',
 	ogTitle: () => title.value,
 	ogDescription: () => description.value,
 	ogType: 'website',
 	ogUrl: canonicalUrl,
-	ogSiteName: 'Axolotl Launcher',
+	ogSiteName: 'Starlight Launcher',
 	ogLocale: () => locale.value.replace('-', '_'),
 	ogLocaleAlternate: () => (locale.value === 'zh-CN' ? 'en_US' : 'zh_CN'),
 	ogImage: socialImageUrl,

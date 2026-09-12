@@ -54,7 +54,7 @@
     "message": "Renderizado avanzado"
   },
   "app.appearance-settings.color-theme.description": {
-    "message": "Selecciona tu tema de color preferido para la Axolotl Launcher."
+    "message": "Selecciona tu tema de color preferido para la Starlight Launcher."
   },
   "app.appearance-settings.color-theme.title": {
     "message": "Tema de color"
@@ -429,10 +429,10 @@
     "message": "Iniciar Sesión"
   },
   "app.skins.sign-in.description": {
-    "message": "Por favor, inicia sesión con tu cuenta de Minecraft para usar las funciones del administrador de skins de Axolotl Launcher."
+    "message": "Por favor, inicia sesión con tu cuenta de Minecraft para usar las funciones del administrador de skins de Starlight Launcher."
   },
   "app.skins.sign-in.axolotl-alt": {
-    "message": "Axolotl Launcher"
+    "message": "Starlight Launcher"
   },
   "app.skins.sign-in.title": {
     "message": "Por favor, inicia sesión"
@@ -441,13 +441,13 @@
     "message": "Selector de Skin"
   },
   "app.update-popup.body.download-complete": {
-    "message": "Axolotl Launcher v{version} se ha descargado. Actualiza la página ahora o espera a que se actualice automáticamente al cerrar Axolotl Launcher."
+    "message": "Starlight Launcher v{version} se ha descargado. Actualiza la página ahora o espera a que se actualice automáticamente al cerrar Starlight Launcher."
   },
   "app.update-popup.body.linux": {
-    "message": "Ya está disponible Axolotl Launcher v{version}. ¡Utiliza tu gestor de paquetes para actualizarla y disfrutar de las últimas funciones y correcciones!"
+    "message": "Ya está disponible Starlight Launcher v{version}. ¡Utiliza tu gestor de paquetes para actualizarla y disfrutar de las últimas funciones y correcciones!"
   },
   "app.update-popup.body.metered": {
-    "message": "¡Axolotl Launcher v{version} ya está disponible! Como estás conectado a una red con tarifa por datos, no la hemos descargado automáticamente."
+    "message": "¡Starlight Launcher v{version} ya está disponible! Como estás conectado a una red con tarifa por datos, no la hemos descargado automáticamente."
   },
   "app.update-popup.changelog": {
     "message": "Registro de cambios"

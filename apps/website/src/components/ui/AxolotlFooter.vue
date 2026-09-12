@@ -13,7 +13,7 @@ const messages = defineMessages({
 	developer: { id: 'axolotl-site.footer.developer', defaultMessage: 'Axolotl Launcher Team' },
 	openSourcePrefix: {
 		id: 'axolotl-site.footer.open-source-prefix',
-		defaultMessage: 'Axolotl is',
+		defaultMessage: 'Starlight is',
 	},
 	openSourceLink: {
 		id: 'axolotl-site.footer.open-source-link',

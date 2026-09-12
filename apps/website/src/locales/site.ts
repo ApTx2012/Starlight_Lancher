@@ -3,33 +3,33 @@ export const SUPPORTED_SITE_LOCALES = ['en-US', 'zh-CN'] as const
 export const siteLocaleMessages: Record<string, Record<string, string>> = {
 	'zh-CN': {
 		'axolotl-site.seo.title':
-			'Axolotl Launcher - 支持 Modrinth 与 CurseForge 的开源 Minecraft 启动器',
+			'Starlight Launcher - 支持 Modrinth 与 CurseForge 的开源 Minecraft 启动器',
 		'axolotl-site.seo.description':
-			'下载 Axolotl Launcher：适用于 Windows、macOS 和 Linux 的免费开源 Tauri v2 Minecraft（我的世界）启动器，支持 Modrinth 与 CurseForge 内容管理、主题、账户及更多功能。',
+			'下载 Starlight Launcher：适用于 Windows、macOS 和 Linux 的免费开源 Tauri v2 Minecraft（我的世界）启动器，支持 Modrinth 与 CurseForge 内容管理、主题、账户及更多功能。',
 		'axolotl-site.seo.social-image-alt':
-			'Axolotl Launcher 正在展示一个 Minecraft 实例及其已安装内容。',
+			'Starlight Launcher 正在展示一个 Minecraft 实例及其已安装内容。',
 		'axolotl-site.faq.eyebrow': '常见问题',
 		'axolotl-site.faq.title': '关于 Axolotl Launcher，你需要了解的一切',
 		'axolotl-site.faq.description': '了解支持平台、账户类型、内容来源与官方下载方式。',
 		'axolotl-site.faq.platforms.question': 'Axolotl Launcher 支持哪些操作系统？',
 		'axolotl-site.faq.platforms.answer':
-			'Axolotl Launcher 支持 Windows 10/11 x64、搭载 Intel 或 Apple 芯片的 macOS，以及通过 AppImage、DEB 和 RPM 软件包安装的 Linux x64。',
+			'Starlight Launcher 支持 Windows 10/11 x64、搭载 Intel 或 Apple 芯片的 macOS，以及通过 AppImage、DEB 和 RPM 软件包安装的 Linux x64。',
 		'axolotl-site.faq.free.question': 'Axolotl Launcher 免费且开源吗？',
 		'axolotl-site.faq.free.answer':
-			'是。Axolotl Launcher 是基于 GPL-3.0 发布的自由软件，源代码和版本历史均在 GitHub 上公开。',
+			'是。Starlight Launcher 是基于 GPL-3.0 发布的自由软件，源代码和版本历史均在 GitHub 上公开。',
 		'axolotl-site.faq.accounts.question': '可以使用 Microsoft 正版账户和离线账户吗？',
 		'axolotl-site.faq.accounts.answer':
-			'可以。Axolotl 支持 Microsoft Minecraft 正版账户、本地离线账户与第三方 Yggdrasil 认证，包括 LittleSkin 预设和自定义服务器。',
+			'可以。Starlight 支持 Microsoft Minecraft 正版账户、本地离线账户与第三方 Yggdrasil 认证，包括 LittleSkin 预设和自定义服务器。',
 		'axolotl-site.faq.content.question': 'Axolotl 从哪里获取模组和其他 Minecraft 内容？',
 		'axolotl-site.faq.content.answer':
-			'Axolotl 可以搜索、查看、选择版本、安装、更新和管理来自 Modrinth 与 CurseForge 的内容。受 CurseForge 分发限制的文件可能需要手动下载。',
+			'Starlight 可以搜索、查看、选择版本、安装、更新和管理来自 Modrinth 与 CurseForge 的内容。受 CurseForge 分发限制的文件可能需要手动下载。',
 		'axolotl-site.faq.download.question': '应该从哪里下载 Axolotl Launcher？',
 		'axolotl-site.faq.download.answer':
 			'请使用本官方网站的下载区域。自动模式使用 Update Server，GitHub 作为备用来源；你也可以在网站设置中手动更换下载源。',
 		'axolotl-marketing.hero.download': 'Axolotl Launcher',
 		'axolotl-marketing.hero.download-for-os': '适用于 {os} 的 Axolotl Launcher',
 		'app-marketing.hero.description':
-			'Axolotl Launcher 是一款免费、开源、无广告的跨平台 Minecraft Java 版启动器，可在同一个客户端中搜索、安装和更新来自 Modrinth 与 CurseForge 的模组、整合包、资源包和光影，并内置 Axolotl 实验室。',
+			'Starlight Launcher 是一款免费、开源、无广告的跨平台 Minecraft Java 版启动器，可在同一个客户端中搜索、安装和更新来自 Modrinth 与 CurseForge 的模组、整合包、资源包和光影，并内置 Starlight 实验室。',
 		'axolotl-marketing.hero.screenshot-alt': 'Axolotl Launcher 主界面。',
 		'axolotl-marketing.highlights.eyebrow': '一个启动器，两个来源',
 		'axolotl-marketing.highlights.title': '管理 Minecraft 内容',
@@ -38,7 +38,7 @@ export const siteLocaleMessages: Record<string, Record<string, string>> = {
 			'搜索 Modrinth 与 CurseForge，查看项目详情、选择版本并安装内容，由启动器处理依赖和更新。',
 		'axolotl-marketing.highlights.ad-free.title': '免费、开源且独立',
 		'axolotl-marketing.highlights.ad-free.description':
-			'基于 GPL-3.0 发布，免费使用且无广告。Axolotl 不是 Modrinth 官方客户端。',
+			'基于 GPL-3.0 发布，免费使用且无广告。Starlight 不是 Modrinth 官方客户端。',
 		'axolotl-marketing.highlights.localized.title': '井然有序的内容管理',
 		'axolotl-marketing.highlights.localized.description':
 			'同时安装和管理整合包与单个项目。部分 CurseForge 文件受分发限制，可能需要手动下载。',
@@ -52,7 +52,7 @@ export const siteLocaleMessages: Record<string, Record<string, string>> = {
 		'axolotl-marketing.showcase.themes.label': '个性化',
 		'axolotl-marketing.showcase.translation.title': '启动器里的 Axolotl 实验室',
 		'axolotl-marketing.showcase.translation.description':
-			'直接在 Axolotl 中使用渐变文字生成器、Java 版种子地图和 3D 投影工坊，而不是跳转到外部网页。',
+			'直接在 Starlight 中使用渐变文字生成器、Java 版种子地图和 3D 投影工坊，而不是跳转到外部网页。',
 		'axolotl-marketing.showcase.translation.label': '实验室',
 		'axolotl-marketing.showcase.offline.alt': 'Axolotl Launcher 的添加账户界面。',
 		'axolotl-marketing.showcase.themes.alt': 'Axolotl Launcher 的强调色设置。',
@@ -75,7 +75,7 @@ export const siteLocaleMessages: Record<string, Record<string, string>> = {
 			'创建、导入和批量管理实例；集中管理模组、资源包、光影、文件、世界、截图和日志，以及更新、启动设置与整合包导出。',
 		'app-marketing.features.performance.title': '高性能',
 		'app-marketing.features.performance.description':
-			'Axolotl 以灵敏的界面与轻量的桌面核心保持安静、高效，不打扰你的游戏。',
+			'Starlight 以灵敏的界面与轻量的桌面核心保持安静、高效，不打扰你的游戏。',
 		'app-marketing.features.website.title': '从发现到安装',
 		'app-marketing.features.website.description':
 			'从 Modrinth 或 CurseForge 发现内容后，通过项目详情和版本选择直接安装到实例中，并在原处处理依赖和更新。',
@@ -110,10 +110,10 @@ export const siteLocaleMessages: Record<string, Record<string, string>> = {
 		'app-marketing.download.download-deb': '下载 DEB',
 		'app-marketing.download.download-rpm': '下载 RPM',
 		'app-marketing.download.terms':
-			'Axolotl 是基于 <terms-link>GPL-3.0</terms-link> 发布的自由软件。安装前请阅读<privacy-link>隐私政策</privacy-link>。',
+			'Starlight 是基于 <terms-link>GPL-3.0</terms-link> 发布的自由软件。安装前请阅读<privacy-link>隐私政策</privacy-link>。',
 		'app-marketing.download.linux-disclaimer':
 			'每个版本都会发布 Linux 软件包。请在<issues-link>发布页面</issues-link>查看架构详情；如果你的发行版需要额外配置，也可以<prism-link>报告问题</prism-link>。',
-		'app-marketing.hero.app-screenshot-alt': 'Axolotl Launcher 实例内容预览。',
+		'app-marketing.hero.app-screenshot-alt': 'Starlight Launcher 实例内容预览。',
 		'axolotl-marketing.hero.open-source': 'Tauri v2 · Rust · Vue 3',
 		'axolotl-marketing.demo.one-launcher': '一个启动器，承载每一个世界。',
 		'axolotl-marketing.demo.everything-together': '配置、模组、存档和设置始终井然有序。',
@@ -177,7 +177,7 @@ export const siteLocaleMessages: Record<string, Record<string, string>> = {
 		'axolotl-site.footer.cta-eyebrow': '免费、开源，为 Minecraft 而生。',
 		'axolotl-site.footer.cta-title': '你的下一个世界，从这里开始。',
 		'axolotl-site.footer.cta-description':
-			'安装 Axolotl，在一个清爽有序的空间中管理实例、模组与存档。',
+			'安装 Starlight，在一个清爽有序的空间中管理实例、模组与存档。',
 		'axolotl-site.footer.download-now': '立即下载',
 		'axolotl-site.footer.view-github': '前往 GitHub',
 		'axolotl-settings.title': '显示设置',
@@ -212,12 +212,12 @@ export const siteLocaleMessages: Record<string, Record<string, string>> = {
 		'axolotl-settings.done': '完成',
 		'axolotl-site.faq.lab.question': '什么是 Axolotl 实验室？',
 		'axolotl-site.faq.lab.answer':
-			'Axolotl 实验室是一个内置的网页工具集合，提供渐变文字生成器、Java 版种子地图、3D 投影工坊、配方生成器、Minecraft 模组翻译工具等功能。内容持续更新中。',
+			'Starlight 实验室是一个内置的网页工具集合，提供渐变文字生成器、Java 版种子地图、3D 投影工坊、配方生成器、Minecraft 模组翻译工具等功能。内容持续更新中。',
 		'axolotl-site.seo.keywords':
-			'Axolotl Launcher, 美西螈启动器, Minecraft 启动器, Modrinth, CurseForge, Minecraft Java 版, 模组, 整合包, 资源包, 光影, Axolotl 实验室, Axolotl Launcher 下载, Axolotl Launcher 安装, Axolotl Launcher 中文, Axolotl Launcher 开源, Axolotl Launcher 免费, Axolotl Launcher 跨平台, Axolotl Launcher Windows, Axolotl Launcher macOS, Axolotl Launcher Linux',
+			'Starlight Launcher, 美西螈启动器, Minecraft 启动器, Modrinth, CurseForge, Minecraft Java 版, 模组, 整合包, 资源包, 光影, Starlight 实验室, Starlight Launcher 下载, Starlight Launcher 安装, Starlight Launcher 中文, Starlight Launcher 开源, Starlight Launcher 免费, Starlight Launcher 跨平台, Starlight Launcher Windows, Starlight Launcher macOS, Starlight Launcher Linux',
 		'axolotl-site.faq.project-disclaimer.question':
-			'Axolotl Launcher 和 Axolotl Client 是同一个项目吗？',
+			'Starlight Launcher 和 Starlight Client 是同一个项目吗？',
 		'axolotl-site.faq.project-disclaimer.answer':
-			'不是。Axolotl Launcher 和 Axolotl Client 是两个独立的项目。Axolotl Launcher 是基于 Modrinth 单体仓库的独立非官方下游启动器，与其他名为 Axolotl Client 的 Minecraft 项目无关联。',
+			'不是。Starlight Launcher 和 Starlight Client 是两个独立的项目。Starlight Launcher 是基于 Modrinth 单体仓库的独立非官方下游启动器，与其他名为 Axolotl Client 的 Minecraft 项目无关联。',
 	},
 }

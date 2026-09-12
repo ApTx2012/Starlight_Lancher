@@ -62,7 +62,8 @@ export async function showLauncherLogsFolder() {
 
 export async function exportErrorLogs(
 	errorMessage,
-	fileNamePrefix = 'Axolotl Launcher error logs',
+
+	fileNamePrefix = 'Starlight Launcher error logs',
 ) {
 	const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
 	const outputPath = await save({

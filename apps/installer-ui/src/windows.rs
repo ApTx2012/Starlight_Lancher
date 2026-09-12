@@ -33,7 +33,8 @@ use wry::{NewWindowResponse, WebView, WebViewBuilder, http::Request};
 
 const HTML: &str = include_str!("installer.html");
 const LOGO: &[u8] = include_bytes!("../../app/icons/128x128.png");
-const MAIN_BINARY_NAME: &str = "Axolotl Launcher.exe";
+
+const MAIN_BINARY_NAME: &str = "Starlight Launcher.exe";
 
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -147,7 +148,8 @@ pub fn run() -> Result<(), String> {
     let arguments = parse_arguments()?;
     let event_loop = EventLoopBuilder::<UserEvent>::with_user_event().build();
     let window = WindowBuilder::new()
-        .with_title("Axolotl Launcher")
+
+        .with_title("Starlight Launcher")
         .with_inner_size(LogicalSize::new(940.0, 620.0))
         .with_min_inner_size(LogicalSize::new(940.0, 620.0))
         .with_max_inner_size(LogicalSize::new(940.0, 620.0))

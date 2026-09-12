@@ -66,7 +66,7 @@
     "message": "Renderizado avanzado"
   },
   "app.appearance-settings.color-theme.description": {
-    "message": "Selecciona el tema de color que prefieras para la Axolotl Launcher."
+    "message": "Selecciona el tema de color que prefieras para la Starlight Launcher."
   },
   "app.appearance-settings.color-theme.title": {
     "message": "Color de la interfaz"
@@ -534,10 +534,10 @@
     "message": "Iniciar sesión"
   },
   "app.skins.sign-in.description": {
-    "message": "Por favor, inicia sesión en tu cuenta de Minecraft para poder utilizar las funciones de gestión de skins de la Axolotl Launcher."
+    "message": "Por favor, inicia sesión en tu cuenta de Minecraft para poder utilizar las funciones de gestión de skins de la Starlight Launcher."
   },
   "app.skins.sign-in.axolotl-alt": {
-    "message": "Axolotl Launcher"
+    "message": "Starlight Launcher"
   },
   "app.skins.sign-in.title": {
     "message": "Por favor, inicia sesión"
@@ -546,13 +546,13 @@
     "message": "Selector de skin"
   },
   "app.update-popup.body.download-complete": {
-    "message": "La descarga de la Axolotl Launcher v{version} ha finalizado. Actualiza ahora o automáticamente al cerrar la Axolotl Launcher."
+    "message": "La descarga de la Starlight Launcher v{version} ha finalizado. Actualiza ahora o automáticamente al cerrar la Starlight Launcher."
   },
   "app.update-popup.body.linux": {
-    "message": "La Axolotl Launcher v{version} está disponible. ¡Usa tu gestor de paquetes para actualizarla y tener las últimas funciones y corrección de errores!"
+    "message": "La Starlight Launcher v{version} está disponible. ¡Usa tu gestor de paquetes para actualizarla y tener las últimas funciones y corrección de errores!"
   },
   "app.update-popup.body.metered": {
-    "message": "¡La Axolotl Launcher v{version} ya está disponible! Al estar usando una red de datos límitada, no la hemos descargado automáticamente."
+    "message": "¡La Starlight Launcher v{version} ya está disponible! Al estar usando una red de datos límitada, no la hemos descargado automáticamente."
   },
   "app.update-popup.changelog": {
     "message": "Registro de cambios"

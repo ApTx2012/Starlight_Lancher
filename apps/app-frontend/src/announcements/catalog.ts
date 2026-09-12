@@ -37,8 +37,8 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		version: '1.9.6-beta.3',
 		publishedAt: '2026-09-08',
 		title: {
-			'en-US': 'Axolotl Launcher 1.9.6-beta.3',
-			'zh-CN': 'Axolotl Launcher 1.9.6-beta.3',
+			'en-US': 'Starlight Launcher 1.9.6-beta.3',
+			'zh-CN': 'Starlight Launcher 1.9.6-beta.3',
 		},
 		changes: {
 			added: [
@@ -103,8 +103,8 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		version: '1.9.6-beta.2',
 		publishedAt: '2026-09-07',
 		title: {
-			'en-US': 'Axolotl Launcher 1.9.6-beta.2',
-			'zh-CN': 'Axolotl Launcher 1.9.6-beta.2',
+			'en-US': 'Starlight Launcher 1.9.6-beta.2',
+			'zh-CN': 'Starlight Launcher 1.9.6-beta.2',
 		},
 		changes: {
 			added: [
@@ -165,8 +165,8 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		version: '1.9.6-beta.1',
 		publishedAt: '2026-09-05',
 		title: {
-			'en-US': 'Axolotl Launcher 1.9.6-beta.1',
-			'zh-CN': 'Axolotl Launcher 1.9.6-beta.1',
+			'en-US': 'Starlight Launcher 1.9.6-beta.1',
+			'zh-CN': 'Starlight Launcher 1.9.6-beta.1',
 		},
 		changes: {
 			added: [
@@ -269,8 +269,8 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		version: '1.9.5',
 		publishedAt: '2026-09-04',
 		title: {
-			'en-US': 'Axolotl Launcher 1.9.5',
-			'zh-CN': 'Axolotl Launcher 1.9.5',
+			'en-US': 'Starlight Launcher 1.9.5',
+			'zh-CN': 'Starlight Launcher 1.9.5',
 		},
 		changes: {
 			added: [
@@ -478,8 +478,8 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		version: '1.9.4',
 		publishedAt: '2026-08-29',
 		title: {
-			'en-US': 'Axolotl Launcher 1.9.4',
-			'zh-CN': 'Axolotl Launcher 1.9.4',
+			'en-US': 'Starlight Launcher 1.9.4',
+			'zh-CN': 'Starlight Launcher 1.9.4',
 		},
 		changes: {
 			fixed: [
@@ -495,8 +495,8 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		version: '1.9.2',
 		publishedAt: '2026-08-29',
 		title: {
-			'en-US': 'Axolotl Launcher 1.9.2',
-			'zh-CN': 'Axolotl Launcher 1.9.2',
+			'en-US': 'Starlight Launcher 1.9.2',
+			'zh-CN': 'Starlight Launcher 1.9.2',
 		},
 		changes: {
 			fixed: [
@@ -536,8 +536,8 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		version: '1.9.1',
 		publishedAt: '2026-08-27',
 		title: {
-			'en-US': 'Axolotl Launcher 1.9.1',
-			'zh-CN': 'Axolotl Launcher 1.9.1',
+			'en-US': 'Starlight Launcher 1.9.1',
+			'zh-CN': 'Starlight Launcher 1.9.1',
 		},
 		changes: {
 			added: [
@@ -597,8 +597,8 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		version: '1.9.0',
 		publishedAt: '2026-08-26',
 		title: {
-			'en-US': 'Axolotl Launcher 1.9.0',
-			'zh-CN': 'Axolotl Launcher 1.9.0',
+			'en-US': 'Starlight Launcher 1.9.0',
+			'zh-CN': 'Starlight Launcher 1.9.0',
 		},
 		changes: {
 			added: [
@@ -722,8 +722,8 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		version: '1.8.14',
 		publishedAt: '2026-08-25',
 		title: {
-			'en-US': 'Axolotl Launcher 1.8.14',
-			'zh-CN': 'Axolotl Launcher 1.8.14',
+			'en-US': 'Starlight Launcher 1.8.14',
+			'zh-CN': 'Starlight Launcher 1.8.14',
 		},
 		changes: {
 			added: [
@@ -789,8 +789,8 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		version: '1.8.12',
 		publishedAt: '2026-08-23',
 		title: {
-			'en-US': 'Axolotl Launcher 1.8.12',
-			'zh-CN': 'Axolotl Launcher 1.8.12',
+			'en-US': 'Starlight Launcher 1.8.12',
+			'zh-CN': 'Starlight Launcher 1.8.12',
 		},
 		changes: {
 			fixed: [
@@ -806,8 +806,8 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		version: '1.8.11',
 		publishedAt: '2026-08-22',
 		title: {
-			'en-US': 'Axolotl Launcher 1.8.11',
-			'zh-CN': 'Axolotl Launcher 1.8.11',
+			'en-US': 'Starlight Launcher 1.8.11',
+			'zh-CN': 'Starlight Launcher 1.8.11',
 		},
 		changes: {
 			added: [
@@ -891,8 +891,8 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		version: '1.8.10',
 		publishedAt: '2026-08-22',
 		title: {
-			'en-US': 'Axolotl Launcher 1.8.10',
-			'zh-CN': 'Axolotl Launcher 1.8.10',
+			'en-US': 'Starlight Launcher 1.8.10',
+			'zh-CN': 'Starlight Launcher 1.8.10',
 		},
 		changes: {
 			added: [
@@ -922,8 +922,8 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		version: '1.8.9',
 		publishedAt: '2026-08-21',
 		title: {
-			'en-US': 'Axolotl Launcher 1.8.9',
-			'zh-CN': 'Axolotl Launcher 1.8.9',
+			'en-US': 'Starlight Launcher 1.8.9',
+			'zh-CN': 'Starlight Launcher 1.8.9',
 		},
 		changes: {
 			added: [
@@ -961,8 +961,8 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		version: '1.8.8',
 		publishedAt: '2026-08-19',
 		title: {
-			'en-US': 'Axolotl Launcher 1.8.8',
-			'zh-CN': 'Axolotl Launcher 1.8.8',
+			'en-US': 'Starlight Launcher 1.8.8',
+			'zh-CN': 'Starlight Launcher 1.8.8',
 		},
 		changes: {
 			added: [
@@ -1014,8 +1014,8 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		version: '1.8.7',
 		publishedAt: '2026-08-19',
 		title: {
-			'en-US': 'Axolotl Launcher 1.8.7',
-			'zh-CN': 'Axolotl Launcher 1.8.7',
+			'en-US': 'Starlight Launcher 1.8.7',
+			'zh-CN': 'Starlight Launcher 1.8.7',
 		},
 		changes: {
 			changed: [
@@ -1107,8 +1107,8 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		version: '1.8.6',
 		publishedAt: '2026-08-18',
 		title: {
-			'en-US': 'Axolotl Launcher 1.8.6',
-			'zh-CN': 'Axolotl Launcher 1.8.6',
+			'en-US': 'Starlight Launcher 1.8.6',
+			'zh-CN': 'Starlight Launcher 1.8.6',
 		},
 		changes: {
 			added: [
@@ -1156,8 +1156,8 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		version: '1.8.5',
 		publishedAt: '2026-08-18',
 		title: {
-			'en-US': 'Axolotl Launcher 1.8.5',
-			'zh-CN': 'Axolotl Launcher 1.8.5',
+			'en-US': 'Starlight Launcher 1.8.5',
+			'zh-CN': 'Starlight Launcher 1.8.5',
 		},
 		changes: {
 			fixed: [
@@ -1174,8 +1174,8 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		version: '1.8.4',
 		publishedAt: '2026-08-18',
 		title: {
-			'en-US': 'Axolotl Launcher 1.8.4',
-			'zh-CN': 'Axolotl Launcher 1.8.4',
+			'en-US': 'Starlight Launcher 1.8.4',
+			'zh-CN': 'Starlight Launcher 1.8.4',
 		},
 		changes: {
 			fixed: [
@@ -1198,8 +1198,8 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		version: '1.8.3',
 		publishedAt: '2026-08-17',
 		title: {
-			'en-US': 'Axolotl Launcher 1.8.3',
-			'zh-CN': 'Axolotl Launcher 1.8.3',
+			'en-US': 'Starlight Launcher 1.8.3',
+			'zh-CN': 'Starlight Launcher 1.8.3',
 		},
 		changes: {
 			added: [
@@ -1330,8 +1330,8 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		version: '1.8.2',
 		publishedAt: '2026-08-16',
 		title: {
-			'en-US': 'Axolotl Launcher 1.8.2',
-			'zh-CN': 'Axolotl Launcher 1.8.2',
+			'en-US': 'Starlight Launcher 1.8.2',
+			'zh-CN': 'Starlight Launcher 1.8.2',
 		},
 		changes: {
 			fixed: [
@@ -1356,8 +1356,8 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		version: '1.8.1',
 		publishedAt: '2026-08-16',
 		title: {
-			'en-US': 'Axolotl Launcher 1.8.1',
-			'zh-CN': 'Axolotl Launcher 1.8.1',
+			'en-US': 'Starlight Launcher 1.8.1',
+			'zh-CN': 'Starlight Launcher 1.8.1',
 		},
 		changes: {
 			added: [
@@ -1466,8 +1466,8 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		version: '1.8.0',
 		publishedAt: '2026-08-15',
 		title: {
-			'en-US': 'Axolotl Launcher 1.8.0',
-			'zh-CN': 'Axolotl Launcher 1.8.0',
+			'en-US': 'Starlight Launcher 1.8.0',
+			'zh-CN': 'Starlight Launcher 1.8.0',
 		},
 		changes: {
 			added: [
@@ -1593,8 +1593,8 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		version: '1.7.7',
 		publishedAt: '2026-08-14',
 		title: {
-			'en-US': 'Axolotl Launcher 1.7.7',
-			'zh-CN': 'Axolotl Launcher 1.7.7',
+			'en-US': 'Starlight Launcher 1.7.7',
+			'zh-CN': 'Starlight Launcher 1.7.7',
 		},
 		changes: {
 			added: [
@@ -1610,8 +1610,8 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		version: '1.7.6',
 		publishedAt: '2026-08-14',
 		title: {
-			'en-US': 'Axolotl Launcher 1.7.6',
-			'zh-CN': 'Axolotl Launcher 1.7.6',
+			'en-US': 'Starlight Launcher 1.7.6',
+			'zh-CN': 'Starlight Launcher 1.7.6',
 		},
 		changes: {
 			added: [
@@ -1629,8 +1629,8 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		version: '1.7.5',
 		publishedAt: '2026-08-13',
 		title: {
-			'en-US': 'Axolotl Launcher 1.7.5',
-			'zh-CN': 'Axolotl Launcher 1.7.5',
+			'en-US': 'Starlight Launcher 1.7.5',
+			'zh-CN': 'Starlight Launcher 1.7.5',
 		},
 		changes: {
 			fixed: [
@@ -1668,8 +1668,8 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		version: '1.7.4',
 		publishedAt: '2026-08-12',
 		title: {
-			'en-US': 'Axolotl Launcher 1.7.4',
-			'zh-CN': 'Axolotl Launcher 1.7.4',
+			'en-US': 'Starlight Launcher 1.7.4',
+			'zh-CN': 'Starlight Launcher 1.7.4',
 		},
 		changes: {
 			changed: [
@@ -1738,7 +1738,7 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 			fixed: [
 				{
 					'en-US':
-						'Fixed corrupted launcher databases repeatedly showing errors when opening instance content; Axolotl now restores the latest verified backup while preserving the damaged database files.',
+						'Fixed corrupted launcher databases repeatedly showing errors when opening instance content; Starlight now restores the latest verified backup while preserving the damaged database files.',
 					'zh-CN':
 						'修复启动器数据库损坏后，打开实例内容页会反复报错的问题；现在会从最新且校验正常的备份恢复，并保留损坏的数据库文件。',
 				},
@@ -1849,8 +1849,8 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		version: '1.7.3',
 		publishedAt: '2026-08-10',
 		title: {
-			'en-US': 'Axolotl Launcher 1.7.3',
-			'zh-CN': 'Axolotl Launcher 1.7.3',
+			'en-US': 'Starlight Launcher 1.7.3',
+			'zh-CN': 'Starlight Launcher 1.7.3',
 		},
 		changes: {
 			added: [
@@ -1903,8 +1903,8 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		version: '1.7.2',
 		publishedAt: '2026-08-10',
 		title: {
-			'en-US': 'Axolotl Launcher 1.7.2',
-			'zh-CN': 'Axolotl Launcher 1.7.2',
+			'en-US': 'Starlight Launcher 1.7.2',
+			'zh-CN': 'Starlight Launcher 1.7.2',
 		},
 		changes: {
 			added: [
@@ -1990,8 +1990,8 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		version: '1.7.1',
 		publishedAt: '2026-08-08',
 		title: {
-			'en-US': 'Axolotl Launcher 1.7.1',
-			'zh-CN': 'Axolotl Launcher 1.7.1',
+			'en-US': 'Starlight Launcher 1.7.1',
+			'zh-CN': 'Starlight Launcher 1.7.1',
 		},
 		changes: {
 			added: [
@@ -2053,8 +2053,8 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		version: '1.7.0',
 		publishedAt: '2026-08-06',
 		title: {
-			'en-US': 'Axolotl Launcher 1.7.0',
-			'zh-CN': 'Axolotl Launcher 1.7.0',
+			'en-US': 'Starlight Launcher 1.7.0',
+			'zh-CN': 'Starlight Launcher 1.7.0',
 		},
 		changes: {
 			added: [
@@ -2102,8 +2102,8 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		version: '1.6.12',
 		publishedAt: '2026-08-04',
 		title: {
-			'en-US': 'Axolotl Launcher 1.6.12',
-			'zh-CN': 'Axolotl Launcher 1.6.12',
+			'en-US': 'Starlight Launcher 1.6.12',
+			'zh-CN': 'Starlight Launcher 1.6.12',
 		},
 		changes: {
 			added: [
@@ -2159,8 +2159,8 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		version: '1.6.11',
 		publishedAt: '2026-08-04',
 		title: {
-			'en-US': 'Axolotl Launcher 1.6.11',
-			'zh-CN': 'Axolotl Launcher 1.6.11',
+			'en-US': 'Starlight Launcher 1.6.11',
+			'zh-CN': 'Starlight Launcher 1.6.11',
 		},
 		changes: {
 			added: [
@@ -2211,8 +2211,8 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		version: '1.6.10',
 		publishedAt: '2026-08-03',
 		title: {
-			'en-US': 'Axolotl Launcher 1.6.10',
-			'zh-CN': 'Axolotl Launcher 1.6.10',
+			'en-US': 'Starlight Launcher 1.6.10',
+			'zh-CN': 'Starlight Launcher 1.6.10',
 		},
 		changes: {
 			added: [
@@ -2291,14 +2291,14 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		version: '1.6.9',
 		publishedAt: '2026-08-02',
 		title: {
-			'en-US': 'Axolotl Launcher 1.6.9',
-			'zh-CN': 'Axolotl Launcher 1.6.9',
+			'en-US': 'Starlight Launcher 1.6.9',
+			'zh-CN': 'Starlight Launcher 1.6.9',
 		},
 		changes: {
 			added: [
 				{
-					'en-US': 'Launcher will now show a discord rich presence binded to Axolotl Launcher.',
-					'zh-CN': '启动器现在会显示 Axolotl Launcher 的 Discord Rich Presence。',
+					'en-US': 'Launcher will now show a discord rich presence binded to Starlight Launcher.',
+					'zh-CN': '启动器现在会显示 Starlight Launcher 的 Discord Rich Presence。',
 				},
 				{
 					'en-US': 'Launcher will now show a discord rich presence with a more detailed status.',
@@ -2335,8 +2335,8 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		version: '1.6.8',
 		publishedAt: '2026-08-02',
 		title: {
-			'en-US': 'Axolotl Launcher 1.6.8',
-			'zh-CN': 'Axolotl Launcher 1.6.8',
+			'en-US': 'Starlight Launcher 1.6.8',
+			'zh-CN': 'Starlight Launcher 1.6.8',
 		},
 		changes: {
 			added: [
@@ -2469,8 +2469,8 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		version: '1.6.7',
 		publishedAt: '2026-08-01',
 		title: {
-			'en-US': 'Axolotl Launcher 1.6.7',
-			'zh-CN': 'Axolotl Launcher 1.6.7',
+			'en-US': 'Starlight Launcher 1.6.7',
+			'zh-CN': 'Starlight Launcher 1.6.7',
 		},
 		changes: {
 			fixed: [
@@ -2487,8 +2487,8 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		version: '1.6.6',
 		publishedAt: '2026-08-01',
 		title: {
-			'en-US': 'Axolotl Launcher 1.6.6',
-			'zh-CN': 'Axolotl Launcher 1.6.6',
+			'en-US': 'Starlight Launcher 1.6.6',
+			'zh-CN': 'Starlight Launcher 1.6.6',
 		},
 		changes: {
 			added: [
@@ -2549,8 +2549,8 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		version: '1.6.5',
 		publishedAt: '2026-07-31',
 		title: {
-			'en-US': 'Axolotl Launcher 1.6.5',
-			'zh-CN': 'Axolotl Launcher 1.6.5',
+			'en-US': 'Starlight Launcher 1.6.5',
+			'zh-CN': 'Starlight Launcher 1.6.5',
 		},
 		changes: {
 			fixed: [
@@ -2574,8 +2574,8 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		version: '1.6.4',
 		publishedAt: '2026-07-31',
 		title: {
-			'en-US': 'Axolotl Launcher 1.6.4',
-			'zh-CN': 'Axolotl Launcher 1.6.4',
+			'en-US': 'Starlight Launcher 1.6.4',
+			'zh-CN': 'Starlight Launcher 1.6.4',
 		},
 		changes: {
 			changed: [
@@ -2616,8 +2616,8 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		version: '1.6.1',
 		publishedAt: '2026-07-29',
 		title: {
-			'en-US': 'Axolotl Launcher 1.6.1',
-			'zh-CN': 'Axolotl Launcher 1.6.1',
+			'en-US': 'Starlight Launcher 1.6.1',
+			'zh-CN': 'Starlight Launcher 1.6.1',
 		},
 		changes: {
 			changed: [
@@ -2652,8 +2652,8 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		version: '1.6.0',
 		publishedAt: '2026-07-28',
 		title: {
-			'en-US': 'Axolotl Launcher 1.6.0',
-			'zh-CN': 'Axolotl Launcher 1.6.0',
+			'en-US': 'Starlight Launcher 1.6.0',
+			'zh-CN': 'Starlight Launcher 1.6.0',
 		},
 		changes: {
 			added: [
@@ -2690,9 +2690,9 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 				},
 				{
 					'en-US':
-						'Replaced Tauri template variables in the Linux desktop file template with fixed values, ensuring the built .desktop file uses "Axolotl Launcher" directly for its name, icon, and executable.',
+						'Replaced Tauri template variables in the Linux desktop file template with fixed values, ensuring the built .desktop file uses "Starlight Launcher" directly for its name, icon, and executable.',
 					'zh-CN':
-						'将 Linux 桌面文件模板从 Tauri 模板变量格式改为固定值格式, 确保编译后的 .desktop 文件直接使用 "Axolotl Launcher" 作为名称、图标和可执行文件。',
+						'将 Linux 桌面文件模板从 Tauri 模板变量格式改为固定值格式, 确保编译后的 .desktop 文件直接使用 "Starlight Launcher" 作为名称、图标和可执行文件。',
 				},
 			],
 			fixed: [
@@ -2712,8 +2712,8 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		version: '1.5.5',
 		publishedAt: '2026-07-26',
 		title: {
-			'en-US': 'Axolotl Launcher 1.5.5',
-			'zh-CN': 'Axolotl Launcher 1.5.5',
+			'en-US': 'Starlight Launcher 1.5.5',
+			'zh-CN': 'Starlight Launcher 1.5.5',
 		},
 		changes: {
 			added: [
@@ -2808,8 +2808,8 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		version: '1.5.4',
 		publishedAt: '2026-07-25',
 		title: {
-			'en-US': 'Axolotl Launcher 1.5.4',
-			'zh-CN': 'Axolotl Launcher 1.5.4',
+			'en-US': 'Starlight Launcher 1.5.4',
+			'zh-CN': 'Starlight Launcher 1.5.4',
 		},
 		changes: {
 			added: [
@@ -2845,8 +2845,8 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		version: '1.5.3',
 		publishedAt: '2026-07-25',
 		title: {
-			'en-US': 'Axolotl Launcher 1.5.3',
-			'zh-CN': 'Axolotl Launcher 1.5.3',
+			'en-US': 'Starlight Launcher 1.5.3',
+			'zh-CN': 'Starlight Launcher 1.5.3',
 		},
 		changes: {
 			added: [
@@ -2896,8 +2896,8 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		version: '1.5.2',
 		publishedAt: '2026-07-25',
 		title: {
-			'en-US': 'Axolotl Launcher 1.5.2',
-			'zh-CN': 'Axolotl Launcher 1.5.2',
+			'en-US': 'Starlight Launcher 1.5.2',
+			'zh-CN': 'Starlight Launcher 1.5.2',
 		},
 		changes: {
 			added: [
@@ -3077,8 +3077,8 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		version: '1.5.1',
 		publishedAt: '2026-07-23',
 		title: {
-			'en-US': 'Axolotl Launcher 1.5.1',
-			'zh-CN': 'Axolotl Launcher 1.5.1',
+			'en-US': 'Starlight Launcher 1.5.1',
+			'zh-CN': 'Starlight Launcher 1.5.1',
 		},
 		changes: {
 			added: [
@@ -3132,8 +3132,8 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		version: '1.5.0',
 		publishedAt: '2026-07-23',
 		title: {
-			'en-US': 'Axolotl Launcher 1.5.0',
-			'zh-CN': 'Axolotl Launcher 1.5.0',
+			'en-US': 'Starlight Launcher 1.5.0',
+			'zh-CN': 'Starlight Launcher 1.5.0',
 		},
 		changes: {
 			added: [
@@ -3207,8 +3207,8 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		version: '1.4.1',
 		publishedAt: '2026-07-23',
 		title: {
-			'en-US': 'Axolotl Launcher 1.4.1',
-			'zh-CN': 'Axolotl Launcher 1.4.1',
+			'en-US': 'Starlight Launcher 1.4.1',
+			'zh-CN': 'Starlight Launcher 1.4.1',
 		},
 		changes: {
 			added: [
@@ -3278,8 +3278,8 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		version: '1.4.0',
 		publishedAt: '2026-07-23',
 		title: {
-			'en-US': 'Axolotl Launcher 1.4.0',
-			'zh-CN': 'Axolotl Launcher 1.4.0',
+			'en-US': 'Starlight Launcher 1.4.0',
+			'zh-CN': 'Starlight Launcher 1.4.0',
 		},
 		changes: {
 			added: [

@@ -80,7 +80,7 @@ const messages = defineMessages({
 	},
 	description: {
 		id: 'app.settings.updates.channel.description',
-		defaultMessage: 'Choose which launcher versions Axolotl receives.',
+		defaultMessage: 'Choose which launcher versions Starlight receives.',
 	},
 	channelLabel: {
 		id: 'app.settings.updates.channel.label',
@@ -120,7 +120,7 @@ const messages = defineMessages({
 	},
 	upToDate: {
 		id: 'app.settings.updates.up-to-date',
-		defaultMessage: 'Axolotl is up to date.',
+		defaultMessage: 'Starlight is up to date.',
 	},
 	disabled: {
 		id: 'app.settings.updates.disabled',
@@ -166,7 +166,7 @@ const messages = defineMessages({
 	restartDescription: {
 		id: 'app.settings.updates.channel.restart-description',
 		defaultMessage:
-			'Restart Axolotl now to start using the new update channel, or restart manually later.',
+			'Restart Starlight now to start using the new update channel, or restart manually later.',
 	},
 	restartDevelopmentDescription: {
 		id: 'app.settings.updates.channel.restart-development-description',
@@ -273,12 +273,12 @@ const messages = defineMessages({
 	databaseOperationActiveTarget: {
 		id: 'app.settings.updates.database-operation.active-target',
 		defaultMessage:
-			'Cannot overwrite the database currently in use. Restart Axolotl and switch channels first.',
+			'Cannot overwrite the database currently in use. Restart Starlight and switch channels first.',
 	},
 	databaseOperationFailed: {
 		id: 'app.settings.updates.database-operation.failed',
 		defaultMessage:
-			'The database could not be copied. Please make sure Axolotl is not using the target database.',
+			'The database could not be copied. Please make sure Starlight is not using the target database.',
 	},
 	databaseOperationSuccess: {
 		id: 'app.settings.updates.database-operation.success',

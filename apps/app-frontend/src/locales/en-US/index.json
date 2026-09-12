@@ -438,10 +438,10 @@
     "message": "Hide to tray"
   },
   "app.appearance-settings.close-behavior.title": {
-    "message": "Choose how to close Axolotl Launcher"
+    "message": "Choose how to close Starlight Launcher"
   },
   "app.appearance-settings.color-theme.description": {
-    "message": "Select your preferred color theme for Axolotl Launcher."
+    "message": "Select your preferred color theme for Starlight Launcher."
   },
   "app.appearance-settings.color-theme.title": {
     "message": "Color theme"
@@ -771,7 +771,7 @@
     "message": "Remember my choice"
   },
   "app.close-launcher.title": {
-    "message": "Choose how to close Axolotl Launcher"
+    "message": "Choose how to close Starlight Launcher"
   },
   "app.close-launcher.tray": {
     "message": "Hide to tray"
@@ -783,10 +783,10 @@
     "message": "If you have more ideas or suggestions, please join the player QQ group: "
   },
   "app.community-announcement.feedback-suffix": {
-    "message": ". We look forward to improving Axolotl Launcher together!"
+    "message": ". We look forward to improving Starlight Launcher together!"
   },
   "app.community-announcement.response": {
-    "message": "Since Axolotl Launcher was promoted on video platforms, we have received far more love and attention than we expected, along with many thoughtful suggestions and high-quality reports."
+    "message": "Since Starlight Launcher was promoted on video platforms, we have received far more love and attention than we expected, along with many thoughtful suggestions and high-quality reports."
   },
   "app.community-announcement.thanks": {
     "message": "I have done my best to personally reply to every comment on the videos. Thank you sincerely for all your support!"
@@ -1680,7 +1680,7 @@
     "message": "Debug information"
   },
   "app.error.directory-description": {
-    "message": "Axolotl Launcher cannot migrate to the selected directory. Contact support for help or cancel the directory change."
+    "message": "Starlight Launcher cannot migrate to the selected directory. Contact support for help or cancel the directory change."
   },
   "app.error.directory-title": {
     "message": "Could not change app directory"
@@ -1698,7 +1698,7 @@
     "message": "The connection to Microsoft, Xbox, or Minecraft services was rejected. These services may be blocked by your hosts file. See our support article for steps to fix the issue."
   },
   "app.error.loader-description": {
-    "message": "Axolotl Launcher could not find a loader version for this instance."
+    "message": "Starlight Launcher could not find a loader version for this instance."
   },
   "app.error.loader-fix": {
     "message": "Repair the instance using the button below."
@@ -1716,7 +1716,7 @@
     "message": "Sign in to Minecraft"
   },
   "app.error.network-description": {
-    "message": "Axolotl Launcher had trouble connecting to Microsoft services. This is often caused by a poor connection. Try again, and use our support article if the issue persists."
+    "message": "Starlight Launcher had trouble connecting to Microsoft services. This is often caused by a poor connection. Try again, and use our support article if the issue persists."
   },
   "app.error.network-issues": {
     "message": "Network issues"
@@ -1737,7 +1737,7 @@
     "message": "Using PC Game Pass, coming from Bedrock, or just bought the game?"
   },
   "app.error.permissions-description": {
-    "message": "Axolotl Launcher cannot write to the selected directory. Adjust its permissions and try again, or cancel the directory change."
+    "message": "Starlight Launcher cannot write to the selected directory. Adjust its permissions and try again, or cancel the directory change."
   },
   "app.error.permissions-title": {
     "message": "Change directory permissions"
@@ -1755,7 +1755,7 @@
     "message": "Not enough space"
   },
   "app.error.state-description": {
-    "message": "Axolotl Launcher failed to load correctly. A file may be corrupted or an essential file may be missing."
+    "message": "Starlight Launcher failed to load correctly. A file may be corrupted or an essential file may be missing."
   },
   "app.error.state-fix-internet": {
     "message": "Check your internet connection, then restart the app."
@@ -1767,7 +1767,7 @@
     "message": "Download and install the app again."
   },
   "app.error.state-title": {
-    "message": "Error initializing Axolotl Launcher"
+    "message": "Error initializing Starlight Launcher"
   },
   "app.error.support-article": {
     "message": "Support article"
@@ -3678,7 +3678,7 @@
     "message": "Redstone"
   },
   "app.lab.recipe-generator.copyright.disclaimer-body": {
-    "message": "Minecraft assets are Copyright Mojang Studios / Microsoft and are used only to identify compatible content. Axolotl Launcher is not affiliated with or endorsed by Mojang Studios or Microsoft."
+    "message": "Minecraft assets are Copyright Mojang Studios / Microsoft and are used only to identify compatible content. Starlight Launcher is not affiliated with or endorsed by Mojang Studios or Microsoft."
   },
   "app.lab.recipe-generator.copyright.disclaimer-heading": {
     "message": "Unofficial tool"
@@ -4461,13 +4461,13 @@
     "message": "Copy /tp"
   },
   "app.lab.seed-map.copyright.disclaimer-body": {
-    "message": "Minecraft is a trademark of Mojang Synergies AB. Axolotl Launcher is not affiliated with or endorsed by Mojang or MinecraftSearch."
+    "message": "Minecraft is a trademark of Mojang Synergies AB. Starlight Launcher is not affiliated with or endorsed by Mojang or MinecraftSearch."
   },
   "app.lab.seed-map.copyright.disclaimer-heading": {
     "message": "Unofficial tool"
   },
   "app.lab.seed-map.copyright.engine-body": {
-    "message": "Biome, terrain, spawn, and structure data is generated locally with cubiomes, Copyright (c) 2020 Cubitect, provided under the MIT License, together with the Axolotl native integration."
+    "message": "Biome, terrain, spawn, and structure data is generated locally with cubiomes, Copyright (c) 2020 Cubitect, provided under the MIT License, together with the Starlight native integration."
   },
   "app.lab.seed-map.copyright.engine-heading": {
     "message": "Local map engine"
@@ -5346,7 +5346,7 @@
     "message": "Minecraft opened a different LAN port. Restart the tunnel before sharing it."
   },
   "app.multiplayer.hongshi.port-hint": {
-    "message": "Open a world to LAN. Axolotl will detect the port automatically; external games can use a manual port."
+    "message": "Open a world to LAN. Starlight will detect the port automatically; external games can use a manual port."
   },
   "app.multiplayer.hongshi.public-address": {
     "message": "Public address"
@@ -5805,7 +5805,7 @@
     "message": "Your launch shelf"
   },
   "app.onboarding.mascot-alt": {
-    "message": "Axolotl guide"
+    "message": "Starlight guide"
   },
   "app.onboarding.privacy.description": {
     "message": "Manage anonymous telemetry, Discord Rich Presence, and the Minecraft log analysis service whenever you need to."
@@ -5841,10 +5841,10 @@
     "message": "Translate Modrinth project titles, summaries, and descriptions while you browse. Keep the original, show both, or make the translation the main character."
   },
   "app.onboarding.translation.title": {
-    "message": "Translation, the Axolotl way"
+    "message": "Translation, the Starlight way"
   },
   "app.onboarding.updates.description": {
-    "message": "Choose when Axolotl checks for updates and whether it installs them for you."
+    "message": "Choose when Starlight checks for updates and whether it installs them for you."
   },
   "app.onboarding.updates.title": {
     "message": "Stay in the loop"
@@ -5868,7 +5868,7 @@
     "message": "Shows your current launcher or game activity in Discord when Discord is running."
   },
   "app.privacy-consent.intro": {
-    "message": "Choose what Axolotl may send or display. Nothing is sent until you confirm these choices."
+    "message": "Choose what Starlight may send or display. Nothing is sent until you confirm these choices."
   },
   "app.privacy-consent.privacy-policy": {
     "message": "Read the privacy policy"
@@ -6189,7 +6189,7 @@
     "message": "Preparing server..."
   },
   "app.servers.modpack.unsupported-loader-description": {
-    "message": "This modpack uses {loader}, but Axolotl can only start modpack servers with vanilla, Fabric, or Quilt. Support for {loader} is coming soon."
+    "message": "This modpack uses {loader}, but Starlight can only start modpack servers with vanilla, Fabric, or Quilt. Support for {loader} is coming soon."
   },
   "app.servers.modpack.unsupported-loader-title": {
     "message": "{loader} servers are not supported yet"
@@ -6654,7 +6654,7 @@
     "message": "Help support continued development"
   },
   "app.settings.about.attribution": {
-    "message": "Axolotl Launcher is a modified version of the open-source Modrinth codebase."
+    "message": "Starlight Launcher is a modified version of the open-source Modrinth codebase."
   },
   "app.settings.about.community-support": {
     "message": "Project & community"
@@ -6744,13 +6744,13 @@
     "message": "The tide is falling — keep your axolotls underwater!"
   },
   "app.settings.about.game.title": {
-    "message": "Axolotl merge"
+    "message": "Starlight merge"
   },
   "app.settings.about.license-attribution": {
     "message": "License & attribution"
   },
   "app.settings.about.not-affiliated": {
-    "message": "Modrinth is a trademark of Rinth, Inc. Axolotl Launcher is not affiliated with or endorsed by Rinth, Inc."
+    "message": "Modrinth is a trademark of Rinth, Inc. Starlight Launcher is not affiliated with or endorsed by Rinth, Inc."
   },
   "app.settings.about.original-source": {
     "message": "Original Modrinth source"
@@ -6789,7 +6789,7 @@
     "message": "Community survey"
   },
   "app.settings.about.survey-description": {
-    "message": "Help us improve Axolotl Launcher"
+    "message": "Help us improve Starlight Launcher"
   },
   "app.settings.about.test-error": {
     "message": "Trigger test error"
@@ -7044,7 +7044,7 @@
     "message": "App cache"
   },
   "app.settings.resources.app-cache-description": {
-    "message": "Axolotl Launcher caches data to speed up loading. Purging it forces the app to reload data and may temporarily slow the app down."
+    "message": "Starlight Launcher caches data to speed up loading. Purging it forces the app to reload data and may temporarily slow the app down."
   },
   "app.settings.resources.app-directory": {
     "message": "App directory"
@@ -7056,7 +7056,7 @@
     "message": "You are currently running in portable mode. The app directory is fixed and cannot be changed."
   },
   "app.settings.resources.axolotl-data-directory": {
-    "message": "Axolotl data directory"
+    "message": "Starlight data directory"
   },
   "app.settings.resources.concurrency.manual": {
     "message": "Manual"
@@ -7113,7 +7113,7 @@
     "message": "Minecraft directories"
   },
   "app.settings.resources.minecraft-directories-description": {
-    "message": "Add one or more .minecraft folders for instances that use an external game directory. These folders are kept separate from Axolotl data."
+    "message": "Add one or more .minecraft folders for instances that use an external game directory. These folders are kept separate from Starlight data."
   },
   "app.settings.resources.minecraft-directory-mode": {
     "message": "Game directory mode"
@@ -7461,7 +7461,7 @@
     "message": "Copy Release data to Beta?"
   },
   "app.settings.updates.channel.description": {
-    "message": "Choose which launcher versions Axolotl receives."
+    "message": "Choose which launcher versions Starlight receives."
   },
   "app.settings.updates.channel.label": {
     "message": "Channel"
@@ -7473,7 +7473,7 @@
     "message": "Stable, tested features and fixes. Updates arrive less often."
   },
   "app.settings.updates.channel.restart-description": {
-    "message": "Restart Axolotl now to start using the new update channel, or restart manually later."
+    "message": "Restart Starlight now to start using the new update channel, or restart manually later."
   },
   "app.settings.updates.channel.restart-development-description": {
     "message": "The new update channel will be used after you manually restart the development session."
@@ -7524,7 +7524,7 @@
     "message": "Database isolation"
   },
   "app.settings.updates.database-operation.active-target": {
-    "message": "Cannot overwrite the database currently in use. Restart Axolotl and switch channels first."
+    "message": "Cannot overwrite the database currently in use. Restart Starlight and switch channels first."
   },
   "app.settings.updates.database-operation.beta-to-release": {
     "message": "Copy Beta to Release"
@@ -7542,7 +7542,7 @@
     "message": "Overwrite database?"
   },
   "app.settings.updates.database-operation.failed": {
-    "message": "The database could not be copied. Please make sure Axolotl is not using the target database."
+    "message": "The database could not be copied. Please make sure Starlight is not using the target database."
   },
   "app.settings.updates.database-operation.label": {
     "message": "Database operation"
@@ -7602,7 +7602,7 @@
     "message": "Updates are installed only when their cryptographic signature is valid."
   },
   "app.settings.updates.up-to-date": {
-    "message": "Axolotl is up to date."
+    "message": "Starlight is up to date."
   },
   "app.sidebar.collapse": {
     "message": "Collapse sidebar"
@@ -7749,13 +7749,13 @@
     "message": "Tiny Takeover"
   },
   "app.skins.sign-in.axolotl-alt": {
-    "message": "Axolotl Launcher"
+    "message": "Starlight Launcher"
   },
   "app.skins.sign-in.button": {
     "message": "Sign In"
   },
   "app.skins.sign-in.description": {
-    "message": "Please sign into your Minecraft account to use the skin management features of Axolotl Launcher."
+    "message": "Please sign into your Minecraft account to use the skin management features of Starlight Launcher."
   },
   "app.skins.sign-in.title": {
     "message": "Please sign in"
@@ -7788,7 +7788,7 @@
     "message": "Fill out the survey"
   },
   "app.survey-promotion.intro": {
-    "message": "To help us improve Axolotl Launcher, we have prepared a short survey and would love to hear your feedback."
+    "message": "To help us improve Starlight Launcher, we have prepared a short survey and would love to hear your feedback."
   },
   "app.survey-promotion.reward": {
     "message": "Lucky participants will be drawn to win a genuine Minecraft account (redeemable for cash)."
@@ -7992,16 +7992,16 @@
     "message": "This version does not have a bundled announcement yet. Visit the website for the full changelog."
   },
   "app.update-announcement.unknown-title": {
-    "message": "Axolotl Launcher was updated"
+    "message": "Starlight Launcher was updated"
   },
   "app.update-announcement.version": {
     "message": "Version {version}"
   },
   "app.update-popup.body.download-complete": {
-    "message": "Axolotl Launcher v{version} has finished downloading. Reload to update now, or automatically when you close Axolotl Launcher."
+    "message": "Starlight Launcher v{version} has finished downloading. Reload to update now, or automatically when you close Starlight Launcher."
   },
   "app.update-popup.body.metered": {
-    "message": "Axolotl Launcher v{version} is available now! Since you're on a metered network, we didn't automatically download it."
+    "message": "Starlight Launcher v{version} is available now! Since you're on a metered network, we didn't automatically download it."
   },
   "app.update-popup.changelog": {
     "message": "Changelog"
@@ -8031,7 +8031,7 @@
     "message": "Installing version {version}"
   },
   "app.warning.running-as-admin": {
-    "message": "Axolotl is running as administrator. Drag-and-drop file import is disabled in this mode; please restart the launcher without administrator privileges."
+    "message": "Starlight is running as administrator. Drag-and-drop file import is disabled in this mode; please restart the launcher without administrator privileges."
   },
   "app.world-editor.allow-commands.label": {
     "message": "Allow cheats"
@@ -8484,7 +8484,7 @@
     "message": "Shader Packs"
   },
   "drop.help.title": {
-    "message": "What can I drop into Axolotl?"
+    "message": "What can I drop into Starlight?"
   },
   "drop.help.worlds-desc": {
     "message": "Drag world save folders to import them into an instance."
@@ -8868,7 +8868,7 @@
     "message": "Version isolated (stored in versions/)"
   },
   "instance.settings.tabs.general.game-dir.managed-note": {
-    "message": "This instance uses the Axolotl-managed folder."
+    "message": "This instance uses the Starlight-managed folder."
   },
   "instance.settings.tabs.general.game-dir.move-note": {
     "message": "Switching isolation only updates the launcher path. Move the mods, saves, and config folders yourself to match."
@@ -9429,7 +9429,7 @@
     "message": "{count, plural, one {# exact choice} other {# exact choices}}"
   },
   "instance.upgrade.customize.custom.description": {
-    "message": "Fix exact versions for selected content and let Axolotl solve the remaining dependency graph."
+    "message": "Fix exact versions for selected content and let Starlight solve the remaining dependency graph."
   },
   "instance.upgrade.customize.custom.discard-switch": {
     "message": "Discard and switch"
@@ -9483,7 +9483,7 @@
     "message": "Update dependency"
   },
   "instance.upgrade.customize.description": {
-    "message": "Choose how aggressively Axolotl should update content in this instance."
+    "message": "Choose how aggressively Starlight should update content in this instance."
   },
   "instance.upgrade.customize.effective-changes": {
     "message": "Effective changes"
@@ -9534,7 +9534,7 @@
     "message": "Resolve custom conflicts before continuing."
   },
   "instance.upgrade.customize.search-limit.body": {
-    "message": "Axolotl couldn't find a solution within the search limit. Try relaxing one of your custom choices."
+    "message": "Starlight couldn't find a solution within the search limit. Try relaxing one of your custom choices."
   },
   "instance.upgrade.customize.search-limit.title": {
     "message": "Search limit reached"

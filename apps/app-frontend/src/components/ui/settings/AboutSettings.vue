@@ -157,7 +157,7 @@ const messages = defineMessages({
 	},
 	copyright: {
 		id: 'app.settings.about.copyright',
-		defaultMessage: 'Copyright © Axolotl All Rights Reserved.',
+		defaultMessage: 'Copyright © Starlight All Rights Reserved.',
 	},
 	version: {
 		id: 'app.settings.about.version',
@@ -217,7 +217,7 @@ const messages = defineMessages({
 	},
 	surveyDescription: {
 		id: 'app.settings.about.survey-description',
-		defaultMessage: 'Help us improve Axolotl Launcher',
+		defaultMessage: 'Help us improve Starlight Launcher',
 	},
 	licenseAttribution: {
 		id: 'app.settings.about.license-attribution',
@@ -225,12 +225,12 @@ const messages = defineMessages({
 	},
 	attribution: {
 		id: 'app.settings.about.attribution',
-		defaultMessage: 'Axolotl Launcher is a modified version of the open-source Modrinth codebase.',
+		defaultMessage: 'Starlight Launcher is a modified version of the open-source Modrinth codebase.',
 	},
 	notAffiliated: {
 		id: 'app.settings.about.not-affiliated',
 		defaultMessage:
-			'Modrinth is a trademark of Rinth, Inc. Axolotl Launcher is not affiliated with or endorsed by Rinth, Inc.',
+			'Modrinth is a trademark of Rinth, Inc. Starlight Launcher is not affiliated with or endorsed by Rinth, Inc.',
 	},
 	originalSource: {
 		id: 'app.settings.about.original-source',
