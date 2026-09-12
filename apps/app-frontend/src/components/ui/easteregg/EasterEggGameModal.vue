@@ -1,6 +1,9 @@
+
 <script setup lang="ts">
 import { defineMessages, NewModal, useVIntl } from '@modrinth/ui'
 import { ref } from 'vue'
+
+import AboutEasterEgg from '../AboutEasterEgg.vue'
 
 const { formatMessage } = useVIntl()
 
@@ -14,8 +17,6 @@ const messages = defineMessages({
 const modal = ref<InstanceType<typeof NewModal> | null>(null)
 const gameVisible = ref(false)
 
-const gameUrl = `${window.location.origin}/easteregg/games/game.html`
-
 function show() {
 	gameVisible.value = true
 	modal.value?.show()
@@ -23,6 +24,10 @@ function show() {
 
 function onHide() {
 	gameVisible.value = false
+}
+
+function closeGame() {
+	modal.value?.hide()
 }
 
 defineExpose({ show })
@@ -37,13 +42,8 @@ defineExpose({ show })
 		noblur
 		:on-hide="onHide"
 	>
-		<div class="flex flex-col items-center py-2">
-			<iframe
-				v-if="gameVisible"
-				:src="gameUrl"
-				title="Mini Game"
-				class="h-[600px] w-[800px] max-w-full rounded-xl border-none bg-black"
-			/>
+		<div class="relative h-[600px] w-[800px] max-w-full overflow-hidden rounded-xl bg-surface-1">
+			<AboutEasterEgg v-if="gameVisible" @exit="closeGame" />
 		</div>
 	</NewModal>
 </template>

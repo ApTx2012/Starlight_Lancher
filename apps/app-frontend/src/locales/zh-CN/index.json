@@ -10309,62 +10309,6 @@
   },
   "app.settings.about.easteregg.game-title": {
     "message": "彩蛋小游戏"
-  },
-  "app.settings.about.game.best": {
-    "message": "最高分：{score}"
-  },
-  "app.settings.about.game.best-label": {
-    "message": "最高分"
-  },
-  "app.settings.about.game.completed": {
-    "message": "彩虹美西螈！"
-  },
-  "app.settings.about.game.exit": {
-    "message": "退出游戏"
-  },
-  "app.settings.about.game.game-over": {
-    "message": "美西螈搁浅了！"
-  },
-  "app.settings.about.game.highest-level": {
-    "message": "最高等级：{level}"
-  },
-  "app.settings.about.game.level-label": {
-    "message": "最高等级"
-  },
-  "app.settings.about.game.new-record": {
-    "message": "新纪录！"
-  },
-  "app.settings.about.game.overtime": {
-    "message": "潮水大涨！"
-  },
-  "app.settings.about.game.overtime-detail": {
-    "message": "水位回升，继续合成！"
-  },
-  "app.settings.about.game.overtimes-label": {
-    "message": "加时次数"
-  },
-  "app.settings.about.game.restart": {
-    "message": "重新开始"
-  },
-  "app.settings.about.game.score": {
-    "message": "分数：{score}"
-  },
-  "app.settings.about.game.score-label": {
-    "message": "分数"
-  },
-  "app.settings.about.game.settle": {
-    "message": "结算"
-  },
-  "app.settings.about.game.settle-title": {
-    "message": "结算完成！"
-  },
-  "app.settings.about.game.tap-to-drop": {
-    "message": "点击场地，投放粉色美西螈"
-  },
-  "app.settings.about.game.tide-hint": {
-    "message": "潮水正在退去，别让美西螈搁浅！"
-  },
-  "app.settings.about.game.title": {
-    "message": "合成美西螈"
+
   }
 }

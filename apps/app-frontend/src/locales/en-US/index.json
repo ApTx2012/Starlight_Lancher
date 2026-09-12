@@ -6689,63 +6689,6 @@
   "app.settings.about.easteregg.game-title": {
     "message": "Mini Game"
   },
-  "app.settings.about.game.best": {
-    "message": "Best: {score}"
-  },
-  "app.settings.about.game.best-label": {
-    "message": "Best"
-  },
-  "app.settings.about.game.completed": {
-    "message": "Rainbow axolotl!"
-  },
-  "app.settings.about.game.exit": {
-    "message": "Exit game"
-  },
-  "app.settings.about.game.game-over": {
-    "message": "The axolotls got stranded!"
-  },
-  "app.settings.about.game.highest-level": {
-    "message": "Highest: level {level}"
-  },
-  "app.settings.about.game.level-label": {
-    "message": "Highest level"
-  },
-  "app.settings.about.game.new-record": {
-    "message": "New record!"
-  },
-  "app.settings.about.game.overtime": {
-    "message": "Tide surge!"
-  },
-  "app.settings.about.game.overtime-detail": {
-    "message": "The water rushes back — keep merging!"
-  },
-  "app.settings.about.game.overtimes-label": {
-    "message": "Overtimes"
-  },
-  "app.settings.about.game.restart": {
-    "message": "Restart"
-  },
-  "app.settings.about.game.score": {
-    "message": "Score: {score}"
-  },
-  "app.settings.about.game.score-label": {
-    "message": "Score"
-  },
-  "app.settings.about.game.settle": {
-    "message": "Settle"
-  },
-  "app.settings.about.game.settle-title": {
-    "message": "Run settled!"
-  },
-  "app.settings.about.game.tap-to-drop": {
-    "message": "Click to drop a pink axolotl"
-  },
-  "app.settings.about.game.tide-hint": {
-    "message": "The tide is falling — keep your axolotls underwater!"
-  },
-  "app.settings.about.game.title": {
-    "message": "Starlight merge"
-  },
   "app.settings.about.license-attribution": {
     "message": "License & attribution"
   },
