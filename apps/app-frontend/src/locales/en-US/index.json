@@ -1,4 +1,8 @@
 {
+  "minecraft-account.skin-site.signed-in": { "message": "Signed in to StarLight Skin Site" },
+  "minecraft-account.skin-site.checking": { "message": "Checking skin site session…" },
+  "minecraft-account.skin-site.sync-error": { "message": "Could not verify the skin site session. Retrying automatically." },
+  "minecraft-account.add-skin-game-account": { "message": "Add skin site game account" },
   "app.easteregg.color-mine.title": {
     "message": "Starlight Mine: Chromatic Realms"
   },
@@ -5279,8 +5283,8 @@
   "app.minecraft-crash.view-mod-changes": {
     "message": "View Mod changes"
   },
-  "app.minecraft.playing-as": {
-    "message": "Playing as"
+  "app.minecraft.user-information": {
+    "message": "User information"
   },
   "app.modal.install-to-play.content-required": {
     "message": "Content required"
@@ -10074,13 +10078,13 @@
     "message": "World is in use"
   },
   "minecraft-account.add-microsoft-account": {
-    "message": "Add Microsoft account"
+    "message": "Add your own Minecraft account"
   },
   "minecraft-account.add-offline-account": {
     "message": "Add offline account"
   },
-  "minecraft-account.add-third-party-account": {
-    "message": "Add third-party account"
+  "minecraft-account.sign-in-starlight": {
+    "message": "Sign in to StarLight Skin Site"
   },
   "minecraft-account.copy-uuid": {
     "message": "Copy UUID"

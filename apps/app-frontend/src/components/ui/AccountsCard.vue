@@ -1,4 +1,23 @@
 <template>
+	<div v-if="skinSiteUser" class="flex items-center gap-3 mt-2 p-3 rounded-xl bg-button-bg">
+		<Avatar :src="axolotlLogo" size="36px" />
+		<div class="flex min-w-0 flex-col">
+			<span class="truncate font-semibold text-contrast">{{ skinSiteUser.username }}</span>
+			<span class="text-secondary text-xs">{{ formatMessage(messages.skinSiteSignedIn) }}</span>
+		</div>
+	</div>
+	<p v-else-if="skinSiteStatus === 'checking'" class="text-sm text-secondary">
+		{{ formatMessage(messages.skinSiteChecking) }}
+	</p>
+	<p v-else-if="skinSiteStatus === 'error'" class="text-sm text-secondary">
+		{{ formatMessage(messages.skinSiteSyncError) }}
+	</p>
+	<ButtonStyled v-if="accounts.length > 0 && !offline && !skinSiteUser" color="brand">
+		<button class="mt-2 w-full" :disabled="loginDisabled" @click="goToSkinSiteLogin()">
+			<LogInIcon />
+			{{ formatMessage(messages.signInToStarlight) }}
+		</button>
+	</ButtonStyled>
 	<div
 		v-if="offline"
 		class="flex flex-col gap-1 bg-highlight-orange border border-solid border-orange rounded-xl p-3 mt-2"
@@ -17,18 +36,24 @@
 		v-if="accounts.length === 0"
 		class="flex flex-col gap-3 bg-button-bg border border-solid border-surface-5 rounded-xl p-3 mt-2"
 	>
-		<span>{{ formatMessage(messages.notSignedIn) }}</span>
-		<ButtonStyled v-if="!offline" color="brand">
-			<button color="primary" :disabled="loginDisabled" @click="login()">
+		<span v-if="skinSiteStatus === 'signed-out'">{{ formatMessage(messages.notSignedIn) }}</span>
+		<ButtonStyled v-if="!offline && !skinSiteUser" color="brand">
+			<button color="primary" :disabled="loginDisabled" @click="goToSkinSiteLogin()">
 				<LogInIcon v-if="!loginDisabled" />
 				<SpinnerIcon v-else class="animate-spin" />
-				{{ formatMessage(messages.signInToMinecraft) }}
+				{{ formatMessage(messages.signInToStarlight) }}
+			</button>
+		</ButtonStyled>
+		<ButtonStyled v-if="!offline && skinSiteUser">
+			<button :disabled="loginDisabled" @click="showYggdrasilAccountModal()">
+				<PlusIcon />
+				{{ formatMessage(messages.addSkinGameAccount) }}
 			</button>
 		</ButtonStyled>
 		<ButtonStyled v-if="!offline">
-			<button :disabled="loginDisabled" @click="showYggdrasilAccountModal()">
+			<button :disabled="loginDisabled" @click="login()">
 				<PlusIcon />
-				{{ formatMessage(messages.addThirdPartyAccount) }}
+				{{ formatMessage(messages.addMicrosoftAccount) }}
 			</button>
 		</ButtonStyled>
 	</div>
@@ -137,15 +162,15 @@
 			</template>
 			<div class="flex flex-col gap-2 px-2 pt-2">
 				<ButtonStyled v-if="accounts.length > 0 && !offline" class="w-full">
-					<button :disabled="loginDisabled" @click="login()">
+					<button :disabled="loginDisabled" @click="showYggdrasilAccountModal()">
 						<PlusIcon />
-						{{ formatMessage(messages.addMicrosoftAccount) }}
+						{{ formatMessage(messages.addSkinGameAccount) }}
 					</button>
 				</ButtonStyled>
 				<ButtonStyled v-if="accounts.length > 0 && !offline" class="w-full">
-					<button :disabled="loginDisabled" @click="showYggdrasilAccountModal()">
+					<button :disabled="loginDisabled" @click="login()">
 						<PlusIcon />
-						{{ formatMessage(messages.addThirdPartyAccount) }}
+						{{ formatMessage(messages.addMicrosoftAccount) }}
 					</button>
 				</ButtonStyled>
 			</div>
@@ -262,6 +287,7 @@ import {
 	Accordion,
 	Avatar,
 	ButtonStyled,
+	Checkbox,
 	commonMessages,
 	defineMessages,
 	injectNotificationManager,
@@ -272,12 +298,13 @@ import { useQueryClient } from '@tanstack/vue-query'
 import { listen } from '@tauri-apps/api/event'
 import type { Ref } from 'vue'
 import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 import axolotlLogo from '@/assets/netherstar.png'
 import steveSkinTexture from '@/assets/skins/steve.png?inline'
 import MinecraftLoginModal from '@/components/ui/MinecraftLoginModal.vue'
 import ModalWrapper from '@/components/ui/modal/ModalWrapper.vue'
+import { openSkinSiteLogin, skinSiteStatus, skinSiteUser } from '@/composables/skin-site-session'
 import { useNetworkStatus } from '@/composables/useNetworkStatus'
 import { compareMinecraftAccounts } from '@/helpers/accounts'
 import {
@@ -298,12 +325,22 @@ import { getPlayerHeadUrl } from '@/helpers/rendering/batch-skin-renderer.ts'
 import type { Skin } from '@/helpers/skins'
 import { get_available_skins } from '@/helpers/skins'
 import { handleSevereError } from '@/store/error.js'
+import { useTheming } from '@/store/state'
 
 const { formatMessage } = useVIntl()
 const { handleError } = injectNotificationManager()
 const { offline, refreshBrowserOffline } = useNetworkStatus()
 const queryClient = useQueryClient()
 const route = useRoute()
+const router = useRouter()
+const themeStore = useTheming()
+
+async function goToSkinSiteLogin() {
+	openSkinSiteLogin()
+	// The login action must reveal the iframe even if Minimal Home was selected.
+	themeStore.homeLayout = 'standard'
+	await router.push('/').catch(handleError)
+}
 const refreshingNetwork = ref(false)
 
 /**
@@ -897,6 +934,22 @@ onUnmounted(() => {
 })
 
 const messages = defineMessages({
+	skinSiteSignedIn: {
+		id: 'minecraft-account.skin-site.signed-in',
+		defaultMessage: 'Signed in to StarLight Skin Site',
+	},
+	skinSiteChecking: {
+		id: 'minecraft-account.skin-site.checking',
+		defaultMessage: 'Checking skin site session…',
+	},
+	skinSiteSyncError: {
+		id: 'minecraft-account.skin-site.sync-error',
+		defaultMessage: 'Could not verify the skin site session. Retrying automatically.',
+	},
+	addSkinGameAccount: {
+		id: 'minecraft-account.add-skin-game-account',
+		defaultMessage: 'Add skin site game account',
+	},
 	offlineMode: {
 		id: 'minecraft-account.offline-mode',
 		defaultMessage: 'Offline mode',
@@ -916,11 +969,11 @@ const messages = defineMessages({
 	},
 	addMicrosoftAccount: {
 		id: 'minecraft-account.add-microsoft-account',
-		defaultMessage: 'Add Microsoft account',
+		defaultMessage: 'Add your own Minecraft account',
 	},
-	addThirdPartyAccount: {
-		id: 'minecraft-account.add-third-party-account',
-		defaultMessage: 'Add third-party account',
+	signInToStarlight: {
+		id: 'minecraft-account.sign-in-starlight',
+		defaultMessage: 'Sign in to StarLight Skin Site',
 	},
 	thirdPartyAccount: {
 		id: 'minecraft-account.third-party-account',
@@ -1063,10 +1116,6 @@ const messages = defineMessages({
 	minecraftAccount: {
 		id: 'minecraft-account.label',
 		defaultMessage: 'Minecraft account',
-	},
-	signInToMinecraft: {
-		id: 'minecraft-account.sign-in',
-		defaultMessage: 'Sign in to Minecraft',
 	},
 	loginTrouble: {
 		id: 'minecraft-login.trouble',

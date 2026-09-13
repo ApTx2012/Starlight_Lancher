@@ -688,6 +688,13 @@ fn main() {
     );
 
     builder = builder
+        .plugin(
+            tauri::plugin::Builder::<tauri::Wry>::new("skin-site-session")
+                .js_init_script_on_all_frames(include_str!(
+                    "skin_site_bridge.js"
+                ))
+                .build(),
+        )
         .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
             if let Some(payload) = args.get(1) {
                 tracing::info!("Handling deep link from arg {payload}");

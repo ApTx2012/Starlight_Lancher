@@ -1,4 +1,8 @@
 {
+  "minecraft-account.skin-site.signed-in": { "message": "已登入 StarLight皮膚站" },
+  "minecraft-account.skin-site.checking": { "message": "正在驗證皮膚站登入狀態…" },
+  "minecraft-account.skin-site.sync-error": { "message": "暫時無法驗證皮膚站登入狀態，將自動重試。" },
+  "minecraft-account.add-skin-game-account": { "message": "新增皮膚站遊戲帳號" },
   "app.easteregg.color-mine.title": {
     "message": "星光礦井：彩域"
   },
@@ -5120,8 +5124,8 @@
   "app.minecraft-crash.view-mod-changes": {
     "message": "查看 Mod 變更"
   },
-  "app.minecraft.playing-as": {
-    "message": "當前遊玩帳號："
+  "app.minecraft.user-information": {
+    "message": "使用者資訊"
   },
   "app.modal.install-to-play.content-required": {
     "message": "所需內容"
@@ -9801,13 +9805,13 @@
     "message": "世界正在使用中"
   },
   "minecraft-account.add-microsoft-account": {
-    "message": "新增 Microsoft 帳號"
+    "message": "新增自己的正版帳號"
   },
   "minecraft-account.add-offline-account": {
     "message": "新增離線帳號"
   },
-  "minecraft-account.add-third-party-account": {
-    "message": "新增第三方帳號"
+  "minecraft-account.sign-in-starlight": {
+    "message": "登入 StarLight皮膚站"
   },
   "minecraft-account.copy-uuid": {
     "message": "複製 UUID"

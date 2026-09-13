@@ -758,9 +758,9 @@ const messages = defineMessages({
 		id: 'app.account.signed-in-as',
 		defaultMessage: 'Signed in as',
 	},
-	playingAs: {
-		id: 'app.minecraft.playing-as',
-		defaultMessage: 'Playing as',
+	userInformation: {
+		id: 'app.minecraft.user-information',
+		defaultMessage: 'User information',
 	},
 	collapseSidebar: {
 		id: 'app.sidebar.collapse',
@@ -2469,7 +2469,7 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 				<div class="sidebar-default-content hidden" :class="{ 'sidebar-enabled': sidebarVisible }">
 					<div class="p-4 border-0 border-b-[1px] border-[--brand-gradient-border] border-solid">
 						<h3 class="text-base text-primary font-medium m-0">
-							{{ formatMessage(messages.playingAs) }}
+							{{ formatMessage(messages.userInformation) }}
 						</h3>
 						<suspense>
 							<AccountsCard ref="accounts" />
