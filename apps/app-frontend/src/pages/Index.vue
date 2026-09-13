@@ -30,6 +30,7 @@ import HomeDashboard from '@/components/home/HomeDashboard.vue'
 import HomeInstancePickerModal from '@/components/home/HomeInstancePickerModal.vue'
 import HomeMinecraftNews from '@/components/home/HomeMinecraftNews.vue'
 import HomeMinimal from '@/components/home/HomeMinimal.vue'
+import HomeLaunchProgress from '@/components/home/HomeLaunchProgress.vue'
 import HomePlayInsights from '@/components/home/HomePlayInsights.vue'
 import { useNetworkStatus } from '@/composables/useNetworkStatus'
 import { get_default_user, users } from '@/helpers/auth'
@@ -378,6 +379,7 @@ onUnmounted(() => {
 			class="flex min-w-0 flex-col slide-enter-active"
 			:class="{ 'slide-enter-from': !animateSidebarShow }"
 		>
+			<HomeLaunchProgress />
 			<HomePlayInsights />
 			<HomeDailyChallenge />
 			<HomeMinecraftNews />
