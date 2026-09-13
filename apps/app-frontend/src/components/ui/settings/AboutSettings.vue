@@ -8,6 +8,7 @@ import {
 } from '@modrinth/assets'
 import { Avatar, defineMessages, NewButton as Button, useVIntl } from '@modrinth/ui'
 import { getVersion } from '@tauri-apps/api/app'
+import { openUrl } from '@tauri-apps/plugin-opener'
 import { inject, nextTick, onScopeDispose, ref, shallowRef } from 'vue'
 import EasterEggContributorsModal from '@/components/ui/easteregg/EasterEggContributorsModal.vue'
 import EasterEggGameModal from '@/components/ui/easteregg/EasterEggGameModal.vue'
@@ -80,6 +81,7 @@ const contributorsModal = ref<InstanceType<typeof EasterEggContributorsModal> | 
 
 let typedBuffer = ''
 const secretCodes = ['starlight']
+const YUANSHEN_URL = 'https://ys.mihoyo.com/cloud/'
 
 const konamiSequence = [
 	'ArrowUp',
@@ -100,6 +102,11 @@ function handleEasterEggKeydown(event: KeyboardEvent) {
 	const maxCodeLen = Math.max(...secretCodes.map((c) => c.length))
 	if (typedBuffer.length > maxCodeLen) {
 		typedBuffer = typedBuffer.slice(-maxCodeLen)
+	}
+	if (typedBuffer.endsWith('yuanshen')) {
+		typedBuffer = ''
+		openUrl(YUANSHEN_URL).catch(() => {})
+		return
 	}
 	if (secretCodes.some((code) => typedBuffer.endsWith(code))) {
 		typedBuffer = ''
