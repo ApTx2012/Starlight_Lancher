@@ -1,3 +1,4 @@
+
 import contributorsData from './contributors.json'
 import teamData from './team.json'
 
@@ -10,7 +11,7 @@ export interface TeamMember {
 
 export interface Contributor {
 	name: string
-	avatarUrl: string
+	avatar: string
 	url: string
 	contributions: number
 }
@@ -26,4 +27,9 @@ export const teamMembers: (TeamMember & { avatarUrl: string })[] = teamData.map(
 	avatarUrl: teamAvatarModules[`./avatars/${member.avatar}`],
 }))
 
-export const contributors = contributorsData as Contributor[]
+export const contributors: (Contributor & { avatarUrl: string })[] = (
+	contributorsData as Contributor[]
+).map((contributor) => ({
+	...contributor,
+	avatarUrl: teamAvatarModules[`./avatars/${contributor.avatar}`],
+}))

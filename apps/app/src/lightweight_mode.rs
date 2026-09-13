@@ -354,7 +354,7 @@ unsafe extern "system" fn maximize_if_owned_by_process(
     _: windows::Win32::Foundation::LPARAM,
 ) -> windows::core::BOOL {
     use windows::Win32::UI::WindowsAndMessaging::{
-        GetWindowThreadProcessId, IsWindowVisible, SW_MAXIMIZE, ShowWindow,
+        GetWindowThreadProcessId, IsWindowVisible, SW_MAXIMIZE, SetForegroundWindow, ShowWindow,
     };
     use windows::core::BOOL;
 
@@ -363,6 +363,7 @@ unsafe extern "system" fn maximize_if_owned_by_process(
     if window_pid == MAXIMIZE_PROCESS_ID.load(Ordering::Relaxed)
         && unsafe { IsWindowVisible(hwnd).as_bool() }
     {
+        let _ = unsafe { SetForegroundWindow(hwnd) };
         let _ = unsafe { ShowWindow(hwnd, SW_MAXIMIZE) };
         MAXIMIZE_WINDOW_FOUND.store(true, Ordering::Relaxed);
         return BOOL(0);
