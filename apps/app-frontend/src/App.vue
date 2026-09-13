@@ -57,6 +57,7 @@ import SymlinkMethodCards from '@modrinth/ui/src/components/flows/drop/SymlinkMe
 import { useQuery } from '@tanstack/vue-query'
 import { getVersion } from '@tauri-apps/api/app'
 import { convertFileSrc, invoke } from '@tauri-apps/api/core'
+import { hideAllPoppers } from 'floating-vue'
 import { listen } from '@tauri-apps/api/event'
 import { Effect, getCurrentWindow } from '@tauri-apps/api/window'
 import { fetch as tauriFetch } from '@tauri-apps/plugin-http'
@@ -1461,6 +1462,7 @@ function syncDiscordActivity(to: RouteLocationNormalizedLoaded) {
 }
 
 router.afterEach((to, from, failure) => {
+	hideAllPoppers()
 	if (!failure) void invoke('lightweight_mode_set_route', { route: to.fullPath })
 	trackEvent('PageView', {
 		path: to.path,
