@@ -79,7 +79,7 @@ const gameModal = ref<InstanceType<typeof EasterEggGameModal> | null>(null)
 const contributorsModal = ref<InstanceType<typeof EasterEggContributorsModal> | null>(null)
 
 let typedBuffer = ''
-const secretCodes = ['cyf112233', 'cxkcxkckx']
+const secretCodes = ['starlight']
 
 const konamiSequence = [
 	'ArrowUp',

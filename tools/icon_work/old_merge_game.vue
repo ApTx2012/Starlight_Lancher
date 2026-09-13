@@ -146,12 +146,12 @@
 import { defineMessages, NewButton, useVIntl } from '@modrinth/ui'
 import { nextTick, onMounted, onScopeDispose, ref } from 'vue'
 
-import blueStar from '@/assets/stars/blue.png'
-import greenStar from '@/assets/stars/green.png'
-import pinkStar from '@/assets/stars/pink.png'
-import redStar from '@/assets/stars/red.png'
-import yellowStar from '@/assets/stars/yellow.png'
-import superStar from '@/assets/stars/super.png'
+import blueBall from '@/assets/axolotl-balls/blueball.png'
+import cyanBall from '@/assets/axolotl-balls/cyanball.png'
+import pinkBall from '@/assets/axolotl-balls/pinkball.png'
+import redBall from '@/assets/axolotl-balls/redball.png'
+import superBall from '@/assets/axolotl-balls/superball.png'
+import yellowBall from '@/assets/axolotl-balls/yellowball.png'
 
 interface Piece {
 	id: number
@@ -225,8 +225,8 @@ const messages = defineMessages({
 		id: 'app.settings.about.game.highest-level',
 		defaultMessage: 'Highest: level {level}',
 	},
-	gameOver: { id: 'app.settings.about.game.game-over', defaultMessage: 'The stars fell down!' },
-	completed: { id: 'app.settings.about.game.completed', defaultMessage: 'Nether star!' },
+	gameOver: { id: 'app.settings.about.game.game-over', defaultMessage: 'The axolotls got stranded!' },
+	completed: { id: 'app.settings.about.game.completed', defaultMessage: 'Rainbow axolotl!' },
 	overtime: { id: 'app.settings.about.game.overtime', defaultMessage: 'Tide surge!' },
 	overtimeDetail: {
 		id: 'app.settings.about.game.overtime-detail',
@@ -242,23 +242,23 @@ const messages = defineMessages({
 	levelLabel: { id: 'app.settings.about.game.level-label', defaultMessage: 'Highest level' },
 	tideHint: {
 		id: 'app.settings.about.game.tide-hint',
-		defaultMessage: 'The sky is falling — keep merging!',
+		defaultMessage: 'The tide is falling — keep your axolotls underwater!',
 	},
 	tapToDrop: {
 		id: 'app.settings.about.game.tap-to-drop',
-		defaultMessage: 'Click to drop a star',
+		defaultMessage: 'Click to drop a pink axolotl',
 	},
 	restart: { id: 'app.settings.about.game.restart', defaultMessage: 'Restart' },
 	exit: { id: 'app.settings.about.game.exit', defaultMessage: 'Exit game' },
 })
 
-const colors = ['#4f9cff', '#1bd96a', '#ff8fb3', '#e5484d', '#ffd866', '#e0e0ff']
-const rainbowColors = ['#4f9cff', '#1bd96a', '#ff8fb3', '#e5484d', '#ffd866', '#ffffff']
+const colors = ['#ff8fb3', '#ffd866', '#54c9c4', '#e5484d', '#5c8ee8', '#f05ed2']
+const rainbowColors = ['#ff8fb3', '#ffd866', '#54c9c4', '#5c8ee8', '#f05ed2', '#ffffff']
 const radiusRatios = [0.055, 0.075, 0.098, 0.128, 0.164, 0.21]
 const points = [10, 25, 60, 120, 250, 1200]
 const TIDE_FALL_SPEED = 0.005
-const MERGE_BEST_STORAGE_KEY = 'starlight-merge-best-score'
-const ballImages = [blueStar, greenStar, pinkStar, redStar, yellowStar, superStar]
+const AXOLOTL_MERGE_BEST_STORAGE_KEY = 'axolotl-merge-best-score'
+const ballImages = [pinkBall, yellowBall, cyanBall, redBall, blueBall, superBall]
 const ballSprites: (HTMLCanvasElement | null)[] = ballImages.map(() => null)
 ballImages.forEach((src, level) => prepareBallSprite(src, level))
 const particles: Particle[] = []
@@ -348,7 +348,7 @@ function settleGame() {
 }
 
 function readBestScore() {
-	const raw = localStorage.getItem(MERGE_BEST_STORAGE_KEY)
+	const raw = localStorage.getItem(AXOLOTL_MERGE_BEST_STORAGE_KEY)
 	const parsed = raw ? Number.parseInt(raw, 10) : 0
 	return Number.isFinite(parsed) && parsed > 0 ? parsed : 0
 }
@@ -357,7 +357,7 @@ function recordScore() {
 	if (score.value > bestScore.value) {
 		bestScore.value = score.value
 		newRecord.value = true
-		localStorage.setItem(MERGE_BEST_STORAGE_KEY, String(score.value))
+		localStorage.setItem(AXOLOTL_MERGE_BEST_STORAGE_KEY, String(score.value))
 	}
 }
 
@@ -686,7 +686,7 @@ function prepareBallSprite(src: string, level: number) {
 	image.src = src
 }
 
-function drawMergePiece(piece: Piece) {
+function drawAxolotl(piece: Piece) {
 	if (!context) return
 	const isRainbow = piece.level === colors.length - 1
 	const spawnProgress = Math.min(1, (elapsed - piece.spawnAt) / 0.22)
@@ -858,7 +858,7 @@ function draw() {
 		context.stroke()
 	}
 	context.restore()
-	for (const piece of pieces) drawMergePiece(piece)
+	for (const piece of pieces) drawAxolotl(piece)
 	for (const shockwave of shockwaves) {
 		const progress = Math.min(1, shockwave.age / shockwave.duration)
 		const ringRadius = shockwave.maxRadius * easeOutCubic(progress)
