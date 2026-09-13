@@ -6654,7 +6654,7 @@
     "message": "Help support continued development"
   },
   "app.settings.about.attribution": {
-    "message": "Starlight Launcher is a modified version of the open-source Modrinth codebase."
+    "message": "Starlight Launcher is a modified version of the Axolotl Launcher, which is based on the open-source Modrinth codebase."
   },
   "app.settings.about.community-support": {
     "message": "Project & community"

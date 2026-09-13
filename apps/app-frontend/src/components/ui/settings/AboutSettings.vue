@@ -139,7 +139,7 @@ const messages = defineMessages({
 	},
 	copyright: {
 		id: 'app.settings.about.copyright',
-		defaultMessage: 'Copyright © Starlight All Rights Reserved.',
+		defaultMessage: 'Copyright © Axolotl All Rights Reserved.',
 	},
 	version: {
 		id: 'app.settings.about.version',
@@ -159,7 +159,7 @@ const messages = defineMessages({
 	},
 	attribution: {
 		id: 'app.settings.about.attribution',
-		defaultMessage: 'Starlight Launcher is a modified version of the open-source Modrinth codebase.',
+		defaultMessage: 'Starlight Launcher is a modified version of the Axolotl Launcher, which is based on the open-source Modrinth codebase.',
 	},
 	notAffiliated: {
 		id: 'app.settings.about.not-affiliated',

@@ -6423,7 +6423,7 @@
     "message": "支持專案持續開發"
   },
   "app.settings.about.attribution": {
-    "message": "Starlight Launcher 是開源專案 Modrinth 程式碼庫的修改版本。"
+    "message": "Starlight Launcher 是基於 Axolotl 啟動器修改的版本，Axolotl 啟動器基於開源專案 Modrinth 程式碼庫。"
   },
   "app.settings.about.community-support": {
     "message": "專案與社群"
