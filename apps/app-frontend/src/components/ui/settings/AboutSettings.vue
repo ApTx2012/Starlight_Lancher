@@ -1,20 +1,15 @@
 <script setup lang="ts">
-import {
-
-	ChevronDownIcon,
-	ExternalIcon,
-	ScaleIcon,
-	UsersIcon,
-} from '@modrinth/assets'
+import { ChevronDownIcon, ExternalIcon, ScaleIcon, UsersIcon } from '@modrinth/assets'
 import { Avatar, defineMessages, NewButton as Button, useVIntl } from '@modrinth/ui'
 import { getVersion } from '@tauri-apps/api/app'
 import { openUrl } from '@tauri-apps/plugin-opener'
-import { inject, nextTick, onScopeDispose, ref, shallowRef } from 'vue'
+import { defineAsyncComponent, inject, nextTick, onScopeDispose, ref, shallowRef } from 'vue'
+
+import ColorMineAvatar from '@/components/ui/easteregg/color-mine/ColorMineAvatar.vue'
 import EasterEggContributorsModal from '@/components/ui/easteregg/EasterEggContributorsModal.vue'
 import EasterEggGameModal from '@/components/ui/easteregg/EasterEggGameModal.vue'
 import { AxolotlBrandConfig } from '@/config'
-
-import { contributors, teamMembers, type TeamMember } from '@/data/about'
+import { contributors, type TeamMember, teamMembers } from '@/data/about'
 
 import AboutScene from '../AboutScene.vue'
 import { type AboutMemberExperience, getAboutMemberExperience } from './about-member-experiences'
@@ -24,7 +19,7 @@ const version = await getVersion()
 const experienceHost = ref<HTMLElement>()
 const activeMemberExperience = shallowRef<AboutMemberExperience>()
 const pressingMemberName = ref<string>()
-let longPressTimer: ReturnType<typeof window.setTimeout> | undefined
+let longPressTimer: number | undefined
 let pressStart = { x: 0, y: 0 }
 let suppressNextMemberClick = false
 const replayOnboarding = inject<(mode: 'main' | 'instance') => Promise<void>>('replayOnboarding')
@@ -78,6 +73,24 @@ function closeMemberExperience() {
 
 const gameModal = ref<InstanceType<typeof EasterEggGameModal> | null>(null)
 const contributorsModal = ref<InstanceType<typeof EasterEggContributorsModal> | null>(null)
+const ColorMineModal = defineAsyncComponent(
+	() => import('@/components/ui/easteregg/color-mine/ColorMineModal.vue'),
+)
+const colorMineModal = ref<{ show: () => void }>()
+const colorMineMounted = ref(false)
+const colorMinePending = ref(false)
+
+function openColorMine() {
+	colorMineMounted.value = true
+	if (colorMineModal.value) colorMineModal.value.show()
+	else colorMinePending.value = true
+}
+
+function colorMineReady() {
+	if (!colorMinePending.value) return
+	colorMinePending.value = false
+	colorMineModal.value?.show()
+}
 
 let typedBuffer = ''
 const secretCodes = ['starlight']
@@ -166,7 +179,8 @@ const messages = defineMessages({
 	},
 	attribution: {
 		id: 'app.settings.about.attribution',
-		defaultMessage: 'Starlight Launcher is a modified version of the Axolotl Launcher, which is based on the open-source Modrinth codebase.',
+		defaultMessage:
+			'Starlight Launcher is a modified version of the Axolotl Launcher, which is based on the open-source Modrinth codebase.',
 	},
 	notAffiliated: {
 		id: 'app.settings.about.not-affiliated',
@@ -194,7 +208,6 @@ const messages = defineMessages({
 		defaultMessage: '{count, plural, one {# contributor} other {# contributors}}',
 	},
 })
-
 </script>
 
 <template>
@@ -236,7 +249,6 @@ const messages = defineMessages({
 				{{ formatMessage(messages.copyright) }}
 			</p>
 		</section>
-
 
 		<section>
 			<h3 class="m-0 mb-3 flex items-center gap-2 text-base font-semibold text-contrast">
@@ -288,33 +300,56 @@ const messages = defineMessages({
 				{{ formatMessage(messages.developmentTeam) }}
 			</h3>
 			<div class="grid gap-3 sm:grid-cols-2">
-				<a
-					v-for="member in teamMembers"
-					:key="member.name"
-					:href="member.url ?? undefined"
-					target="_blank"
-					rel="noopener noreferrer"
-					class="flex min-w-0 items-center gap-3 rounded-xl bg-surface-4 p-3 transition-colors hover:bg-surface-5"
-					@pointerdown="startMemberLongPress(member, $event)"
-					@pointermove="moveMemberLongPress"
-					@pointerup="cancelMemberLongPress"
-					@pointerleave="cancelMemberLongPress"
-					@click="handleMemberClick"
-					@contextmenu="handleMemberContextMenu(member, $event)"
-				>
-					<Avatar
-						:src="member.avatarUrl"
-						:alt="member.name"
-						size="2.5rem"
-						circle
-						no-shadow
-						loading="lazy"
-					/>
-					<span class="min-w-0 flex-1 truncate font-semibold text-contrast">
-						{{ member.name }}
-					</span>
-					<ExternalIcon v-if="member.url" class="size-4 shrink-0 text-secondary" />
-				</a>
+				<template v-for="member in teamMembers" :key="member.name">
+					<div
+						v-if="member.name === 'Disy920'"
+						class="flex min-w-0 items-center gap-3 rounded-xl bg-surface-4 p-3 transition-colors hover:bg-surface-5"
+					>
+						<ColorMineAvatar
+							:src="member.avatarUrl"
+							:name="member.name"
+							:href="member.url"
+							@activate="openColorMine"
+						/>
+						<a
+							:href="member.url"
+							target="_blank"
+							rel="noopener noreferrer"
+							class="flex min-w-0 flex-1 items-center gap-3"
+						>
+							<span class="min-w-0 flex-1 truncate font-semibold text-contrast">{{
+								member.name
+							}}</span>
+							<ExternalIcon v-if="member.url" class="size-4 shrink-0 text-secondary" />
+						</a>
+					</div>
+					<a
+						v-else
+						:href="member.url ?? undefined"
+						target="_blank"
+						rel="noopener noreferrer"
+						class="flex min-w-0 items-center gap-3 rounded-xl bg-surface-4 p-3 transition-colors hover:bg-surface-5"
+						@pointerdown="startMemberLongPress(member, $event)"
+						@pointermove="moveMemberLongPress"
+						@pointerup="cancelMemberLongPress"
+						@pointerleave="cancelMemberLongPress"
+						@click="handleMemberClick"
+						@contextmenu="handleMemberContextMenu(member, $event)"
+					>
+						<Avatar
+							:src="member.avatarUrl"
+							:alt="member.name"
+							size="2.5rem"
+							circle
+							no-shadow
+							loading="lazy"
+						/>
+						<span class="min-w-0 flex-1 truncate font-semibold text-contrast">
+							{{ member.name }}
+						</span>
+						<ExternalIcon v-if="member.url" class="size-4 shrink-0 text-secondary" />
+					</a>
+				</template>
 			</div>
 		</section>
 		<details class="group pt-4 about-settings-details">
@@ -360,6 +395,7 @@ const messages = defineMessages({
 	</div>
 
 	<EasterEggGameModal ref="gameModal" />
+	<ColorMineModal v-if="colorMineMounted" ref="colorMineModal" @vue:mounted="colorMineReady" />
 	<EasterEggContributorsModal ref="contributorsModal" @open-game="onEasterEggOpenGame" />
 </template>
 

@@ -110,7 +110,8 @@ const { formatMessage } = useVIntl()
 	color: var(--color-contrast);
 	font-size: 4.5rem;
 	font-weight: 800;
-	line-height: 1;
+	// Keep descenders inside the line box clipped by the wordmark reveal animation.
+	line-height: normal;
 	letter-spacing: 0;
 	white-space: nowrap;
 	animation: onboarding-welcome-wordmark-reveal 1050ms 900ms cubic-bezier(0.16, 1, 0.3, 1) both;

@@ -1,4 +1,109 @@
 {
+  "app.easteregg.color-mine.title": {
+    "message": "Starlight Mine: Chromatic Realms"
+  },
+  "app.easteregg.color-mine.easy": {
+    "message": "Easy"
+  },
+  "app.easteregg.color-mine.normal": {
+    "message": "Normal"
+  },
+  "app.easteregg.color-mine.hard": {
+    "message": "Hard"
+  },
+  "app.easteregg.color-mine.newGame": {
+    "message": "New board"
+  },
+  "app.easteregg.color-mine.close": {
+    "message": "Close"
+  },
+  "app.easteregg.color-mine.choose": {
+    "message": "Click a revealed tile to sample its color, then paint a gray tile."
+  },
+  "app.easteregg.color-mine.selected": {
+    "message": "Color {color} selected · Click a colored tile to change your brush."
+  },
+  "app.easteregg.color-mine.rulesTitle": {
+    "message": "How to play"
+  },
+  "app.easteregg.color-mine.rules": {
+    "message": "Numbers count same-color tiles in the eight surrounding spaces, excluding the tile itself. Each color forms one connected region using only horizontal and vertical edges. Sample a revealed tile to select a brush; a correct paint reveals a new number, but one wrong paint ends the game. Every board has a step-by-step deduction path without guessing."
+  },
+  "app.easteregg.color-mine.loading": {
+    "message": "Generating regions and checking the deduction path…"
+  },
+  "app.easteregg.color-mine.generateError": {
+    "message": "Could not generate this board. Try again."
+  },
+  "app.easteregg.color-mine.retry": {
+    "message": "Try again"
+  },
+  "app.easteregg.color-mine.progress": {
+    "message": "{count} / {total} revealed"
+  },
+  "app.easteregg.color-mine.best": {
+    "message": "Best · {time}"
+  },
+  "app.easteregg.color-mine.won": {
+    "message": "All colors restored!"
+  },
+  "app.easteregg.color-mine.lost": {
+    "message": "Wrong color at row {row}, column {column}: selected {selected}, correct {correct}. Game over."
+  },
+  "app.easteregg.color-mine.review": {
+    "message": "Unrevealed answers are now shown faded for review."
+  },
+  "app.easteregg.color-mine.leaveTitle": {
+    "message": "Leave this board?"
+  },
+  "app.easteregg.color-mine.leaveText": {
+    "message": "Save to continue later, or discard this unfinished board."
+  },
+  "app.easteregg.color-mine.saveLeave": {
+    "message": "Save and leave"
+  },
+  "app.easteregg.color-mine.discard": {
+    "message": "Discard"
+  },
+  "app.easteregg.color-mine.continue": {
+    "message": "Keep playing"
+  },
+  "app.easteregg.color-mine.replaceTitle": {
+    "message": "Start a new board?"
+  },
+  "app.easteregg.color-mine.replaceText": {
+    "message": "The current board will be discarded."
+  },
+  "app.easteregg.color-mine.savedTitle": {
+    "message": "An unfinished board is saved"
+  },
+  "app.easteregg.color-mine.resume": {
+    "message": "Resume saved game"
+  },
+  "app.easteregg.color-mine.storageError": {
+    "message": "Could not read or write the saved game. Your current board has been kept. Retry or explicitly discard it."
+  },
+  "app.easteregg.color-mine.recordError": {
+    "message": "Finished, but the best time could not be saved."
+  },
+  "app.easteregg.color-mine.zoomIn": {
+    "message": "Zoom in"
+  },
+  "app.easteregg.color-mine.zoomOut": {
+    "message": "Zoom out"
+  },
+  "app.easteregg.color-mine.map": {
+    "message": "Board overview. Click to navigate."
+  },
+  "app.easteregg.color-mine.board": {
+    "message": "{size} by {size} color deduction board"
+  },
+  "app.easteregg.color-mine.hidden": {
+    "message": "Row {row}, column {column}, unrevealed"
+  },
+  "app.easteregg.color-mine.revealed": {
+    "message": "Row {row}, column {column}, color {color}, {number} same-color neighbors"
+  },
   "app.account.signed-in-as": {
     "message": "Signed in as"
   },

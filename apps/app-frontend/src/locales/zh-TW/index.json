@@ -1,4 +1,109 @@
 {
+  "app.easteregg.color-mine.title": {
+    "message": "星光礦井：彩域"
+  },
+  "app.easteregg.color-mine.easy": {
+    "message": "簡單"
+  },
+  "app.easteregg.color-mine.normal": {
+    "message": "普通"
+  },
+  "app.easteregg.color-mine.hard": {
+    "message": "困難"
+  },
+  "app.easteregg.color-mine.newGame": {
+    "message": "新的一局"
+  },
+  "app.easteregg.color-mine.close": {
+    "message": "關閉"
+  },
+  "app.easteregg.color-mine.choose": {
+    "message": "先點擊已揭示的色塊取色，再為灰格染色。"
+  },
+  "app.easteregg.color-mine.selected": {
+    "message": "已取色 {color} · 點擊其他色塊切換畫筆。"
+  },
+  "app.easteregg.color-mine.rulesTitle": {
+    "message": "玩法說明"
+  },
+  "app.easteregg.color-mine.rules": {
+    "message": "數字表示周圍八格中同色格的數量，不含自身。每種顏色必須組成一個上下左右連通的區域，斜角不算連接。點擊已揭示的格子取色，染對會顯示新數字，染錯則本局結束。每局均經過逐步推理驗證，無需猜測。"
+  },
+  "app.easteregg.color-mine.loading": {
+    "message": "正在生成色域並校驗推理路徑…"
+  },
+  "app.easteregg.color-mine.generateError": {
+    "message": "棋盤生成失敗，請重試。"
+  },
+  "app.easteregg.color-mine.retry": {
+    "message": "重試"
+  },
+  "app.easteregg.color-mine.progress": {
+    "message": "已揭示 {count} / {total}"
+  },
+  "app.easteregg.color-mine.best": {
+    "message": "最佳 · {time}"
+  },
+  "app.easteregg.color-mine.won": {
+    "message": "全部色域已還原！"
+  },
+  "app.easteregg.color-mine.lost": {
+    "message": "第 {row} 行、第 {column} 列染錯了：選擇了 {selected}，正確顏色為 {correct}。本局結束。"
+  },
+  "app.easteregg.color-mine.review": {
+    "message": "未揭示的答案已淡色顯示，可查看棋盤複盤。"
+  },
+  "app.easteregg.color-mine.leaveTitle": {
+    "message": "要離開目前棋盤嗎？"
+  },
+  "app.easteregg.color-mine.leaveText": {
+    "message": "可以儲存，下次從這裡繼續；也可以放棄本局。"
+  },
+  "app.easteregg.color-mine.saveLeave": {
+    "message": "儲存並離開"
+  },
+  "app.easteregg.color-mine.discard": {
+    "message": "放棄本局"
+  },
+  "app.easteregg.color-mine.continue": {
+    "message": "繼續這局"
+  },
+  "app.easteregg.color-mine.replaceTitle": {
+    "message": "開始新的一局？"
+  },
+  "app.easteregg.color-mine.replaceText": {
+    "message": "目前這局的進度將被放棄。"
+  },
+  "app.easteregg.color-mine.savedTitle": {
+    "message": "有一局尚未完成的棋盤"
+  },
+  "app.easteregg.color-mine.resume": {
+    "message": "繼續上次的棋盤"
+  },
+  "app.easteregg.color-mine.storageError": {
+    "message": "無法讀取或儲存存檔，目前棋盤已保留。可重試，或選擇放棄存檔。"
+  },
+  "app.easteregg.color-mine.recordError": {
+    "message": "已完成，但最佳成績未能儲存。"
+  },
+  "app.easteregg.color-mine.zoomIn": {
+    "message": "放大"
+  },
+  "app.easteregg.color-mine.zoomOut": {
+    "message": "縮小"
+  },
+  "app.easteregg.color-mine.map": {
+    "message": "棋盤總覽，點擊定位"
+  },
+  "app.easteregg.color-mine.board": {
+    "message": "{size} × {size} 彩色推理棋盤"
+  },
+  "app.easteregg.color-mine.hidden": {
+    "message": "第 {row} 行，第 {column} 列，未揭示"
+  },
+  "app.easteregg.color-mine.revealed": {
+    "message": "第 {row} 行，第 {column} 列，顏色 {color}，周圍同色 {number} 格"
+  },
   "app.account.signed-in-as": {
     "message": "登入身分："
   },
