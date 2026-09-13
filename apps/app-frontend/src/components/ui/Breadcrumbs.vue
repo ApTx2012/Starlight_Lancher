@@ -225,10 +225,19 @@ const breadcrumbs = computed<Breadcrumb[]>(() => {
 function resolveLabel(name: string): string {
 	return resolveBreadcrumbLabel(
 		name,
-		(key) => breadcrumbData.getName(key),
+		(key) => breadcrumbData.getName(key) || fallbackDynamicLabel(key),
 		staticLabels,
 		(message) => formatMessage(message),
 	)
+}
+
+// 动态面包屑（?Xxx）在页面异步 setName 之前，回退到静态标签，避免图标与文字不同步
+function fallbackDynamicLabel(key: string): string {
+	const fallback: Record<string, keyof typeof staticLabels> = {
+		BrowseTitle: 'Discover content',
+	}
+	const staticKey = fallback[key]
+	return staticKey ? formatMessage(staticLabels[staticKey]) : ''
 }
 
 function resolveIcon(breadcrumb: Breadcrumb): Component | undefined {
