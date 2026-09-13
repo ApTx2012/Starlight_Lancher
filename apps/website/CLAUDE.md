@@ -1,6 +1,6 @@
-# Axolotl Website
+# Starlight Website
 
-`apps/website` is the official Axolotl Launcher website. It is a Nuxt 3 static site using Vue 3, Tailwind CSS, and the shared UI and asset packages.
+`apps/website` is the official Starlight Launcher website. It is a Nuxt 3 static site using Vue 3, Tailwind CSS, and the shared UI and asset packages.
 
 ## Development
 

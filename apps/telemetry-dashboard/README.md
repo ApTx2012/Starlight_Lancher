@@ -1,4 +1,4 @@
-# Axolotl Telemetry Dashboard
+# Starlight Telemetry Dashboard
 
 Read-only administration UI for the existing `axolotl-telemetry` D1 database and
 `axolotl-telemetry-errors` R2 bucket. It does not share routes or code with the public telemetry

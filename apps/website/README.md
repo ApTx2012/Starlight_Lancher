@@ -1,6 +1,6 @@
-# Axolotl Website
+# Starlight Website
 
-The official website for Axolotl Launcher.
+The official website for Starlight Launcher.
 
 ## Development
 
