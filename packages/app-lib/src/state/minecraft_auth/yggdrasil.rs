@@ -213,56 +213,29 @@ pub async fn begin_yggdrasil_login(
         .as_error());
     }
 
-    // 逐个角色 refresh + 保存，实现「一次登录自动加入所有角色」。
-    // Yggdrasil 同一时刻只激活一个角色，因此需要串行 refresh，并各自保存当次 token。
-    let mut access_token = response.access_token.clone();
-    let mut client_token = response.client_token.clone();
-    let mut last_credentials: Option<Credentials> = None;
+    // 不在此处激活任何角色：authenticate 只拿到一条 clientToken 链，
+    // 若循环 refresh 多个角色，同一 clientToken 下后一次会顶掉前一次的
+    // accessToken，导致只有最后一个角色有效。因此改为返回
+    // `SelectProfile`，由前端弹出选择框，老板选中后用
+    // `finish_yggdrasil_login` 单独 refresh 该角色。
+    // 需要多个角色时重复登录、各选一个，每个角色持有独立的 clientToken。
+    let _ = exec;
 
-    for (index, profile) in profiles.iter().enumerate() {
-        let refreshed = refresh_selected_profile(
-            &metadata.api_root,
-            &access_token,
-            &client_token,
-            profile,
-        )
-        .await?;
-        let selected_profile = refreshed.selected_profile.ok_or_else(|| {
-            ErrorKind::OtherError(
-                "The Yggdrasil service did not select the requested profile"
-                    .to_string(),
-            )
-            .as_error()
-        })?;
-        access_token = refreshed.access_token.clone();
-        client_token = refreshed.client_token.clone();
+    let flow_id = Uuid::new_v4();
+    PENDING_LOGINS.lock().await.insert(
+        flow_id,
+        PendingYggdrasilLogin {
+            created: Instant::now(),
+            api_root: metadata.api_root,
+            server_name: metadata.server_name,
+            login: login.to_string(),
+            access_token: response.access_token,
+            client_token: response.client_token,
+            profiles: profiles.clone(),
+        },
+    );
 
-        let mut credentials = create_credentials(
-            selected_profile,
-            refreshed.access_token,
-            refreshed.client_token,
-            YggdrasilMetadata {
-                api_root: metadata.api_root.clone(),
-                server_name: metadata.server_name.clone(),
-                raw: String::new(),
-            },
-            login,
-        );
-        // 仅让最后一个（通常是默认/首个以外的角色）保持 active，避免多个 active。
-        credentials.active = index == profiles.len() - 1;
-        credentials.upsert(exec).await?;
-        last_credentials = Some(credentials);
-    }
-
-    if let Some(credentials) = last_credentials {
-        return Ok(YggdrasilLoginResult::Complete { credentials });
-    }
-
-    Err(ErrorKind::OtherError(
-        "The Yggdrasil account does not have a Minecraft profile"
-            .to_string(),
-    )
-    .as_error())
+    Ok(YggdrasilLoginResult::SelectProfile { flow_id, profiles })
 }
 
 pub async fn finish_yggdrasil_login(
