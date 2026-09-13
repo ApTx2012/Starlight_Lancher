@@ -175,9 +175,6 @@ export type AppSettings = {
 	home_widgets: HomeDashboardConfig | null
 	terracotta_public_nodes: string[]
 
-	telemetry: boolean
-	telemetry_consent_version: number
-	discord_rpc: boolean
 	onboarded: boolean
 	onboarding_version: number
 	onboarding_instance_tour_completed: boolean
@@ -205,12 +202,6 @@ export type AppSettings = {
 	auto_download_updates: boolean | null
 
 	version: number
-}
-
-export type PrivacySettings = {
-	telemetry: boolean
-	discord_rpc: boolean
-	consent_version: number
 }
 
 type LegacyMirrorSettings = {
@@ -299,22 +290,6 @@ export async function set(settings: AppSettings) {
 
 export async function cancel_directory_change(): Promise<void> {
 	return await invoke('plugin:settings|cancel_directory_change')
-}
-
-export async function getPrivacySettings(): Promise<PrivacySettings> {
-	return await invoke('plugin:settings|privacy_get')
-}
-
-export async function savePrivacySettings(privacy: PrivacySettings): Promise<PrivacySettings> {
-	return await invoke('plugin:settings|privacy_set', { privacy })
-}
-
-export async function setTelemetryEnabled(enabled: boolean): Promise<PrivacySettings> {
-	return await invoke('plugin:settings|telemetry_set', { enabled })
-}
-
-export async function setDiscordRpcEnabled(enabled: boolean): Promise<PrivacySettings> {
-	return await invoke('plugin:settings|discord_rpc_set', { enabled })
 }
 
 export async function getProxyConfig(): Promise<ProxyConfig> {

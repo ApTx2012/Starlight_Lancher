@@ -15,7 +15,6 @@ import { useHomeDashboardRuntime } from '@/components/home/home-dashboard-runtim
 import InstanceItem from '@/components/ui/world/InstanceItem.vue'
 import WorldItem from '@/components/ui/world/WorldItem.vue'
 import { useMinecraftLaunchError } from '@/composables/useMinecraftLaunchError'
-import { trackEvent } from '@/helpers/analytics'
 import { kill, run } from '@/helpers/instance'
 import type { GameInstance } from '@/helpers/types'
 import {
@@ -117,11 +116,6 @@ async function joinWorld(world: WorldWithInstance, instance: GameInstance) {
 			await start_join_singleplayer_world(world.instance_id, world.path)
 		}
 		playingWorldKey.value = key
-		trackEvent('InstanceStart', {
-			loader: instance.loader,
-			game_version: instance.game_version,
-			source: 'HomeRecentWorld',
-		})
 	} catch (error) {
 		const handled = await handleMinecraftLaunchError(error, {
 			instance_id: instance.id,
@@ -136,11 +130,6 @@ async function joinWorld(world: WorldWithInstance, instance: GameInstance) {
 async function playInstance(instance: GameInstance) {
 	try {
 		await run(instance.id)
-		trackEvent('InstanceStart', {
-			loader: instance.loader,
-			game_version: instance.game_version,
-			source: 'HomeRecentWorld',
-		})
 	} catch (error) {
 		const handled = await handleMinecraftLaunchError(error, {
 			instance_id: instance.id,
@@ -153,11 +142,6 @@ async function playInstance(instance: GameInstance) {
 async function stopInstance(instance: GameInstance) {
 	await kill(instance.id).catch(handleError)
 	playingWorldKey.value = null
-	trackEvent('InstanceStop', {
-		loader: instance.loader,
-		game_version: instance.game_version,
-		source: 'HomeRecentWorld',
-	})
 }
 </script>
 

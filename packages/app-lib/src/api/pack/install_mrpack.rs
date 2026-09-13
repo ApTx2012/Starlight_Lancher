@@ -23,8 +23,8 @@ use crate::state::{
     Settings, SideType,
 };
 use crate::util::fetch::{
-    ContentValidation, DownloadMeta, DownloadReason, DownloadRequest,
-    Integrity, ResourceClass, download_to_path, sha1_file_async,
+    ContentValidation, DownloadRequest, Integrity, ResourceClass,
+    download_to_path, sha1_file_async,
 };
 use crate::util::io;
 use async_zip::base::read::seek::ZipFileReader as SeekZipFileReader;
@@ -219,7 +219,6 @@ fn missing_required_content_pause(
 struct ModpackContentInstallContext {
     instance_id: String,
     instance_full_path: PathBuf,
-    download_meta: DownloadMeta,
     pack_version_id: Option<String>,
     pack_project_id: Option<String>,
     reporter: InstallProgressReporter,
@@ -689,7 +688,6 @@ where
 pub(crate) async fn install_zipped_mrpack_files_with_reporter(
     create_pack: CreatePack,
     ignore_lock: bool,
-    reason: DownloadReason,
     reporter: InstallProgressReporter,
 ) -> crate::Result<MrpackInstallOutcome> {
     let state = &State::get().await?;
@@ -806,21 +804,6 @@ pub(crate) async fn install_zipped_mrpack_files_with_reporter(
     )
     .await?;
 
-    let metadata =
-        crate::api::instance::get(&instance_id)
-            .await?
-            .ok_or_else(|| {
-                crate::ErrorKind::InputError(format!(
-                    "Unknown instance {instance_id}"
-                ))
-            })?;
-    let download_meta = DownloadMeta {
-        reason,
-        game_version: metadata.applied_content_set.game_version.clone(),
-        loader: metadata.applied_content_set.loader.as_str().to_string(),
-        dependent_on: version_id.clone(),
-    };
-
     let num_files = pack.files.len();
     let content_total_bytes = pack
         .files
@@ -892,7 +875,6 @@ pub(crate) async fn install_zipped_mrpack_files_with_reporter(
     let content_context = ModpackContentInstallContext {
         instance_id: instance_id.clone(),
         instance_full_path: instance_full_path.clone(),
-        download_meta,
         pack_version_id: version_id.clone(),
         pack_project_id: project_id.clone(),
         reporter: reporter.clone(),
@@ -1191,9 +1173,6 @@ pub(crate) async fn install_zipped_mrpack_files_with_reporter(
                             project.downloads.iter().skip(1).cloned(),
                         )
                         .with_integrity(integrity)
-                        .with_download_meta(
-                            content_context.download_meta.clone(),
-                        )
                         .with_segmented_download(true)
                         .with_http1_segmented_download(false)
                         .with_install_tracking(

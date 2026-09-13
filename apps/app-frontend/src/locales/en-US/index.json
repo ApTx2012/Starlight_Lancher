@@ -5912,12 +5912,6 @@
   "app.onboarding.mascot-alt": {
     "message": "Starlight guide"
   },
-  "app.onboarding.privacy.description": {
-    "message": "Manage anonymous telemetry, Discord Rich Presence, and the Minecraft log analysis service whenever you need to."
-  },
-  "app.onboarding.privacy.title": {
-    "message": "Your data, your call"
-  },
   "app.onboarding.resources.description": {
     "message": "Choose how content downloads and installs, from download sources to safety checks."
   },
@@ -5962,30 +5956,6 @@
   },
   "app.onboarding.welcome.title": {
     "message": "Everything is ready"
-  },
-  "app.privacy-consent.continue": {
-    "message": "Save and continue"
-  },
-  "app.privacy-consent.discord-rpc": {
-    "message": "Discord Rich Presence"
-  },
-  "app.privacy-consent.discord-rpc-description": {
-    "message": "Shows your current launcher or game activity in Discord when Discord is running."
-  },
-  "app.privacy-consent.intro": {
-    "message": "Choose what Starlight may send or display. Nothing is sent until you confirm these choices."
-  },
-  "app.privacy-consent.privacy-policy": {
-    "message": "Read the privacy policy"
-  },
-  "app.privacy-consent.telemetry": {
-    "message": "Allow anonymous telemetry"
-  },
-  "app.privacy-consent.telemetry-description": {
-    "message": "Helps count opted-in installations and daily active users. Full Minecraft logs and account credentials are never uploaded."
-  },
-  "app.privacy-consent.title": {
-    "message": "Privacy & security"
   },
   "app.project.curseforge.loading": {
     "message": "Loading CurseForge project…"
@@ -6806,9 +6776,6 @@
   "app.settings.about.preview-minecraft-crash-modal": {
     "message": "Preview Minecraft crash window"
   },
-  "app.settings.about.preview-privacy-consent-modal": {
-    "message": "Preview privacy & security modal"
-  },
   "app.settings.about.product-title": {
     "message": "About {productName}"
   },
@@ -7069,21 +7036,6 @@
   },
   "app.settings.java.view-installed": {
     "message": "View installed Java"
-  },
-  "app.settings.privacy.data-handling": {
-    "message": "Telemetry uses a random installation identifier and sends only a daily activity signal. Turning telemetry off clears pending data immediately."
-  },
-  "app.settings.privacy.discord-rpc": {
-    "message": "Discord Rich Presence"
-  },
-  "app.settings.privacy.discord-rpc-description": {
-    "message": "Show your current launcher or game activity in Discord."
-  },
-  "app.settings.privacy.telemetry": {
-    "message": "Allow telemetry"
-  },
-  "app.settings.privacy.telemetry-description": {
-    "message": "Send one anonymous daily activity signal to improve usage statistics. Minecraft logs and account credentials are never uploaded."
   },
   "app.settings.resources.add-minecraft-directory": {
     "message": "Add .minecraft directory"
@@ -7465,9 +7417,6 @@
   },
   "app.settings.tabs.network-multiplayer": {
     "message": "Network & multiplayer"
-  },
-  "app.settings.tabs.privacy-data": {
-    "message": "Privacy & data sharing"
   },
   "app.settings.tabs.storage": {
     "message": "Storage"

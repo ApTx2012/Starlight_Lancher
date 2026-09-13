@@ -14,7 +14,6 @@ import { computed, ref } from 'vue'
 
 import InstanceIcon from '@/components/ui/InstanceIcon.vue'
 import ModalWrapper from '@/components/ui/modal/ModalWrapper.vue'
-import { trackEvent } from '@/helpers/analytics'
 import { list } from '@/helpers/instance'
 import { add_server_to_instance, get_instance_worlds } from '@/helpers/worlds.ts'
 
@@ -91,7 +90,6 @@ defineExpose({
 		instances.value = instanceValues
 		modal.value.show()
 
-		trackEvent('AddServerToInstanceStart', { source: 'AddServerToInstanceModal' })
 	},
 })
 
@@ -102,11 +100,6 @@ async function addServer(instance) {
 		instance.added = true
 		await queryClient.invalidateQueries({ queryKey: ['worlds', instance.id] })
 
-		trackEvent('AddServerToInstance', {
-			server_name: serverName.value,
-			instance_name: instance.name,
-			source: 'AddServerToInstanceModal',
-		})
 	} catch (err) {
 		handleError(err)
 	}

@@ -28,7 +28,6 @@ import LegacyProjectCard from '@/components/ui/LegacyProjectCard.vue'
 import ConfirmDeleteInstanceModal from '@/components/ui/modal/ConfirmDeleteInstanceModal.vue'
 import { useMinecraftLaunchError } from '@/composables/useMinecraftLaunchError'
 import { useNetworkStatus } from '@/composables/useNetworkStatus'
-import { trackEvent } from '@/helpers/analytics'
 import { install_duplicate_instance } from '@/helpers/install'
 import { kill, remove, run } from '@/helpers/instance'
 import { get_by_instance_id } from '@/helpers/process.js'
@@ -158,17 +157,9 @@ const handleOptionsClick = async (args) => {
 				})
 				if (!handled) handleSevereError(err, { instanceId: args.item.id })
 			})
-			trackEvent('InstanceStart', {
-				loader: args.item.loader,
-				game_version: args.item.game_version,
-			})
 			break
 		case 'stop':
 			await kill(args.item.id).catch(handleError)
-			trackEvent('InstanceStop', {
-				loader: args.item.loader,
-				game_version: args.item.game_version,
-			})
 			break
 		case 'add_content':
 			await router.push({

@@ -26,7 +26,6 @@ import { useRouter } from 'vue-router'
 
 import InstanceIcon from '@/components/ui/InstanceIcon.vue'
 import { useMinecraftLaunchError } from '@/composables/useMinecraftLaunchError'
-import { trackEvent } from '@/helpers/analytics'
 import { get_project } from '@/helpers/cache'
 import { process_listener } from '@/helpers/events'
 import { kill, run } from '@/helpers/instance'
@@ -108,11 +107,6 @@ const play = async (event: MouseEvent) => {
 			if (!handled) handleSevereError(err, { instanceId: props.instance.id })
 		})
 		.finally(() => {
-			trackEvent('InstanceStart', {
-				loader: props.instance.loader,
-				game_version: props.instance.game_version,
-				source: 'InstanceItem',
-			})
 		})
 	emit('play')
 	loading.value = false
@@ -122,11 +116,6 @@ const stop = async (event: MouseEvent) => {
 	event?.stopPropagation()
 	loading.value = true
 	await kill(props.instance.id).catch(handleError)
-	trackEvent('InstanceStop', {
-		loader: props.instance.loader,
-		game_version: props.instance.game_version,
-		source: 'InstanceItem',
-	})
 	emit('stop')
 	loading.value = false
 }

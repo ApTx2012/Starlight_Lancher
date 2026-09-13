@@ -12,9 +12,8 @@ use crate::state::{
     ModrinthVersionId, SideType,
 };
 use crate::util::fetch::{
-    ContentValidation, DownloadMeta, DownloadReason, DownloadRequest,
-    FetchProgressFn, Integrity, ResourceClass, download_to_path, fetch,
-    sha1_file_async, write_cached_icon,
+    ContentValidation, DownloadRequest, FetchProgressFn, Integrity,
+    ResourceClass, download_to_path, fetch, sha1_file_async, write_cached_icon,
 };
 use path_util::SafeRelativeUtf8UnixPathBuf;
 use serde::{Deserialize, Serialize};
@@ -267,7 +266,6 @@ pub(crate) async fn generate_pack_from_version_id_with_reporter(
     title: String,
     icon_url: Option<String>,
     instance_id: String,
-    reason: DownloadReason,
     reporter: InstallProgressReporter,
 ) -> crate::Result<CreatePack> {
     let state = State::get().await?;
@@ -339,22 +337,6 @@ pub(crate) async fn generate_pack_from_version_id_with_reporter(
         .join(&project_id)
         .join(&version_id)
         .join(file_name);
-
-    let metadata =
-        crate::api::instance::get(&instance_id)
-            .await?
-            .ok_or_else(|| {
-                crate::ErrorKind::InputError(format!(
-                    "Unknown instance {instance_id}"
-                ))
-            })?;
-
-    let download_meta = DownloadMeta {
-        reason,
-        game_version: metadata.applied_content_set.game_version.clone(),
-        loader: metadata.applied_content_set.loader.as_str().to_string(),
-        dependent_on: Some(version_id.clone()),
-    };
 
     let details = InstallPhaseDetails::Modpack {
         project_id: Some(project_id.clone()),
@@ -430,7 +412,6 @@ pub(crate) async fn generate_pack_from_version_id_with_reporter(
                 ..Integrity::default()
             })
             .with_h2_range_concurrency(16)
-            .with_download_meta(download_meta)
             .with_install_tracking(
                 reporter.clone(),
                 pack_path.display().to_string(),
@@ -485,7 +466,6 @@ pub(crate) async fn generate_pack_from_version_id_with_reporter(
                 .await?;
             let icon_bytes = fetch(
                 &icon_url,
-                None,
                 None,
                 None,
                 &state.fetch_semaphore,

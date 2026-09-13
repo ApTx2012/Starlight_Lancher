@@ -357,7 +357,6 @@ impl FriendsSocket {
             None,
             None,
             None,
-            None,
             Some("/v3/friend/:user_id"),
             semaphore,
             exec,
@@ -387,7 +386,6 @@ impl FriendsSocket {
         fetch_advanced(
             Method::DELETE,
             &format!("{}friend/{user_id}", env!("MODRINTH_API_URL_V3")),
-            None,
             None,
             None,
             None,

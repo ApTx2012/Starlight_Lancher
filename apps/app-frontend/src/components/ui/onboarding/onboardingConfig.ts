@@ -204,15 +204,6 @@ export const onboardingMessages = defineMessages({
 		defaultMessage:
 			'Choose how content downloads and installs, from download sources to safety checks.',
 	},
-	privacyTitle: {
-		id: 'app.onboarding.privacy.title',
-		defaultMessage: 'Your data, your call',
-	},
-	privacyDescription: {
-		id: 'app.onboarding.privacy.description',
-		defaultMessage:
-			'Manage anonymous telemetry, Discord Rich Presence, and the Minecraft log analysis service whenever you need to.',
-	},
 	updatesTitle: { id: 'app.onboarding.updates.title', defaultMessage: 'Stay in the loop' },
 	updatesDescription: {
 		id: 'app.onboarding.updates.description',

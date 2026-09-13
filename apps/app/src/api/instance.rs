@@ -6,7 +6,6 @@ use path_util::SafeRelativeUtf8UnixPathBuf;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use theseus::DownloadReason;
 use theseus::data::{
     AppliedContentSetPatch, ContentItem, Dependency,
     EditInstance as CoreEditInstance, InstanceInstallCandidate,
@@ -1116,16 +1115,11 @@ pub async fn instance_update_project(
 pub async fn instance_add_project_from_version(
     instance_id: &str,
     version_id: &str,
-    reason: DownloadReason,
-    dependent_on_version_id: Option<String>,
 ) -> Result<String> {
-    Ok(theseus::instance::add_project_from_version(
-        instance_id,
-        version_id,
-        reason,
-        dependent_on_version_id,
+    Ok(
+        theseus::instance::add_project_from_version(instance_id, version_id)
+            .await?,
     )
-    .await?)
 }
 
 #[tauri::command]

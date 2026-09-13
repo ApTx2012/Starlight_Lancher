@@ -85,7 +85,6 @@ import InstanceIconPickerModal from '@/components/ui/modal/InstanceIconPickerMod
 import JavaDownloadConfirmationModal from '@/components/ui/modal/JavaDownloadConfirmationModal.vue'
 import ModpackAlreadyInstalledModal from '@/components/ui/modal/ModpackAlreadyInstalledModal.vue'
 import ModpackInstallModal from '@/components/ui/modal/ModpackInstallModal.vue'
-import PrivacyConsentModal from '@/components/ui/modal/PrivacyConsentModal.vue'
 import UpdateToPlayModal from '@/components/ui/modal/UpdateToPlayModal.vue'
 import NavButton from '@/components/ui/NavButton.vue'
 import NavRail from '@/components/ui/NavRail.vue'
@@ -98,7 +97,6 @@ import { useDropImport } from '@/composables/useDropImport'
 import { minecraftLaunchErrorKey } from '@/composables/useMinecraftLaunchError'
 import { useNetworkStatus } from '@/composables/useNetworkStatus'
 import { AxolotlBrandConfig, config, getOfficialLabrinthBaseUrl } from '@/config'
-import { trackEvent } from '@/helpers/analytics'
 import { check_reachable } from '@/helpers/auth.js'
 import { get_user, get_version } from '@/helpers/cache.js'
 import { configureCurseForgeManualDownloadWatcher } from '@/helpers/curseforge'
@@ -119,16 +117,13 @@ import { mergeUrlQuery, parseModrinthLink } from '@/helpers/project-links.ts'
 import {
 	get as getSettings,
 	getLastBrowseContentProjectType,
-	getPrivacySettings,
 	getUpdateChannel,
 	getUpdatePreferences,
 	isBrowseContentProjectType,
-	type PrivacySettings,
-	savePrivacySettings,
 	set as setSettings,
 } from '@/helpers/settings.ts'
 import { getSidebarExpanded, setSidebarExpanded } from '@/helpers/sidebar-state.ts'
-import { get_opening_command, initialize_state, set_discord_activity } from '@/helpers/state'
+import { get_opening_command, initialize_state } from '@/helpers/state'
 import {
 	areUpdatesEnabled,
 	backupAppDbForUpdate,
@@ -369,8 +364,6 @@ watch(
 )
 
 const stateInitialized = ref(false)
-const privacyConsentModal = ref<InstanceType<typeof PrivacyConsentModal>>()
-const privacyConsentPending = ref(false)
 const closeChoiceModal = ref<InstanceType<typeof NewModal>>()
 const closeChoiceOpen = ref(false)
 const closeChoiceRemember = ref(false)
@@ -1055,9 +1048,6 @@ async function setupApp() {
 		theme,
 		accent_color,
 		locale,
-		telemetry,
-		telemetry_consent_version,
-		discord_rpc,
 		collapsed_navigation,
 		hide_nametag_skins_page,
 		advanced_rendering,
@@ -1101,7 +1091,6 @@ async function setupApp() {
 	const dev = await isDev()
 	isDevEnvironment.value = dev
 	if (!onboarded && route.path !== '/') await router.replace('/')
-	privacyConsentPending.value = telemetry_consent_version < 1
 	showOnboarding.value = false
 	onboardingSettings.value = initialSettings
 
@@ -1132,16 +1121,7 @@ async function setupApp() {
 	themeStore.devMode = developer_mode
 	themeStore.featureFlags = feature_flags
 	stateInitialized.value = true
-	if (privacyConsentPending.value) {
-		await nextTick()
-		privacyConsentModal.value?.show({
-			telemetry,
-			discord_rpc,
-			consent_version: telemetry_consent_version,
-		})
-	} else {
-		showOnboarding.value = !onboarded
-	}
+	showOnboarding.value = !onboarded
 	void reconcileMojangAuthSourceAtStartup().catch(handleError)
 
 	isMaximized.value = await getCurrentWindow().isMaximized()
@@ -1274,42 +1254,7 @@ async function closeOnboardingSettings() {
 }
 
 async function scheduleStartupDialogs() {
-	if (!stateInitialized.value || privacyConsentPending.value || showOnboarding.value) return
-}
-
-async function handlePrivacyConsentSaved(privacy: PrivacySettings) {
-	privacyConsentPending.value = false
-	if (onboardingSettings.value) {
-		onboardingSettings.value.telemetry = privacy.telemetry
-		onboardingSettings.value.discord_rpc = privacy.discord_rpc
-		onboardingSettings.value.telemetry_consent_version = privacy.consent_version
-	}
-	if (!onboardingSettings.value?.onboarded) {
-		startOnboarding('main')
-	} else {
-		await scheduleStartupDialogs()
-	}
-}
-
-async function previewPrivacyConsentModal() {
-	try {
-		const current = await getPrivacySettings()
-		const privacy = await savePrivacySettings({
-			telemetry: false,
-			discord_rpc: current.discord_rpc,
-			consent_version: 0,
-		})
-		privacyConsentPending.value = true
-		if (onboardingSettings.value) {
-			onboardingSettings.value.telemetry = privacy.telemetry
-			onboardingSettings.value.discord_rpc = privacy.discord_rpc
-			onboardingSettings.value.telemetry_consent_version = privacy.consent_version
-		}
-		await nextTick()
-		privacyConsentModal.value?.show(privacy)
-	} catch (error) {
-		handleError(error)
-	}
+	if (!stateInitialized.value || showOnboarding.value) return
 }
 
 provide('replayOnboarding', replayOnboarding)
@@ -1320,7 +1265,6 @@ provide(
 )
 provide('previewMinecraftCrashModal', () => minecraftCrashModal.value?.showPreview())
 provide('showLauncherPopup', (_request: unknown) => {})
-provide('previewPrivacyConsentModal', previewPrivacyConsentModal)
 
 const stateFailed = ref(false)
 stateInitialization
@@ -1429,9 +1373,6 @@ loading.setEnabled(false)
 let initialLoadToken = loading.begin()
 let routerToken = null
 let suspenseToken = null
-let lastDiscordActivity = null
-let discordActivityUpdate = Promise.resolve()
-
 let suspensePending = false
 
 const sidebarOverlayScrollbarsOptions = Object.freeze({
@@ -1447,31 +1388,11 @@ router.beforeEach(() => {
 	routerToken = loading.begin()
 })
 
-function syncDiscordActivity(to: RouteLocationNormalizedLoaded) {
-	const activity =
-		typeof to.meta.discordActivity === 'string' ? to.meta.discordActivity : 'Idling...'
-	if (activity === lastDiscordActivity) return
-
-	lastDiscordActivity = activity
-	discordActivityUpdate = discordActivityUpdate
-		.then(() => set_discord_activity(activity))
-		.catch((error) => {
-			if (lastDiscordActivity === activity) lastDiscordActivity = null
-			console.error('Failed to update Discord activity', error)
-		})
-}
-
 router.afterEach((to, from, failure) => {
 	hideAllPoppers()
 	if (!failure) void invoke('lightweight_mode_set_route', { route: to.fullPath })
-	trackEvent('PageView', {
-		path: to.path,
-		fromPath: from.path,
-		failed: failure,
-	})
 	if (!failure) {
 		void directLinkSync?.()
-		if (stateInitialized.value) syncDiscordActivity(to)
 	}
 	setTimeout(() => {
 		if (!suspensePending && stateInitialized.value) {
@@ -1508,7 +1429,6 @@ watch(
 	stateInitialized,
 	(ready) => {
 		if (ready) {
-			syncDiscordActivity(router.currentRoute.value)
 			if (initialLoadToken) {
 				loading.end(initialLoadToken)
 				initialLoadToken = null
@@ -1624,7 +1544,6 @@ const dropImport = useDropImport({
 	onSkinsPage,
 	onSchematicWorkshopPage,
 	isSchematicFile,
-	trackEvent,
 	router,
 })
 
@@ -1836,9 +1755,6 @@ async function handleCommand(e) {
 			} else {
 				await install_create_modpack_instance(location).catch(handleError)
 			}
-			trackEvent('InstanceCreate', {
-				source: 'CreationModalFileDrop',
-			})
 		}
 	} else if (e.event === 'LaunchInstance') {
 		const instance = await getInstance(e.id).catch(() => null)
@@ -2577,7 +2493,6 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 	/>
 	<MinecraftCrashModal ref="minecraftCrashModal" @error="handleError" />
 	<JavaDownloadConfirmationModal ref="javaDownloadConfirmationModal" />
-	<PrivacyConsentModal ref="privacyConsentModal" @saved="handlePrivacyConsentSaved" />
 	<NewModal
 		ref="closeChoiceModal"
 		:header="formatMessage(messages.closeLauncherTitle)"

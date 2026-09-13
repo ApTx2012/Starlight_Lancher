@@ -22,7 +22,6 @@ import { computed, ref } from 'vue'
 import type { HomeWidgetSize } from '@/components/home/home-dashboard'
 import { useHomeDashboardRuntime } from '@/components/home/home-dashboard-runtime'
 import { useMinecraftLaunchError } from '@/composables/useMinecraftLaunchError'
-import { trackEvent } from '@/helpers/analytics'
 import { kill } from '@/helpers/instance'
 import type { GameInstance } from '@/helpers/types'
 import {
@@ -107,11 +106,6 @@ async function joinServer(world: ServerWorld & WorldWithInstance, instance: Game
 
 	try {
 		await start_join_server(world.instance_id, world.address)
-		trackEvent('InstanceStart', {
-			loader: instance.loader,
-			game_version: instance.game_version,
-			source: 'HomePinnedServer',
-		})
 	} catch (error) {
 		const handled = await handleMinecraftLaunchError(error, {
 			instance_id: instance.id,
@@ -125,11 +119,6 @@ async function joinServer(world: ServerWorld & WorldWithInstance, instance: Game
 
 async function stopInstance(instance: GameInstance) {
 	await kill(instance.id).catch(handleError)
-	trackEvent('InstanceStop', {
-		loader: instance.loader,
-		game_version: instance.game_version,
-		source: 'HomePinnedServer',
-	})
 }
 
 async function unpinServer(world: ServerWorld & WorldWithInstance) {

@@ -5723,12 +5723,6 @@
   "app.onboarding.mascot-alt": {
     "message": "引導吉祥物"
   },
-  "app.onboarding.privacy.description": {
-    "message": "匿名遙測、Discord 活動狀態與 Minecraft 日誌分析服務都可以在這裡調整。"
-  },
-  "app.onboarding.privacy.title": {
-    "message": "你的資料，由你決定"
-  },
   "app.onboarding.resources.description": {
     "message": "調節下載、儲存和啟動器資源。給風扇一點尊嚴。"
   },
@@ -5773,30 +5767,6 @@
   },
   "app.onboarding.welcome.title": {
     "message": "一切就緒"
-  },
-  "app.privacy-consent.continue": {
-    "message": "儲存並繼續"
-  },
-  "app.privacy-consent.discord-rpc": {
-    "message": "Discord 活動狀態"
-  },
-  "app.privacy-consent.discord-rpc-description": {
-    "message": "Discord 執行時顯示你當前使用啟動器或遊玩的狀態。"
-  },
-  "app.privacy-consent.intro": {
-    "message": "選擇 Starlight 可以傳送或展示的內容。確認前不會傳送任何遙測。"
-  },
-  "app.privacy-consent.privacy-policy": {
-    "message": "閱讀隱私政策"
-  },
-  "app.privacy-consent.telemetry": {
-    "message": "允許匿名遙測"
-  },
-  "app.privacy-consent.telemetry-description": {
-    "message": "透過脫敏且限長的報告統計選擇加入的安裝量並排查啟動器錯誤。不會上傳完整 Minecraft 日誌或賬戶憑據。"
-  },
-  "app.privacy-consent.title": {
-    "message": "隱私與安全"
   },
   "app.project.curseforge.loading": {
     "message": "正在載入 CurseForge 專案..."
@@ -6566,9 +6536,6 @@
   "app.settings.about.preview-minecraft-crash-modal": {
     "message": "預覽 Minecraft 崩潰窗口"
   },
-  "app.settings.about.preview-privacy-consent-modal": {
-    "message": "預覽隱私與安全彈窗"
-  },
   "app.settings.about.product-title": {
     "message": "關於 {productName}"
   },
@@ -6814,21 +6781,6 @@
   },
   "app.settings.java.view-installed": {
     "message": "查看已安裝 Java"
-  },
-  "app.settings.privacy.data-handling": {
-    "message": "遙測使用隨機安裝標識。錯誤上下文離開裝置前會經過脫敏和長度限制。關閉遙測會立即清空待傳送報告。"
-  },
-  "app.settings.privacy.discord-rpc": {
-    "message": "Discord 活動狀態"
-  },
-  "app.settings.privacy.discord-rpc-description": {
-    "message": "在 Discord 中顯示你當前使用啟動器或遊玩的狀態。"
-  },
-  "app.settings.privacy.telemetry": {
-    "message": "允許遙測"
-  },
-  "app.settings.privacy.telemetry-description": {
-    "message": "傳送匿名每日活躍訊號和脫敏的啟動器錯誤報告。絕不上傳 Minecraft 日誌或賬戶憑據。"
   },
   "app.settings.resources.app-cache": {
     "message": "應用程式快取"
@@ -7219,9 +7171,6 @@
   },
   "app.settings.tabs.network-multiplayer": {
     "message": "網路與多人遊戲"
-  },
-  "app.settings.tabs.privacy-data": {
-    "message": "隱私與資料共享"
   },
   "app.settings.tabs.resource-management": {
     "message": "資源管理"

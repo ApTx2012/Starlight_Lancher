@@ -69,7 +69,6 @@ pub use self::projects::{
 pub use self::run::{
     GcLaunchIntent, GcLaunchReport, QuickPlayType, kill, run,
     run_with_extra_launch_args, run_with_extra_launch_args_with_gc,
-    try_update_playtime_by_instance_id,
 };
 pub use self::upgrade::{
     dismiss_instance_post_upgrade_notice, execute_instance_upgrade,

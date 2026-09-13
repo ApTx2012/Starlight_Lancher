@@ -212,7 +212,6 @@ import { useRoute, useRouter } from 'vue-router'
 import AppUpdateButton from '@/components/ui/app-update-button/index.vue'
 import { useInstallJobNotifications } from '@/composables/browse/install-job-notifications'
 import { useNetworkStatus } from '@/composables/useNetworkStatus'
-import { trackEvent } from '@/helpers/analytics'
 import { loading_listener, process_listener } from '@/helpers/events'
 import { get_many as getInstances } from '@/helpers/instance'
 import { get_all as getRunningProcesses, kill as killProcess } from '@/helpers/process'
@@ -437,11 +436,6 @@ const stop = async (process: RunningProcess) => {
 	try {
 		await killProcess(process.uuid).catch(handleError)
 
-		trackEvent('InstanceStop', {
-			loader: process.instance.loader,
-			game_version: process.instance.game_version,
-			source: 'AppBar',
-		})
 	} catch (e) {
 		console.error(e)
 	}

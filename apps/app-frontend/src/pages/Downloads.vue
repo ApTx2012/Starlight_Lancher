@@ -137,11 +137,11 @@
 							</template>
 						</div>
 						<div
-							v-if="downloadTelemetry(job).length"
+							v-if="downloadDetails(job).length"
 							class="mt-1 flex flex-wrap items-center gap-2 text-sm text-secondary"
 						>
 							<template
-								v-for="(metric, index) in downloadTelemetry(job)"
+								v-for="(metric, index) in downloadDetails(job)"
 								:key="`${index}-${metric}`"
 							>
 								<BulletDivider v-if="index > 0" />
@@ -1058,7 +1058,7 @@ function totalRequiredFiles(job: InstallJobSnapshot) {
 	return Math.max(job.summary.files_total ?? 0, job.items.length, completed + missing)
 }
 
-function downloadTelemetry(job: InstallJobSnapshot) {
+function downloadDetails(job: InstallJobSnapshot) {
 	const summary = job.summary
 	const metrics: string[] = []
 	if (summary.source && !isRecoveryValidation(job)) {

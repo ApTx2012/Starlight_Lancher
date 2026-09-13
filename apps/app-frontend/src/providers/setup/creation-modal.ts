@@ -13,7 +13,6 @@ import { useRouter } from 'vue-router'
 
 import type UnknownPackWarningModal from '@/components/ui/install_flow/UnknownPackWarningModal.vue'
 import type ModpackAlreadyInstalledModal from '@/components/ui/modal/ModpackAlreadyInstalledModal.vue'
-import { trackEvent } from '@/helpers/analytics'
 import { get_project_versions, get_search_results } from '@/helpers/cache.js'
 import { getCurseForgeFiles, hasCompatibleCurseForgeFile } from '@/helpers/curseforge'
 import { install_job_listener } from '@/helpers/events.js'
@@ -143,7 +142,6 @@ export function setupCreationModal(
 			},
 			{ name },
 		).catch(handleError)
-		trackEvent('InstanceCreate', { source: 'CreationModalModpack' })
 	}
 
 	async function handleCreate(config: CreationFlowContextValue) {
@@ -222,7 +220,6 @@ export function setupCreationModal(
 						handleError(error)
 					}
 				}
-				trackEvent('InstanceCreate', { source: 'CreationModalImport' })
 				return
 			}
 
@@ -238,7 +235,6 @@ export function setupCreationModal(
 				const splitPath = config.modpackFilePath.value.split(/[\\/]/)
 				const fileName = splitPath ? splitPath[splitPath.length - 1] : config.modpackFilePath.value
 				await installModpackFromPath(config.modpackFilePath.value, fileName)
-				trackEvent('InstanceCreate', { source: 'CreationModalModpackFile' })
 				return
 			}
 
@@ -281,9 +277,6 @@ export function setupCreationModal(
 				gameDirOverride,
 			}).catch(handleError)
 
-			trackEvent('InstanceCreate', {
-				source: 'CreationModal',
-			})
 		} catch (err) {
 			handleError(err as Error)
 		}

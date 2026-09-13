@@ -30,16 +30,6 @@
 						<CheckIcon v-else />
 					</button>
 				</ButtonStyled>
-				<!-- 开服功能暂有问题，隐藏该按钮
-				<ButtonStyled v-if="serverCapable && startServer" circular type="transparent">
-					<button
-						v-tooltip="formatMessage(messages.startServer)"
-						@click.stop="() => startServer(version)"
-					>
-						<ServerIcon />
-					</button>
-				</ButtonStyled>
-				-->
 				<ButtonStyled circular type="transparent">
 					<OverflowMenu
 						v-if="false"
@@ -87,7 +77,6 @@ import {
 	DownloadIcon,
 	ExternalIcon,
 	MoreVerticalIcon,
-	ServerIcon,
 } from '@modrinth/assets'
 import {
 	ButtonStyled,
@@ -98,7 +87,7 @@ import {
 	ProjectPageVersions,
 	useVIntl,
 } from '@modrinth/ui'
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 import { useRoute } from 'vue-router'
 
 import { SwapIcon } from '@/assets/icons/index.js'
@@ -116,10 +105,6 @@ const messages = defineMessages({
 	addToAnotherInstance: {
 		id: 'app.project.versions.add-to-another-instance',
 		defaultMessage: 'Add to another instance',
-	},
-	startServer: {
-		id: 'app.project.versions.start-server',
-		defaultMessage: 'Create server',
 	},
 })
 
@@ -152,15 +137,7 @@ const props = defineProps({
 		type: String,
 		default: null,
 	},
-	startServer: {
-		type: Function,
-		default: null,
-	},
 })
-
-const serverCapable = computed(
-	() => props.project?.project_type === 'modpack' && props.project?.server_side !== 'unsupported',
-)
 
 const { handleError } = injectNotificationManager()
 const route = useRoute()

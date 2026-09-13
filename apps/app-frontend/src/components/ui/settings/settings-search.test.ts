@@ -28,7 +28,6 @@ const settingsComponentFiles = {
 	'content-downloads': ['./AppearanceSettings.vue', './ResourceManagementSettings.vue'],
 	'network-multiplayer': ['./ResourceManagementSettings.vue', './MultiplayerSettings.vue'],
 	'storage-backups': ['./ResourceManagementSettings.vue', './StorageSettings.vue'],
-	'privacy-data': ['./PrivacySettings.vue'],
 	updates: ['./UpdateSettings.vue'],
 	about: ['./AboutSettings.vue'],
 	'feature-flags': ['./FeatureFlagSettings.vue'],
@@ -169,7 +168,7 @@ test('developer-only settings stay out of the normal search categories', () => {
 		'content-downloads',
 		'network-multiplayer',
 	])
-	assert.deepEqual(categoriesForGroup('data-privacy'), ['storage-backups', 'privacy-data'])
+	assert.deepEqual(categoriesForGroup('data-privacy'), ['storage-backups'])
 	assert.deepEqual(categoriesForGroup('support'), ['updates', 'about'])
 	assert.deepEqual(categoriesForGroup('developer'), [])
 	assert.deepEqual(categoriesForGroup('developer', true), ['feature-flags'])

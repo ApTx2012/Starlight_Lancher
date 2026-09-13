@@ -154,10 +154,6 @@ pub struct Settings {
     #[serde(default = "default_terracotta_public_nodes")]
     pub terracotta_public_nodes: Vec<String>,
 
-    pub telemetry: bool,
-    #[serde(default)]
-    pub telemetry_consent_version: u32,
-    pub discord_rpc: bool,
     #[serde(skip, default)]
     pub personalized_ads: bool,
 
@@ -188,13 +184,6 @@ pub struct Settings {
     pub auto_download_updates: Option<bool>,
 
     pub version: usize,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
-pub struct PrivacySettings {
-    pub telemetry: bool,
-    pub discord_rpc: bool,
-    pub consent_version: u32,
 }
 
 fn default_true() -> bool {
@@ -330,9 +319,6 @@ impl Settings {
                 .as_ref()
                 .and_then(|value| serde_json::from_str(value).ok())
                 .unwrap_or_else(default_terracotta_public_nodes),
-            telemetry: res.telemetry == 1,
-            telemetry_consent_version: res.telemetry_consent_version as u32,
-            discord_rpc: res.discord_rpc == 1,
             developer_mode: res.developer_mode == 1,
             personalized_ads: res.personalized_ads == 1,
             onboarded: res.onboarded == 1,
@@ -521,9 +507,9 @@ impl Settings {
             self.collapsed_navigation,
             self.advanced_rendering,
             self.native_decorations,
-            self.discord_rpc,
+            false,
             self.developer_mode,
-            self.telemetry,
+            false,
             self.personalized_ads,
             self.onboarded,
             extra_launch_args,
@@ -573,7 +559,7 @@ impl Settings {
             home_widgets,
             mojang_auth_source,
             terracotta_public_nodes,
-            self.telemetry_consent_version,
+            0_i64,
         )
         .execute(exec)
         .await?;
@@ -1355,58 +1341,23 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn telemetry_schema_migrates_fresh_and_existing_settings_databases() {
+    async fn removed_data_collection_schema_is_cleaned_up() {
         let fresh = sqlx::sqlite::SqlitePoolOptions::new()
             .max_connections(1)
             .connect("sqlite::memory:")
             .await
             .unwrap();
         sqlx::migrate!().run(&fresh).await.unwrap();
-        let settings = Settings::get(&fresh).await.unwrap();
-        assert!(!settings.telemetry);
-        assert_eq!(settings.telemetry_consent_version, 0);
+        let telemetry_tables = sqlx::query_scalar::<_, String>(
+			"SELECT name FROM sqlite_master WHERE type = 'table' AND name LIKE 'telemetry_%'",
+		)
+		.fetch_all(&fresh)
+		.await
+		.unwrap();
+        assert!(telemetry_tables.is_empty());
         assert!(
             sqlx::query("PRAGMA foreign_key_check")
                 .fetch_all(&fresh)
-                .await
-                .unwrap()
-                .is_empty()
-        );
-
-        let upgrade = sqlx::sqlite::SqlitePoolOptions::new()
-            .max_connections(1)
-            .connect("sqlite::memory:")
-            .await
-            .unwrap();
-        sqlx::query(
-            "CREATE TABLE settings (id INTEGER PRIMARY KEY CHECK (id = 0), telemetry INTEGER NOT NULL DEFAULT 0, discord_rpc INTEGER NOT NULL DEFAULT 1)",
-        )
-        .execute(&upgrade)
-        .await
-        .unwrap();
-        sqlx::query(
-            "INSERT INTO settings (id, telemetry, discord_rpc) VALUES (0, 0, 1)",
-        )
-        .execute(&upgrade)
-        .await
-        .unwrap();
-        sqlx::raw_sql(include_str!(concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/migrations/20260814120000_telemetry.sql"
-        )))
-        .execute(&upgrade)
-        .await
-        .unwrap();
-        let consent_version = sqlx::query_scalar::<_, i64>(
-            "SELECT telemetry_consent_version FROM settings WHERE id = 0",
-        )
-        .fetch_one(&upgrade)
-        .await
-        .unwrap();
-        assert_eq!(consent_version, 0);
-        assert!(
-            sqlx::query("PRAGMA foreign_key_check")
-                .fetch_all(&upgrade)
                 .await
                 .unwrap()
                 .is_empty()

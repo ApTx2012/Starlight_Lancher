@@ -18,8 +18,8 @@ use crate::state::{
     Version, cache_file_hash, cache_file_hash_metadata,
 };
 use crate::util::fetch::{
-    self, ContentValidation, DownloadMeta, DownloadReason, DownloadRequest,
-    Integrity, ResourceClass, download_to_path,
+    self, ContentValidation, DownloadRequest, Integrity, ResourceClass,
+    download_to_path,
 };
 use crate::util::io;
 use crate::util::io::io_error_with_lock_info;
@@ -307,7 +307,6 @@ pub(crate) async fn install_resolved_content_plan_with_reporter(
         add_resolved_content_with_progress(
             instance_id,
             &plan.primary,
-            DownloadReason::Standalone,
             false,
             primary_progress,
             state,
@@ -332,7 +331,6 @@ pub(crate) async fn install_resolved_content_plan_with_reporter(
             add_resolved_content_with_progress(
                 instance_id,
                 dependency,
-                DownloadReason::Dependency,
                 true,
                 dependency_progress,
                 state,
@@ -424,8 +422,6 @@ pub(crate) async fn switch_project_version_with_dependencies(
     let mut new_path = add_project_from_version(
         instance_id,
         &plan.primary.version_id,
-        DownloadReason::Update,
-        None,
         ContentSourceKind::Local,
         ownership_kind,
         state,
@@ -442,14 +438,7 @@ pub(crate) async fn switch_project_version_with_dependencies(
     installed_paths.push(new_path.clone());
     for dependency in &plan.dependencies {
         installed_paths.push(
-            add_resolved_content(
-                instance_id,
-                dependency,
-                DownloadReason::Dependency,
-                true,
-                state,
-            )
-            .await?,
+            add_resolved_content(instance_id, dependency, true, state).await?,
         );
     }
     persist_resolved_plan_dependency_edges(
@@ -474,14 +463,12 @@ pub(crate) async fn switch_project_version_with_dependencies(
 pub(crate) async fn add_resolved_content(
     instance_id: &str,
     content: &ResolvedContent,
-    reason: DownloadReason,
     auto_dependency: bool,
     state: &State,
 ) -> crate::Result<String> {
     add_resolved_content_with_progress(
         instance_id,
         content,
-        reason,
         auto_dependency,
         None,
         state,
@@ -492,7 +479,6 @@ pub(crate) async fn add_resolved_content(
 async fn add_resolved_content_with_progress(
     instance_id: &str,
     content: &ResolvedContent,
-    reason: DownloadReason,
     auto_dependency: bool,
     progress: Option<ResolvedContentDownloadProgress>,
     state: &State,
@@ -500,8 +486,6 @@ async fn add_resolved_content_with_progress(
     let path = add_project_from_version_with_progress(
         instance_id,
         &content.version_id,
-        reason,
-        content.dependent_on_version_id.clone(),
         ContentSourceKind::Local,
         ContentOwnershipKind::UserAdded,
         progress,
@@ -536,15 +520,8 @@ pub(crate) async fn install_resolved_dependency(
     content: &ResolvedContent,
     state: &State,
 ) -> crate::Result<String> {
-    add_resolved_content_with_progress(
-        instance_id,
-        content,
-        DownloadReason::Dependency,
-        true,
-        None,
-        state,
-    )
-    .await
+    add_resolved_content_with_progress(instance_id, content, true, None, state)
+        .await
 }
 
 pub(crate) async fn persist_resolved_plan_dependency_edges(
@@ -728,8 +705,6 @@ pub(crate) async fn resolve_content_scope(
 pub(crate) async fn add_project_from_version(
     instance_id: &str,
     version_id: &str,
-    reason: DownloadReason,
-    dependent_on_version_id: Option<String>,
     source_kind: ContentSourceKind,
     ownership_kind: ContentOwnershipKind,
     state: &State,
@@ -737,8 +712,6 @@ pub(crate) async fn add_project_from_version(
     add_project_from_version_with_progress(
         instance_id,
         version_id,
-        reason,
-        dependent_on_version_id,
         source_kind,
         ownership_kind,
         None,
@@ -751,22 +724,14 @@ pub(crate) async fn add_project_from_version(
 pub(crate) async fn add_project_from_version_with_progress(
     instance_id: &str,
     version_id: &str,
-    reason: DownloadReason,
-    dependent_on_version_id: Option<String>,
     source_kind: ContentSourceKind,
     ownership_kind: ContentOwnershipKind,
     progress: Option<ResolvedContentDownloadProgress>,
     state: &State,
 ) -> crate::Result<String> {
-    let downloaded = download_project_version_with_progress(
-        instance_id,
-        version_id,
-        reason,
-        dependent_on_version_id,
-        progress,
-        state,
-    )
-    .await?;
+    let downloaded =
+        download_project_version_with_progress(version_id, progress, state)
+            .await?;
 
     add_downloaded_project_version(
         instance_id,
@@ -779,21 +744,10 @@ pub(crate) async fn add_project_from_version_with_progress(
 }
 
 pub(crate) async fn download_project_version(
-    instance_id: &str,
     version_id: &str,
-    reason: DownloadReason,
-    dependent_on_version_id: Option<String>,
     state: &State,
 ) -> crate::Result<DownloadedProjectVersion> {
-    download_project_version_with_progress(
-        instance_id,
-        version_id,
-        reason,
-        dependent_on_version_id,
-        None,
-        state,
-    )
-    .await
+    download_project_version_with_progress(version_id, None, state).await
 }
 
 /// Progress context for one file inside a multi-file content install.
@@ -807,38 +761,21 @@ pub(crate) struct ResolvedContentDownloadProgress {
 }
 
 pub(crate) async fn download_project_version_with_progress(
-    instance_id: &str,
     version_id: &str,
-    reason: DownloadReason,
-    dependent_on_version_id: Option<String>,
     progress: Option<ResolvedContentDownloadProgress>,
     state: &State,
 ) -> crate::Result<DownloadedProjectVersion> {
-    download_project_version_with_reporting(
-        instance_id,
-        version_id,
-        reason,
-        dependent_on_version_id,
-        progress,
-        None,
-        state,
-    )
-    .await
+    download_project_version_with_reporting(version_id, progress, None, state)
+        .await
 }
 
 pub(crate) async fn download_project_version_with_reporter(
-    instance_id: &str,
     version_id: &str,
-    reason: DownloadReason,
-    dependent_on_version_id: Option<String>,
     reporter: crate::install::InstallProgressReporter,
     state: &State,
 ) -> crate::Result<DownloadedProjectVersion> {
     download_project_version_with_reporting(
-        instance_id,
         version_id,
-        reason,
-        dependent_on_version_id,
         None,
         Some(reporter),
         state,
@@ -847,26 +784,15 @@ pub(crate) async fn download_project_version_with_reporter(
 }
 
 async fn download_project_version_with_reporting(
-    instance_id: &str,
     version_id: &str,
-    reason: DownloadReason,
-    dependent_on_version_id: Option<String>,
     progress: Option<ResolvedContentDownloadProgress>,
     reporter: Option<crate::install::InstallProgressReporter>,
     state: &State,
 ) -> crate::Result<DownloadedProjectVersion> {
-    let prepared = prepare_version_download(
-        instance_id,
-        version_id,
-        reason,
-        dependent_on_version_id,
-        state,
-    )
-    .await?;
+    let prepared = prepare_version_download(version_id, state).await?;
     let mut request =
         DownloadRequest::new(&prepared.url, ResourceClass::Modrinth)
-            .with_integrity(prepared.integrity)
-            .with_download_meta(prepared.download_meta);
+            .with_integrity(prepared.integrity);
     let tracking_reporter = progress
         .as_ref()
         .map(|progress| progress.reporter.clone())
@@ -961,7 +887,6 @@ async fn download_project_version_with_reporting(
 struct PreparedVersionDownload {
     url: String,
     path: PathBuf,
-    download_meta: DownloadMeta,
     integrity: Integrity,
     file_name: String,
     sha1: Option<String>,
@@ -973,22 +898,9 @@ struct PreparedVersionDownload {
 /// Resolves the content scope and version metadata for a download and
 /// validates the target path, without touching the network.
 async fn prepare_version_download(
-    instance_id: &str,
     version_id: &str,
-    reason: DownloadReason,
-    dependent_on_version_id: Option<String>,
     state: &State,
 ) -> crate::Result<PreparedVersionDownload> {
-    let scope = resolve_content_scope(instance_id, None, state).await?;
-    let content_set =
-        content_rows::get_content_set(&scope.content_set_id, &state.pool)
-            .await?
-            .ok_or_else(|| {
-                crate::ErrorKind::InputError(format!(
-                    "Unknown content set {}",
-                    scope.content_set_id
-                ))
-            })?;
     let version = CachedEntry::get_version(
         &ModrinthVersionId::new(version_id.to_string())?,
         None,
@@ -1011,12 +923,6 @@ async fn prepare_version_download(
                 "No files for input version present!".to_string(),
             )
         })?;
-    let download_meta = DownloadMeta {
-        reason,
-        game_version: content_set.game_version,
-        loader: content_set.loader.as_str().to_string(),
-        dependent_on: dependent_on_version_id,
-    };
     let file_name_path = Path::new(&file.filename);
     if file_name_path.as_os_str().is_empty()
         || file_name_path.is_absolute()
@@ -1057,7 +963,6 @@ async fn prepare_version_download(
     Ok(PreparedVersionDownload {
         url: file.url.clone(),
         path,
-        download_meta,
         integrity,
         file_name: file.filename.clone(),
         sha1: file.hashes.get("sha1").cloned(),

@@ -7,8 +7,7 @@
 use super::h2_pool::{H2ConnectFailureKind, SharedH2Connection};
 use crate::util::fetch;
 use crate::util::fetch::{
-    DownloadRequest, DownloadResult, DownloadRoute, DownloadRouteSource,
-    Integrity,
+    DownloadRequest, DownloadResult, DownloadRoute, Integrity,
 };
 use futures::StreamExt;
 use http::header::{ACCEPT_ENCODING, RANGE, USER_AGENT};
@@ -393,16 +392,6 @@ pub(crate) fn request_headers(
             if let Ok(value) = HeaderValue::from_str(value) {
                 headers.insert(name, value);
             }
-        }
-    }
-    if route.source == DownloadRouteSource::Official
-        && fetch::is_official_modrinth_download_url(&request.url)
-        && let Some(download_meta) = &request.download_meta
-    {
-        if let Ok(value) =
-            HeaderValue::from_str(&download_meta.to_header_value())
-        {
-            headers.insert("modrinth-download-meta", value);
         }
     }
     headers

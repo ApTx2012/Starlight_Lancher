@@ -23,7 +23,6 @@ import { useRouter } from 'vue-router'
 import InstanceIcon from '@/components/ui/InstanceIcon.vue'
 import { useMinecraftLaunchError } from '@/composables/useMinecraftLaunchError'
 import { useNetworkStatus } from '@/composables/useNetworkStatus'
-import { trackEvent } from '@/helpers/analytics'
 import { process_listener } from '@/helpers/events'
 import { install_existing_instance, install_pack_to_existing_instance } from '@/helpers/install'
 import { kill, run } from '@/helpers/instance'
@@ -121,11 +120,6 @@ const play = async (e, context) => {
 			if (!handled) handleSevereError(err, { instanceId: props.instance.id })
 		})
 		.finally(() => {
-			trackEvent('InstanceStart', {
-				loader: props.instance.loader,
-				game_version: props.instance.game_version,
-				source: context,
-			})
 		})
 	loading.value = false
 }
@@ -136,11 +130,6 @@ const stop = async (e, context) => {
 
 	await kill(props.instance.id).catch(handleError)
 
-	trackEvent('InstanceStop', {
-		loader: props.instance.loader,
-		game_version: props.instance.game_version,
-		source: context,
-	})
 }
 
 const repair = async (e) => {

@@ -23,7 +23,6 @@ const { formatMessage } = useVIntl()
 const { addNotification } = injectNotificationManager()
 const isDevEnvironment = await isDev()
 const previewMinecraftCrashModal = inject<() => void>('previewMinecraftCrashModal')
-const previewPrivacyConsentModal = inject<() => Promise<void>>('previewPrivacyConsentModal')
 const messages = defineMessages({
 	resetToDefault: {
 		id: 'app.settings.feature-flags.reset-to-default',
@@ -52,10 +51,6 @@ const messages = defineMessages({
 	previewMinecraftCrashModal: {
 		id: 'app.settings.about.preview-minecraft-crash-modal',
 		defaultMessage: 'Preview Minecraft crash window',
-	},
-	previewPrivacyConsentModal: {
-		id: 'app.settings.about.preview-privacy-consent-modal',
-		defaultMessage: 'Preview privacy & security modal',
 	},
 })
 
@@ -126,9 +121,6 @@ watch(
 			</Button>
 			<Button type="base" @click="previewMinecraftCrashModal?.()">
 				<WrenchIcon /> {{ formatMessage(messages.previewMinecraftCrashModal) }}
-			</Button>
-			<Button type="base" @click="previewPrivacyConsentModal?.()">
-				<WrenchIcon /> {{ formatMessage(messages.previewPrivacyConsentModal) }}
 			</Button>
 		</div>
 	</SettingsSection>

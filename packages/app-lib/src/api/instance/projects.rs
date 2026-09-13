@@ -6,7 +6,6 @@ use crate::state::instances::{
     PackMemberOverrideKind,
 };
 use crate::state::{ContentProvider, ContentSourceKind, ProjectType, State};
-use crate::util::fetch;
 use modrinth_content_management::{
     ContentType, ResolutionPreferences, ResolveContentPlan,
 };
@@ -85,16 +84,12 @@ pub async fn update_project(
 pub async fn add_project_from_version(
     instance_id: &str,
     version_id: &str,
-    reason: fetch::DownloadReason,
-    dependent_on_version_id: Option<String>,
 ) -> crate::Result<String> {
     let state = State::get().await?;
     let project_path =
         crate::state::instances::commands::add_project_from_version(
             instance_id,
             version_id,
-            reason,
-            dependent_on_version_id,
             crate::state::ContentSourceKind::Local,
             crate::state::instances::ContentOwnershipKind::UserAdded,
             &state,
@@ -674,8 +669,6 @@ pub async fn restore_pack_member_default(
                 crate::state::instances::commands::add_project_from_version(
                     instance_id,
                     release_id,
-                    fetch::DownloadReason::Update,
-                    None,
                     ContentSourceKind::ModrinthModpack,
                     ContentOwnershipKind::PackManaged,
                     &state,

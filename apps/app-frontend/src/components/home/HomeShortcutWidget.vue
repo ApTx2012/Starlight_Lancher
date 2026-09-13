@@ -28,7 +28,6 @@ import type { HomeWidgetPlacement, HomeWidgetSize } from '@/components/home/home
 import { useHomeDashboardRuntime } from '@/components/home/home-dashboard-runtime'
 import InstanceIcon from '@/components/ui/InstanceIcon.vue'
 import { useMinecraftLaunchError } from '@/composables/useMinecraftLaunchError'
-import { trackEvent } from '@/helpers/analytics'
 import { kill, run } from '@/helpers/instance'
 import type { GameInstance } from '@/helpers/types'
 import {
@@ -205,11 +204,6 @@ async function playInstance(targetInstance: GameInstance) {
 	starting.value = true
 	try {
 		await run(targetInstance.id)
-		trackEvent('InstanceStart', {
-			loader: targetInstance.loader,
-			game_version: targetInstance.game_version,
-			source: 'HomeInstanceWidget',
-		})
 	} catch (error) {
 		const handled = await handleMinecraftLaunchError(error, {
 			instance_id: targetInstance.id,
@@ -230,11 +224,6 @@ async function playWorld() {
 		} else {
 			await start_join_singleplayer_world(instance.value.id, world.value.path)
 		}
-		trackEvent('InstanceStart', {
-			loader: instance.value.loader,
-			game_version: instance.value.game_version,
-			source: 'HomeShortcutWidget',
-		})
 	} catch (error) {
 		const handled = await handleMinecraftLaunchError(error, {
 			instance_id: instance.value.id,

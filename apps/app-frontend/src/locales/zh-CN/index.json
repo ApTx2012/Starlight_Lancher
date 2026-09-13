@@ -104,24 +104,42 @@
   "app.easteregg.color-mine.revealed": {
     "message": "第 {row} 行，第 {column} 列，颜色 {color}，周围同色 {number} 格"
   },
-  "app.settings.developer.announcement-preview": { "message": "公告样式预览" },
+  "app.settings.developer.announcement-preview": {
+    "message": "公告样式预览"
+  },
   "app.settings.developer.announcement-preview-description": {
     "message": "使用本地示例预览真实公告组件，不请求远端公告，也不改变真实公告的已读状态。"
   },
-  "app.settings.developer.preview-with-action": { "message": "显示可选的外部链接按钮" },
-  "app.settings.developer.preview-announcement-modal": { "message": "预览启动弹窗" },
-  "app.settings.developer.preview-announcement-popup": { "message": "预览 Popup 通知" },
-  "app.remote-announcements.preview-title": { "message": "公告样式预览" },
+  "app.settings.developer.preview-with-action": {
+    "message": "显示可选的外部链接按钮"
+  },
+  "app.settings.developer.preview-announcement-modal": {
+    "message": "预览启动弹窗"
+  },
+  "app.settings.developer.preview-announcement-popup": {
+    "message": "预览 Popup 通知"
+  },
+  "app.remote-announcements.preview-title": {
+    "message": "公告样式预览"
+  },
   "app.remote-announcements.preview-summary": {
     "message": "这是一条本地预览通知，点击“查看公告”可查看完整 Markdown 正文。"
   },
-  "app.remote-announcements.preview-action": { "message": "访问官网" },
+  "app.remote-announcements.preview-action": {
+    "message": "访问官网"
+  },
   "app.remote-announcements.preview-content": {
     "message": "## 公告预览\n\n这是**示例正文**，不是已发布公告。\n\n- 支持标题、列表和链接\n- 默认自带关闭按钮\n\n> 预览不会影响真实公告的已读状态。\n\n| 类型 | 展示方式 |\n| --- | --- |\n| 启动弹窗 | 完整 Markdown 正文 |\n| Popup 通知 | 先显示摘要，再查看全文 |\n\n[访问官网](https://axlmc.org)"
   },
-  "app.remote-announcements.view": { "message": "查看公告" },
-  "app.remote-announcements.unread": { "message": "未读" },
-  "app.remote-announcements.read-all": { "message": "将所有公告标为已读" },
+  "app.remote-announcements.view": {
+    "message": "查看公告"
+  },
+  "app.remote-announcements.unread": {
+    "message": "未读"
+  },
+  "app.remote-announcements.read-all": {
+    "message": "将所有公告标为已读"
+  },
   "app.account.signed-in-as": {
     "message": "登录身份："
   },
@@ -5984,12 +6002,6 @@
   "app.onboarding.mascot-alt": {
     "message": "引导吉祥物"
   },
-  "app.onboarding.privacy.description": {
-    "message": "匿名遥测、Discord 活动状态与 Minecraft 日志分析服务都可以在这里调整。"
-  },
-  "app.onboarding.privacy.title": {
-    "message": "你的数据，由你决定"
-  },
   "app.onboarding.resources.description": {
     "message": "选择内容的下载与安装方式，包括下载源和安全确认。"
   },
@@ -6034,30 +6046,6 @@
   },
   "app.onboarding.welcome.title": {
     "message": "一切就绪"
-  },
-  "app.privacy-consent.continue": {
-    "message": "保存并继续"
-  },
-  "app.privacy-consent.discord-rpc": {
-    "message": "Discord 活动状态"
-  },
-  "app.privacy-consent.discord-rpc-description": {
-    "message": "Discord 运行时显示你当前使用启动器或游玩的状态。"
-  },
-  "app.privacy-consent.intro": {
-    "message": "选择 Starlight 可以发送或展示的内容。确认前不会发送任何遥测。"
-  },
-  "app.privacy-consent.privacy-policy": {
-    "message": "阅读隐私政策"
-  },
-  "app.privacy-consent.telemetry": {
-    "message": "允许匿名遥测"
-  },
-  "app.privacy-consent.telemetry-description": {
-    "message": "用于统计选择加入的安装量和每日活跃用户。绝不上传完整 Minecraft 日志或账户凭据。"
-  },
-  "app.privacy-consent.title": {
-    "message": "隐私与安全"
   },
   "app.project.curseforge.loading": {
     "message": "正在加载 CurseForge 项目…"
@@ -6851,9 +6839,6 @@
   "app.settings.about.preview-minecraft-crash-modal": {
     "message": "预览 Minecraft 崩溃窗口"
   },
-  "app.settings.about.preview-privacy-consent-modal": {
-    "message": "预览隐私与安全弹窗"
-  },
   "app.settings.about.product-title": {
     "message": "关于 {productName}"
   },
@@ -7099,21 +7084,6 @@
   },
   "app.settings.java.view-installed": {
     "message": "查看已安装 Java"
-  },
-  "app.settings.privacy.data-handling": {
-    "message": "遥测使用随机安装标识，仅发送每日活跃信号。关闭遥测会立即清空待发送数据。"
-  },
-  "app.settings.privacy.discord-rpc": {
-    "message": "Discord 活动状态"
-  },
-  "app.settings.privacy.discord-rpc-description": {
-    "message": "在 Discord 中显示你当前使用启动器或游玩的状态。"
-  },
-  "app.settings.privacy.telemetry": {
-    "message": "允许遥测"
-  },
-  "app.settings.privacy.telemetry-description": {
-    "message": "发送匿名每日活跃信号以优化使用统计。绝不上传 Minecraft 日志或账户凭据。"
   },
   "app.settings.resources.app-cache": {
     "message": "应用缓存"
@@ -7504,9 +7474,6 @@
   },
   "app.settings.tabs.network-multiplayer": {
     "message": "网络与多人游戏"
-  },
-  "app.settings.tabs.privacy-data": {
-    "message": "隐私与数据共享"
   },
   "app.settings.tabs.resource-management": {
     "message": "资源管理"
@@ -10414,6 +10381,5 @@
   },
   "app.settings.about.easteregg.game-title": {
     "message": "彩蛋小游戏"
-
   }
 }

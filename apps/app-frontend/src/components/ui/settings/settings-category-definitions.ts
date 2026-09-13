@@ -10,7 +10,6 @@ export type SettingsCategoryId =
 	| 'content-downloads'
 	| 'network-multiplayer'
 	| 'storage-backups'
-	| 'privacy-data'
 	| 'updates'
 	| 'about'
 	| 'feature-flags'
@@ -105,15 +104,6 @@ export const settingsCategoryDefinitions: SettingsCategoryDefinition[] = [
 		}),
 		group: 'data-privacy',
 		onboardingId: 'settings-tab-storage-backups',
-	},
-	{
-		id: 'privacy-data',
-		name: defineMessage({
-			id: 'app.settings.tabs.privacy-data',
-			defaultMessage: 'Privacy & data sharing',
-		}),
-		group: 'data-privacy',
-		onboardingId: 'settings-tab-privacy-data',
 	},
 	{
 		id: 'updates',

@@ -25,7 +25,6 @@ import HomeGreeting from '@/components/home/HomeGreeting.vue'
 import InstanceIcon from '@/components/ui/InstanceIcon.vue'
 import { useMinecraftLaunchError } from '@/composables/useMinecraftLaunchError'
 import { useNetworkStatus } from '@/composables/useNetworkStatus'
-import { trackEvent } from '@/helpers/analytics'
 import { process_listener } from '@/helpers/events'
 import { install_existing_instance, install_pack_to_existing_instance } from '@/helpers/install'
 import { kill, run } from '@/helpers/instance'
@@ -126,11 +125,6 @@ async function playInstance() {
 	loading.value = true
 	try {
 		await run(instance.id)
-		trackEvent('InstanceStart', {
-			loader: instance.loader,
-			game_version: instance.game_version,
-			source: 'HomeMinimal',
-		})
 	} catch (error) {
 		const handled = await handleMinecraftLaunchError(error, {
 			instance_id: instance.id,
@@ -149,11 +143,6 @@ async function stopInstance() {
 
 	await kill(instance.id).catch(handleError)
 	running.value = false
-	trackEvent('InstanceStop', {
-		loader: instance.loader,
-		game_version: instance.game_version,
-		source: 'HomeMinimal',
-	})
 }
 
 async function installInstance() {

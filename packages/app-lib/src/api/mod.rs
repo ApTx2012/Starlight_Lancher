@@ -65,9 +65,9 @@ pub mod data {
         ManualDownloadOperationKind, ManualDownloadState, MemorySettings,
         ModLoader, ModrinthCredentials, Organization, OwnerType,
         PackMemberMaterializationState, PackMemberOverrideKind,
-        PendingManualDownload, PrivacySettings, ProcessMetadata, Project,
-        ProjectType, ProjectV3, SearchResult, SearchResults, SearchResultsV3,
-        Settings, ShaderRuntime, TeamMember, Theme, User, UserFriend, Version,
+        PendingManualDownload, ProcessMetadata, Project, ProjectType,
+        ProjectV3, SearchResult, SearchResults, SearchResultsV3, Settings,
+        ShaderRuntime, TeamMember, Theme, User, UserFriend, Version,
         WindowSize,
     };
     pub use ariadne::users::UserStatus;

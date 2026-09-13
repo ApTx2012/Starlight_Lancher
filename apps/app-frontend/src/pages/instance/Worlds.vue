@@ -204,7 +204,6 @@ import ConfirmRemoveWorldModal from '@/components/ui/world/modal/ConfirmRemoveWo
 import EditServerModal from '@/components/ui/world/modal/EditServerModal.vue'
 import WorldItem from '@/components/ui/world/WorldItem.vue'
 import { useMinecraftLaunchError } from '@/composables/useMinecraftLaunchError'
-import { trackEvent } from '@/helpers/analytics'
 import { get_project, get_project_v3 } from '@/helpers/cache.js'
 import { instance_listener } from '@/helpers/events'
 import { get_game_versions } from '@/helpers/tags'
@@ -592,20 +591,10 @@ async function joinWorld(world: World) {
 		const managedProjectId = instance.value.link?.project_id
 		if (managedProjectId && isManagedServerWorld(world)) {
 			await playServerProject(managedProjectId).catch(handleJoinError)
-			trackEvent('InstanceStart', {
-				loader: instance.value.loader,
-				game_version: instance.value.game_version,
-				source: 'WorldsPage',
-			})
 			startingInstance.value = false
 			return
 		}
 		await start_join_server(instance.value.id, world.address).catch(handleJoinError)
-		trackEvent('InstanceStart', {
-			loader: instance.value.loader,
-			game_version: instance.value.game_version,
-			source: 'WorldsPage',
-		})
 	} else if (world.type === 'singleplayer') {
 		await start_join_singleplayer_world(instance.value.id, world.path).catch(handleJoinError)
 	}

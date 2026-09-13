@@ -280,7 +280,6 @@ import MinecraftLoginModal from '@/components/ui/MinecraftLoginModal.vue'
 import ModalWrapper from '@/components/ui/modal/ModalWrapper.vue'
 import { useNetworkStatus } from '@/composables/useNetworkStatus'
 import { compareMinecraftAccounts } from '@/helpers/accounts'
-import { trackEvent } from '@/helpers/analytics'
 import {
 	begin_yggdrasil_login,
 	delete_yggdrasil_password,
@@ -678,7 +677,6 @@ async function onMicrosoftLogin(account: MinecraftCredential) {
 	loginDisabled.value = true
 	try {
 		await setAccount(account)
-		trackEvent('AccountLogIn')
 	} catch (error) {
 		handleSevereError(error)
 	} finally {
@@ -833,7 +831,6 @@ async function addYggdrasilAccount() {
 			await persistYggdrasilPasswordPreference()
 			yggdrasilAccountModal.value?.hide()
 			await setAccount(result.credentials)
-			trackEvent('YggdrasilAccountAdd')
 		} else {
 			pendingYggdrasilFlowId.value = result.flow_id
 			pendingYggdrasilProfiles.value = result.profiles
@@ -859,7 +856,6 @@ async function selectYggdrasilProfile(profileId: string) {
 		await persistYggdrasilPasswordPreference()
 		yggdrasilProfileModal.value?.hide()
 		await setAccount(account)
-		trackEvent('YggdrasilAccountAdd')
 	} catch (error) {
 		handleError(error as Error)
 	} finally {
@@ -875,7 +871,6 @@ async function logout(account: MinecraftCredential) {
 	} else {
 		notifyAccountChange()
 	}
-	trackEvent('AccountLogOut')
 }
 
 async function copyAccountUuid(account: MinecraftCredential) {

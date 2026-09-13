@@ -18,7 +18,6 @@ import {
 } from '@modrinth/ui'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 
-import { trackEvent } from '@/helpers/analytics'
 import {
 	type ProjectGalleryCaptionField,
 	projectGalleryTranslationSegmentId,
@@ -130,10 +129,6 @@ function viewImage(entry: GalleryEntry) {
 	zoomedIn.value = false
 	viewerModal.value?.show()
 
-	trackEvent('GalleryImageExpand', {
-		project_id: props.project.id,
-		url: entry.image.url,
-	})
 }
 
 function changeImage(offset: number) {
@@ -146,10 +141,6 @@ function changeImage(offset: number) {
 	selectedGalleryItem.value = filteredGallery.value[nextIndex]
 	zoomedIn.value = false
 
-	trackEvent(offset > 0 ? 'GalleryImageNext' : 'GalleryImagePrevious', {
-		project_id: props.project.id,
-		url: selectedGalleryItem.value.image.url,
-	})
 }
 
 function handleViewerHide() {

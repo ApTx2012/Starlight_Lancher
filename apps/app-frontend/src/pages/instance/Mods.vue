@@ -264,7 +264,6 @@ import ContentToggleDependenciesModal from '@/components/ui/modal/ContentToggleD
 import ShareModalWrapper from '@/components/ui/modal/ShareModalWrapper.vue'
 import { postUpgradeNoticeQueryKey, usePostUpgradeNotice } from '@/composables/usePostUpgradeNotice'
 import { useWorldDatapacks } from '@/composables/useWorldDatapacks'
-import { trackEvent } from '@/helpers/analytics'
 import { get_project_versions, get_version, get_version_many } from '@/helpers/cache.js'
 import { applyContentItemUpdates, matchesContentItem } from '@/helpers/content-item-state'
 import { lookupContentWikiIds, translateContentItemTitles } from '@/helpers/content-search'
@@ -1580,14 +1579,6 @@ async function toggleDisableMod(
 		const enabled = desiredEnabled ?? !mod.enabled
 		try {
 			await toggleWorldDatapackItem(mod, enabled)
-			trackEvent('InstanceProjectDisable', {
-				loader: props.instance.loader,
-				game_version: props.instance.game_version,
-				id: mod.project?.id,
-				name: mod.project?.title ?? mod.file_name,
-				project_type: mod.project_type,
-				disabled: !enabled,
-			})
 		} catch (err) {
 			handleError(err as Error)
 		}
@@ -1646,14 +1637,6 @@ async function applyToggleDisableMod(mod: ContentItem, enabled: boolean) {
 			enabled: actualEnabled,
 		})
 
-		trackEvent('InstanceProjectDisable', {
-			loader: props.instance.loader,
-			game_version: props.instance.game_version,
-			id: mod.project?.id,
-			name: mod.project?.title ?? mod.file_name,
-			project_type: mod.project_type,
-			disabled: !actualEnabled,
-		})
 	} catch (err) {
 		applyContentItemToggleState(mod, operation.originalFileName, originalFilePath, {
 			file_path: originalFilePath,
@@ -1733,14 +1716,6 @@ async function applyToggleDisableBatch(items: ContentItem[], enabled: boolean) {
 		)
 
 		for (const operation of operations) {
-			trackEvent('InstanceProjectDisable', {
-				loader: props.instance.loader,
-				game_version: props.instance.game_version,
-				id: operation.item.project?.id,
-				name: operation.item.project?.title ?? operation.originalFileName,
-				project_type: operation.item.project_type,
-				disabled: !enabled,
-			})
 		}
 	} catch (error) {
 		for (const operation of operations) {
@@ -1831,13 +1806,6 @@ async function removeMod(mod: ContentItem) {
 			projects.value = projects.value.filter((x) => removedPath !== x.file_path)
 		}
 
-		trackEvent('InstanceProjectRemove', {
-			loader: props.instance.loader,
-			game_version: props.instance.game_version,
-			id: mod.project?.id,
-			name: mod.project?.title ?? mod.file_name,
-			project_type: mod.project_type,
-		})
 	} catch (err) {
 		handleError(err as Error)
 	} finally {
@@ -1999,13 +1967,6 @@ async function updateProject(mod: ContentItem) {
 	try {
 		await update_content_entry(props.instance.id, contentId)
 
-		trackEvent('InstanceProjectUpdate', {
-			loader: props.instance.loader,
-			game_version: props.instance.game_version,
-			id: mod.project?.id,
-			name: mod.project?.title ?? mod.file_name,
-			project_type: mod.project_type,
-		})
 	} catch (err) {
 		handleError(err as Error)
 		throw err
@@ -2024,13 +1985,6 @@ async function switchProjectVersion(mod: ContentItem, version: Labrinth.Versions
 	try {
 		await switch_content_entry_version(props.instance.id, contentId, version.id)
 
-		trackEvent('InstanceProjectUpdate', {
-			loader: props.instance.loader,
-			game_version: props.instance.game_version,
-			id: mod.project?.id,
-			name: mod.project?.title ?? mod.file_name,
-			project_type: mod.project_type,
-		})
 	} catch (err) {
 		handleError(err as Error)
 	} finally {
@@ -2046,13 +2000,6 @@ async function handleRollbackContent(mod: ContentItem) {
 
 	try {
 		await rollback_project(props.instance.id, mod.file_path)
-		trackEvent('InstanceProjectRollback', {
-			loader: props.instance.loader,
-			game_version: props.instance.game_version,
-			id: mod.project?.id,
-			name: mod.project?.title ?? mod.file_name,
-			project_type: mod.project_type,
-		})
 	} catch (err) {
 		handleError(err as Error)
 	} finally {

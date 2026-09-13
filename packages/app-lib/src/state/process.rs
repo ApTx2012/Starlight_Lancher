@@ -1194,25 +1194,6 @@ impl Process {
         record_post_upgrade_launch_best_effort(&instance_id, clean_launch)
             .await;
 
-        // Publish play time update
-        // Allow failure, it will be stored locally and sent next time
-        // Sent in another thread as first call may take a couple seconds and hold up process ending
-        let playtime_instance_id = instance_id.clone();
-        tokio::spawn(async move {
-            if let Err(e) =
-                crate::api::instance::try_update_playtime_by_instance_id(
-                    &playtime_instance_id,
-                )
-                .await
-            {
-                tracing::warn!(
-                    "Failed to update playtime for instance {}: {}",
-                    playtime_instance_id,
-                    e
-                );
-            }
-        });
-
         let log_path = logs_folder.join(LAUNCHER_LOG_PATH);
 
         if log_path.exists()
@@ -1247,8 +1228,6 @@ impl Process {
             Some(!mc_exit_status.success() && !manually_killed),
         )
         .await?;
-
-        let _ = state.discord_rpc.clear_to_default(true).await;
 
         if mc_exit_status.success() {
             // We do not wait on the post exist command to finish running! We let it spawn + run on its own.

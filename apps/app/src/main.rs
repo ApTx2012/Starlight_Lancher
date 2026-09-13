@@ -389,16 +389,6 @@ async fn backup_app_db_for_update(
     Ok(())
 }
 
-#[tauri::command]
-async fn set_discord_activity(activity: String) -> api::Result<()> {
-    let state = State::get().await?;
-    state
-        .discord_rpc
-        .set_launcher_activity(&activity, true)
-        .await?;
-    Ok(())
-}
-
 // Should be call once Vue has mounted the app
 #[tracing::instrument(skip_all)]
 #[tauri::command]
@@ -823,7 +813,6 @@ fn main() {
         .plugin(api::schematic_preview::init())
         .plugin(api::shortcuts::init())
         .plugin(api::tags::init())
-        .plugin(api::telemetry::init())
         .plugin(api::translation::init())
         .plugin(api::utils::init())
         .plugin(api::cache::init())
@@ -851,7 +840,6 @@ fn main() {
             copy_database_between_channels,
             beta_database_exists,
             backup_app_db_for_update,
-            set_discord_activity,
             is_dev,
             portable::is_portable_mode,
             are_updates_enabled,

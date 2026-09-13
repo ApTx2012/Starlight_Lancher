@@ -507,47 +507,6 @@ pub(crate) async fn add_instance_recent_playtime(
     Ok(())
 }
 
-pub(crate) async fn mark_instance_playtime_submitted(
-    instance_id: &str,
-    recent_time_played: u64,
-    pool: &SqlitePool,
-) -> crate::Result<()> {
-    if recent_time_played == 0 {
-        return Ok(());
-    }
-
-    let recent_time_played =
-        playtime_to_storage(recent_time_played, "recent_time_played")?;
-    let max_playtime = i64::MAX;
-    let max_playtime_before_increment = max_playtime - recent_time_played;
-    let modified = Utc::now().timestamp();
-
-    sqlx::query!(
-        "
-		UPDATE instances
-		SET
-			submitted_time_played = CASE
-				WHEN submitted_time_played < 0 THEN ?
-				WHEN submitted_time_played > ? THEN ?
-				ELSE submitted_time_played + ?
-			END,
-			recent_time_played = 0,
-			modified = ?
-		WHERE id = ?
-		",
-        recent_time_played,
-        max_playtime_before_increment,
-        max_playtime,
-        recent_time_played,
-        modified,
-        instance_id,
-    )
-    .execute(pool)
-    .await?;
-
-    Ok(())
-}
-
 #[cfg(test)]
 mod tests {
     use chrono::{TimeZone, Utc};

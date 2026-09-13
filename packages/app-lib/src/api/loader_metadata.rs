@@ -1096,7 +1096,7 @@ async fn fetch_maven_metadata(
     fetch_semaphore: &FetchSemaphore,
     pool: &SqlitePool,
 ) -> crate::Result<MavenMetadata> {
-    let bytes = fetch(url, None, None, None, fetch_semaphore, pool).await?;
+    let bytes = fetch(url, None, None, fetch_semaphore, pool).await?;
     let xml = std::str::from_utf8(&bytes).map_err(|error| {
         crate::ErrorKind::OtherError(format!(
             "Maven metadata at {url} was not UTF-8: {error}"
@@ -1116,8 +1116,7 @@ async fn fetch_forge_maven_metadata(
     fetch_semaphore: &FetchSemaphore,
     pool: &SqlitePool,
 ) -> crate::Result<MavenMetadata> {
-    let bytes =
-        fetch_official(url, None, None, None, fetch_semaphore, pool).await?;
+    let bytes = fetch_official(url, None, None, fetch_semaphore, pool).await?;
     let xml = std::str::from_utf8(&bytes).map_err(|error| {
         crate::ErrorKind::OtherError(format!(
             "Forge Maven metadata at {url} was not UTF-8: {error}"
@@ -1651,15 +1650,9 @@ async fn resolve_installer_profile(
     state: &State,
     installer_url: &str,
 ) -> crate::Result<PartialVersionInfo> {
-    let bytes = fetch(
-        installer_url,
-        None,
-        None,
-        None,
-        &state.api_semaphore,
-        &state.pool,
-    )
-    .await?;
+    let bytes =
+        fetch(installer_url, None, None, &state.api_semaphore, &state.pool)
+            .await?;
     let installer_url = installer_url.to_string();
     let parsed = tokio::task::spawn_blocking(move || {
         parse_installer(bytes.to_vec(), &installer_url)
@@ -1700,7 +1693,6 @@ pub(crate) async fn ensure_installer_artifacts(
 
     let bytes = fetch(
         &installer_url.client,
-        None,
         None,
         None,
         &state.api_semaphore,

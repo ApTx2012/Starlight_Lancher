@@ -45,8 +45,6 @@ fn is_safe_redirect_location(location: &str) -> bool {
 }
 use uuid::Uuid;
 
-pub const DOWNLOAD_META_HEADER: &str = "modrinth-download-meta";
-
 const BMCLAPI_BASE_URL: &str = "https://bmclapi2.bangbang93.com";
 const MCIM_BASE_URL: &str = "https://mod.mcimirror.top";
 pub(crate) const TIANPAO_HOST: &str = "mod.tianpao.top";
@@ -253,7 +251,6 @@ pub struct DownloadRequest {
     pub url: String,
     pub resource: ResourceClass,
     pub integrity: Integrity,
-    pub download_meta: Option<DownloadMeta>,
     pub header: Option<(String, String)>,
     pub candidate_urls: Vec<String>,
     /// Whether range-segmented (multi-connection) downloading is allowed.
@@ -283,7 +280,6 @@ impl DownloadRequest {
             url: url.into(),
             resource,
             integrity: Integrity::default(),
-            download_meta: None,
             header: None,
             candidate_urls: Vec::new(),
             allow_segmented_download: true,
@@ -315,11 +311,6 @@ impl DownloadRequest {
 
     pub fn with_integrity(mut self, integrity: Integrity) -> Self {
         self.integrity = integrity;
-        self
-    }
-
-    pub fn with_download_meta(mut self, download_meta: DownloadMeta) -> Self {
-        self.download_meta = Some(download_meta);
         self
     }
 
@@ -1077,19 +1068,6 @@ fn route_host(route: &DownloadRoute) -> Option<String> {
         .and_then(|url| url.host_str().map(str::to_string))
 }
 
-pub(crate) fn is_official_modrinth_download_url(url: &str) -> bool {
-    Url::parse(url).is_ok_and(|url| {
-        matches!(
-            url.host_str(),
-            Some(
-                "api.modrinth.com"
-                    | "cdn.modrinth.com"
-                    | "cdn-alt.modrinth.com"
-            )
-        )
-    })
-}
-
 fn is_official_version_manifest_url(url: &str) -> bool {
     Url::parse(url).is_ok_and(|url| {
         matches!(
@@ -1297,30 +1275,6 @@ fn infer_resource_class(url: &str) -> ResourceClass {
         | "media.forgecdn.net"
         | "mediafilez.forgecdn.net" => ResourceClass::CurseForge,
         _ => ResourceClass::Other,
-    }
-}
-
-#[derive(Debug, derive_more::Display, Clone, Copy, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-#[display(rename_all = "snake_case")]
-pub enum DownloadReason {
-    Standalone,
-    Dependency,
-    Modpack,
-    Update,
-}
-
-#[derive(Debug, Clone, Serialize)]
-pub struct DownloadMeta {
-    pub reason: DownloadReason,
-    pub game_version: String,
-    pub loader: String,
-    pub dependent_on: Option<String>,
-}
-
-impl DownloadMeta {
-    pub fn to_header_value(&self) -> String {
-        serde_json::to_string(self).unwrap_or_default()
     }
 }
 
@@ -1956,7 +1910,6 @@ async fn fetch_hedged_metadata(
 pub async fn fetch(
     url: &str,
     sha1: Option<&str>,
-    download_meta: Option<&DownloadMeta>,
     uri_path: Option<&'static str>,
     semaphore: &FetchSemaphore,
     exec: impl sqlx::Executor<'_, Database = sqlx::Sqlite>,
@@ -1967,7 +1920,6 @@ pub async fn fetch(
         sha1,
         None,
         None,
-        download_meta,
         None,
         uri_path,
         semaphore,
@@ -1981,7 +1933,6 @@ pub async fn fetch(
 pub async fn fetch_official(
     url: &str,
     sha1: Option<&str>,
-    download_meta: Option<&DownloadMeta>,
     uri_path: Option<&'static str>,
     semaphore: &FetchSemaphore,
     exec: impl sqlx::Executor<'_, Database = sqlx::Sqlite>,
@@ -1993,7 +1944,6 @@ pub async fn fetch_official(
         sha1,
         None,
         None,
-        download_meta,
         None,
         uri_path,
         semaphore,
@@ -2031,7 +1981,6 @@ where
         url,
         sha1,
         json_body,
-        None,
         None,
         None,
         uri_path,
@@ -2086,7 +2035,6 @@ where
         json_body,
         None,
         None,
-        None,
         uri_path,
         semaphore,
         exec,
@@ -2110,7 +2058,6 @@ pub async fn fetch_advanced(
     sha1: Option<&str>,
     json_body: Option<serde_json::Value>,
     header: Option<(&str, &str)>,
-    download_meta: Option<&DownloadMeta>,
     loading_bar: Option<(&LoadingBarId, f64)>,
     uri_path: Option<&'static str>,
     semaphore: &FetchSemaphore,
@@ -2122,7 +2069,6 @@ pub async fn fetch_advanced(
         sha1,
         json_body,
         header,
-        download_meta,
         loading_bar,
         uri_path,
         semaphore,
@@ -2141,7 +2087,6 @@ pub async fn fetch_advanced_with_client(
     sha1: Option<&str>,
     json_body: Option<serde_json::Value>,
     header: Option<(&str, &str)>,
-    download_meta: Option<&DownloadMeta>,
     loading_bar: Option<(&LoadingBarId, f64)>,
     uri_path: Option<&'static str>,
     semaphore: &FetchSemaphore,
@@ -2154,7 +2099,6 @@ pub async fn fetch_advanced_with_client(
         sha1,
         json_body,
         header,
-        download_meta,
         loading_bar,
         uri_path,
         semaphore,
@@ -2176,7 +2120,6 @@ async fn fetch_advanced_with_client_and_progress(
     sha1: Option<&str>,
     json_body: Option<serde_json::Value>,
     header: Option<(&str, &str)>,
-    download_meta: Option<&DownloadMeta>,
     loading_bar: Option<(&LoadingBarId, f64)>,
     uri_path: Option<&'static str>,
     semaphore: &FetchSemaphore,
@@ -2224,7 +2167,6 @@ async fn fetch_advanced_with_client_and_progress(
     let mut attempt_history = VecDeque::new();
     let hedge_is_safe = method == Method::GET
         && json_body.is_none()
-        && download_meta.is_none()
         && progress.is_none()
         && creds.is_none()
         && header.is_none_or(|(name, _)| !is_sensitive_header(name))
@@ -2273,15 +2215,6 @@ async fn fetch_advanced_with_client_and_progress(
         let route_source = route.source;
         let request_target = if is_mirror { "mirror" } else { "official" };
         let has_next_route = route_index + 1 < request_routes.len();
-        let download_meta_header = (!is_mirror
-            && is_official_modrinth_download_url(request_url))
-        .then(|| {
-            download_meta.map(|m| {
-                (DOWNLOAD_META_HEADER.to_string(), m.to_header_value())
-            })
-        })
-        .flatten();
-
         let max_attempts = if modrinth_request_kind == Some("CDN") {
             if is_mirror { 1 } else { MODRINTH_CDN_ATTEMPTS }
         } else {
@@ -2309,7 +2242,6 @@ async fn fetch_advanced_with_client_and_progress(
             );
 
             let protected_headers = creds.is_some()
-                || download_meta_header.is_some()
                 || header.is_some_and(|header| is_sensitive_header(header.0));
             let route_client = match (route.proxy, protected_headers) {
                 (ProxyPolicy::System, false)
@@ -2342,11 +2274,6 @@ async fn fetch_advanced_with_client_and_progress(
                 && let Some(ref creds) = creds
             {
                 req = req.header("Authorization", &creds.session);
-            }
-
-            if let Some((name, value)) = &download_meta_header {
-                tracing::debug!("Sending download analytics: {value}");
-                req = req.header(name.as_str(), value.as_str());
             }
 
             let permit = semaphore.0.acquire().await?;
@@ -3418,7 +3345,6 @@ async fn send_path_request_with_clients(
     route: &DownloadRoute,
     custom_header: Option<&(String, String)>,
     credentials: Option<&crate::state::ModrinthCredentials>,
-    download_meta: Option<&DownloadMeta>,
     range_start: Option<u64>,
     range_end: Option<u64>,
     system_client: &reqwest::Client,
@@ -3467,14 +3393,6 @@ async fn send_path_request_with_clients(
         }
         if allow_sensitive && let Some(credentials) = credentials {
             request = request.header("Authorization", &credentials.session);
-        }
-        if !route.is_mirror
-            && same_as_original
-            && is_official_modrinth_download_url(original.as_str())
-            && let Some(download_meta) = download_meta
-        {
-            request = request
-                .header(DOWNLOAD_META_HEADER, download_meta.to_header_value());
         }
         if let Some(range) = byte_range_header_value(range_start, range_end) {
             request = request
@@ -3581,7 +3499,6 @@ async fn send_path_request(
     route: &DownloadRoute,
     custom_header: Option<&(String, String)>,
     credentials: Option<&crate::state::ModrinthCredentials>,
-    download_meta: Option<&DownloadMeta>,
     range_start: Option<u64>,
     range_end: Option<u64>,
 ) -> crate::Result<(reqwest::Response, String)> {
@@ -3589,7 +3506,6 @@ async fn send_path_request(
         route,
         custom_header,
         credentials,
-        download_meta,
         range_start,
         range_end,
         &NO_REDIRECT_REQWEST_CLIENT,
@@ -4034,7 +3950,6 @@ async fn probe_route_throughput(
     total_size: u64,
     custom_header: Option<&(String, String)>,
     credentials: Option<&crate::state::ModrinthCredentials>,
-    download_meta: Option<&DownloadMeta>,
     semaphore: &FetchSemaphore,
     system_client: &reqwest::Client,
     direct_client: &reqwest::Client,
@@ -4054,7 +3969,6 @@ async fn probe_route_throughput(
             route,
             custom_header,
             credentials,
-            download_meta,
             Some(0),
             Some(probe_end),
             system_client,
@@ -4134,7 +4048,6 @@ async fn probe_faster_route(
     total_size: u64,
     custom_header: Option<&(String, String)>,
     credentials: Option<&crate::state::ModrinthCredentials>,
-    download_meta: Option<&DownloadMeta>,
     semaphore: &FetchSemaphore,
     system_client: &reqwest::Client,
     direct_client: &reqwest::Client,
@@ -4162,7 +4075,6 @@ async fn probe_faster_route(
             total_size,
             custom_header,
             credentials,
-            download_meta,
             semaphore,
             system_client,
             direct_client,
@@ -4339,7 +4251,6 @@ async fn ensure_task_routes_probed(
                         size,
                         request.header.as_ref(),
                         None,
-                        request.download_meta.as_ref(),
                         semaphore,
                         system_client,
                         direct_client,
@@ -4473,7 +4384,6 @@ async fn download_tail_candidate(
     requested_end: u64,
     custom_header: Option<&(String, String)>,
     credentials: Option<&crate::state::ModrinthCredentials>,
-    download_meta: Option<&DownloadMeta>,
     part_path: &Path,
     candidate_index: usize,
     system_client: &reqwest::Client,
@@ -4493,7 +4403,6 @@ async fn download_tail_candidate(
             route,
             custom_header,
             credentials,
-            download_meta,
             Some(requested_start),
             Some(requested_end),
             system_client,
@@ -4588,7 +4497,6 @@ async fn race_tail_candidates(
     requested_end: u64,
     custom_header: Option<&(String, String)>,
     credentials: Option<&crate::state::ModrinthCredentials>,
-    download_meta: Option<&DownloadMeta>,
     part_path: &Path,
     system_client: &reqwest::Client,
     direct_client: &reqwest::Client,
@@ -4603,7 +4511,6 @@ async fn race_tail_candidates(
         requested_end,
         custom_header,
         credentials,
-        download_meta,
         part_path,
         0,
         system_client,
@@ -4619,7 +4526,6 @@ async fn race_tail_candidates(
         requested_end,
         custom_header,
         credentials,
-        download_meta,
         part_path,
         1,
         system_client,
@@ -4647,7 +4553,6 @@ async fn download_segment(
     total_size: u64,
     custom_header: Option<&(String, String)>,
     credentials: Option<&crate::state::ModrinthCredentials>,
-    download_meta: Option<&DownloadMeta>,
     part_path: &Path,
     output: &Arc<crate::util::download::range_output::RangeOutput>,
     _permit: NativeConnectionPermit<'_>,
@@ -4691,7 +4596,6 @@ async fn download_segment(
                 route,
                 custom_header,
                 credentials,
-                download_meta,
                 Some(requested_start),
                 Some(requested_end),
                 system_client,
@@ -4819,7 +4723,6 @@ async fn download_segment(
                                 hedge_end,
                                 custom_header,
                                 credentials,
-                                download_meta,
                                 part_path,
                                 system_client,
                                 direct_client,
@@ -5085,7 +4988,6 @@ async fn try_segmented_download(
             size,
             request.header.as_ref(),
             credentials,
-            request.download_meta.as_ref(),
             part_path,
             &output,
             permit,
@@ -5208,7 +5110,6 @@ async fn try_segmented_download(
                         size,
                         request.header.as_ref(),
                         credentials,
-                        request.download_meta.as_ref(),
                         semaphore,
                         system_client,
                         direct_client,
@@ -5305,7 +5206,6 @@ async fn try_segmented_download(
                             size,
                             request.header.as_ref(),
                             credentials,
-                            None,
                             part_path,
                             &output,
                             permit,
@@ -6216,7 +6116,6 @@ async fn download_to_path_inner(
                         &attempt_route,
                         request.header.as_ref(),
                         credentials.as_ref(),
-                        request.download_meta.as_ref(),
                         (resume_offset > 0).then_some(resume_offset),
                         None,
                     ),
@@ -6600,7 +6499,6 @@ async fn download_to_path_inner(
                                     total_size,
                                     request.header.as_ref(),
                                     credentials.as_ref(),
-                                    request.download_meta.as_ref(),
                                     semaphore,
                                     &NO_REDIRECT_REQWEST_CLIENT,
                                     &DIRECT_REQWEST_CLIENT,
@@ -6973,28 +6871,6 @@ async fn download_to_path_inner(
         attempts,
         file_attempt_budget,
     ))
-}
-
-/// Posts a JSON to a URL
-#[tracing::instrument(skip_all)]
-pub async fn post_json(
-    url: &str,
-    json_body: serde_json::Value,
-    semaphore: &FetchSemaphore,
-    exec: impl sqlx::Executor<'_, Database = sqlx::Sqlite>,
-) -> crate::Result<()> {
-    let _permit = semaphore.0.acquire().await?;
-
-    let mut req = INSECURE_REQWEST_CLIENT.post(url).json(&json_body);
-
-    if let Some(creds) =
-        crate::state::ModrinthCredentials::get_active(exec).await?
-    {
-        req = req.header("Authorization", &creds.session);
-    }
-
-    req.send().await?.error_for_status()?;
-    Ok(())
 }
 
 pub async fn read_json<T>(
@@ -7524,22 +7400,6 @@ mod tests {
             assert_eq!(routes.len(), 1);
             assert_eq!(routes[0].url, url);
         }
-    }
-
-    #[test]
-    fn modrinth_download_url_recognition_includes_cdn_alt() {
-        assert!(is_official_modrinth_download_url(
-            "https://cdn-alt.modrinth.com/data/project/version/file.jar"
-        ));
-        assert!(is_official_modrinth_download_url(
-            "https://cdn.modrinth.com/data/project/version/file.jar"
-        ));
-        assert!(is_official_modrinth_download_url(
-            "https://api.modrinth.com/v2/project/abc"
-        ));
-        assert!(!is_official_modrinth_download_url(
-            "https://example.com/file.jar"
-        ));
     }
 
     #[test]
@@ -8678,7 +8538,6 @@ mod tests {
             data.len() as u64,
             None,
             None,
-            None,
             &semaphore,
             &client,
             &client,
@@ -8705,7 +8564,6 @@ mod tests {
                 &candidates,
                 1,
                 data.len() as u64,
-                None,
                 None,
                 None,
                 &semaphore,
@@ -9042,7 +8900,6 @@ mod tests {
             &route,
             DownloadRange::new(0, 0, data.len() as u64 - 1),
             data.len() as u64,
-            None,
             None,
             None,
             &part_path,

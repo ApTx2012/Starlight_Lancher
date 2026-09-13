@@ -419,7 +419,6 @@ import { useMinecraftLaunchError } from '@/composables/useMinecraftLaunchError'
 import { useNetworkStatus } from '@/composables/useNetworkStatus'
 import { postUpgradeNoticeQueryKey, usePostUpgradeNotice } from '@/composables/usePostUpgradeNotice'
 import { useSymlinkWarningDismiss } from '@/composables/useSymlinkWarningDismiss'
-import { trackEvent } from '@/helpers/analytics'
 import { get_project_v3 } from '@/helpers/cache.js'
 import { instance_listener, process_listener } from '@/helpers/events'
 import {
@@ -776,11 +775,6 @@ const startInstance = async (context: string) => {
 		loading.value = false
 	}
 
-	trackEvent('InstanceStart', {
-		loader: instance.value.loader,
-		game_version: instance.value.game_version,
-		source: context,
-	})
 }
 
 const stopInstance = async (context: string) => {
@@ -790,11 +784,6 @@ const stopInstance = async (context: string) => {
 	playing.value = false
 
 	if (!instance.value) return
-	trackEvent('InstanceStop', {
-		loader: instance.value.loader,
-		game_version: instance.value.game_version,
-		source: context,
-	})
 }
 
 const handlePlayServer = async () => {

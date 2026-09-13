@@ -222,18 +222,6 @@ export const settingsSearchEntries: SettingsSearchEntry[] = [
 		keywords: [message('app.settings.tabs.launch-defaults', 'Launch & instance defaults')],
 	},
 	{
-		id: 'privacy-telemetry',
-		categoryId: 'privacy-data',
-		targetId: 'settings-target-privacy-telemetry',
-		label: message('app.settings.privacy.telemetry', 'Telemetry'),
-	},
-	{
-		id: 'privacy-discord-rpc',
-		categoryId: 'privacy-data',
-		targetId: 'settings-target-privacy-discord-rpc',
-		label: message('app.settings.privacy.discord-rpc', 'Discord rich presence'),
-	},
-	{
 		id: 'java-installations',
 		categoryId: 'java-performance',
 		label: message('app.settings.tabs.java-installations', 'Java installations'),

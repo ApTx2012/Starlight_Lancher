@@ -28,7 +28,6 @@ use crate::state::{
     LoaderComponent, LoaderComponentKind, LoaderComponentRole, ModLoader,
     State,
 };
-use crate::util::fetch::DownloadReason;
 use futures::stream::{FuturesUnordered, StreamExt};
 use std::collections::{HashMap, HashSet};
 use std::future::Future;
@@ -1513,14 +1512,8 @@ async fn run_request(
             )
             .await?;
             if let InstallExecutionOutcome::WaitingForUser(reason) =
-                install_pack(
-                    job_id,
-                    job_state,
-                    location,
-                    instance_id.clone(),
-                    DownloadReason::Modpack,
-                )
-                .await?
+                install_pack(job_id, job_state, location, instance_id.clone())
+                    .await?
             {
                 return Ok(InstallExecutionOutcome::WaitingForUser(reason));
             }
@@ -1714,14 +1707,8 @@ async fn run_request(
                 }
             };
             if let InstallExecutionOutcome::WaitingForUser(reason) =
-                install_pack(
-                    job_id,
-                    job_state,
-                    location,
-                    instance_id.clone(),
-                    DownloadReason::Modpack,
-                )
-                .await?
+                install_pack(job_id, job_state, location, instance_id.clone())
+                    .await?
             {
                 return Ok(InstallExecutionOutcome::WaitingForUser(reason));
             }
@@ -2973,13 +2960,8 @@ async fn stage_upgrade_content(
             let reporter = reporter.clone();
             async move {
                 let index = context.index;
-                let mutation = stage_one_upgrade_request(
-                    instance_id,
-                    context,
-                    reporter,
-                    state,
-                )
-                .await?;
+                let mutation =
+                    stage_one_upgrade_request(context, reporter, state).await?;
                 Ok::<_, crate::Error>((index, mutation))
             }
         })
@@ -3002,7 +2984,6 @@ where
 }
 
 async fn stage_one_upgrade_request(
-    instance_id: &str,
     context: UpgradeStagingRequest,
     reporter: Option<InstallProgressReporter>,
     state: &State,
@@ -3011,27 +2992,13 @@ async fn stage_one_upgrade_request(
             ContentProvider::Modrinth => StagedUpgradeDownload::Modrinth(
                 match reporter.as_ref() {
                     Some(reporter) => crate::state::instances::commands::download_project_version_with_reporter(
-                        instance_id,
                         &context.release_id,
-                        if context.auto_dependency {
-                            DownloadReason::Dependency
-                        } else {
-                            DownloadReason::Update
-                        },
-                        None,
                         reporter.clone(),
                         state,
                     )
                     .await?,
                     None => crate::state::instances::commands::download_project_version(
-                        instance_id,
                         &context.release_id,
-                        if context.auto_dependency {
-                            DownloadReason::Dependency
-                        } else {
-                            DownloadReason::Update
-                        },
-                        None,
                         state,
                     )
                     .await?,
@@ -3739,7 +3706,6 @@ async fn remove_existing_pack_content(
         metadata.instance.name.clone(),
         None,
         instance_id.to_string(),
-        DownloadReason::Update,
         reporter,
     )
     .await?;
@@ -3799,7 +3765,6 @@ async fn install_pack(
     job_state: &mut InstallJobState,
     location: CreatePackLocation,
     instance_id: String,
-    reason: DownloadReason,
 ) -> crate::Result<InstallExecutionOutcome<()>> {
     let reporter = InstallProgressReporter::new(job_id, job_state.clone());
     reporter
@@ -3831,7 +3796,6 @@ async fn install_pack(
                 title,
                 icon_url,
                 instance_id.clone(),
-                reason,
                 reporter.clone(),
             )
             .await?
@@ -3882,13 +3846,9 @@ async fn install_pack(
         }
     };
 
-    let outcome = install_zipped_mrpack_files_with_reporter(
-        create_pack,
-        false,
-        reason,
-        reporter,
-    )
-    .await?;
+    let outcome =
+        install_zipped_mrpack_files_with_reporter(create_pack, false, reporter)
+            .await?;
     Ok(match outcome {
         MrpackInstallOutcome::Completed(_) => {
             InstallExecutionOutcome::Completed(())
@@ -4056,7 +4016,6 @@ async fn install_local_pack_file(
                 match install_zipped_mrpack_files_with_reporter(
                     create_pack,
                     false,
-                    DownloadReason::Modpack,
                     reporter,
                 )
                 .await?

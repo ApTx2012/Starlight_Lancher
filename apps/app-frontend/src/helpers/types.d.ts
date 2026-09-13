@@ -216,8 +216,6 @@ type AppSettings = {
 	close_behavior: 'ask' | 'close' | 'lightweight'
 	home_widgets: import('@/components/home/home-dashboard').HomeDashboardConfig | null
 
-	telemetry: boolean
-	discord_rpc: boolean
 	developer_mode: boolean
 
 	onboarded: boolean

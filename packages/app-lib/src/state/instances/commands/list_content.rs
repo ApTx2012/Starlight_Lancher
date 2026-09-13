@@ -20,8 +20,8 @@ use crate::state::{
     ReleaseChannel, TeamMember, Version, VersionV3,
 };
 use crate::util::fetch::{
-    ContentValidation, DownloadMeta, DownloadReason, DownloadRequest,
-    FetchSemaphore, Integrity, ResourceClass, download_to_path, sha1_async,
+    ContentValidation, DownloadRequest, FetchSemaphore, Integrity,
+    ResourceClass, download_to_path, sha1_async,
 };
 use async_zip::tokio::read::fs::ZipFileReader;
 use dashmap::DashMap;
@@ -507,7 +507,6 @@ pub(crate) async fn list_linked_modpack_content(
     };
     let ids = match get_modpack_identifiers(
         version_id,
-        &resolved.content_set,
         &state.pool,
         &state.api_semaphore,
     )
@@ -2520,7 +2519,6 @@ async fn get_cached_modpack_identifiers(
 
 async fn get_modpack_identifiers(
     version_id: &str,
-    content_set: &ContentSet,
     pool: &SqlitePool,
     fetch_semaphore: &FetchSemaphore,
 ) -> crate::Result<ModpackIdentifiers> {
@@ -2585,12 +2583,6 @@ async fn get_modpack_identifiers(
                 "No files found for modpack version {version_id}"
             ))
         })?;
-    let download_meta = DownloadMeta {
-        reason: DownloadReason::Modpack,
-        game_version: content_set.game_version.clone(),
-        loader: content_set.loader.as_str().to_string(),
-        dependent_on: Some(version_id.to_string()),
-    };
     let state = State::get().await?;
     let file_name = Path::new(&primary_file.filename);
     if file_name.components().count() != 1
@@ -2619,8 +2611,7 @@ async fn get_modpack_identifiers(
                 sha512: primary_file.hashes.get("sha512").cloned(),
                 content: ContentValidation::Jar,
                 ..Integrity::default()
-            })
-            .with_download_meta(download_meta),
+            }),
         &pack_path,
         &state.download_semaphore,
         pool,

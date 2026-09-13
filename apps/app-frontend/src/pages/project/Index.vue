@@ -210,25 +210,6 @@
 								{{ installButtonLabel }}
 							</button>
 						</ButtonStyled>
-						<!-- 开服功能暂有问题，隐藏该按钮
-						<Transition name="start-server">
-							<ButtonStyled
-								v-if="serverCapableModpack"
-								key="modpack-start-server"
-								size="large"
-								type="outlined"
-							>
-								<button
-									v-tooltip="formatMessage(messages.startServer)"
-									type="button"
-									@click="openModpackServerFlow"
-								>
-									<ServerIcon />
-									{{ formatMessage(messages.startServer) }}
-								</button>
-							</ButtonStyled>
-						</Transition>
-						-->
 						<ButtonStyled size="large" circular type="transparent">
 							<OverflowMenu
 								:tooltip="`More options`"
@@ -339,7 +320,6 @@
 					:translations="translations"
 					:translation-mode="translationMode"
 					:translation-style="translationStyle"
-					:start-server="(version) => openModpackServerFlow(version)"
 				/>
 			</template>
 			<template v-else> Project data couldn't not be loaded. </template>
@@ -408,7 +388,6 @@ import {
 	PlusIcon,
 	ReportIcon,
 	SearchIcon,
-	ServerIcon,
 	SpinnerIcon,
 	StopCircleIcon,
 } from '@modrinth/assets'
@@ -424,7 +403,6 @@ import {
 	getLatestMatchingInstallVersion,
 	getTargetInstallPreferences,
 	injectNotificationManager,
-	injectPopupNotificationManager,
 	NavTabs,
 	OverflowMenu,
 	ProjectBackgroundGradient,
@@ -501,7 +479,6 @@ import UpgradeProjectReturnBar from './UpgradeProjectReturnBar.vue'
 dayjs.extend(relativeTime)
 
 const { addNotification, handleError } = injectNotificationManager()
-const popupNotificationManager = injectPopupNotificationManager()
 const { install: installVersion } = injectContentInstall()
 const contentSelection = injectContentSelection()
 const route = useRoute()
@@ -603,22 +580,6 @@ const messages = defineMessages({
 		id: 'project.actions.view-modpacks',
 		defaultMessage: 'View modpacks',
 	},
-	startServer: {
-		id: 'app.project.modpack-server.start',
-		defaultMessage: 'Start server',
-	},
-	serverCreated: {
-		id: 'app.project.modpack-server.created-title',
-		defaultMessage: 'Server created',
-	},
-	serverCreatedDescription: {
-		id: 'app.project.modpack-server.created-description',
-		defaultMessage: '{name} is ready. Configure and start it in Multiplayer.',
-	},
-	openServer: {
-		id: 'app.project.modpack-server.open',
-		defaultMessage: 'Open server',
-	},
 })
 
 const { installingServerProjects, playServerProject, showAddServerToInstanceModal } =
@@ -641,15 +602,6 @@ const favoritePending = computed(() =>
 const favoriteSaved = computed(() =>
 	data.value ? contentFavorites.isFavorite('modrinth', data.value.id) : false,
 )
-
-const serverCapableModpack = computed(
-	() => data.value?.project_type === 'modpack' && data.value.server_side !== 'unsupported',
-)
-
-async function openModpackServerFlow() {
-	// 服务器创建弹窗（CreateModpackServerModal）已在上游移除，此流程暂不可用。
-	// 如需恢复：重新实现该组件，并在此处调用其 show() 方法。
-}
 
 async function toggleFavorite() {
 	if (!data.value || !favoriteSupported.value || favoritePending.value) return

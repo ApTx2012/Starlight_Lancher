@@ -22,7 +22,6 @@ import { useQuery, useQueryClient } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 
 import SymlinkInstanceWarning from '@/components/ui/SymlinkInstanceWarning.vue'
-import { trackEvent } from '@/helpers/analytics'
 import { get_project_versions, get_version } from '@/helpers/cache'
 import { type CurseForgeFile, updateManagedCurseForgeModpack } from '@/helpers/curseforge'
 import {
@@ -333,10 +332,6 @@ provideInstallationSettings({
 	afterSave: async () => {
 		debug('afterSave: installing', { instanceId: instance.value.id })
 		await install_existing_instance(instance.value.id, false).catch(handleError)
-		trackEvent('InstanceRepair', {
-			loader: instance.value.loader,
-			game_version: instance.value.game_version,
-		})
 		debug('afterSave: done')
 	},
 
@@ -345,39 +340,26 @@ provideInstallationSettings({
 		repairing.value = true
 		await install_existing_instance(instance.value.id, true).catch(handleError)
 		repairing.value = false
-		trackEvent('InstanceRepair', {
-			loader: instance.value.loader,
-			game_version: instance.value.game_version,
-		})
 		debug('repair: done')
 	},
 
 	async reinstallModpack() {
 		debug('reinstallModpack: called', { instanceId: instance.value.id })
 		reinstalling.value = true
-		let shouldTrack = false
 		try {
 			if (isImportedModpack.value) {
-				shouldTrack = await installLocalModpackFromPicker()
+				await installLocalModpackFromPicker()
 			} else if (isCurseForgeLinkedModpack.value) {
 				const fileId = Number(instance.value.link?.version_id)
 				if (!Number.isFinite(fileId)) {
 					throw new Error('Invalid CurseForge file ID')
 				}
 				await updateManagedCurseForgeModpack(instance.value.id, fileId).catch(handleError)
-				shouldTrack = true
 			} else {
 				await update_repair_modrinth(instance.value.id).catch(handleError)
-				shouldTrack = true
 			}
 		} finally {
 			reinstalling.value = false
-		}
-		if (shouldTrack) {
-			trackEvent('InstanceRepair', {
-				loader: instance.value.loader,
-				game_version: instance.value.game_version,
-			})
 		}
 		debug('reinstallModpack: done')
 	},
@@ -386,13 +368,7 @@ provideInstallationSettings({
 		debug('swapModpack: called', { instanceId: instance.value.id })
 		reinstalling.value = true
 		try {
-			const installed = await installLocalModpackFromPicker()
-			if (installed) {
-				trackEvent('InstanceRepair', {
-					loader: instance.value.loader,
-					game_version: instance.value.game_version,
-				})
-			}
+			await installLocalModpackFromPicker()
 		} finally {
 			reinstalling.value = false
 		}

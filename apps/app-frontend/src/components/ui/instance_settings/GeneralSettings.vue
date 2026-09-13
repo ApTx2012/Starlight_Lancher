@@ -18,7 +18,6 @@ import { useRouter } from 'vue-router'
 
 import InstanceIcon from '@/components/ui/InstanceIcon.vue'
 import ConfirmDeleteInstanceModal from '@/components/ui/modal/ConfirmDeleteInstanceModal.vue'
-import { trackEvent } from '@/helpers/analytics'
 import { install_duplicate_instance } from '@/helpers/install'
 import { edit, edit_icon, get_full_path, remove } from '@/helpers/instance'
 import { injectInstanceSettings } from '@/providers/instance-settings'
@@ -49,10 +48,6 @@ const installing = computed(() => instance.value.install_stage !== 'installed')
 
 async function duplicateInstance() {
 	await install_duplicate_instance(instance.value.id).catch(handleError)
-	trackEvent('InstanceDuplicate', {
-		loader: instance.value.loader,
-		game_version: instance.value.game_version,
-	})
 }
 
 function formatReleaseChannelLabel(channel: ReleaseChannel) {
@@ -104,7 +99,6 @@ watch(selectedReleaseChannel, async (channel, previousChannel) => {
 async function resetIcon() {
 	icon.value = undefined
 	await edit_icon(instance.value.id, null).catch(handleError)
-	trackEvent('InstanceRemoveIcon')
 }
 
 async function setIcon() {
@@ -116,7 +110,6 @@ async function setIcon() {
 		icon.value = picked.path
 		try {
 			await edit_icon(instance.value.id, picked.path)
-			trackEvent('InstanceSetIcon')
 		} catch (error) {
 			icon.value = previousIcon
 			handleError(error)
@@ -253,10 +246,6 @@ async function removeInstance() {
 	removing.value = true
 	const path = instance.value.id
 
-	trackEvent('InstanceRemove', {
-		loader: instance.value.loader,
-		game_version: instance.value.game_version,
-	})
 
 	await router.push({ path: '/' })
 	await remove(path).catch(handleError)

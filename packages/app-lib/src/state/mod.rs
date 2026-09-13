@@ -42,9 +42,6 @@ pub use self::java_globals::*;
 mod discovered_javas;
 pub use self::discovered_javas::*;
 
-mod discord;
-pub use self::discord::*;
-
 mod minecraft_auth;
 pub use self::minecraft_auth::*;
 
@@ -123,9 +120,6 @@ pub struct State {
     pub(crate) install_job_cancellations: DashMap<Uuid, CancellationToken>,
     pub(crate) install_job_operation_locks:
         DashMap<Uuid, Arc<AsyncMutex<InstallJobOperationState>>>,
-
-    /// Discord RPC
-    pub discord_rpc: DiscordGuard,
 
     /// Process manager
     pub process_manager: ProcessManager,
@@ -501,8 +495,6 @@ impl State {
             concurrency_state.run_auto_concurrency_controller().await;
         });
 
-        crate::telemetry::start(Arc::clone(state));
-
         tokio::task::spawn(async move {
             crate::google_ip::preload().await;
         });
@@ -521,14 +513,13 @@ impl State {
             .await;
 
             let res = tokio::try_join!(
-                state.discord_rpc.clear_to_default(true),
                 instances::refresh_all_instances(),
                 Settings::migrate(&state.pool),
                 ModrinthCredentials::refresh_all(),
             );
 
             if let Err(e) = res {
-                tracing::error!("Error running discord RPC: {e}");
+                tracing::error!("Error refreshing startup state: {e}");
             }
 
             // Axolotl does not connect to Modrinth's private friends socket.
@@ -861,8 +852,6 @@ impl State {
         let directories =
             DirectoryInfo::init(settings.custom_dir, &app_identifier).await?;
 
-        let discord_rpc = DiscordGuard::init()?;
-
         tracing::info!("Initializing file watcher");
         let file_watcher = instances::watcher::init_watcher().await?;
 
@@ -915,7 +904,6 @@ impl State {
             install_db_semaphore: Semaphore::new(1),
             install_job_cancellations: DashMap::new(),
             install_job_operation_locks: DashMap::new(),
-            discord_rpc,
             process_manager,
             friends_socket,
             restart_after_pending_update: AtomicBool::new(false),
@@ -983,7 +971,6 @@ pub(crate) async fn test_state(
         install_db_semaphore: Semaphore::new(1),
         install_job_cancellations: DashMap::new(),
         install_job_operation_locks: DashMap::new(),
-        discord_rpc: DiscordGuard::init()?,
         process_manager: ProcessManager::new(),
         friends_socket: FriendsSocket::new(),
         restart_after_pending_update: AtomicBool::new(false),

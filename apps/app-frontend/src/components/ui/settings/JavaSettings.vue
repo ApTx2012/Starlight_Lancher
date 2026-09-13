@@ -19,7 +19,6 @@ import MemoryAllocationDisplay from '@/components/ui/MemoryAllocationDisplay.vue
 import DownloadJavaModal from '@/components/ui/settings/DownloadJavaModal.vue'
 import InstalledJavaModal from '@/components/ui/settings/InstalledJavaModal.vue'
 import useMemorySlider from '@/composables/useMemorySlider'
-import { trackEvent } from '@/helpers/analytics'
 import { collectGcContext } from '@/helpers/gc/context'
 import { wait_for_install_job } from '@/helpers/install'
 import { getJavaArgumentPresets } from '@/helpers/java-argument-presets'
@@ -249,7 +248,6 @@ async function runScan(exhaustive) {
 
 	scanning.value = true
 	scanMode.value = 'quick'
-	trackEvent('JavaQuickScan', { source: 'settings' })
 	try {
 		await find_filtered_jres(null, false, true, false).catch(handleError)
 	} finally {
@@ -262,7 +260,6 @@ async function confirmDeepScan() {
 	showDeepScanConfirm.value = false
 	scanning.value = true
 	scanMode.value = 'deep'
-	trackEvent('JavaDeepScan', { source: 'settings' })
 	try {
 		await find_filtered_jres(null, true, true, true).catch(handleError)
 	} finally {
@@ -280,7 +277,6 @@ async function handleManualAdd() {
 	if (!javaInfo) return
 
 	await set_java_version(javaInfo).catch(handleError)
-	trackEvent('JavaManualSelect', { path: filePath })
 }
 
 async function onJavaDownloaded(job) {

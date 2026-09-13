@@ -2389,11 +2389,6 @@ pub async fn launch_minecraft(
     )
     .await?;
 
-    let _ = state
-        .discord_rpc
-        .set_activity(&format!("Playing {}", instance.name), true)
-        .await;
-
     // The launcher log must land where the game and log browser read it. The
     // resolved directory is PCL's PathIndie equivalent for direct links.
     let logs_folder = state.directories.game_logs_dir(&instance_path);

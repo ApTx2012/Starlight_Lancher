@@ -18,7 +18,6 @@ import { computed, ref, watch } from 'vue'
 import { useHomeDashboardRuntime } from '@/components/home/home-dashboard-runtime'
 import InstanceIcon from '@/components/ui/InstanceIcon.vue'
 import { useMinecraftLaunchError } from '@/composables/useMinecraftLaunchError'
-import { trackEvent } from '@/helpers/analytics'
 import {
 	type DailyPlaytime,
 	type DailyPlaytimeEntry,
@@ -200,11 +199,6 @@ function selectDay(dateKey: string) {
 async function playInstance(instance: GameInstance) {
 	try {
 		await run(instance.id)
-		trackEvent('InstanceStart', {
-			loader: instance.loader,
-			game_version: instance.game_version,
-			source: 'HomeCalendar',
-		})
 	} catch (error) {
 		const handled = await handleMinecraftLaunchError(error, {
 			instance_id: instance.id,
@@ -216,11 +210,6 @@ async function playInstance(instance: GameInstance) {
 
 async function stopInstance(instance: GameInstance) {
 	await kill(instance.id).catch(handleError)
-	trackEvent('InstanceStop', {
-		loader: instance.loader,
-		game_version: instance.game_version,
-		source: 'HomeCalendar',
-	})
 }
 
 watch(() => anchor.value.getTime(), refreshPlaytime, { immediate: true })

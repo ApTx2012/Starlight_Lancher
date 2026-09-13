@@ -112,7 +112,6 @@ import { computed, ref, watch } from 'vue'
 
 import JavaDetectionModal from '@/components/ui/JavaDetectionModal.vue'
 import useJavaTest from '@/composables/useJavaTest'
-import { trackEvent } from '@/helpers/analytics'
 import { auto_install_java, find_filtered_jres, get_jre } from '@/helpers/jre.js'
 
 const { handleError } = injectNotificationManager()
@@ -196,9 +195,9 @@ const recommendedInstalled = computed(() => {
 let hasInitialized = false
 
 async function runTest(path) {
-	await testJavaInstallation(path, testVersion.value, true)
+	await testJavaInstallation(path, testVersion.value)
 	if (props.version != null) {
-		await recommendedJavaTest.testJavaInstallation(path, props.version, false)
+		await recommendedJavaTest.testJavaInstallation(path, props.version)
 	}
 }
 
@@ -212,9 +211,9 @@ watch(
 	(newPath) => {
 		if (newPath) {
 			if (!hasInitialized) {
-				testJavaInstallation(newPath, testVersion.value, false)
+			testJavaInstallation(newPath, testVersion.value)
 				if (props.version != null) {
-					recommendedJavaTest.testJavaInstallation(newPath, props.version, false)
+				recommendedJavaTest.testJavaInstallation(newPath, props.version)
 				}
 				hasInitialized = true
 			} else {
@@ -242,9 +241,6 @@ async function handleJavaFileInput() {
 			}
 		}
 
-		trackEvent('JavaManualSelect', {
-			version: props.version,
-		})
 
 		commitSelection(result)
 	}
@@ -279,7 +275,6 @@ async function reinstallJava() {
 			}
 		}
 
-		trackEvent('JavaReInstall', { path: path, version: props.version })
 		commitSelection(result)
 		runTest(result.path)
 	} finally {

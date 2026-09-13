@@ -21,7 +21,6 @@ import JetBrainsLogo from '@/assets/java-vendors/jetbrains.png'
 import MicrosoftLogo from '@/assets/java-vendors/microsoft.png'
 import OracleLogo from '@/assets/java-vendors/oracle.png'
 import SapLogo from '@/assets/java-vendors/sap.png'
-import { trackEvent } from '@/helpers/analytics'
 import { download_java, list_java_feed_vendors, list_java_feed_versions } from '@/helpers/jre'
 
 const { handleError } = injectNotificationManager()
@@ -117,7 +116,6 @@ function backToVendors() {
 
 async function downloadVersion(info) {
 	downloading.value = info.major_version
-	trackEvent('JavaDownload', { vendor: info.vendor, version: info.major_version })
 	modal.value?.hide()
 
 	const job = await download_java(info.vendor, info.major_version).catch(handleError)

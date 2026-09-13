@@ -652,10 +652,6 @@ export async function update_project(instanceId: string, projectPath: string): P
 	return await invoke('plugin:instance|instance_update_project', { instanceId, projectPath })
 }
 
-// Add a project to an instance from a version
-// Returns a path to the new project file
-export type DownloadReason = 'standalone' | 'dependency' | 'modpack' | 'update'
-
 export interface ResolutionPreferences {
 	game_versions?: string[]
 	loaders?: string[]
@@ -691,14 +687,10 @@ export interface ResolveContentPlan {
 export async function add_project_from_version(
 	instanceId: string,
 	versionId: string,
-	reason: DownloadReason,
-	dependentOnVersionId?: string,
 ): Promise<string> {
 	return await invoke('plugin:instance|instance_add_project_from_version', {
 		instanceId,
 		versionId,
-		reason,
-		dependentOnVersionId,
 	})
 }
 

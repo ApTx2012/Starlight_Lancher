@@ -6,7 +6,6 @@ use crate::state::{
     CacheBehaviour, CachedEntry, ContentProviderRef, Dependency,
     DependencyType, ModrinthVersionId, ProjectType, State, Version,
 };
-use crate::util::fetch::DownloadReason;
 use futures::stream::{FuturesUnordered, StreamExt};
 use std::cmp::Reverse;
 use std::collections::{HashMap, HashSet};
@@ -31,7 +30,6 @@ struct BulkUpdatePlan {
 struct PlannedProjectUpdate {
     relative_path: String,
     project_id: String,
-    current_version_id: String,
     update_version_id: String,
 }
 
@@ -107,7 +105,6 @@ async fn apply_content_update(
     let mut new_path = match update {
         ContentUpdate::Modrinth {
             project_id,
-            current_version_id,
             update_version_id,
             ..
         } => {
@@ -149,8 +146,6 @@ async fn apply_content_update(
                 add_project_from_version(
                     instance_id,
                     &plan.primary.version_id,
-                    DownloadReason::Update,
-                    Some(current_version_id.to_string()),
                     ContentSourceKind::Local,
                     ownership_kind,
                     state,
@@ -159,14 +154,8 @@ async fn apply_content_update(
             );
             for dependency in &plan.dependencies {
                 paths.push(
-                    add_resolved_content(
-                        instance_id,
-                        dependency,
-                        DownloadReason::Dependency,
-                        true,
-                        state,
-                    )
-                    .await?,
+                    add_resolved_content(instance_id, dependency, true, state)
+                        .await?,
                 );
             }
             persist_resolved_plan_dependency_edges(
@@ -449,10 +438,7 @@ async fn download_planned_projects(
             match download {
                 PlannedDownload::ProjectUpdate(update) => {
                     let downloaded = download_project_version(
-                        instance_id,
                         &update.update_version_id,
-                        DownloadReason::Update,
-                        Some(update.current_version_id.clone()),
                         state,
                     )
                     .await?;
@@ -462,14 +448,9 @@ async fn download_planned_projects(
                     ))
                 }
                 PlannedDownload::DependencyAddition(dependency) => {
-                    let downloaded = download_project_version(
-                        instance_id,
-                        &dependency.version_id,
-                        DownloadReason::Dependency,
-                        Some(dependency.parent_version_id.clone()),
-                        state,
-                    )
-                    .await?;
+                    let downloaded =
+                        download_project_version(&dependency.version_id, state)
+                            .await?;
 
                     Ok::<_, crate::Error>(
                         DownloadedBulkProject::DependencyAddition(
@@ -636,11 +617,10 @@ async fn plan_bulk_update(
     let project_updates = updates
         .into_iter()
         .filter_map(|update| {
-            let (project_id, current, target) = update.modrinth_ids()?;
+            let (project_id, _, target) = update.modrinth_ids()?;
             Some(PlannedProjectUpdate {
                 relative_path: update.relative_path().to_string(),
                 project_id: project_id.to_string(),
-                current_version_id: current.to_string(),
                 update_version_id: target.to_string(),
             })
         })

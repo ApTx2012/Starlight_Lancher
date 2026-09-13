@@ -114,8 +114,6 @@ export interface DropImportOptions {
 	onSchematicWorkshopPage: ComputedRef<boolean>
 	/** Check if path is a schematic file */
 	isSchematicFile: (path: string) => boolean
-	/** Track analytics event */
-	trackEvent: (name: string, properties?: Record<string, unknown>) => void
 	/** Route to push */
 	router: Router
 }
@@ -135,7 +133,6 @@ export interface DropImportOptions {
  *   onSkinsPage,
  *   onSchematicWorkshopPage,
  *   isSchematicFile,
- *   trackEvent,
  *   router,
  *   route,
  * })
@@ -151,7 +148,6 @@ export function useDropImport(options: DropImportOptions) {
 		onSkinsPage,
 		onSchematicWorkshopPage,
 		isSchematicFile,
-		trackEvent,
 		router,
 	} = options
 
@@ -906,7 +902,6 @@ export function useDropImport(options: DropImportOptions) {
 
 			clearDropProcessingNotification()
 			await installModpackFromPath(filePath, fileName, { persistUntilDone: true })
-			trackEvent('InstanceCreate', { source: 'DropConfirmModpack' })
 			await router.push('/library')
 			return
 		}

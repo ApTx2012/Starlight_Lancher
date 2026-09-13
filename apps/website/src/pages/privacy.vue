@@ -37,7 +37,7 @@ useHead({
 		eyebrow="隐私政策"
 		title="隐私政策"
 		description="本政策说明 Starlight Launcher 官方网站和桌面应用处理数据的方式，以及第三方服务可能接收的信息。"
-		updated-at="2026 年 8 月 14 日"
+		updated-at="2026 年 9 月 13 日"
 	>
 		<h2>1. 适用范围</h2>
 		<p>
@@ -54,8 +54,7 @@ useHead({
 		</ul>
 		<p>
 			这些偏好主要保存在 Cookie 或浏览器 localStorage 中，你可通过浏览器设置清除。网站不使用广告
-			Cookie。网站接入<a href="https://howxm.com" target="_blank" rel="noopener">浩客（Howxm）</a>
-			作为第三方用户体验分析和反馈收集服务；其可根据服务配置处理与网站访问、交互、设备或浏览器及网络请求相关的信息，以展示问卷、收集评价和改进网站体验。
+			Cookie，也不加载第三方用户行为分析脚本。
 		</p>
 		<p>
 			网站托管和网络基础设施提供者可能为保障访问、安全和故障排查而处理常规请求信息，例如 IP
@@ -71,13 +70,8 @@ useHead({
 			<li>游戏日志、崩溃信息、缓存、下载记录及更新状态。</li>
 		</ul>
 		<p>
-			这些数据用于登录、启动游戏、管理内容、诊断故障和提供你主动使用的功能。启动器会在首次运行或功能升级后询问是否允许匿名遥测；未确认或关闭时不会发送遥测。允许后，启动器每天最多发送一次匿名活跃信号，用于统计选择加入遥测的匿名安装量、DAU、WAU、MAU。不会自动上传完整的启动器日志或 Minecraft
-			令牌、账户凭据或原始随机安装标识。
-		</p>
-		<p>
-			遥测使用本地生成的随机安装标识；服务端仅保存经密钥 HMAC-SHA256
-			处理后的不可逆标识。你可随时在“隐私与安全”中关闭遥测；关闭后会停止后续采集并清空本地待发送队列，但已经上传的数据仍按下述保留周期清理。Discord
-			Rich Presence 是独立的本地开关，不属于遥测。
+			这些数据用于登录、启动游戏、管理内容、诊断故障和提供你主动使用的功能。启动器不收集或发送使用遥测、活跃状态、游玩时长、下载来源元数据或 Discord Rich Presence 数据，也不会自动上传完整的启动器日志、Minecraft
+			令牌或账户凭据。
 		</p>
 
 		<h2>4. 与第三方共享和传输</h2>
@@ -90,8 +84,6 @@ useHead({
 			<li>你选择的第三方 Yggdrasil 认证服务；</li>
 			<li>Modrinth、CurseForge 及内容作者提供的 API 和下载地址；</li>
 			<li>Update Server、GitHub 及其他用于版本检查、更新或文件分发的服务；</li>
-			<li>用于官网用户体验分析和反馈收集的浩客（Howxm）；</li>
-			<li>用于接收和保存选择加入的匿名遥测数据的 Cloudflare Workers 和 D1；</li>
 			<li>你主动连接的 Minecraft 服务器或其他外部链接。</li>
 		</ul>
 		<p>项目维护者不会出售你的个人信息。第三方如何保存和使用请求数据，由其各自的隐私政策决定。</p>
@@ -99,11 +91,6 @@ useHead({
 		<h2>5. 数据保存与删除</h2>
 		<p>
 			网站偏好保存在你的浏览器中；启动器数据主要保存在你的设备中。你可以清除浏览器站点数据，或在启动器内移除账户、实例和缓存。卸载应用不一定自动删除全部数据目录，请在确认备份需求后手动清理残留文件。
-		</p>
-		<p>
-			遥测中的匿名日活记录保留 35 天；每日汇总和匿名安装哈希会长期保留，用于历史趋势和累计安装统计。项目不会在遥测数据库中保存请求
-			IP。Cloudflare
-			作为基础设施提供者仍可能按其自身政策处理网络请求所必需的信息。
 		</p>
 		<p>
 			第三方服务保存的数据须通过对应服务的账户设置或隐私渠道管理。项目维护者无法代你访问、导出或删除第三方持有的数据。
@@ -142,7 +129,7 @@ useHead({
 		eyebrow="Privacy Policy"
 		title="Privacy Policy"
 		description="This policy explains how the Starlight Launcher official website and desktop application handle data, and what information third-party services may receive."
-		updated-at="August 14, 2026"
+		updated-at="September 13, 2026"
 	>
 		<h2>1. Scope</h2>
 		<p>
@@ -163,12 +150,8 @@ useHead({
 		</ul>
 		<p>
 			These preferences are mainly stored in cookies or browser localStorage and can be cleared
-			through your browser settings. The website uses no advertising cookies. It integrates
-			<a href="https://howxm.com" target="_blank" rel="noopener">Howxm</a> as a third-party
-			user-experience analytics and feedback collection service. Depending on its service
-			configuration, Howxm may process information related to website visits, interactions, devices
-			or browsers, and network requests to display surveys, collect ratings, and improve the website
-			experience.
+			through your browser settings. The website uses no advertising cookies and loads no
+			third-party user-behavior analytics scripts.
 		</p>
 		<p>
 			Website hosting and network infrastructure providers may process routine request information
@@ -192,19 +175,10 @@ useHead({
 		</ul>
 		<p>
 			This data is used for signing in, launching the game, managing content, diagnosing faults, and
-			providing features you actively use. The launcher asks whether to allow anonymous telemetry on
-			first use or after a relevant consent update. No telemetry is sent before confirmation or
-			while it is disabled. When enabled, the launcher sends at most one anonymous daily activity
-			 signal. This is used to count opted-in anonymous installations, DAU, WAU, and MAU. Full
-			launcher or Minecraft logs, Minecraft tokens, account credentials, and the original random
-			installation identifier are not uploaded automatically.
-		</p>
-		<p>
-			Telemetry uses a random installation identifier generated locally; the service stores only an
-			irreversible HMAC-SHA256 value produced with a server secret. You can disable telemetry at any time
-			under Privacy & security. Disabling it stops future collection and clears the local pending
-			queue, while previously uploaded records are deleted under the retention periods below.
-			Discord Rich Presence is an independent local setting and is not telemetry.
+			providing features you actively use. The launcher does not collect or send usage telemetry,
+			activity status, playtime, download-source metadata, or Discord Rich Presence data. Full
+			launcher or Minecraft logs, Minecraft tokens, and account credentials are not uploaded
+			automatically.
 		</p>
 
 		<h2>4. Sharing and Transfers with Third Parties</h2>
@@ -223,10 +197,6 @@ useHead({
 				Update Server, GitHub, and other services used for version checks, updates, or file
 				distribution;
 			</li>
-			<li>Howxm for official-website user-experience analytics and feedback collection;</li>
-			<li>
-				Cloudflare Workers and D1 for opted-in anonymous telemetry ingestion and storage;
-			</li>
 			<li>Minecraft servers or other external links you connect to.</li>
 		</ul>
 		<p>
@@ -240,12 +210,6 @@ useHead({
 			You can clear browser site data or remove accounts, instances, and caches inside the launcher.
 			Uninstalling the application does not necessarily delete all data directories automatically;
 			after confirming your backup needs, manually clean up any leftover files.
-		</p>
-		<p>
-			Anonymous daily-active records are retained for 35 days; daily totals and anonymous installation hashes are retained long-term for
-			historical trends and cumulative installation counts. The project does not store request IP
-			addresses in the telemetry database. Cloudflare, as the infrastructure provider, may still process information
-			required to deliver network requests under its own policies.
 		</p>
 		<p>
 			Data stored by third-party services must be managed through the corresponding service's

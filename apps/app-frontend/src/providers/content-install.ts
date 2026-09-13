@@ -15,7 +15,6 @@ import type { Router } from 'vue-router'
 import type ContentInstallPreviewModal from '@/components/ui/ContentInstallPreviewModal.vue'
 import type { ContentInstallPreviewData } from '@/components/ui/ContentInstallPreviewModal.vue'
 import type { ModpackInstallModalData } from '@/components/ui/modal/ModpackInstallModal.vue'
-import { trackEvent } from '@/helpers/analytics'
 import {
 	get_organization,
 	get_project,
@@ -868,12 +867,6 @@ export function createContentInstall(opts: {
 			})
 			removeInstallingItems(createdInstanceId, [project.id])
 			markInstanceContentChanged(createdInstanceId)
-			trackEvent('PackInstall', {
-				id: project.id,
-				version_id: version.id,
-				title: project.title,
-				source,
-			})
 			callback(version.id, [project.id])
 		} catch (err) {
 			debugState('createAndInstallCurseForgeModpack ERR', { err: String(err), createdInstanceId })
@@ -997,7 +990,6 @@ export function createContentInstall(opts: {
 			if (sessionId !== currentSessionId) return
 			contentInstallModalOpen = true
 			modalRef?.show()
-			trackEvent('ProjectInstallStart', { source: 'ProjectInstallModal' })
 		}
 
 		get_game_versions()
@@ -1068,7 +1060,6 @@ export function createContentInstall(opts: {
 		await nextTick()
 		contentInstallModalOpen = true
 		modalRef?.show()
-		trackEvent('ProjectInstallStart', { source: 'ProjectInstallModal' })
 		return sessionId
 	}
 
@@ -1688,15 +1679,6 @@ export function createContentInstall(opts: {
 			if (storeInstance) storeInstance.installing = true
 			try {
 				await queueCurrentCurseForgeWorld(selectedInstance)
-				trackEvent('ProjectInstall', {
-					loader: selectedInstance.loader,
-					game_version: selectedInstance.game_version,
-					id: currentProject.id,
-					version_id: currentWorldFileId ?? '',
-					project_type: 'world',
-					title: currentProject.title,
-					source: 'ProjectInstallModal',
-				})
 				settleCurrentCallback(currentWorldFileId ?? undefined, [currentProject.id])
 				hideContentInstallModal()
 			} catch (err) {
@@ -1758,15 +1740,6 @@ export function createContentInstall(opts: {
 					{ ...request, excluded_project_ids: excludedProjectIds },
 					{ title: currentProject.title, iconUrl: currentProject.icon_url },
 				)
-				trackEvent('ProjectInstall', {
-					loader: selectedInstance.loader,
-					game_version: selectedInstance.game_version,
-					id: currentProject.id,
-					version_id: version.id,
-					project_type: currentProject.project_type,
-					title: currentProject.title,
-					source: 'ProjectInstallModal',
-				})
 				settleCurrentCallback(version.id, [currentProject.id])
 				hideContentInstallModal()
 			} catch (err) {
@@ -1786,15 +1759,6 @@ export function createContentInstall(opts: {
 					settleCurrentCallback()
 					return
 				}
-				trackEvent('ProjectInstall', {
-					loader: selectedInstance.loader,
-					game_version: selectedInstance.game_version,
-					id: currentProject.id,
-					version_id: version.id,
-					project_type: currentProject.project_type,
-					title: currentProject.title,
-					source: 'ProjectInstallModal',
-				})
 				settleCurrentCallback(version.id, [currentProject.id])
 				hideContentInstallModal()
 			} catch (err) {
@@ -1830,15 +1794,6 @@ export function createContentInstall(opts: {
 				storeInstance.installed = primaryInstalled
 				storeInstance.installing = false
 			}
-			trackEvent('ProjectInstall', {
-				loader: selectedInstance.loader,
-				game_version: selectedInstance.game_version,
-				id: currentProject!.id,
-				version_id: version.id,
-				project_type: currentProject!.project_type,
-				title: currentProject!.title,
-				source: 'ProjectInstallModal',
-			})
 			settleCurrentCallback(primaryInstalled ? version.id : undefined, installedProjectIds)
 		} catch (err) {
 			if (storeInstance) storeInstance.installing = false
@@ -1878,7 +1833,6 @@ export function createContentInstall(opts: {
 
 		await nextTick()
 		incompatibilityWarningModalRef?.show(version.id)
-		trackEvent('ProjectInstallStart', { source: 'ProjectIncompatibilityWarningModal' })
 	}
 
 	async function handleIncompatibilityWarningInstall(version: Labrinth.Versions.v2.Version) {
@@ -1931,15 +1885,6 @@ export function createContentInstall(opts: {
 		incompatibilityWarningModalRef?.hide()
 		removeInstallingItems(instance.id, [project.id])
 
-		trackEvent('ProjectInstall', {
-			loader: instance.loader ?? '',
-			game_version: instance.game_version ?? '',
-			id: project.id,
-			version_id: version.id,
-			project_type: project.project_type,
-			title: project.title,
-			source: 'ProjectIncompatibilityWarningModal',
-		})
 	}
 
 	function handleIncompatibilityWarningCancel() {
@@ -2056,16 +2001,6 @@ export function createContentInstall(opts: {
 					},
 					{ title: currentProject!.title, iconUrl: currentProject!.icon_url },
 				)
-				trackEvent('InstanceCreate', { source: 'ProjectInstallModal' })
-				trackEvent('ProjectInstall', {
-					loader: data.loader,
-					game_version: data.gameVersion,
-					id: currentProject!.id,
-					version_id: version.id,
-					project_type: currentProject!.project_type,
-					title: currentProject!.title,
-					source: 'ProjectInstallModal',
-				})
 				settleCurrentCallback(version.id, [currentProject!.id])
 				hideContentInstallModal()
 				return
@@ -2085,16 +2020,6 @@ export function createContentInstall(opts: {
 					excludedCurseForgeProjectIds,
 				)
 				if (!job) return
-				trackEvent('InstanceCreate', { source: 'ProjectInstallModal' })
-				trackEvent('ProjectInstall', {
-					loader: data.loader,
-					game_version: data.gameVersion,
-					id: currentProject!.id,
-					version_id: version.id,
-					project_type: currentProject!.project_type,
-					title: currentProject!.title,
-					source: 'ProjectInstallModal',
-				})
 				settleCurrentCallback(version.id, [currentProject!.id])
 				hideContentInstallModal()
 				return
@@ -2131,18 +2056,6 @@ export function createContentInstall(opts: {
 					: `/instance/${encodeURIComponent(id)}`,
 			)
 
-			trackEvent('InstanceCreate', {
-				source: 'ProjectInstallModal',
-			})
-			trackEvent('ProjectInstall', {
-				loader: data.loader,
-				game_version: data.gameVersion,
-				id: currentProject!.id,
-				version_id: version.id,
-				project_type: currentProject!.project_type,
-				title: currentProject!.title,
-				source: 'ProjectInstallModal',
-			})
 
 			settleCurrentCallback(version.id, installedProjectIds)
 			modalRef?.hide()
@@ -2282,15 +2195,6 @@ export function createContentInstall(opts: {
 					{ ...installRequest, excluded_project_ids: excludedProjectIds },
 					{ title: project.title, iconUrl: project.icon_url },
 				)
-				trackEvent('ProjectInstall', {
-					loader: instance.loader,
-					game_version: instance.game_version,
-					id: project.id,
-					project_type: project.project_type,
-					version_id: version.id,
-					title: project.title,
-					source,
-				})
 				callback(version.id, [project.id])
 			} else {
 				await showIncompatibilityWarning(instance, project, projectVersions, version, callback)
@@ -2402,15 +2306,6 @@ export function createContentInstall(opts: {
 			if (isVersionCompatible(version, project, instance)) {
 				const job = await queueCurrentCurseForgeVersion(instance, project, version)
 				if (!job) return
-				trackEvent('ProjectInstall', {
-					loader: instance.loader,
-					game_version: instance.game_version,
-					id: project.id,
-					project_type: project.project_type,
-					version_id: version.id,
-					title: project.title,
-					source,
-				})
 				callback(version.id, [project.id])
 			} else {
 				await showIncompatibilityWarning(instance, project, versions, version, callback)
@@ -2457,7 +2352,6 @@ export function createContentInstall(opts: {
 		if (sessionId !== currentSessionId) return
 		contentInstallModalOpen = true
 		modalRef?.show()
-		trackEvent('ProjectInstallStart', { source: 'ProjectInstallModal' })
 
 		try {
 			const candidates = (await list()).filter(
@@ -2537,15 +2431,6 @@ export function createContentInstall(opts: {
 		const instance = await get(instanceId)
 		if (!instance) throw new Error(formatMessage(curseForgeWorldUnknownInstanceMessage))
 		await queueCurrentCurseForgeWorld(instance)
-		trackEvent('ProjectInstall', {
-			loader: instance.loader,
-			game_version: instance.game_version,
-			id: currentProject!.id,
-			version_id: file.id.toString(),
-			project_type: 'world',
-			title: currentProject!.title,
-			source,
-		})
 		callback(file.id.toString(), [currentProject!.id])
 	}
 
@@ -2700,12 +2585,6 @@ export function createContentInstall(opts: {
 			if (instanceId) {
 				createInstanceCallback(instanceId)
 			}
-			trackEvent('PackInstall', {
-				id: project.id,
-				version_id: versionId,
-				title: project.title,
-				source,
-			})
 			callback(versionId)
 		},
 		handleModpackInstallCancel() {
