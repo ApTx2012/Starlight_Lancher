@@ -18,7 +18,6 @@ type BaseWorld = {
 export type WorldType = 'singleplayer' | 'server'
 export type DisplayStatus = 'normal' | 'hidden' | 'favorite'
 
-export const PROTECTED_SERVER_ADDRESS = 'slv4.starlight.cool'
 
 export type SingleplayerWorld = BaseWorld & {
 	type: 'singleplayer'

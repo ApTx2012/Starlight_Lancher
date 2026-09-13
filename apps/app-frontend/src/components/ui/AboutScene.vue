@@ -4,7 +4,6 @@
 
 <script setup lang="ts">
 import * as THREE from 'three'
-import { type GLTF, GLTFLoader } from 'three/examples/jsm/Addons.js'
 import { onMounted, onScopeDispose, useTemplateRef } from 'vue'
 
 import { useTheming } from '@/store/theme'
@@ -15,20 +14,6 @@ function isDarkMode() {
 		return matchMedia('(prefers-color-scheme: dark)').matches
 	}
 	return ['dark', 'oled'].includes(themeStore.selectedTheme)
-}
-
-function loadGLTF(url: string): Promise<GLTF> {
-	return new Promise((res, rej) => {
-		const loader = new GLTFLoader()
-		loader.load(
-			url,
-			(data) => {
-				res(data)
-			},
-			undefined,
-			rej,
-		)
-	})
 }
 
 function createTip(position: THREE.Vector3, color: THREE.ColorRepresentation = 0x00ff00) {
@@ -224,43 +209,16 @@ function main() {
 	scene.add(createWater(waterMaterial, new THREE.Vector3(2, -8, -10)))
 	scene.add(createWater(waterMaterial, new THREE.Vector3(16, -8, -26)))
 
-	async function load() {
-		const axlGLTF = await loadGLTF('/models/axolotl.gltf')
+	// 静止的下界之星（替换原动态美西螈）
+	const starTexture = new THREE.TextureLoader().load('/models/netherstar.png')
+	starTexture.colorSpace = THREE.SRGBColorSpace
+	const starMaterial = new THREE.SpriteMaterial({ map: starTexture, transparent: true })
+	const starSprite = new THREE.Sprite(starMaterial)
+	starSprite.scale.set(8, 8, 1)
+	starSprite.position.set(0, -2.5, 0)
+	scene.add(starSprite)
 
-		const axlModel = axlGLTF.scene
-		axlModel.scale.multiplyScalar(5)
-		axlModel.rotateY(Math.PI / 2)
-		axlModel.position.add(new THREE.Vector3(0, -2.5, 0))
-		scene.add(axlModel)
-
-		const mixer = new THREE.AnimationMixer(axlModel)
-		const axlSwimAnim = axlGLTF.animations.filter((a) => a.name === 'swim')[0]
-		if (!axlSwimAnim) return console.error('Missing animation swim')
-		mixer.clipAction(axlSwimAnim).play()
-
-		// // Axl Label
-		// const axlLabelGLTF = await loadGLTF('/models/axl_label.glb')
-		// const axlLabel = axlLabelGLTF.scene
-		// axlLabel.scale.multiplyScalar(8)
-		// axlLabel.rotateY(-Math.PI / 2)
-		// axlLabel.position.set(0, 5.2, 0)
-		// scene.add(axlLabel)
-
-		const originAxlModelPosition = axlModel.position.clone()
-		return function (deltaTime: number, elapsedTime: number) {
-			axlModel.position.set(
-				originAxlModelPosition.x,
-				originAxlModelPosition.y + Math.sin(elapsedTime),
-				originAxlModelPosition.z,
-			)
-			axlModel.rotation.y = Math.sin(elapsedTime * 0.3) * 0.2 + (Math.PI * 100) / 180
-			mixer.update(deltaTime)
-		}
-	}
 	let updateGLTF = (_deltaTime: number, _elapsedTime: number) => {}
-	load().then((updateFn) => {
-		if (updateFn) updateGLTF = updateFn
-	})
 
 	const circleMaterial = createCircleMaterial()
 	circleMaterial.uniforms.color.value = new THREE.Color(accentColor).multiplyScalar(

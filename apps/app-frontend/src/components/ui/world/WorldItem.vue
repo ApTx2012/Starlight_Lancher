@@ -51,7 +51,6 @@ import type {
 } from '@/helpers/worlds.ts'
 import {
 	getWorldIdentifier,
-	PROTECTED_SERVER_ADDRESS,
 	set_world_display_status,
 } from '@/helpers/worlds.ts'
 
@@ -149,9 +148,6 @@ const managed = computed(() => props.managed)
 const shortcutInstanceId = computed(() => props.shortcutInstanceId ?? props.instanceId)
 const homePinTarget = computed(() => props.shortcutInstanceId ?? props.instanceId)
 const pinnedToHome = computed(() => props.world.display_status === 'favorite')
-const protectedServer = computed(
-	() => props.world.type === 'server' && props.world.address === PROTECTED_SERVER_ADDRESS,
-)
 
 async function updateHomePin() {
 	if (!homePinTarget.value) return
@@ -519,8 +515,8 @@ const messages = defineMessages({
 							{
 								id: 'edit',
 								action: () => emit('edit'),
-								shown: !instanceId && !protectedServer,
-								disabled: locked || managed || protectedServer,
+								shown: !instanceId,
+								disabled: locked || managed,
 								tooltip: locked
 									? formatMessage(messages.worldInUse)
 									: managed
@@ -538,7 +534,7 @@ const messages = defineMessages({
 							},
 							{
 								id: pinnedToHome ? 'unpin-home' : 'pin-home',
-								shown: !!homePinTarget && !protectedServer,
+								shown: !!homePinTarget,
 								action: updateHomePin,
 							},
 							{
@@ -555,8 +551,8 @@ const messages = defineMessages({
 								color: 'red',
 								hoverFilled: true,
 								action: () => emit('delete'),
-								shown: !instanceId && !protectedServer,
-								disabled: locked || managed || protectedServer,
+								shown: !instanceId,
+								disabled: locked || managed,
 								tooltip: locked
 									? formatMessage(messages.worldInUse)
 									: managed

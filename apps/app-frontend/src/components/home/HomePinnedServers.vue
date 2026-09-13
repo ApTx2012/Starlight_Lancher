@@ -27,7 +27,6 @@ import { kill } from '@/helpers/instance'
 import type { GameInstance } from '@/helpers/types'
 import {
 	type ServerWorld,
-	PROTECTED_SERVER_ADDRESS,
 	set_world_display_status,
 	start_join_server,
 	type WorldWithInstance,
@@ -79,10 +78,6 @@ const messages = defineMessages({
 		id: 'app.home.servers.more-options',
 		defaultMessage: 'More options',
 	},
-	protectedServerName: {
-		id: 'app.home.servers.protected-name',
-		defaultMessage: 'Starlight Server',
-	},
 })
 
 const startingServerKey = ref<string | null>(null)
@@ -90,29 +85,13 @@ const startingServerKey = ref<string | null>(null)
 const instanceById = computed(
 	() => new Map(props.instances.map((instance) => [instance.id, instance])),
 )
-const servers = computed(() => {
-	const favoriteServers = favoriteWorlds.value.flatMap((world) => {
-		if (world.type !== 'server' || world.address === PROTECTED_SERVER_ADDRESS) return []
+const servers = computed(() =>
+	favoriteWorlds.value.flatMap((world) => {
+		if (world.type !== 'server') return []
 		const instance = instanceById.value.get(world.instance_id)
 		return instance ? [{ instance, world: world as ServerWorld & WorldWithInstance }] : []
-	})
-	const protectedInstance =
-		props.instances.find((instance) => instance.install_stage === 'installed') ?? props.instances[0]
-	if (!protectedInstance) return favoriteServers
-
-	const protectedServer: ServerWorld & WorldWithInstance = {
-		instance_id: protectedInstance.id,
-		name: formatMessage(messages.protectedServerName),
-		last_played: undefined,
-		icon: undefined,
-		display_status: 'favorite',
-		type: 'server',
-		index: -1,
-		address: PROTECTED_SERVER_ADDRESS,
-		pack_status: 'prompt',
-	}
-	return [{ instance: protectedInstance, world: protectedServer }, ...favoriteServers]
-})
+	}),
+)
 
 function serverKey(world: ServerWorld & WorldWithInstance): string {
 	return `${world.instance_id}:${world.address}`
@@ -261,7 +240,6 @@ async function unpinServer(world: ServerWorld & WorldWithInstance) {
 						</button>
 					</ButtonStyled>
 					<ButtonStyled
-						v-if="server.world.address !== PROTECTED_SERVER_ADDRESS"
 						circular
 						size="small"
 						type="transparent"
