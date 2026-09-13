@@ -3,6 +3,7 @@ import { AuthFeature, TauriModrinthClient, VerboseLoggingFeature } from '@modrin
 import {
 	ChangeSkinIcon,
 	CompassIcon,
+	GlobeIcon,
 	DownloadIcon,
 	ExternalIcon,
 	FlaskConicalIcon,
@@ -734,6 +735,10 @@ const messages = defineMessages({
 	skinSelector: {
 		id: 'app.navigation.skin-selector',
 		defaultMessage: 'Skin selector',
+	},
+	starlightSkin: {
+		id: 'app.navigation.starlight-skin',
+		defaultMessage: '斯达莱特',
 	},
 	library: {
 		id: 'app.navigation.library',
@@ -2313,6 +2318,13 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 					to="/skins"
 				>
 					<ChangeSkinIcon />
+				</NavButton>
+				<NavButton
+					v-tooltip.right="formatMessage(messages.starlightSkin)"
+					data-onboarding-id="nav-starlight-skin"
+					to="/starlight-skin"
+				>
+					<GlobeIcon />
 				</NavButton>
 				<NavButton
 					v-tooltip.right="formatMessage(messages.library)"

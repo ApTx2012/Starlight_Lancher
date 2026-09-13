@@ -94,6 +94,14 @@ export default new createRouter({
 			},
 		},
 		{
+			path: '/starlight-skin',
+			name: 'Starlight skin',
+			component: () => import('@/pages/StarlightSkin.vue'),
+			meta: {
+				breadcrumb: [{ name: 'Starlight skin' }],
+			},
+		},
+		{
 			path: '/multiplayer',
 			name: 'Multiplayer',
 			component: () => import('@/pages/Multiplayer.vue'),
