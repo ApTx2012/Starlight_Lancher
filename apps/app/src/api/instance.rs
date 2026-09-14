@@ -462,6 +462,7 @@ fn edit_to_core(edit_instance: EditInstance) -> Result<CoreEditInstance> {
             })
             .transpose()?,
         launch_overrides: Some(InstanceLaunchOverridesPatch {
+            instance_mode: None,
             java_path: edit_instance.java_path,
             extra_launch_args: edit_instance.extra_launch_args,
             custom_env_vars: edit_instance.custom_env_vars,

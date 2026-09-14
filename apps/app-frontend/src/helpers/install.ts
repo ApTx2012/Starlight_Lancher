@@ -32,6 +32,7 @@ export interface InstallModpackPreview {
 }
 
 export interface InstallCreateInstanceRequest {
+	instanceMode?: 'starlight' | 'local'
 	name: string
 	gameVersion: string
 	loader: InstanceLoader

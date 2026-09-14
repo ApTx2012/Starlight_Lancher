@@ -54,6 +54,7 @@ pub struct EditInstance {
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct InstanceLaunchOverridesPatch {
+    pub instance_mode: Option<crate::state::InstanceMode>,
     #[serde(
         default,
         skip_serializing_if = "Option::is_none",
@@ -368,6 +369,9 @@ fn apply_launch_overrides_patch(
     }
     if let Some(game_resolution) = patch.game_resolution {
         overrides.game_resolution = game_resolution;
+    }
+    if let Some(mode) = patch.instance_mode {
+        overrides.instance_mode = Some(mode);
     }
     if let Some(timeout) = patch.launch_preparation_timeout {
         overrides.launch_preparation_timeout = timeout;

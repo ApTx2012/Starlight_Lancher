@@ -142,6 +142,7 @@ pub(crate) async fn import_axolotl(
                 loader_version: Some(config.content_set.loader_version.clone()),
             }),
             launch_overrides: Some(InstanceLaunchOverridesPatch {
+                instance_mode: Some(crate::state::InstanceMode::Local),
                 java_path: Some(config.launch_overrides.java_path.clone()),
                 extra_launch_args: Some(
                     config.launch_overrides.extra_launch_args.clone(),

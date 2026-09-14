@@ -1525,6 +1525,10 @@ pub async fn launch_minecraft(
 ) -> crate::Result<ProcessMetadata> {
     let instance = &context.instance;
     let content_set = &context.applied_content_set;
+    let mut combined_java_args =
+        crate::pack::hosted::java_arguments(&instance.id).await?;
+    combined_java_args.extend_from_slice(java_args);
+    let java_args = combined_java_args.as_slice();
 
     if instance.install_stage == InstanceInstallStage::PackInstalling
         || instance.install_stage == InstanceInstallStage::MinecraftInstalling
@@ -1917,7 +1921,8 @@ pub async fn launch_minecraft(
     let mut effective_memory = *memory;
     let mut effective_resolution = *resolution;
     // Extra game arguments appended after the vanilla game arguments.
-    let mut extra_game_args: Vec<String> = Vec::new();
+    let mut extra_game_args =
+        crate::pack::hosted::game_arguments(&instance.id).await?;
     if let Some(direct) = direct_launch.as_ref()
         && direct.dialect == LinkedLauncherDialect::Hmcl
     {

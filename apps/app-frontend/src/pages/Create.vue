@@ -1,16 +1,20 @@
 <script setup lang="ts">
 import { FolderOpenIcon, LeftArrowIcon, SparklesIcon } from '@modrinth/assets'
 import { BigOptionButton, Button, defineMessages, useVIntl } from '@modrinth/ui'
-import { inject } from 'vue'
+import { inject, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import InstanceModeOptions from '@/components/instance/InstanceModeOptions.vue'
+import type { InstanceMode } from '@/helpers/hosted-packs'
 
 const { formatMessage } = useVIntl()
 const router = useRouter()
+const instanceMode = ref<InstanceMode>('local')
 
 const showModal = inject<
 	(options?: {
 		skipSetupType?: boolean
 		initialMode?: 'custom' | 'import'
+		instanceMode?: InstanceMode
 		onBack?: () => void
 	}) => void
 >('showCreationModalWithOptions')
@@ -60,6 +64,7 @@ function handleStartFresh() {
 	showModal?.({
 		skipSetupType: true,
 		initialMode: 'custom',
+		instanceMode: instanceMode.value,
 		onBack: () => router.push('/create'),
 	})
 }
@@ -68,14 +73,15 @@ function handleImportExisting() {
 	showModal?.({
 		skipSetupType: true,
 		initialMode: 'import',
+		instanceMode: 'local',
 		onBack: () => router.push('/create'),
 	})
 }
 </script>
 
 <template>
-	<div class="flex h-full w-full flex-col items-center justify-center p-6">
-		<div class="flex w-full max-w-2xl flex-col gap-6">
+	<div class="flex h-full w-full flex-col items-center overflow-y-auto p-6">
+		<div class="my-auto flex w-full max-w-2xl shrink-0 flex-col gap-6">
 			<div class="flex flex-col gap-2">
 				<h1 class="m-0 text-2xl font-bold text-contrast">
 					{{ formatMessage(messages.title) }}
@@ -85,6 +91,7 @@ function handleImportExisting() {
 				</p>
 			</div>
 
+			<InstanceModeOptions v-model="instanceMode" data-onboarding-id="creation-instance-mode" />
 			<div data-onboarding-id="creation-methods" class="flex flex-col gap-4 sm:flex-row">
 				<BigOptionButton
 					data-onboarding-id="creation-method-custom"
@@ -97,6 +104,7 @@ function handleImportExisting() {
 
 				<BigOptionButton
 					data-onboarding-id="creation-method-import"
+					v-if="instanceMode === 'local'"
 					:icon="FolderOpenIcon"
 					:title="formatMessage(messages.importTitle)"
 					:description="formatMessage(messages.importDescription)"

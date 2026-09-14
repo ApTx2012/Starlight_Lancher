@@ -51,7 +51,7 @@ pub mod data {
         InstanceContentSnapshot, InstanceContentSnapshotItem,
         InstanceContentWarning, InstanceInstallCandidate,
         InstanceInstallTarget, InstanceLaunchOverridesPatch, InstanceLink,
-        InstanceMetadata, InstancePostUpgradeNotice,
+        InstanceMetadata, InstanceMode, InstancePostUpgradeNotice,
         InstancePostUpgradeWarning, InstanceUpgradeAction,
         InstanceUpgradeDependencyChange, InstanceUpgradeDependencyChangeKind,
         InstanceUpgradeEnvironment, InstanceUpgradeFixedConstraint,

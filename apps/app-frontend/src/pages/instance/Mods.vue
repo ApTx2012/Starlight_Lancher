@@ -1,215 +1,220 @@
 <template>
-	<ReadyTransition :pending="loading">
-		<template #pending>
-			<LoadingIndicator class="pt-4" />
-		</template>
-		<CollapsibleAdmonition
-			v-if="postUpgradeNotice?.warnings.length"
-			v-model="postUpgradeNoticeExpanded"
-			type="warning"
-			class="mb-4"
-		>
-			<template #header>
-				<span class="inline-flex items-center gap-2">
-					{{ formatMessage(messages.postUpgradeNoticeTitle) }}
-					<span class="rounded-full bg-brand-orange/20 px-2 py-0.5 text-sm tabular-nums">{{
-						postUpgradeNotice.warnings.length
-					}}</span>
-				</span>
+	<ModManagementSwitch>
+		<template #packs><HostedModpacks :instance-id="instance.id" /></template>
+		<ReadyTransition :pending="loading">
+			<template #pending>
+				<LoadingIndicator class="pt-4" />
 			</template>
-			<div class="border-0 border-t border-solid border-brand-orange/60 bg-bg-orange p-4">
-				<p class="m-0">{{ formatMessage(messages.postUpgradeNoticeBody) }}</p>
-				<div class="mt-3 flex justify-end">
-					<ButtonStyled color="orange" size="small">
-						<button type="button" @click="dismissPostUpgradeNotice">
-							{{ formatMessage(messages.ignoreAllPostUpgradeWarnings) }}
-						</button>
-					</ButtonStyled>
-				</div>
-			</div>
-		</CollapsibleAdmonition>
-		<CollapsibleAdmonition
-			v-if="skippedManualDownloads.length > 0"
-			v-model="manualWarningExpanded"
-			type="warning"
-			class="mb-4"
-		>
-			<template #header>
-				<span class="inline-flex items-center gap-2">
-					{{ formatMessage(messages.skippedFilesWarningTitle) }}
-					<span class="rounded-full bg-brand-orange/20 px-2 py-0.5 text-sm tabular-nums">
-						{{ skippedManualDownloads.length }}
+			<CollapsibleAdmonition
+				v-if="postUpgradeNotice?.warnings.length"
+				v-model="postUpgradeNoticeExpanded"
+				type="warning"
+				class="mb-4"
+			>
+				<template #header>
+					<span class="inline-flex items-center gap-2">
+						{{ formatMessage(messages.postUpgradeNoticeTitle) }}
+						<span class="rounded-full bg-brand-orange/20 px-2 py-0.5 text-sm tabular-nums">{{
+							postUpgradeNotice.warnings.length
+						}}</span>
 					</span>
-				</span>
-			</template>
-			<div class="border-0 border-t border-solid border-brand-orange/60 bg-bg-orange p-4">
-				<p class="m-0">{{ skippedFilesWarningBody }}</p>
-				<ul class="mb-0 mt-2 flex list-none flex-col gap-1 p-0">
-					<li
-						v-for="item in visibleSkippedManualDownloads"
-						:key="`${item.projectId}:${item.fileId}`"
-						class="min-w-0"
-					>
-						<button
-							class="inline-flex max-w-full cursor-pointer items-center gap-1 text-left font-semibold text-brand hover:underline"
-							@click="openManualCurseForgeDownload(item)"
-						>
-							<span class="truncate">{{ item.fileName }}</span>
-							<ExternalIcon class="size-4 shrink-0" />
-						</button>
-					</li>
-				</ul>
-				<p v-if="hiddenSkippedManualDownloadCount > 0" class="mb-0 mt-2 text-secondary">
-					{{
-						formatMessage(messages.skippedFilesWarningMore, {
-							count: hiddenSkippedManualDownloadCount,
-						})
-					}}
-				</p>
-				<div class="mt-3 flex justify-end">
-					<ButtonStyled color="orange" size="small">
-						<button @click="openManualCurseForgeResolver">
-							<FolderSearchIcon />
-							{{ formatMessage(messages.completeSkippedFiles) }}
-						</button>
-					</ButtonStyled>
-				</div>
-			</div>
-		</CollapsibleAdmonition>
-		<CollapsibleAdmonition
-			v-if="missingPackMembers.length > 0"
-			v-model="missingWarningExpanded"
-			type="warning"
-			class="mb-4"
-		>
-			<template #header>
-				<span class="inline-flex items-center gap-2">
-					{{ formatMessage(messages.missingFilesWarningTitle) }}
-					<span class="rounded-full bg-brand-orange/20 px-2 py-0.5 text-sm tabular-nums">
-						{{ missingPackMembers.length }}
-					</span>
-				</span>
-			</template>
-			<div class="bg-bg-orange px-4 pb-4 pt-3">
-				<p class="m-0 text-sm leading-6 text-secondary">
-					{{ formatMessage(messages.missingFilesWarningBody) }}
-				</p>
-				<ul class="m-0 mt-2 flex max-h-64 list-none flex-col gap-1 overflow-y-auto p-0">
-					<li
-						v-for="item in missingPackMembers"
-						:key="item.memberId ?? item.expectedRelativePath"
-						class="flex min-h-14 min-w-0 items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-surface-5/40"
-					>
-						<FileIcon class="size-5 shrink-0 text-brand-orange" aria-hidden="true" />
-						<span class="flex min-w-0 flex-1 flex-col gap-0.5">
-							<span class="truncate font-medium text-contrast" :title="item.expectedRelativePath">
-								{{ fileNameFromPath(item.expectedRelativePath) }}
-							</span>
-							<code class="truncate text-xs text-secondary" :title="item.expectedRelativePath">
-								{{ item.expectedRelativePath }}
-							</code>
-						</span>
-						<ButtonStyled size="small" type="highlight-colored-text" color="orange">
-							<button
-								type="button"
-								:disabled="!item.memberId || isInstanceBusy || isRestoringMissingPackMember(item)"
-								@click="restoreMissingPackMember(item)"
-							>
-								<SpinnerIcon
-									v-if="isRestoringMissingPackMember(item)"
-									class="animate-spin"
-									aria-hidden="true"
-								/>
-								<UndoIcon v-else aria-hidden="true" />
-								{{ formatMessage(messages.restoreMissingFile) }}
+				</template>
+				<div class="border-0 border-t border-solid border-brand-orange/60 bg-bg-orange p-4">
+					<p class="m-0">{{ formatMessage(messages.postUpgradeNoticeBody) }}</p>
+					<div class="mt-3 flex justify-end">
+						<ButtonStyled color="orange" size="small">
+							<button type="button" @click="dismissPostUpgradeNotice">
+								{{ formatMessage(messages.ignoreAllPostUpgradeWarnings) }}
 							</button>
 						</ButtonStyled>
-					</li>
-				</ul>
-			</div>
-		</CollapsibleAdmonition>
-		<CollapsibleAdmonition
-			v-if="contentWarnings.length > 0"
-			v-model="contentWarningExpanded"
-			type="warning"
-			class="mb-4"
-		>
-			<template #header>{{ formatMessage(messages.contentRefreshWarningTitle) }}</template>
-			<div class="border-0 border-t border-solid border-brand-orange/60 bg-bg-orange p-4">
-				<p class="m-0">{{ formatMessage(messages.contentRefreshWarningBody) }}</p>
-			</div>
-		</CollapsibleAdmonition>
-		<ContentPageLayout @visible-items="handleVisibleItems">
-			<template #modals>
-				<ContentToggleDependenciesModal ref="toggleDependenciesModal" />
-				<DependencyGraphModal
-					ref="dependencyGraphModal"
-					:instance-id="props.instance.id"
-					:instance-name="props.instance.name"
-					:instance-icon-url="localContentIconUrl(props.instance.icon_path)"
-				/>
+					</div>
+				</div>
+			</CollapsibleAdmonition>
+			<CollapsibleAdmonition
+				v-if="skippedManualDownloads.length > 0"
+				v-model="manualWarningExpanded"
+				type="warning"
+				class="mb-4"
+			>
+				<template #header>
+					<span class="inline-flex items-center gap-2">
+						{{ formatMessage(messages.skippedFilesWarningTitle) }}
+						<span class="rounded-full bg-brand-orange/20 px-2 py-0.5 text-sm tabular-nums">
+							{{ skippedManualDownloads.length }}
+						</span>
+					</span>
+				</template>
+				<div class="border-0 border-t border-solid border-brand-orange/60 bg-bg-orange p-4">
+					<p class="m-0">{{ skippedFilesWarningBody }}</p>
+					<ul class="mb-0 mt-2 flex list-none flex-col gap-1 p-0">
+						<li
+							v-for="item in visibleSkippedManualDownloads"
+							:key="`${item.projectId}:${item.fileId}`"
+							class="min-w-0"
+						>
+							<button
+								class="inline-flex max-w-full cursor-pointer items-center gap-1 text-left font-semibold text-brand hover:underline"
+								@click="openManualCurseForgeDownload(item)"
+							>
+								<span class="truncate">{{ item.fileName }}</span>
+								<ExternalIcon class="size-4 shrink-0" />
+							</button>
+						</li>
+					</ul>
+					<p v-if="hiddenSkippedManualDownloadCount > 0" class="mb-0 mt-2 text-secondary">
+						{{
+							formatMessage(messages.skippedFilesWarningMore, {
+								count: hiddenSkippedManualDownloadCount,
+							})
+						}}
+					</p>
+					<div class="mt-3 flex justify-end">
+						<ButtonStyled color="orange" size="small">
+							<button @click="openManualCurseForgeResolver">
+								<FolderSearchIcon />
+								{{ formatMessage(messages.completeSkippedFiles) }}
+							</button>
+						</ButtonStyled>
+					</div>
+				</div>
+			</CollapsibleAdmonition>
+			<CollapsibleAdmonition
+				v-if="missingPackMembers.length > 0"
+				v-model="missingWarningExpanded"
+				type="warning"
+				class="mb-4"
+			>
+				<template #header>
+					<span class="inline-flex items-center gap-2">
+						{{ formatMessage(messages.missingFilesWarningTitle) }}
+						<span class="rounded-full bg-brand-orange/20 px-2 py-0.5 text-sm tabular-nums">
+							{{ missingPackMembers.length }}
+						</span>
+					</span>
+				</template>
+				<div class="bg-bg-orange px-4 pb-4 pt-3">
+					<p class="m-0 text-sm leading-6 text-secondary">
+						{{ formatMessage(messages.missingFilesWarningBody) }}
+					</p>
+					<ul class="m-0 mt-2 flex max-h-64 list-none flex-col gap-1 overflow-y-auto p-0">
+						<li
+							v-for="item in missingPackMembers"
+							:key="item.memberId ?? item.expectedRelativePath"
+							class="flex min-h-14 min-w-0 items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-surface-5/40"
+						>
+							<FileIcon class="size-5 shrink-0 text-brand-orange" aria-hidden="true" />
+							<span class="flex min-w-0 flex-1 flex-col gap-0.5">
+								<span class="truncate font-medium text-contrast" :title="item.expectedRelativePath">
+									{{ fileNameFromPath(item.expectedRelativePath) }}
+								</span>
+								<code class="truncate text-xs text-secondary" :title="item.expectedRelativePath">
+									{{ item.expectedRelativePath }}
+								</code>
+							</span>
+							<ButtonStyled size="small" type="highlight-colored-text" color="orange">
+								<button
+									type="button"
+									:disabled="!item.memberId || isInstanceBusy || isRestoringMissingPackMember(item)"
+									@click="restoreMissingPackMember(item)"
+								>
+									<SpinnerIcon
+										v-if="isRestoringMissingPackMember(item)"
+										class="animate-spin"
+										aria-hidden="true"
+									/>
+									<UndoIcon v-else aria-hidden="true" />
+									{{ formatMessage(messages.restoreMissingFile) }}
+								</button>
+							</ButtonStyled>
+						</li>
+					</ul>
+				</div>
+			</CollapsibleAdmonition>
+			<CollapsibleAdmonition
+				v-if="contentWarnings.length > 0"
+				v-model="contentWarningExpanded"
+				type="warning"
+				class="mb-4"
+			>
+				<template #header>{{ formatMessage(messages.contentRefreshWarningTitle) }}</template>
+				<div class="border-0 border-t border-solid border-brand-orange/60 bg-bg-orange p-4">
+					<p class="m-0">{{ formatMessage(messages.contentRefreshWarningBody) }}</p>
+				</div>
+			</CollapsibleAdmonition>
+			<ContentPageLayout @visible-items="handleVisibleItems">
+				<template #modals>
+					<ContentToggleDependenciesModal ref="toggleDependenciesModal" />
+					<DependencyGraphModal
+						ref="dependencyGraphModal"
+						:instance-id="props.instance.id"
+						:instance-name="props.instance.name"
+						:instance-icon-url="localContentIconUrl(props.instance.icon_path)"
+					/>
 
-				<ShareModalWrapper
-					ref="shareModal"
-					:share-title="formatMessage(messages.shareTitle)"
-					:share-text="formatMessage(messages.shareText)"
-					:open-in-new-tab="false"
-				/>
-				<ModpackContentModal
-					ref="modpackContentModal"
-					:modpack-name="displayedModpackProject?.title"
-					:modpack-icon-url="displayedModpackProject?.icon_url ?? undefined"
-					:enable-toggle="!props.isServerInstance"
-					:busy="isBulkOperating"
-					:get-overflow-options="getOverflowOptions"
-					@update:enabled="handleModpackContentToggle"
-					@bulk:enable="(items) => handleModpackContentBulkToggle(items, true)"
-					@bulk:disable="(items) => handleModpackContentBulkToggle(items, false)"
-				/>
-				<ConfirmModpackUpdateModal
-					ref="modpackUpdateConfirmModal"
-					:downgrade="isModpackUpdateDowngrade"
-					:backup-tip="
-						[displayedModpackProject?.title, pendingModpackUpdateVersion?.version_number]
-							.filter(Boolean)
-							.join(' ')
-					"
-					:symlink-target="props.instance.symlink_target"
-					@confirm="handleModpackUpdateConfirm"
-					@cancel="handleModpackUpdateCancel"
-				/>
-				<ExportModal v-if="projects.length > 0" ref="exportModal" :instance="instance" />
-				<ContentUpdaterModal
-					v-if="updatingProject || updatingModpack"
-					ref="contentUpdaterModal"
-					:versions="updatingProjectVersions"
-					:current-game-version="instance.game_version"
-					:current-loader="instance.loader"
-					:current-version-id="
-						updatingModpack
-							? (instance.link?.version_id ?? '')
-							: (updatingProject?.version?.id ?? '')
-					"
-					:is-app="true"
-					:project-type="updatingModpack ? 'modpack' : updatingProject?.project_type"
-					:project-icon-url="
-						updatingModpack ? displayedModpackProject?.icon_url : updatingProject?.project?.icon_url
-					"
-					:project-name="
-						updatingModpack
-							? (displayedModpackProject?.title ?? formatMessage(commonMessages.modpackLabel))
-							: (updatingProject?.project?.title ?? updatingProject?.file_name)
-					"
-					:loading="loadingVersions"
-					:loading-changelog="loadingChangelog"
-					@update="handleModalUpdate"
-					@cancel="resetUpdateState"
-					@version-select="handleVersionSelect"
-					@version-hover="handleVersionHover"
-				/>
-			</template>
-		</ContentPageLayout>
-	</ReadyTransition>
+					<ShareModalWrapper
+						ref="shareModal"
+						:share-title="formatMessage(messages.shareTitle)"
+						:share-text="formatMessage(messages.shareText)"
+						:open-in-new-tab="false"
+					/>
+					<ModpackContentModal
+						ref="modpackContentModal"
+						:modpack-name="displayedModpackProject?.title"
+						:modpack-icon-url="displayedModpackProject?.icon_url ?? undefined"
+						:enable-toggle="!props.isServerInstance"
+						:busy="isBulkOperating"
+						:get-overflow-options="getOverflowOptions"
+						@update:enabled="handleModpackContentToggle"
+						@bulk:enable="(items) => handleModpackContentBulkToggle(items, true)"
+						@bulk:disable="(items) => handleModpackContentBulkToggle(items, false)"
+					/>
+					<ConfirmModpackUpdateModal
+						ref="modpackUpdateConfirmModal"
+						:downgrade="isModpackUpdateDowngrade"
+						:backup-tip="
+							[displayedModpackProject?.title, pendingModpackUpdateVersion?.version_number]
+								.filter(Boolean)
+								.join(' ')
+						"
+						:symlink-target="props.instance.symlink_target"
+						@confirm="handleModpackUpdateConfirm"
+						@cancel="handleModpackUpdateCancel"
+					/>
+					<ExportModal v-if="projects.length > 0" ref="exportModal" :instance="instance" />
+					<ContentUpdaterModal
+						v-if="updatingProject || updatingModpack"
+						ref="contentUpdaterModal"
+						:versions="updatingProjectVersions"
+						:current-game-version="instance.game_version"
+						:current-loader="instance.loader"
+						:current-version-id="
+							updatingModpack
+								? (instance.link?.version_id ?? '')
+								: (updatingProject?.version?.id ?? '')
+						"
+						:is-app="true"
+						:project-type="updatingModpack ? 'modpack' : updatingProject?.project_type"
+						:project-icon-url="
+							updatingModpack
+								? displayedModpackProject?.icon_url
+								: updatingProject?.project?.icon_url
+						"
+						:project-name="
+							updatingModpack
+								? (displayedModpackProject?.title ?? formatMessage(commonMessages.modpackLabel))
+								: (updatingProject?.project?.title ?? updatingProject?.file_name)
+						"
+						:loading="loadingVersions"
+						:loading-changelog="loadingChangelog"
+						@update="handleModalUpdate"
+						@cancel="resetUpdateState"
+						@version-select="handleVersionSelect"
+						@version-hover="handleVersionHover"
+					/>
+				</template>
+			</ContentPageLayout>
+		</ReadyTransition>
+	</ModManagementSwitch>
 </template>
 
 <script setup lang="ts">
@@ -259,6 +264,8 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import DependencyGraphModal from '@/components/instance/dependencies/DependencyGraphModal.vue'
+import HostedModpacks from '@/components/instance/HostedModpacks.vue'
+import ModManagementSwitch from '@/components/instance/ModManagementSwitch.vue'
 import ExportModal from '@/components/ui/ExportModal.vue'
 import ContentToggleDependenciesModal from '@/components/ui/modal/ContentToggleDependenciesModal.vue'
 import ShareModalWrapper from '@/components/ui/modal/ShareModalWrapper.vue'
@@ -1401,8 +1408,7 @@ async function getUpdaterProjectVersions(
 
 	if (!versions) {
 		versions = (await get_project_versions(projectId).catch(() => null)) as
-			| Labrinth.Versions.v2.Version[]
-			| null
+			Labrinth.Versions.v2.Version[] | null
 	}
 
 	if (!versions && fetchError) {
@@ -1636,7 +1642,6 @@ async function applyToggleDisableMod(mod: ContentItem, enabled: boolean) {
 			file_name: newFileName,
 			enabled: actualEnabled,
 		})
-
 	} catch (err) {
 		applyContentItemToggleState(mod, operation.originalFileName, originalFilePath, {
 			file_path: originalFilePath,
@@ -1805,7 +1810,6 @@ async function removeMod(mod: ContentItem) {
 			await remove_content_entry(props.instance.id, contentId)
 			projects.value = projects.value.filter((x) => removedPath !== x.file_path)
 		}
-
 	} catch (err) {
 		handleError(err as Error)
 	} finally {
@@ -1966,7 +1970,6 @@ async function updateProject(mod: ContentItem) {
 
 	try {
 		await update_content_entry(props.instance.id, contentId)
-
 	} catch (err) {
 		handleError(err as Error)
 		throw err
@@ -1984,7 +1987,6 @@ async function switchProjectVersion(mod: ContentItem, version: Labrinth.Versions
 
 	try {
 		await switch_content_entry_version(props.instance.id, contentId, version.id)
-
 	} catch (err) {
 		handleError(err as Error)
 	} finally {
@@ -2750,8 +2752,8 @@ provideContentManager({
 			const instanceLink = props.instance.link
 			const projectPath =
 				instanceLink?.type === 'curseforge_modpack'
-				? `/project/curseforge/${instanceLink.project_id}`
-				: `/project/${linkedModpackProject.value.slug ?? linkedModpackProject.value.id}`
+					? `/project/curseforge/${instanceLink.project_id}`
+					: `/project/${linkedModpackProject.value.slug ?? linkedModpackProject.value.id}`
 
 			return {
 				project: displayedModpackProject.value ?? linkedModpackProject.value,

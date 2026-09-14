@@ -3,8 +3,21 @@ use crate::state::{
 };
 use serde::{Deserialize, Serialize};
 
+#[derive(
+    Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize,
+)]
+#[serde(rename_all = "snake_case")]
+pub enum InstanceMode {
+    #[serde(rename = "starlight")]
+    StarLight,
+    #[default]
+    Local,
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct InstanceLaunchOverrides {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub instance_mode: Option<InstanceMode>,
     pub instance_id: String,
     pub java_path: Option<String>,
     pub extra_launch_args: Option<Vec<String>>,
@@ -21,6 +34,7 @@ pub struct InstanceLaunchOverrides {
 impl InstanceLaunchOverrides {
     pub fn empty(instance_id: String) -> Self {
         Self {
+            instance_mode: None,
             instance_id,
             java_path: None,
             extra_launch_args: None,
@@ -41,6 +55,8 @@ impl InstanceLaunchOverrides {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub(crate) struct InstanceLaunchOverridesData {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub instance_mode: Option<InstanceMode>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub java_path: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -67,6 +83,7 @@ impl InstanceLaunchOverridesData {
         instance_id: String,
     ) -> InstanceLaunchOverrides {
         InstanceLaunchOverrides {
+            instance_mode: self.instance_mode,
             instance_id,
             java_path: self.java_path,
             extra_launch_args: self.extra_launch_args,
@@ -84,6 +101,7 @@ impl InstanceLaunchOverridesData {
 impl From<&InstanceLaunchOverrides> for InstanceLaunchOverridesData {
     fn from(overrides: &InstanceLaunchOverrides) -> Self {
         Self {
+            instance_mode: overrides.instance_mode,
             java_path: overrides.java_path.clone(),
             extra_launch_args: overrides.extra_launch_args.clone(),
             custom_env_vars: overrides.custom_env_vars.clone(),
@@ -103,4 +121,37 @@ pub struct InstanceLaunchContext {
     pub applied_content_set: ContentSet,
     pub link: InstanceLink,
     pub launch_overrides: InstanceLaunchOverrides,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn instance_mode_round_trips_with_saved_launch_configuration() {
+        let mut original = InstanceLaunchOverrides::empty("instance".into());
+        for mode in [InstanceMode::StarLight, InstanceMode::Local] {
+            original.instance_mode = Some(mode);
+            let encoded = serde_json::to_string(
+                &InstanceLaunchOverridesData::from(&original),
+            )
+            .unwrap();
+            let decoded: InstanceLaunchOverridesData =
+                serde_json::from_str(&encoded).unwrap();
+            assert_eq!(
+                decoded
+                    .into_launch_overrides("instance".into())
+                    .instance_mode,
+                Some(mode)
+            );
+        }
+        let old: InstanceLaunchOverridesData =
+            serde_json::from_str("{}").unwrap();
+        assert_eq!(old.instance_mode, None);
+        assert_eq!(
+            serde_json::to_string(&InstanceMode::StarLight).unwrap(),
+            "\"starlight\""
+        );
+        assert!(serde_json::from_str::<InstanceMode>("\"invalid\"").is_err());
+    }
 }

@@ -14,6 +14,11 @@ use uuid::Uuid;
 pub fn init<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
     tauri::plugin::Builder::new("install")
         .invoke_handler(tauri::generate_handler![
+            hosted_catalog,
+            hosted_binding,
+            hosted_sync,
+            hosted_instance_mode,
+            hosted_set_instance_mode,
             install_get_modpack_preview,
             install_create_instance,
             install_create_modpack_instance,
@@ -48,9 +53,47 @@ pub fn init<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
         .build()
 }
 
+#[tauri::command]
+pub async fn hosted_catalog() -> Result<Vec<theseus::pack::hosted::Publication>>
+{
+    Ok(theseus::pack::hosted::catalog().await?)
+}
+
+#[tauri::command]
+pub async fn hosted_instance_mode(
+    instance_id: String,
+) -> Result<theseus::data::InstanceMode> {
+    Ok(theseus::pack::hosted::instance_mode(&instance_id).await?)
+}
+
+#[tauri::command]
+pub async fn hosted_set_instance_mode(
+    instance_id: String,
+    mode: theseus::data::InstanceMode,
+) -> Result<()> {
+    Ok(theseus::pack::hosted::set_instance_mode(&instance_id, mode).await?)
+}
+
+#[tauri::command]
+pub async fn hosted_binding(
+    instance_id: String,
+) -> Result<Option<theseus::pack::hosted::Binding>> {
+    Ok(theseus::pack::hosted::binding(&instance_id).await?)
+}
+
+#[tauri::command]
+pub async fn hosted_sync(
+    instance_id: String,
+    pack_id: String,
+) -> Result<theseus::pack::hosted::SyncResult> {
+    Ok(theseus::pack::hosted::synchronize(&instance_id, &pack_id).await?)
+}
+
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct InstallCreateInstanceRequest {
+    #[serde(default)]
+    pub instance_mode: theseus::data::InstanceMode,
     pub name: String,
     pub game_version: String,
     pub loader: ModLoader,
@@ -97,7 +140,7 @@ pub async fn install_get_modpack_preview(
 pub async fn install_create_instance(
     request: InstallCreateInstanceRequest,
 ) -> Result<InstallJobSnapshot> {
-    Ok(theseus::install::create_instance_with_adjuncts(
+    let job = theseus::install::create_instance_with_adjuncts(
         request.name.trim().to_string(),
         request.game_version,
         request.loader,
@@ -110,7 +153,23 @@ pub async fn install_create_instance(
         },
         request.game_dir_override,
     )
-    .await?)
+    .await?;
+    if let Some(id) = &job.instance_id {
+        theseus::instance::edit(
+            id,
+            theseus::data::EditInstance {
+                launch_overrides: Some(
+                    theseus::data::InstanceLaunchOverridesPatch {
+                        instance_mode: Some(request.instance_mode),
+                        ..Default::default()
+                    },
+                ),
+                ..Default::default()
+            },
+        )
+        .await?;
+    }
+    Ok(job)
 }
 
 #[tauri::command]

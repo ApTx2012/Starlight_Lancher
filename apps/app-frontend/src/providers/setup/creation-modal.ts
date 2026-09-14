@@ -112,16 +112,20 @@ export function setupCreationModal(
 	}
 
 	provide('showCreationModal', () => {
+		creationInstanceMode.value = 'local'
 		installationModal.value?.show()
 	})
+	const creationInstanceMode = ref<'starlight' | 'local'>('local')
 
 	provide(
 		'showCreationModalWithOptions',
 		(options?: {
 			skipSetupType?: boolean
 			initialMode?: 'custom' | 'import'
+			instanceMode?: 'starlight' | 'local'
 			onBack?: () => void
 		}) => {
+			creationInstanceMode.value = options?.instanceMode ?? 'local'
 			installationModal.value?.show(options)
 		},
 	)
@@ -145,6 +149,7 @@ export function setupCreationModal(
 	}
 
 	async function handleCreate(config: CreationFlowContextValue) {
+		const instanceMode = creationInstanceMode.value
 		try {
 			installationModal.value?.hide()
 
@@ -262,7 +267,8 @@ export function setupCreationModal(
 							: gameRoot
 						: null
 
-			await install_create_instance({
+			const job = await install_create_instance({
+				instanceMode,
 				name,
 				gameVersion: config.selectedGameVersion.value!,
 				loader: loader as InstanceLoader,
@@ -276,7 +282,14 @@ export function setupCreationModal(
 				iconPath,
 				gameDirOverride,
 			}).catch(handleError)
-
+			if (instanceMode === 'starlight' && job?.instance_id) {
+				try {
+					localStorage.setItem('starlight:instance:mod-management-tab', 'packs')
+				} catch {
+					/* Optional navigation preference. */
+				}
+				await router.push(`/instance/${encodeURIComponent(job.instance_id)}/`)
+			}
 		} catch (err) {
 			handleError(err as Error)
 		}

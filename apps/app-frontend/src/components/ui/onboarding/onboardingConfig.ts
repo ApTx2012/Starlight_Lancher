@@ -207,7 +207,8 @@ export const onboardingMessages = defineMessages({
 	updatesTitle: { id: 'app.onboarding.updates.title', defaultMessage: 'Stay in the loop' },
 	updatesDescription: {
 		id: 'app.onboarding.updates.description',
-		defaultMessage: 'Choose when Starlight checks for updates and whether it installs them for you.',
+		defaultMessage:
+			'Choose when Starlight checks for updates and whether it installs them for you.',
 	},
 	clickTab: { id: 'app.onboarding.action.click-tab', defaultMessage: 'Click this tab to continue' },
 	libraryTitle: { id: 'app.onboarding.library.title', defaultMessage: 'Your launch shelf' },
@@ -239,6 +240,15 @@ export const onboardingMessages = defineMessages({
 		defaultMessage: 'Click Create new instance to continue',
 	},
 	creationTitle: { id: 'app.onboarding.creation.title', defaultMessage: 'Pick your route' },
+	instanceModeTitle: {
+		id: 'app.onboarding.instance-mode.title',
+		defaultMessage: 'Choose your instance type',
+	},
+	instanceModeDescription: {
+		id: 'app.onboarding.instance-mode.description',
+		defaultMessage:
+			'Choose StarLight to play on the StarLight server and automatically sync its approved updates. Local instances skip StarLight sync, start faster, and let you use your own modpacks for other servers or single-player. You can change this later in instance settings.',
+	},
 	creationDescription: {
 		id: 'app.onboarding.creation.description',
 		defaultMessage:
@@ -680,6 +690,12 @@ export const onboardingTours: Record<OnboardingMode, OnboardingStep[]> = {
 				onboardingMessages.clickCreate,
 			),
 			control('create-instance', '/create'),
+		),
+		inspect(
+			'creation-instance-mode',
+			'creation-instance-mode',
+			onboardingMessages.instanceModeTitle,
+			onboardingMessages.instanceModeDescription,
 		),
 		step(
 			'creation-flow',

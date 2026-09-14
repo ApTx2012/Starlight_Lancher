@@ -125,8 +125,10 @@ pub(crate) async fn create_instance(
             created: now,
             modified: now,
         };
-        let launch_overrides =
+        let mut launch_overrides =
             InstanceLaunchOverrides::empty(instance_id.clone());
+        launch_overrides.instance_mode =
+            Some(crate::state::InstanceMode::Local);
         let loader_components = LoaderComponent::from_legacy_projection(
             instance_id.clone(),
             input.loader,
