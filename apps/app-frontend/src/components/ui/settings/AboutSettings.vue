@@ -216,13 +216,13 @@ const messages = defineMessages({
 			<div class="flex flex-col items-center gap-4">
 				<div
 					ref="experienceHost"
-					class="relative m-0 w-full overflow-hidden h-64 rounded-xl"
+					class="relative m-0 aspect-[3/1] w-full overflow-hidden rounded-xl"
 					style="
 						mask-image: linear-gradient(to bottom, black 97%, transparent 100%);
 						-webkit-mask-image: linear-gradient(to bottom, black 97%, transparent 100%);
 					"
 				>
-					<AboutScene />
+					<AboutScene :paused="Boolean(activeMemberExperience)" />
 					<component
 						:is="activeMemberExperience?.component"
 						v-if="activeMemberExperience"

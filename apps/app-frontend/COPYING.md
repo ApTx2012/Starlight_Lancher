@@ -22,6 +22,10 @@ Item identifiers, readable names, and textures are sourced from the `minecraft-t
 
 The recipe data and item artwork ultimately derive from Minecraft data generator output and Minecraft game resources. Minecraft and its original resources are Copyright Mojang Studios / Microsoft and are used only to identify compatible game content. Axolotl Launcher is not affiliated with or endorsed by Mojang Studios or Microsoft.
 
+## About-page scene attribution
+
+The about-page victory illustration is the user-approved generated artwork. Its bundled scene layers preserve the approved preview without regenerating the illustration at runtime. The supplied netherite sword artwork and the unmodified `clouds.png` and `moon_phases.png` textures from Minecraft: Java Edition 1.20.6 are Minecraft resources, Copyright Mojang Studios / Microsoft. These assets are stored in `src/assets/about-scene` and do not require a network connection.
+
 ## AI integration attribution
 
 The AI provider settings information architecture, provider catalog, and provider descriptions are adapted from [LobeChat](https://github.com/lobehub/lobe-chat) at commit `a27dfaeda1ab499ac024a6eb0448917b216ba8a1`. The localized provider descriptions under `src/data/lobehub-provider-descriptions` are reproduced from that release. Bundled text-model metadata is synchronized separately from [LobeHub's model bank](https://github.com/lobehub/lobehub/tree/main/packages/model-bank/src/aiModels), with its exact source revision recorded in the backend catalog. LobeChat is distributed under the LobeHub Community License; a verbatim copy of that license is provided in [third-party/licenses/LobeHub-Community-License.txt](../../third-party/licenses/LobeHub-Community-License.txt).
