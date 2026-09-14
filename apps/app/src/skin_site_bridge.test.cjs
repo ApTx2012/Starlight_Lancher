@@ -4,11 +4,14 @@ const vm = require('node:vm')
 const test = require('node:test')
 const source = fs.readFileSync(require('node:path').join(__dirname, 'skin_site_bridge.js'), 'utf8')
 
-function harness(origin = 'https://skin.starlight.cool') {
+function harness(origin = 'https://skin.starlight.cool', skinSize = 64) {
 	let token = null
 	const listeners = {},
 		messages = [],
-		requests = []
+		requests = [],
+		drawCalls = []
+	const skinWidth = typeof skinSize === 'number' ? skinSize : skinSize.width
+	const skinHeight = typeof skinSize === 'number' ? skinSize : skinSize.height
 	let tick
 	let result = async () => ({
 		ok: true,
@@ -38,7 +41,34 @@ function harness(origin = 'https://skin.starlight.cool') {
 			return result(...args)
 		},
 		AbortController,
+		Blob,
 		Date,
+		FormData,
+		Uint8Array,
+		atob,
+			document: {
+				createElement() {
+					return {
+						getContext() {
+							return {
+								drawImage(...args) {
+									drawCalls.push(args)
+								},
+							}
+					},
+					toDataURL() {
+						return 'data:image/png;base64,SEVBRERBVEE='
+					},
+				}
+			},
+			},
+			Image: class {
+				naturalWidth = skinWidth
+				naturalHeight = skinHeight
+			set src(_value) {
+				queueMicrotask(() => this.onload?.())
+			}
+		},
 		setTimeout,
 		clearTimeout,
 		setInterval(callback) {
@@ -49,6 +79,7 @@ function harness(origin = 'https://skin.starlight.cool') {
 	}
 	vm.runInNewContext(source, context)
 	return {
+		drawCalls,
 		messages,
 		requests,
 		listeners,
@@ -70,6 +101,19 @@ function harness(origin = 'https://skin.starlight.cool') {
 		async message(data, origin = 'http://localhost:5201', source = parent) {
 			listeners.message?.({ source, origin, data })
 			await new Promise(setImmediate)
+		},
+		async waitForMessage(type, requestId, timeout = 2_000) {
+			const deadline = Date.now() + timeout
+			while (Date.now() < deadline) {
+				const message = messages.find(
+					(entry) =>
+						entry.data?.type === type &&
+						(requestId === undefined || entry.data?.requestId === requestId),
+				)
+				if (message) return message
+				await new Promise((resolve) => setTimeout(resolve, 10))
+			}
+			throw new Error(`Timed out waiting for ${type}`)
 		},
 	}
 }
@@ -186,25 +230,130 @@ test('player requests return a sanitized complete player collection without expo
 	const h = harness()
 	h.token('test-token')
 	await h.connect()
-	h.result(async () => ({
-		ok: true,
-		status: 200,
-		json: async () => ({
-			payload: [
-				{ uuid: '0123456789abcdef0123456789abcdef', name: 'PlayerOne', isMojang: false },
-				{ uuid: 'fedcba9876543210fedcba9876543210', name: 'Official', isMojang: true },
-				{ uuid: 'bad', name: 'Ignored', isMojang: false },
-			],
-		}),
-	}))
+	h.result(async (url) => {
+		if (url.startsWith('/starlight/skin/player/skin/')) {
+			return {
+				ok: true,
+				status: 200,
+				json: async () => ({
+					payload: {
+						skin: url.endsWith('0123456789abcdef0123456789abcdef')
+							? '/textures/player-one.png'
+							: null,
+					},
+				}),
+			}
+		}
+		return {
+			ok: true,
+			status: 200,
+			json: async () => ({
+				payload: [
+					{ uuid: '0123456789abcdef0123456789abcdef', name: 'PlayerOne', isMojang: false },
+					{ uuid: 'fedcba9876543210fedcba9876543210', name: 'Official', isMojang: true },
+					{ uuid: 'bad', name: 'Ignored', isMojang: false },
+				],
+			}),
+		}
+	})
 	await h.message({ type: 'starlight-skin-players-request', requestId: 'skin-players-1-1' })
-	const request = h.requests.at(-1)
+	await h.waitForMessage('starlight-skin-players-result', 'skin-players-1-1')
+	const request = h.requests.find(([url]) => url === '/starlight/skin/player')
 	assert.equal(request[0], '/starlight/skin/player')
 	assert.equal(request[1].headers.Authorization, 'Bearer test-token')
+	assert.equal(
+		h.requests.filter(([url]) => url.startsWith('/starlight/skin/player/skin/')).length,
+		2,
+	)
 	const message = h.messages.at(-1)
 	assert.equal(message.data.type, 'starlight-skin-players-result')
 	assert.equal(message.data.ok, true)
 	assert.equal(message.data.players.length, 2)
 	assert.equal(message.data.players[1].isMojang, true)
+	assert.equal(message.data.players[0].skinState, 'ready')
+	assert.equal(message.data.players[0].headDataUrl, 'data:image/png;base64,SEVBRERBVEE=')
+	assert.equal(message.data.players[0].skinDataUrl, 'data:image/png;base64,SEVBRERBVEE=')
+	assert.equal(message.data.players[0].model, 'default')
+	assert.equal(message.data.players[1].skinState, 'empty')
+	assert.equal(message.data.players[1].headDataUrl, undefined)
 	assert.ok(!JSON.stringify(h.messages).includes('test-token'))
+})
+
+test('skin updates upload a PNG to the selected skin-site player without exposing the token', async () => {
+	const h = harness()
+	h.token('test-token')
+	await h.connect()
+	h.result(async (url) => ({
+		ok: true,
+		status: 200,
+		json: async () => ({
+			payload:
+				url === '/starlight/skin/player'
+					? [
+							{
+								uuid: '0123456789abcdef0123456789abcdef',
+								name: 'PlayerOne',
+								isMojang: false,
+							},
+						]
+					: { skin: null },
+		}),
+	}))
+	await h.message({ type: 'starlight-skin-players-request', requestId: 'skin-players-2-1' })
+	h.result(async () => ({
+		ok: true,
+		status: 200,
+		json: async () => ({ success: true, payload: 'updated' }),
+	}))
+	await h.message({
+		type: 'starlight-skin-update-request',
+		requestId: 'skin-update-1-1',
+		playerId: '0123456789abcdef0123456789abcdef',
+		textureDataUrl: 'data:image/png;base64,SEVBRERBVEE=',
+		model: 'slim',
+	})
+
+	const request = h.requests.at(-1)
+	assert.equal(
+		request[0],
+		'/starlight/skin/player/skin/0123456789abcdef0123456789abcdef/SKIN',
+	)
+	assert.equal(request[1].method, 'PUT')
+	assert.equal(request[1].headers.Authorization, 'Bearer test-token')
+	assert.equal(request[1].body.get('model'), 'slim')
+	assert.equal(request[1].body.get('file').type, 'image/png')
+	assert.equal(h.messages.at(-1).data.type, 'starlight-skin-update-result')
+	assert.equal(h.messages.at(-1).data.ok, true)
+	assert.ok(!JSON.stringify(h.messages).includes('test-token'))
+})
+
+test('skin rendering uses the skin site crop and preserves the source texture dimensions', async () => {
+	const h = harness('https://skin.starlight.cool', { width: 64, height: 128 })
+	h.token('test-token')
+	await h.connect()
+	h.result(async (url) => ({
+		ok: true,
+		status: 200,
+		json: async () => ({
+			payload:
+				url === '/starlight/skin/player'
+					? [
+							{
+								uuid: '0123456789abcdef0123456789abcdef',
+								name: 'HighResolutionPlayer',
+								isMojang: false,
+							},
+						]
+					: { skin: '/textures/hd.png', model: 'slim' },
+		}),
+	}))
+	await h.message({ type: 'starlight-skin-players-request', requestId: 'skin-players-3-1' })
+
+	const player = h.messages.at(-1).data.players[0]
+	assert.equal(player.skinState, 'ready')
+	assert.equal(player.headDataUrl, 'data:image/png;base64,SEVBRERBVEE=')
+	assert.equal(player.skinDataUrl, 'data:image/png;base64,SEVBRERBVEE=')
+	assert.equal(player.model, 'slim')
+	assert.deepEqual(h.drawCalls[0].slice(1), [8, 8, 8, 8, 1, 1, 16, 16])
+	assert.deepEqual(h.drawCalls[1].slice(1), [40, 8, 8, 8, 0, 0, 18, 18])
 })

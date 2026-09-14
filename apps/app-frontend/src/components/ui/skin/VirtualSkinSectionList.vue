@@ -84,6 +84,7 @@ const props = defineProps<{
 	isSkinActive: (skin: Skin) => boolean
 	isAddSkinButtonDragActive: boolean
 	readOnly?: boolean
+	manageSavedSkins?: boolean
 	activeTab?: 'saved' | 'default'
 }>()
 
@@ -182,7 +183,9 @@ const sections = computed<SkinSection[]>(() => {
 
 const draggableSavedSkins = ref<Skin[]>([])
 const isDraggingSavedSkin = ref(false)
-const canReorderSavedSkins = computed(() => draggableSavedSkins.value.length > 1)
+const canReorderSavedSkins = computed(
+	() => props.manageSavedSkins !== false && draggableSavedSkins.value.length > 1,
+)
 const fixedSavedSkins = computed(() => props.savedSkins.filter((skin) => !canDragSavedSkin(skin)))
 
 const sectionLayouts = computed(() => {
@@ -486,7 +489,7 @@ defineExpose({ getAddSkinButtonElement })
 								:is-dragging="isDraggingSavedSkin"
 								@select="emit('select', skin)"
 							>
-								<template v-if="!readOnly" #overlay-buttons>
+								<template v-if="!readOnly && manageSavedSkins !== false" #overlay-buttons>
 									<ButtonStyled color="brand">
 										<button
 											:aria-label="formatMessage(messages.editSkinButton)"
@@ -526,7 +529,7 @@ defineExpose({ getAddSkinButtonElement })
 								:is-dragging="isDraggingSavedSkin"
 								@select="emit('select', skin)"
 							>
-								<template v-if="!readOnly" #overlay-buttons>
+								<template v-if="!readOnly && manageSavedSkins !== false" #overlay-buttons>
 									<ButtonStyled color="brand">
 										<button
 											:aria-label="formatMessage(messages.editSkinButton)"
@@ -568,7 +571,7 @@ defineExpose({ getAddSkinButtonElement })
 						:is-dragging="isDraggingSavedSkin"
 						@select="emit('select', skin)"
 					>
-						<template #overlay-buttons>
+						<template v-if="manageSavedSkins !== false" #overlay-buttons>
 							<ButtonStyled color="brand">
 								<button
 									:aria-label="formatMessage(messages.editSkinButton)"

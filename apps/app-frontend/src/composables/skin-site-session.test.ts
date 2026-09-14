@@ -6,6 +6,7 @@ import {
 	receiveSkinSiteMessage,
 	requestSkinSiteLuck,
 	requestSkinSitePlayers,
+	requestSkinSiteSkinUpdate,
 	resetSkinSiteSession,
 	setSkinSiteFrame,
 	SKIN_SITE_ORIGIN,
@@ -150,7 +151,21 @@ test('player requests validate identities and replace the collection atomically'
 					requestId: automaticRequest.requestId,
 					ok: true,
 					players: [
-						{ uuid: '0123456789abcdef0123456789abcdef', name: 'PlayerOne', isMojang: false },
+						{
+							uuid: '0123456789abcdef0123456789abcdef',
+							name: 'PlayerOne',
+							isMojang: false,
+							skinState: 'ready',
+							headDataUrl: 'data:image/png;base64,SEVBRERBVEE=',
+							skinDataUrl: 'data:image/png;base64,SEVBRERBVEE=',
+							model: 'slim',
+						},
+						{
+							uuid: 'fedcba9876543210fedcba9876543210',
+							name: 'NoSkinPlayer',
+							isMojang: false,
+							skinState: 'empty',
+						},
 						{ uuid: 'invalid', name: 'Ignored', isMojang: false },
 					],
 				},
@@ -160,9 +175,49 @@ test('player requests validate identities and replace the collection atomically'
 		true,
 	)
 	assert.deepEqual(skinSitePlayers.value, [
-		{ uuid: '0123456789abcdef0123456789abcdef', name: 'PlayerOne', isMojang: false },
+		{
+			uuid: '0123456789abcdef0123456789abcdef',
+			name: 'PlayerOne',
+			isMojang: false,
+			skinState: 'ready',
+			headDataUrl: 'data:image/png;base64,SEVBRERBVEE=',
+			skinDataUrl: 'data:image/png;base64,SEVBRERBVEE=',
+			model: 'slim',
+		},
+		{
+			uuid: 'fedcba9876543210fedcba9876543210',
+			name: 'NoSkinPlayer',
+			isMojang: false,
+			skinState: 'empty',
+		},
 	])
 	assert.equal(skinSitePlayersStatus.value, 'ready')
+
+	const transientFailure = requestSkinSitePlayers()
+	const transientFailureRequest = sent.at(-1)?.data as { requestId: string }
+	receiveSkinSiteMessage(
+		{
+			origin: SKIN_SITE_ORIGIN,
+			source: frame,
+			data: {
+				type: 'starlight-skin-players-result',
+				requestId: transientFailureRequest.requestId,
+				ok: true,
+				players: [
+					{
+						uuid: '0123456789abcdef0123456789abcdef',
+						name: 'PlayerOne Renamed',
+						isMojang: false,
+						skinState: 'error',
+					},
+				],
+			},
+		} as MessageEvent,
+		frame,
+	)
+	assert.equal((await transientFailure)[0].skinState, 'ready')
+	assert.equal(skinSitePlayers.value[0].name, 'PlayerOne Renamed')
+	assert.equal(skinSitePlayers.value[0].headDataUrl, 'data:image/png;base64,SEVBRERBVEE=')
 
 	const retry = requestSkinSitePlayers()
 	const retryRequest = sent.at(-1)?.data as { requestId: string }
@@ -181,6 +236,78 @@ test('player requests validate identities and replace the collection atomically'
 	)
 	assert.deepEqual(await retry, [])
 	assert.deepEqual(skinSitePlayers.value, [])
+	setSkinSiteFrame(null)
+	resetSkinSiteSession()
+})
+
+test('skin updates are restricted to known non-Mojang players and validated results', async () => {
+	const sent: Array<{ data: unknown; targetOrigin: string }> = []
+	const frame = {
+		postMessage(data: unknown, targetOrigin: string) {
+			sent.push({ data, targetOrigin })
+		},
+	} as unknown as Window
+
+	resetSkinSiteSession()
+	setSkinSiteFrame(frame)
+	receiveSkinSiteMessage(
+		{
+			origin: SKIN_SITE_ORIGIN,
+			source: frame,
+			data: {
+				type: 'starlight-skin-session',
+				status: 'signed-in',
+				user: { uuid: 'skin-user', username: 'Skin User' },
+			},
+		} as MessageEvent,
+		frame,
+	)
+	const automaticRequest = sent.at(-1)?.data as { requestId: string }
+	receiveSkinSiteMessage(
+		{
+			origin: SKIN_SITE_ORIGIN,
+			source: frame,
+			data: {
+				type: 'starlight-skin-players-result',
+				requestId: automaticRequest.requestId,
+				ok: true,
+				players: [
+					{
+						uuid: '0123456789abcdef0123456789abcdef',
+						name: 'PlayerOne',
+						isMojang: false,
+						skinState: 'empty',
+					},
+				],
+			},
+		} as MessageEvent,
+		frame,
+	)
+
+	const result = requestSkinSiteSkinUpdate(
+		'0123456789abcdef0123456789abcdef',
+		'data:image/png;base64,SEVBRERBVEE=',
+		'slim',
+	)
+	const request = sent.at(-1)?.data as { type: string; requestId: string; playerId: string }
+	assert.equal(request.type, 'starlight-skin-update-request')
+	assert.equal(request.playerId, '0123456789abcdef0123456789abcdef')
+	receiveSkinSiteMessage(
+		{
+			origin: SKIN_SITE_ORIGIN,
+			source: frame,
+			data: { type: 'starlight-skin-update-result', requestId: request.requestId, ok: true },
+		} as MessageEvent,
+		frame,
+	)
+	await result
+	await assert.rejects(
+		requestSkinSiteSkinUpdate(
+			'fedcba9876543210fedcba9876543210',
+			'data:image/png;base64,SEVBRERBVEE=',
+			'default',
+		),
+	)
 	setSkinSiteFrame(null)
 	resetSkinSiteSession()
 })

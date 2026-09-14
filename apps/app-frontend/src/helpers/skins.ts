@@ -118,6 +118,10 @@ export async function get_available_skins(): Promise<Skin[]> {
 	return invoke('plugin:minecraft-skins|get_available_skins', {})
 }
 
+export async function get_default_skins(): Promise<Skin[]> {
+	return invoke('plugin:minecraft-skins|get_default_skins', {})
+}
+
 export async function add_and_equip_custom_skin(
 	textureBlob: Uint8Array,
 	variant: SkinModel,

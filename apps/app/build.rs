@@ -320,6 +320,7 @@ fn main() {
                     .commands(&[
                         "get_available_capes",
                         "get_available_skins",
+                        "get_default_skins",
                         "add_and_equip_custom_skin",
                         "equip_skin",
                         "remove_custom_skin",

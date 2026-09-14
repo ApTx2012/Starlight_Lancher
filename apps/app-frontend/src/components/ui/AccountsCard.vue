@@ -35,24 +35,44 @@
 			/>
 		</div>
 		<div v-if="skinSitePlayers.length > 0" class="border-0 border-t border-solid border-surface-5">
-			<div
+			<button
 				v-for="player in skinSitePlayers"
 				:key="player.uuid"
-				class="flex items-center gap-2 border-0 border-b border-solid border-surface-5 px-3 py-2 last:border-b-0"
+				type="button"
+				class="flex w-full cursor-pointer items-center gap-2 border-0 border-b border-solid border-surface-5 px-3 py-2 text-left transition-colors last:border-b-0 hover:bg-button-hover"
+				:class="selectedSkinSitePlayerId === player.uuid ? 'bg-button-hover' : 'bg-transparent'"
+				:aria-pressed="selectedSkinSitePlayerId === player.uuid"
+				@click="setSkinSitePlayer(player.uuid)"
 			>
-				<Avatar :src="defaultSteveHeadUrl" size="24px" pixelated :unframed-natural-width="72" />
-				<div class="flex min-w-0 flex-1 flex-col">
-					<span class="truncate text-sm text-primary">{{ player.name }}</span>
-					<span class="truncate text-xs text-secondary">{{ player.uuid }}</span>
-				</div>
-				<span class="shrink-0 text-xs text-secondary">
-					{{
-						launcherAccountIds.has(player.uuid)
-							? formatMessage(messages.skinSitePlayerReady)
-							: formatMessage(messages.skinSitePlayerSynced)
-					}}
-				</span>
-			</div>
+				<Avatar
+					v-if="player.skinState === 'ready' && player.headDataUrl"
+					:src="player.headDataUrl"
+					size="32px"
+					pixelated
+					:unframed-natural-width="36"
+				/>
+				<div
+					v-else
+					class="h-8 w-8 shrink-0 rounded-sm border-2 border-dashed border-secondary/45 bg-surface-5/50 text-secondary"
+					style="
+						background-image:
+							linear-gradient(currentColor, currentColor),
+							linear-gradient(currentColor, currentColor),
+							linear-gradient(currentColor, currentColor);
+						background-position:
+							6px 8px,
+							22px 8px,
+							8px 20px;
+						background-repeat: no-repeat;
+						background-size:
+							4px 4px,
+							4px 4px,
+							16px 2px;
+					"
+					aria-hidden="true"
+				/>
+				<span class="min-w-0 flex-1 truncate text-sm text-primary">{{ player.name }}</span>
+			</button>
 		</div>
 		<p v-else-if="skinSitePlayersStatus === 'ready'" class="m-0 px-3 pb-3 text-sm text-secondary">
 			{{ formatMessage(messages.noSkinSitePlayers) }}
@@ -250,11 +270,12 @@ import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import axolotlLogo from '@/assets/netherstar.png'
-import steveSkinTexture from '@/assets/skins/steve.png?inline'
 import MinecraftLoginModal from '@/components/ui/MinecraftLoginModal.vue'
 import {
 	openSkinSiteLogin,
 	requestSkinSitePlayers,
+	selectedSkinSitePlayerId,
+	selectSkinSitePlayer,
 	skinSitePlayers,
 	skinSitePlayersStatus,
 	skinSiteStatus,
@@ -347,24 +368,13 @@ let refreshGeneration = 0
 let headRefreshTimer: ReturnType<typeof setTimeout> | undefined
 let defaultUserUpdateQueue = Promise.resolve()
 const minecraftLoginModal = ref<InstanceType<typeof MinecraftLoginModal> | null>(null)
-const launcherAccountIds = computed(() => new Set(accounts.value.map((account) => account.profile.id)))
-
 async function refreshSkinSitePlayers() {
 	await requestSkinSitePlayers().catch(() => {})
 }
 
-function createSkinHeadDataUrl(textureUrl: string) {
-	const escapedTextureUrl = textureUrl
-		.replaceAll('&', '&amp;')
-		.replaceAll('"', '&quot;')
-		.replaceAll('<', '&lt;')
-		.replaceAll('>', '&gt;')
-	const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 8 8" shape-rendering="crispEdges"><image href="${escapedTextureUrl}" x="-8" y="-8" width="64" height="64" style="image-rendering:pixelated"/><image href="${escapedTextureUrl}" x="-40" y="-8" width="64" height="64" style="image-rendering:pixelated"/></svg>`
-
-	return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
+function setSkinSitePlayer(playerId: string) {
+	selectSkinSitePlayer(playerId)
 }
-
-const defaultSteveHeadUrl = createSkinHeadDataUrl(steveSkinTexture)
 
 const HEAD_REFRESH_RETRY_DELAYS = [1500, 5000, 15000, 30000] as const
 const HEAD_REFRESH_CONTINUOUS_DELAY = 60_000
@@ -609,6 +619,7 @@ function persistDefaultUser(userId: string) {
 async function setAccount(account: MinecraftCredential) {
 	const userId = account.profile.id
 	refreshGeneration += 1
+	selectSkinSitePlayer(null)
 	defaultUser.value = userId
 	equippedSkin.value = null
 
@@ -617,6 +628,16 @@ async function setAccount(account: MinecraftCredential) {
 	await refreshValues()
 	if (defaultUser.value === userId) notifyAccountChange()
 }
+
+watch(
+	[skinSitePlayers, defaultUser],
+	([availablePlayers, selectedLocalUser]) => {
+		if (!selectedLocalUser && !selectedSkinSitePlayerId.value && availablePlayers.length > 0) {
+			selectSkinSitePlayer(availablePlayers[0].uuid)
+		}
+	},
+	{ immediate: true },
+)
 
 async function login() {
 	if (offline.value) return
@@ -707,14 +728,6 @@ const messages = defineMessages({
 	skinSitePlayersError: {
 		id: 'minecraft-account.skin-site.players.error',
 		defaultMessage: 'Could not refresh the player list. Previously loaded players are kept.',
-	},
-	skinSitePlayerReady: {
-		id: 'minecraft-account.skin-site.player.ready',
-		defaultMessage: 'Ready to launch',
-	},
-	skinSitePlayerSynced: {
-		id: 'minecraft-account.skin-site.player.synced',
-		defaultMessage: 'Synced from skin site',
 	},
 	offlineMode: {
 		id: 'minecraft-account.offline-mode',

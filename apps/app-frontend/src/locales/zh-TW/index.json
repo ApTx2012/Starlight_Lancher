@@ -44,8 +44,6 @@
   "minecraft-account.skin-site.players.error": {
     "message": "暫時無法重新整理玩家清單，已保留上一次結果。"
   },
-  "minecraft-account.skin-site.player.ready": { "message": "可啟動" },
-  "minecraft-account.skin-site.player.synced": { "message": "來自皮膚站" },
   "app.easteregg.color-mine.title": {
     "message": "星光礦井：彩域"
   },
@@ -7557,6 +7555,27 @@
   },
   "app.skins.section.tiny-takeover": {
     "message": "小鬼當家"
+  },
+  "app.skins.skin-site-account.description": {
+    "message": "在下方選擇皮膚後，可直接套用到 {player}。切換啟動器頁面時，皮膚站登入狀態也會保持。"
+  },
+  "app.skins.skin-site-account.empty-description": {
+    "message": "這個皮膚站帳號暫時沒有可用的玩家角色。"
+  },
+  "app.skins.skin-site-account.empty-title": {
+    "message": "暫無可用玩家"
+  },
+  "app.skins.skin-site-account.loading-description": {
+    "message": "啟動器正在同步此帳號綁定的玩家。"
+  },
+  "app.skins.skin-site-account.loading-title": {
+    "message": "正在載入皮膚站玩家……"
+  },
+  "app.skins.skin-site-account.mojang-description": {
+    "message": "{player} 是正版 Minecraft 玩家，其皮膚仍由正版帳號服務管理。"
+  },
+  "app.skins.skin-site-account.title": {
+    "message": "StarLight 皮膚站玩家"
   },
   "app.skins.sign-in.axolotl-alt": {
     "message": "Starlight Launcher"

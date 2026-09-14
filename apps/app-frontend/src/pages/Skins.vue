@@ -31,12 +31,23 @@ import { onBeforeRouteLeave, useRouter } from 'vue-router'
 import type AccountsCard from '@/components/ui/AccountsCard.vue'
 import EditSkinModal from '@/components/ui/skin/EditSkinModal.vue'
 import VirtualSkinSectionList from '@/components/ui/skin/VirtualSkinSectionList.vue'
+import {
+	openSkinSiteLogin,
+	requestSkinSitePlayers,
+	requestSkinSiteSkinUpdate,
+	selectedSkinSitePlayerId,
+	skinSitePlayers,
+	skinSitePlayersStatus,
+	skinSiteStatus,
+	skinSiteUser,
+} from '@/composables/skin-site-session'
 import { useNetworkStatus } from '@/composables/useNetworkStatus'
 import { check_reachable, get_default_user, users } from '@/helpers/auth'
 import type { RenderResult } from '@/helpers/rendering/batch-skin-renderer.ts'
 import { skinBlobUrlMap } from '@/helpers/rendering/batch-skin-renderer.ts'
 import type { Cape, Skin, SkinTextureUrl } from '@/helpers/skins.ts'
 import {
+	determineModelType,
 	equip_skin,
 	filterDefaultSkins,
 	filterSavedSkins,
@@ -44,6 +55,7 @@ import {
 	flush_pending_skin_change_for_profile,
 	get_available_capes,
 	get_available_skins,
+	get_default_skins,
 	get_normalized_skin_texture,
 	normalize_skin_texture,
 	remove_custom_skin,
@@ -179,6 +191,22 @@ const messages = defineMessages({
 		id: 'app.skins.sign-in.button',
 		defaultMessage: 'Sign In',
 	},
+	loadingSkinSitePlayersTitle: {
+		id: 'app.skins.skin-site-account.loading-title',
+		defaultMessage: 'Loading skin site players…',
+	},
+	loadingSkinSitePlayersDescription: {
+		id: 'app.skins.skin-site-account.loading-description',
+		defaultMessage: 'The launcher is synchronizing the players attached to your account.',
+	},
+	noSkinSitePlayersTitle: {
+		id: 'app.skins.skin-site-account.empty-title',
+		defaultMessage: 'No players available',
+	},
+	noSkinSitePlayersDescription: {
+		id: 'app.skins.skin-site-account.empty-description',
+		defaultMessage: 'This skin site account does not have an available player profile yet.',
+	},
 	offlineCompatibility: {
 		id: 'app.skins.offline-account.compatibility',
 		defaultMessage:
@@ -196,6 +224,20 @@ const messages = defineMessages({
 		id: 'app.skins.third-party-account.description',
 		defaultMessage:
 			'Skins for this account are managed by its Yggdrasil provider. Open the provider website to change skins or capes.',
+	},
+	skinSiteManagementTitle: {
+		id: 'app.skins.skin-site-account.title',
+		defaultMessage: 'StarLight skin site player',
+	},
+	skinSiteManagementDescription: {
+		id: 'app.skins.skin-site-account.description',
+		defaultMessage:
+			'Select a skin below and apply it directly to {player}. The skin site session remains available while you move between launcher pages.',
+	},
+	skinSiteMojangDescription: {
+		id: 'app.skins.skin-site-account.mojang-description',
+		defaultMessage:
+			'{player} is an official Minecraft player. Its skin remains managed by the official account provider.',
 	},
 	savedTab: {
 		id: 'app.skins.tabs.saved',
@@ -228,7 +270,16 @@ const currentUser = ref(undefined)
 const currentUserId = ref<string | undefined>(undefined)
 const currentAccountType = ref<'microsoft' | 'offline' | 'yggdrasil' | undefined>(undefined)
 
-const username = computed(() => currentUser.value?.profile?.name ?? undefined)
+const activeSkinSitePlayer = computed(() =>
+	selectedSkinSitePlayerId.value
+		? skinSitePlayers.value.find((player) => player.uuid === selectedSkinSitePlayerId.value)
+		: undefined,
+)
+const isSkinSiteProfile = computed(() => Boolean(activeSkinSitePlayer.value && skinSiteUser.value))
+const hasCurrentProfile = computed(() => Boolean(currentUser.value || isSkinSiteProfile.value))
+const username = computed(
+	() => activeSkinSitePlayer.value?.name ?? currentUser.value?.profile?.name ?? undefined,
+)
 const selectedSkin = ref<Skin | null>(null)
 const isApplyingSkin = ref(false)
 
@@ -314,10 +365,16 @@ const capeTexture = computed(() => currentCape.value?.texture)
 const skinVariant = computed(() => selectedSkin.value?.variant)
 const skinNametag = computed(() => (themeStore.hideNametagSkinsPage ? undefined : username.value))
 const isSkinManagementReadOnly = computed(
-	() =>
-		currentAccountType.value === 'yggdrasil' ||
-		(currentAccountType.value !== 'offline' &&
-			(offline.value || (authServerQuery.isError.value && !authServerQuery.isLoading.value))),
+	() => {
+		if (isSkinSiteProfile.value) {
+			return activeSkinSitePlayer.value?.isMojang === true || skinSiteStatus.value !== 'signed-in'
+		}
+		return (
+			currentAccountType.value === 'yggdrasil' ||
+			(currentAccountType.value !== 'offline' &&
+				(offline.value || (authServerQuery.isError.value && !authServerQuery.isLoading.value)))
+		)
+	},
 )
 const hasPendingSkinChange = computed(
 	() => !skinsMatch(selectedSkin.value, originalSelectedSkin.value),
@@ -356,7 +413,7 @@ function confirmDeleteSkin(skin: Skin) {
 }
 
 async function deleteSkin() {
-	if (isSkinManagementReadOnly.value) return
+	if (isSkinManagementReadOnly.value || isSkinSiteProfile.value) return
 
 	const deletedSkin = skinToDelete.value
 	if (!deletedSkin) return
@@ -372,10 +429,17 @@ async function deleteSkin() {
 }
 
 async function loadCapes() {
+	if (isSkinSiteProfile.value) {
+		capes.value = []
+		return
+	}
+	const profileId = currentUserId.value
 	try {
-		capes.value = (await get_available_capes()) ?? []
+		const loadedCapes = (await get_available_capes()) ?? []
+		if (isSkinSiteProfile.value || currentUserId.value !== profileId) return
+		capes.value = loadedCapes
 	} catch (error) {
-		if (currentUser.value && error instanceof Error) {
+		if (hasCurrentProfile.value && error instanceof Error) {
 			handleError(error)
 		}
 	}
@@ -383,7 +447,36 @@ async function loadCapes() {
 
 async function loadSkins() {
 	try {
+		if (isSkinSiteProfile.value) {
+			const player = activeSkinSitePlayer.value
+			if (!player) return
+			const playerId = player.uuid
+			const bundledSkins = (await get_default_skins()).map((skin) => ({
+				...skin,
+				is_equipped: false,
+			}))
+			if (activeSkinSitePlayer.value?.uuid !== playerId) return
+			const currentSkin: Skin | null =
+				player.skinState === 'ready' && player.skinDataUrl
+					? {
+							texture_key: `starlight:${player.uuid}:current`,
+							name: player.name,
+							variant: player.model === 'slim' ? 'SLIM' : 'CLASSIC',
+							texture: player.skinDataUrl,
+							source: 'custom_external',
+							is_equipped: true,
+						}
+					: null
+			skins.value = currentSkin ? [currentSkin, ...bundledSkins] : bundledSkins
+			generateSkinPreviews(skins.value, [])
+			selectedSkin.value = currentSkin
+			originalSelectedSkin.value = currentSkin
+			return
+		}
+
+		const profileId = currentUserId.value
 		const loadedSkins = (await get_available_skins()) ?? []
+		if (isSkinSiteProfile.value || currentUserId.value !== profileId) return
 		const loadedEquippedSkin = loadedSkins.find((s) => s.is_equipped)
 		const locallyKnownEquippedSkin =
 			originalSelectedSkin.value &&
@@ -404,7 +497,7 @@ async function loadSkins() {
 		selectedSkin.value = skins.value.find((s) => s.is_equipped) ?? null
 		originalSelectedSkin.value = selectedSkin.value
 	} catch (error) {
-		if (currentUser.value && error instanceof Error) {
+		if (hasCurrentProfile.value && error instanceof Error) {
 			handleError(error)
 		}
 	}
@@ -612,6 +705,7 @@ function updateLocalSkin(savedSkin: Skin, applied: boolean, previousSkin?: Skin)
 }
 
 async function reorderSavedSkins(orderedSkins: Skin[]) {
+	if (isSkinSiteProfile.value) return
 	const previousSkins = skins.value
 	const previousSelectedSkin = selectedSkin.value
 	const previousOriginalSelectedSkin = originalSelectedSkin.value
@@ -733,6 +827,19 @@ async function applySelectedSkin() {
 
 	isApplyingSkin.value = true
 	try {
+		if (isSkinSiteProfile.value) {
+			const player = activeSkinSitePlayer.value
+			if (!player) return
+			const textureDataUrl = await get_normalized_skin_texture(skinToApply)
+			await requestSkinSiteSkinUpdate(
+				player.uuid,
+				textureDataUrl,
+				skinToApply.variant === 'SLIM' ? 'slim' : 'default',
+			)
+			await requestSkinSitePlayers()
+			await loadSkins()
+			return
+		}
 		await equip_skin(skinToApply)
 		setLocallyEquippedSkin(skinToApply)
 		schedulePendingSkinRefresh()
@@ -776,7 +883,7 @@ async function loadCurrentUser() {
 		currentAccountType.value = selectedAccount?.account_type
 		currentUser.value = selectedAccount
 	} catch (e) {
-		handleError(e as Error)
+		if (!isSkinSiteProfile.value) handleError(e as Error)
 		currentUser.value = undefined
 		currentUserId.value = undefined
 		currentAccountType.value = undefined
@@ -794,14 +901,22 @@ watch(accountChangeRevision, (revision, previousRevision) => {
 	void refreshSelectedAccount()
 })
 
+watch(
+	() => [selectedSkinSitePlayerId.value, activeSkinSitePlayer.value?.skinDataUrl] as const,
+	() => {
+		void loadCapes()
+		void loadSkins()
+	},
+)
+
 function getBakedSkinTextures(skin: Skin): RenderResult | undefined {
 	const key = `${skin.texture_key}+${skin.variant}+${skin.cape_id ?? 'no-cape'}`
 	return skinBlobUrlMap.get(key)
 }
 
-async function login() {
-	if (offline.value) return
-	accountsCard.value?.login()
+async function loginToSkinSite() {
+	openSkinSiteLogin()
+	await router.push('/')
 }
 
 function openAddSkinFileBrowser() {
@@ -877,7 +992,6 @@ async function onAddSkinDrop(event: DragEvent) {
 async function processSkinFileBuffer(buffer: Uint8Array | ArrayBuffer) {
 	if (isSkinManagementReadOnly.value) return
 
-	const fakeEvent = new MouseEvent('click')
 	const originalSkinTexUrl = `data:image/png;base64,` + arrayBufferToBase64(buffer)
 	try {
 		const skinTextureNormalized = await normalize_skin_texture(originalSkinTexUrl)
@@ -885,6 +999,24 @@ async function processSkinFileBuffer(buffer: Uint8Array | ArrayBuffer) {
 			original: originalSkinTexUrl,
 			normalized: `data:image/png;base64,` + arrayBufferToBase64(skinTextureNormalized),
 		}
+		if (isSkinSiteProfile.value) {
+			const variant = await determineModelType(skinTexUrl.normalized)
+			const pendingSkin: Skin = {
+				texture_key: `starlight-upload:${Date.now()}`,
+				name: username.value,
+				variant,
+				texture: skinTexUrl.normalized,
+				source: 'custom_external',
+				is_equipped: false,
+			}
+			skins.value = [pendingSkin, ...skins.value.filter((skin) => skin.source === 'default')]
+			selectedSkin.value = pendingSkin
+			skinListTab.value = 'saved'
+			generateSkinPreviews(skins.value, [])
+			return
+		}
+
+		const fakeEvent = new MouseEvent('click')
 		editSkinModal.value?.showNew(fakeEvent, skinTexUrl)
 	} catch (error) {
 		handleError(error as Error)
@@ -984,6 +1116,7 @@ onUnmounted(() => {
 })
 
 async function checkUserChanges() {
+	if (isSkinSiteProfile.value) return
 	try {
 		const defaultId = await get_default_user(offline.value)
 		if (defaultId !== currentUserId.value) {
@@ -1047,9 +1180,26 @@ await loadSkins()
 			</p>
 		</section>
 	</Teleport>
+	<Teleport v-if="isSkinSiteProfile" to="#sidebar-default-teleport-target">
+		<section class="p-4">
+			<h3 class="m-0 text-base font-semibold text-primary">
+				{{ formatMessage(messages.skinSiteManagementTitle) }}
+			</h3>
+			<p class="mb-0 mt-2 text-sm leading-6 text-secondary">
+				{{
+					formatMessage(
+						activeSkinSitePlayer?.isMojang
+							? messages.skinSiteMojangDescription
+							: messages.skinSiteManagementDescription,
+						{ player: activeSkinSitePlayer?.name ?? '' },
+					)
+				}}
+			</p>
+		</section>
+	</Teleport>
 
 	<div
-		v-if="currentUser"
+		v-if="hasCurrentProfile"
 		data-onboarding-id="skins-page"
 		class="skin-layout box-border min-h-full p-4"
 	>
@@ -1100,7 +1250,7 @@ await loadSkins()
 							</button>
 						</div>
 						<button
-							v-else
+							v-else-if="!isSkinSiteProfile"
 							class="flex h-10 min-w-0 cursor-pointer items-center justify-center gap-2 rounded-[14px] border-0 bg-surface-4 px-4 py-2.5 text-base font-semibold leading-5 shadow-md transition-[filter,transform] duration-200 enabled:hover:brightness-[--hover-brightness] enabled:focus-visible:brightness-[--hover-brightness] enabled:active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 [&>svg]:size-5 [&>svg]:shrink-0"
 							:disabled="!selectedSkin || isSkinManagementReadOnly"
 							@click="(e: MouseEvent) => selectedSkin && editSkinModal?.show(e, selectedSkin)"
@@ -1125,7 +1275,7 @@ await loadSkins()
 						}
 					"
 				/>
-				<ButtonStyled color="brand">
+				<ButtonStyled v-if="!isSkinSiteProfile" color="brand">
 					<button @click="router.push('/lab/skin-editor')">
 						<PlusIcon />
 						{{ formatMessage(messages.createSkinButton) }}
@@ -1142,8 +1292,9 @@ await loadSkins()
 				:is-skin-active="isSkinActive"
 				:is-add-skin-button-drag-active="isAddSkinButtonDragActive"
 				:read-only="isSkinManagementReadOnly"
+				:manage-saved-skins="!isSkinSiteProfile"
 				@select="changeSkin"
-				@edit="(skin, event) => editSkinModal?.show(event, skin)"
+				@edit="(skin, event) => !isSkinSiteProfile && editSkinModal?.show(event, skin)"
 				@delete="confirmDeleteSkin"
 				@reorder-saved-skins="reorderSavedSkins"
 				@add-skin="openAddSkinFileBrowser"
@@ -1183,20 +1334,37 @@ await loadSkins()
 
 			<div class="flex flex-col gap-5">
 				<h1 class="text-3xl font-extrabold m-0">
-					{{ formatMessage(messages.signInTitle) }}
+					{{
+						formatMessage(
+							skinSiteUser
+								? skinSitePlayersStatus === 'checking' || skinSitePlayersStatus === 'idle'
+									? messages.loadingSkinSitePlayersTitle
+									: messages.noSkinSitePlayersTitle
+								: messages.signInTitle,
+						)
+					}}
 				</h1>
 				<p class="text-lg m-0">
-					{{ formatMessage(messages.signInDescription) }}
+					{{
+						formatMessage(
+							skinSiteUser
+								? skinSitePlayersStatus === 'checking' || skinSitePlayersStatus === 'idle'
+									? messages.loadingSkinSitePlayersDescription
+									: messages.noSkinSitePlayersDescription
+								: messages.signInDescription,
+						)
+					}}
 				</p>
-				<ButtonStyled
-					v-if="!offline"
-					v-show="accountsCard"
-					color="brand"
-					:disabled="accountsCard.loginDisabled"
-				>
-					<button :disabled="accountsCard.loginDisabled" @click="login">
-						<LogInIcon v-if="!accountsCard.loginDisabled" />
-						<SpinnerIcon v-else class="animate-spin" />
+				<SpinnerIcon
+					v-if="
+						skinSiteUser &&
+						(skinSitePlayersStatus === 'checking' || skinSitePlayersStatus === 'idle')
+					"
+					class="h-8 w-8 animate-spin text-brand"
+				/>
+				<ButtonStyled v-if="!offline && !skinSiteUser" color="brand">
+					<button @click="loginToSkinSite">
+						<LogInIcon />
 						{{ formatMessage(messages.signInButton) }}
 					</button>
 				</ButtonStyled>

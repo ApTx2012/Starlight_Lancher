@@ -551,6 +551,13 @@ pub async fn get_available_skins() -> crate::Result<Vec<Skin>> {
     Ok(available_skins)
 }
 
+/// Gets the bundled skin catalogue without requiring a selected Minecraft
+/// credential. This is used by external account providers that manage their
+/// own player profiles while reusing the launcher's native skin picker.
+pub fn get_default_skins() -> Vec<Skin> {
+    assets::DEFAULT_SKINS.iter().cloned().collect()
+}
+
 /// Adds or updates a skin in the app database and equips it for the current profile.
 /// Bundled default skins are only persisted when they have an associated cape.
 #[tracing::instrument(skip(texture_blob))]
