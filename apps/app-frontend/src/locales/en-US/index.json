@@ -1,8 +1,27 @@
 {
+  "app.home.luck.title": { "message": "Daily luck index" },
+  "app.home.luck.get": { "message": "Get with one click" },
+  "app.home.luck.login-to-get": { "message": "Sign in to get it" },
+  "app.home.luck.loading": { "message": "Asking the little sprite..." },
+  "app.home.luck.error": {
+    "message": "The little sprite did not answer. Please try again later."
+  },
+  "app.home.luck.out-of": { "message": "out of 100" },
   "minecraft-account.skin-site.signed-in": { "message": "Signed in to StarLight Skin Site" },
   "minecraft-account.skin-site.checking": { "message": "Checking skin site session…" },
-  "minecraft-account.skin-site.sync-error": { "message": "Could not verify the skin site session. Retrying automatically." },
-  "minecraft-account.add-skin-game-account": { "message": "Add skin site game account" },
+  "minecraft-account.skin-site.sync-error": {
+    "message": "Could not verify the skin site session. Retrying automatically."
+  },
+  "minecraft-account.skin-site.players": { "message": "Skin site players ({count})" },
+  "minecraft-account.skin-site.players.retry": { "message": "Retry" },
+  "minecraft-account.skin-site.players.empty": {
+    "message": "No player profiles are attached to this skin site account."
+  },
+  "minecraft-account.skin-site.players.error": {
+    "message": "Could not refresh the player list. Previously loaded players are kept."
+  },
+  "minecraft-account.skin-site.player.ready": { "message": "Ready to launch" },
+  "minecraft-account.skin-site.player.synced": { "message": "From skin site" },
   "app.easteregg.color-mine.title": {
     "message": "Starlight Mine: Chromatic Realms"
   },
@@ -10146,8 +10165,11 @@
   "minecraft-account.offline-mode": {
     "message": "Offline mode"
   },
-  "minecraft-account.offline-mode.description": {
-    "message": "Only offline accounts are available. You can launch fully downloaded instances."
+  "minecraft-account.offline-mode.description.no-internet": {
+    "message": "It looks like this device may not be connected to the internet. You can currently only launch fully downloaded instances and will most likely be unable to connect to StarLight servers. Check your network connection. If you are using a proxy, try disabling or enabling it, then refresh the connection status below."
+  },
+  "minecraft-account.offline-mode.description.server-unavailable": {
+    "message": "Your internet connection is working, but StarLight's authentication server cannot be reached. The StarLight server may be undergoing maintenance, or your proxy may be misconfigured. If you are using a proxy, try disabling or enabling it, then refresh the connection status below. If that does not help, contact a server administrator in the StarLight community group to confirm the maintenance status."
   },
   "minecraft-account.offline-mode.refresh": {
     "message": "Refresh connection status"

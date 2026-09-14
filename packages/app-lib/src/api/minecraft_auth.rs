@@ -14,16 +14,13 @@ use crate::state::{
 };
 pub use crate::state::{MinecraftDeviceLoginFlow, MinecraftDeviceLoginPoll};
 use crate::util::fetch::INSECURE_REQWEST_CLIENT;
-use crate::util::mojang::{mojang_service_url, should_use_mojang_mirror};
+
+const STARLIGHT_SESSION_SERVER_URL: &str = "https://skin.starlight.cool/yggdrasil/sessionserver/session/minecraft/hasJoined";
 
 #[tracing::instrument]
 pub async fn check_reachable() -> crate::Result<()> {
-    let url = mojang_service_url(
-        "https://sessionserver.mojang.com/session/minecraft/hasJoined",
-        should_use_mojang_mirror(),
-    );
     let resp = INSECURE_REQWEST_CLIENT
-        .get(url.as_ref())
+        .get(STARLIGHT_SESSION_SERVER_URL)
         .timeout(Duration::from_secs(5))
         .send()
         .await?;

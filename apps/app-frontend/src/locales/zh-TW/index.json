@@ -1,8 +1,23 @@
 {
+  "app.home.luck.title": { "message": "每日幸運指數" },
+  "app.home.luck.get": { "message": "一鍵獲取" },
+  "app.home.luck.login-to-get": { "message": "登入後獲取" },
+  "app.home.luck.loading": { "message": "正在詢問小精靈..." },
+  "app.home.luck.error": { "message": "小精靈暫時沒有回應，請稍後重試。" },
+  "app.home.luck.out-of": { "message": "滿分 100" },
   "minecraft-account.skin-site.signed-in": { "message": "已登入 StarLight皮膚站" },
   "minecraft-account.skin-site.checking": { "message": "正在驗證皮膚站登入狀態…" },
-  "minecraft-account.skin-site.sync-error": { "message": "暫時無法驗證皮膚站登入狀態，將自動重試。" },
-  "minecraft-account.add-skin-game-account": { "message": "新增皮膚站遊戲帳號" },
+  "minecraft-account.skin-site.sync-error": {
+    "message": "暫時無法驗證皮膚站登入狀態，將自動重試。"
+  },
+  "minecraft-account.skin-site.players": { "message": "皮膚站玩家（{count}）" },
+  "minecraft-account.skin-site.players.retry": { "message": "重試" },
+  "minecraft-account.skin-site.players.empty": { "message": "這個皮膚站帳號還沒有玩家。" },
+  "minecraft-account.skin-site.players.error": {
+    "message": "暫時無法重新整理玩家清單，已保留上一次結果。"
+  },
+  "minecraft-account.skin-site.player.ready": { "message": "可啟動" },
+  "minecraft-account.skin-site.player.synced": { "message": "來自皮膚站" },
   "app.easteregg.color-mine.title": {
     "message": "星光礦井：彩域"
   },
@@ -9873,8 +9888,11 @@
   "minecraft-account.offline-mode": {
     "message": "離線模式"
   },
-  "minecraft-account.offline-mode.description": {
-    "message": "僅可使用離線帳號，並且只能啟動已完整下載的實例。"
+  "minecraft-account.offline-mode.description.no-internet": {
+    "message": "看起來本機似乎並未連線到網際網路，您目前只能啟動已完整下載的實例，且極可能無法連線到 StarLight 伺服器，請檢查網路連線。如果您正在使用代理，請關閉或開啟代理後點擊下方按鈕重新整理連線狀態。"
+  },
+  "minecraft-account.offline-mode.description.server-unavailable": {
+    "message": "您目前網路正常，但無法連線到 StarLight 驗證伺服器；這可能是因為 StarLight 伺服器正在維護，或者您設定的代理存在問題。如果您正在使用代理，請關閉或開啟代理後點擊下方按鈕重新整理連線狀態；若該操作沒有作用，請前往 StarLight 交流群組，聯絡伺服器管理員確認維護狀態。"
   },
   "minecraft-account.offline-mode.refresh": {
     "message": "刷新連接狀態"

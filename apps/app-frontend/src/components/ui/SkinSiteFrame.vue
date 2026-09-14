@@ -3,8 +3,9 @@ import { defineMessages, useVIntl } from '@modrinth/ui'
 import { onMounted, onUnmounted, ref } from 'vue'
 
 import {
-	receiveSkinSiteSession,
+	receiveSkinSiteMessage,
 	resetSkinSiteSession,
+	setSkinSiteFrame,
 	SKIN_SITE_ORIGIN,
 	skinSiteFrameUrl,
 } from '@/composables/skin-site-session'
@@ -22,14 +23,13 @@ let lastMessage = 0
 let expiryTimer: ReturnType<typeof setInterval> | undefined
 
 function connect() {
-	frame.value?.contentWindow?.postMessage(
-		{ type: 'starlight-skin-session-connect' },
-		SKIN_SITE_ORIGIN,
-	)
+	const contentWindow = frame.value?.contentWindow ?? null
+	setSkinSiteFrame(contentWindow)
+	contentWindow?.postMessage({ type: 'starlight-skin-session-connect' }, SKIN_SITE_ORIGIN)
 }
 
 function receive(event: MessageEvent) {
-	if (receiveSkinSiteSession(event, frame.value?.contentWindow ?? null)) lastMessage = Date.now()
+	if (receiveSkinSiteMessage(event, frame.value?.contentWindow ?? null)) lastMessage = Date.now()
 }
 
 onMounted(() => {
@@ -43,6 +43,7 @@ onMounted(() => {
 onUnmounted(() => {
 	window.removeEventListener('message', receive)
 	clearInterval(expiryTimer)
+	setSkinSiteFrame(null)
 	resetSkinSiteSession()
 })
 </script>

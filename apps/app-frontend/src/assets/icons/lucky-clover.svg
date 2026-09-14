@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+	<title>幸运四叶草</title>
+	<path
+		d="M33 34C39.5 38.5 44.5 46 47 56"
+		stroke="var(--clover-edge, #16883F)"
+		stroke-width="5.5"
+		stroke-linecap="round"
+	/>
+	<path
+		d="M32 32C24 29 17 24 17 17.5C17 12.2 21 8 26 8C28.8 8 31 9.7 32 12.2C33 9.7 35.2 8 38 8C43 8 47 12.2 47 17.5C47 24 40 29 32 32Z"
+		fill="var(--clover-leaf, #42C95A)"
+		stroke="var(--clover-edge, #16883F)"
+		stroke-width="2.2"
+		stroke-linejoin="round"
+	/>
+	<path
+		d="M32 32C24 29 17 24 17 17.5C17 12.2 21 8 26 8C28.8 8 31 9.7 32 12.2C33 9.7 35.2 8 38 8C43 8 47 12.2 47 17.5C47 24 40 29 32 32Z"
+		transform="rotate(90 32 32)"
+		fill="var(--clover-leaf, #42C95A)"
+		stroke="var(--clover-edge, #16883F)"
+		stroke-width="2.2"
+		stroke-linejoin="round"
+	/>
+	<path
+		d="M32 32C24 29 17 24 17 17.5C17 12.2 21 8 26 8C28.8 8 31 9.7 32 12.2C33 9.7 35.2 8 38 8C43 8 47 12.2 47 17.5C47 24 40 29 32 32Z"
+		transform="rotate(180 32 32)"
+		fill="var(--clover-leaf, #42C95A)"
+		stroke="var(--clover-edge, #16883F)"
+		stroke-width="2.2"
+		stroke-linejoin="round"
+	/>
+	<path
+		d="M32 32C24 29 17 24 17 17.5C17 12.2 21 8 26 8C28.8 8 31 9.7 32 12.2C33 9.7 35.2 8 38 8C43 8 47 12.2 47 17.5C47 24 40 29 32 32Z"
+		transform="rotate(270 32 32)"
+		fill="var(--clover-leaf, #42C95A)"
+		stroke="var(--clover-edge, #16883F)"
+		stroke-width="2.2"
+		stroke-linejoin="round"
+	/>
+	<circle cx="32" cy="32" r="3.7" fill="var(--clover-edge, #16883F)" />
+</svg>

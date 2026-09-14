@@ -1,8 +1,23 @@
 {
+  "app.home.luck.title": { "message": "每日幸运指数" },
+  "app.home.luck.get": { "message": "一键获取" },
+  "app.home.luck.login-to-get": { "message": "登录后获取" },
+  "app.home.luck.loading": { "message": "正在询问小精灵..." },
+  "app.home.luck.error": { "message": "小精灵暂时没有回应，请稍后重试。" },
+  "app.home.luck.out-of": { "message": "满分 100" },
   "minecraft-account.skin-site.signed-in": { "message": "已登录 StarLight皮肤站" },
   "minecraft-account.skin-site.checking": { "message": "正在验证皮肤站登录状态…" },
-  "minecraft-account.skin-site.sync-error": { "message": "暂时无法验证皮肤站登录状态，将自动重试。" },
-  "minecraft-account.add-skin-game-account": { "message": "添加皮肤站游戏账号" },
+  "minecraft-account.skin-site.sync-error": {
+    "message": "暂时无法验证皮肤站登录状态，将自动重试。"
+  },
+  "minecraft-account.skin-site.players": { "message": "皮肤站玩家（{count}）" },
+  "minecraft-account.skin-site.players.retry": { "message": "重试" },
+  "minecraft-account.skin-site.players.empty": { "message": "这个皮肤站账号还没有玩家。" },
+  "minecraft-account.skin-site.players.error": {
+    "message": "暂时无法刷新玩家列表，已保留上一次结果。"
+  },
+  "minecraft-account.skin-site.player.ready": { "message": "可启动" },
+  "minecraft-account.skin-site.player.synced": { "message": "来自皮肤站" },
   "app.easteregg.color-mine.title": {
     "message": "星光矿井：彩域"
   },
@@ -10227,8 +10242,11 @@
   "minecraft-account.offline-mode": {
     "message": "离线模式"
   },
-  "minecraft-account.offline-mode.description": {
-    "message": "仅可使用离线账号，并且只能启动已完整下载的实例。这通常是因为你的电脑无法连接到Mojang的认证服务器，请检查网络连接。如果你正在使用代理，请关闭或开启代理后点击下方按钮刷新连接状态。"
+  "minecraft-account.offline-mode.description.no-internet": {
+    "message": "看起来本机似乎并没有连接到互联网，您目前只能启动已完整下载的实例，且极可能无法连接到StarLight服务器，请检查网络连接。如果您正在使用代理，请关闭或开启代理后点击下方按钮刷新连接状态。"
+  },
+  "minecraft-account.offline-mode.description.server-unavailable": {
+    "message": "您目前网络正常，但无法连接到StarLight验证服务器；这可能是由于StarLight服务器正在维护，或者您配置的代理存在问题。如果您正在使用代理，请关闭或开启代理后点击下方按钮刷新连接状态；若该操作不生效，请前往StarLight交流群，联系服务器管理确认服务器的维护状态。"
   },
   "minecraft-account.offline-mode.refresh": {
     "message": "刷新连接状态"

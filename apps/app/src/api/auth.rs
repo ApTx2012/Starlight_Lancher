@@ -35,7 +35,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
         .build()
 }
 
-/// Checks if the authentication servers are reachable.
+/// Checks if the StarLight authentication server is reachable.
 #[tauri::command]
 pub async fn check_reachable() -> Result<()> {
     minecraft_auth::check_reachable().await?;

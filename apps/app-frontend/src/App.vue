@@ -3,7 +3,6 @@ import { AuthFeature, TauriModrinthClient, VerboseLoggingFeature } from '@modrin
 import {
 	ChangeSkinIcon,
 	CompassIcon,
-	GlobeIcon,
 	DownloadIcon,
 	ExternalIcon,
 	FlaskConicalIcon,
@@ -57,13 +56,13 @@ import SymlinkMethodCards from '@modrinth/ui/src/components/flows/drop/SymlinkMe
 import { useQuery } from '@tanstack/vue-query'
 import { getVersion } from '@tauri-apps/api/app'
 import { convertFileSrc, invoke } from '@tauri-apps/api/core'
-import { hideAllPoppers } from 'floating-vue'
 import { listen } from '@tauri-apps/api/event'
 import { Effect, getCurrentWindow } from '@tauri-apps/api/window'
 import { fetch as tauriFetch } from '@tauri-apps/plugin-http'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import { type as getOsType } from '@tauri-apps/plugin-os'
 import { saveWindowState, StateFlags } from '@tauri-apps/plugin-window-state'
+import { hideAllPoppers } from 'floating-vue'
 import { computed, nextTick, onMounted, onUnmounted, provide, ref, watch } from 'vue'
 import { type RouteLocationNormalizedLoaded, RouterView, useRoute, useRouter } from 'vue-router'
 
@@ -729,10 +728,6 @@ const messages = defineMessages({
 	skinSelector: {
 		id: 'app.navigation.skin-selector',
 		defaultMessage: 'Skin selector',
-	},
-	starlightSkin: {
-		id: 'app.navigation.starlight-skin',
-		defaultMessage: '斯达莱特',
 	},
 	library: {
 		id: 'app.navigation.library',
@@ -2236,13 +2231,6 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 					to="/skins"
 				>
 					<ChangeSkinIcon />
-				</NavButton>
-				<NavButton
-					v-tooltip.right="formatMessage(messages.starlightSkin)"
-					data-onboarding-id="nav-starlight-skin"
-					to="/starlight-skin"
-				>
-					<GlobeIcon />
 				</NavButton>
 				<NavButton
 					v-tooltip.right="formatMessage(messages.library)"

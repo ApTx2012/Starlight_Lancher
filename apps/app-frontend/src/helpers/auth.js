@@ -14,8 +14,8 @@ import { invoke } from '@tauri-apps/api/core'
 // }
 
 /**
- * Check if the authentication servers are reachable, throwing an exception if
- * not reachable.
+ * Check if the StarLight authentication server is reachable, throwing an
+ * exception if it is not reachable.
  */
 export async function check_reachable() {
 	await invoke('plugin:auth|check_reachable')

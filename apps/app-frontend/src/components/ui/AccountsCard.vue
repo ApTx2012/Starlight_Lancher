@@ -12,6 +12,55 @@
 	<p v-else-if="skinSiteStatus === 'error'" class="text-sm text-secondary">
 		{{ formatMessage(messages.skinSiteSyncError) }}
 	</p>
+	<div
+		v-if="skinSiteUser"
+		class="mt-2 overflow-hidden rounded-xl border border-solid border-surface-5 bg-button-bg"
+	>
+		<div class="flex items-center justify-between gap-3 px-3 py-2">
+			<span class="font-semibold text-contrast">
+				{{ formatMessage(messages.skinSitePlayers, { count: skinSitePlayers.length }) }}
+			</span>
+			<button
+				v-if="skinSitePlayersStatus === 'error'"
+				type="button"
+				class="button-base flex cursor-pointer items-center gap-1 border-0 bg-transparent p-1 text-xs text-secondary hover:text-brand"
+				@click="refreshSkinSitePlayers()"
+			>
+				<RefreshCwIcon class="h-4 w-4" />
+				{{ formatMessage(messages.retrySkinSitePlayers) }}
+			</button>
+			<SpinnerIcon
+				v-else-if="skinSitePlayersStatus === 'checking'"
+				class="h-4 w-4 animate-spin text-secondary"
+			/>
+		</div>
+		<div v-if="skinSitePlayers.length > 0" class="border-0 border-t border-solid border-surface-5">
+			<div
+				v-for="player in skinSitePlayers"
+				:key="player.uuid"
+				class="flex items-center gap-2 border-0 border-b border-solid border-surface-5 px-3 py-2 last:border-b-0"
+			>
+				<Avatar :src="defaultSteveHeadUrl" size="24px" pixelated :unframed-natural-width="72" />
+				<div class="flex min-w-0 flex-1 flex-col">
+					<span class="truncate text-sm text-primary">{{ player.name }}</span>
+					<span class="truncate text-xs text-secondary">{{ player.uuid }}</span>
+				</div>
+				<span class="shrink-0 text-xs text-secondary">
+					{{
+						launcherAccountIds.has(player.uuid)
+							? formatMessage(messages.skinSitePlayerReady)
+							: formatMessage(messages.skinSitePlayerSynced)
+					}}
+				</span>
+			</div>
+		</div>
+		<p v-else-if="skinSitePlayersStatus === 'ready'" class="m-0 px-3 pb-3 text-sm text-secondary">
+			{{ formatMessage(messages.noSkinSitePlayers) }}
+		</p>
+		<p v-else-if="skinSitePlayersStatus === 'error'" class="m-0 px-3 pb-3 text-sm text-secondary">
+			{{ formatMessage(messages.skinSitePlayersError) }}
+		</p>
+	</div>
 	<ButtonStyled v-if="accounts.length > 0 && !offline && !skinSiteUser" color="brand">
 		<button class="mt-2 w-full" :disabled="loginDisabled" @click="goToSkinSiteLogin()">
 			<LogInIcon />
@@ -23,7 +72,15 @@
 		class="flex flex-col gap-1 bg-highlight-orange border border-solid border-orange rounded-xl p-3 mt-2"
 	>
 		<span class="font-semibold text-contrast">{{ formatMessage(messages.offlineMode) }}</span>
-		<span class="text-sm text-secondary">{{ formatMessage(messages.offlineModeDescription) }}</span>
+		<span class="text-sm text-secondary">
+			{{
+				formatMessage(
+					browserOffline
+						? messages.offlineModeNoInternetDescription
+						: messages.offlineModeServerUnavailableDescription,
+				)
+			}}
+		</span>
 		<ButtonStyled>
 			<button class="mt-1" :disabled="refreshingNetwork" @click="refreshNetworkStatus()">
 				<SpinnerIcon v-if="refreshingNetwork" class="animate-spin" />
@@ -42,12 +99,6 @@
 				<LogInIcon v-if="!loginDisabled" />
 				<SpinnerIcon v-else class="animate-spin" />
 				{{ formatMessage(messages.signInToStarlight) }}
-			</button>
-		</ButtonStyled>
-		<ButtonStyled v-if="!offline && skinSiteUser">
-			<button :disabled="loginDisabled" @click="showYggdrasilAccountModal()">
-				<PlusIcon />
-				{{ formatMessage(messages.addSkinGameAccount) }}
 			</button>
 		</ButtonStyled>
 		<ButtonStyled v-if="!offline">
@@ -162,12 +213,6 @@
 			</template>
 			<div class="flex flex-col gap-2 px-2 pt-2">
 				<ButtonStyled v-if="accounts.length > 0 && !offline" class="w-full">
-					<button :disabled="loginDisabled" @click="showYggdrasilAccountModal()">
-						<PlusIcon />
-						{{ formatMessage(messages.addSkinGameAccount) }}
-					</button>
-				</ButtonStyled>
-				<ButtonStyled v-if="accounts.length > 0 && !offline" class="w-full">
 					<button :disabled="loginDisabled" @click="login()">
 						<PlusIcon />
 						{{ formatMessage(messages.addMicrosoftAccount) }}
@@ -177,99 +222,6 @@
 		</div>
 	</Accordion>
 	<MinecraftLoginModal ref="minecraftLoginModal" @complete="onMicrosoftLogin" />
-	<ModalWrapper ref="yggdrasilAccountModal" :header="formatMessage(messages.thirdPartyModalTitle)">
-		<div class="flex min-w-[24rem] flex-col gap-4">
-			<p class="m-0 text-secondary">{{ formatMessage(messages.thirdPartyModalDescription) }}</p>
-			<div v-if="savedYggdrasilLogins.length > 0" class="flex flex-col gap-2">
-				<span class="font-semibold">{{ formatMessage(messages.savedLogins) }}</span>
-				<div
-					v-for="savedLogin in savedYggdrasilLogins"
-					:key="`${savedLogin.api_root}:${savedLogin.login}`"
-					class="flex items-center gap-1 rounded-xl bg-surface-3 p-1"
-				>
-					<button
-						class="flex min-w-0 flex-grow flex-col items-start border-0 bg-transparent px-3 py-2 text-left cursor-pointer"
-						:disabled="loginDisabled"
-						@click="selectSavedYggdrasilLogin(savedLogin)"
-					>
-						<span class="w-full truncate font-semibold text-primary">{{ savedLogin.login }}</span>
-						<span class="w-full truncate text-xs text-secondary">{{ savedLogin.api_root }}</span>
-					</button>
-					<ButtonStyled circular color="red" color-fill="none" hover-color-fill="background">
-						<button
-							v-tooltip="formatMessage(messages.removeSavedLogin)"
-							:disabled="loginDisabled"
-							@click="removeSavedYggdrasilLogin(savedLogin)"
-						>
-							<TrashIcon />
-						</button>
-					</ButtonStyled>
-				</div>
-			</div>
-			<label class="flex flex-col gap-2 font-semibold">
-				{{ formatMessage(messages.apiRootLabel) }}
-				<StyledInput
-					v-model="yggdrasilApiRoot"
-					:disabled="true"
-					readonly
-					:placeholder="formatMessage(messages.apiRootPlaceholder)"
-					inputmode="url"
-					@blur="loadRememberedYggdrasilPassword()"
-				/>
-			</label>
-			<label class="flex flex-col gap-2 font-semibold">
-				{{ formatMessage(messages.accountLabel) }}
-				<StyledInput
-					v-model="yggdrasilLogin"
-					:disabled="loginDisabled"
-					:placeholder="formatMessage(messages.accountPlaceholder)"
-					autocomplete="username"
-					@blur="loadRememberedYggdrasilPassword()"
-				/>
-			</label>
-			<label class="flex flex-col gap-2 font-semibold">
-				{{ formatMessage(messages.passwordLabel) }}
-				<StyledInput
-					v-model="yggdrasilPassword"
-					type="password"
-					:disabled="loginDisabled"
-					autocomplete="current-password"
-					@keyup.enter="addYggdrasilAccount()"
-				/>
-			</label>
-			<Checkbox
-				v-model="rememberYggdrasilPassword"
-				:disabled="loginDisabled"
-				:label="formatMessage(messages.rememberPassword)"
-			/>
-			<div class="input-group push-right">
-				<ButtonStyled>
-					<button :disabled="loginDisabled" @click="yggdrasilAccountModal?.hide()">
-						{{ formatMessage(commonMessages.cancelButton) }}
-					</button>
-				</ButtonStyled>
-				<ButtonStyled color="brand">
-					<button :disabled="loginDisabled || !yggdrasilFormValid" @click="addYggdrasilAccount()">
-						<SpinnerIcon v-if="loginDisabled" class="animate-spin" />
-						<LogInIcon v-else />
-						{{ formatMessage(messages.signInButton) }}
-					</button>
-				</ButtonStyled>
-			</div>
-		</div>
-	</ModalWrapper>
-	<ModalWrapper ref="yggdrasilProfileModal" :header="formatMessage(messages.selectProfileTitle)">
-		<div class="flex min-w-[22rem] flex-col gap-2">
-			<p class="m-0 mb-2 text-secondary">{{ formatMessage(messages.selectProfileDescription) }}</p>
-			<ButtonStyled v-for="profile in pendingYggdrasilProfiles" :key="profile.id" class="w-full">
-				<button :disabled="loginDisabled" @click="selectYggdrasilProfile(profile.id)">
-					<SpinnerIcon v-if="loginDisabled" class="animate-spin" />
-					<RadioButtonIcon v-else />
-					{{ profile.name }}
-				</button>
-			</ButtonStyled>
-		</div>
-	</ModalWrapper>
 </template>
 
 <script setup lang="ts">
@@ -287,11 +239,8 @@ import {
 	Accordion,
 	Avatar,
 	ButtonStyled,
-	Checkbox,
-	commonMessages,
 	defineMessages,
 	injectNotificationManager,
-	StyledInput,
 	useVIntl,
 } from '@modrinth/ui'
 import { useQueryClient } from '@tanstack/vue-query'
@@ -303,21 +252,21 @@ import { useRoute, useRouter } from 'vue-router'
 import axolotlLogo from '@/assets/netherstar.png'
 import steveSkinTexture from '@/assets/skins/steve.png?inline'
 import MinecraftLoginModal from '@/components/ui/MinecraftLoginModal.vue'
-import ModalWrapper from '@/components/ui/modal/ModalWrapper.vue'
-import { openSkinSiteLogin, skinSiteStatus, skinSiteUser } from '@/composables/skin-site-session'
+import {
+	openSkinSiteLogin,
+	requestSkinSitePlayers,
+	skinSitePlayers,
+	skinSitePlayersStatus,
+	skinSiteStatus,
+	skinSiteUser,
+} from '@/composables/skin-site-session'
 import { useNetworkStatus } from '@/composables/useNetworkStatus'
 import { compareMinecraftAccounts } from '@/helpers/accounts'
 import {
-	begin_yggdrasil_login,
-	delete_yggdrasil_password,
-	finish_yggdrasil_login,
 	get_default_user,
-	get_yggdrasil_password,
-	list_yggdrasil_saved_logins,
 	login as loginToMinecraft,
 	remove_user,
 	set_default_user,
-	set_yggdrasil_password,
 	users,
 } from '@/helpers/auth'
 import { process_listener } from '@/helpers/events'
@@ -329,7 +278,7 @@ import { useTheming } from '@/store/state'
 
 const { formatMessage } = useVIntl()
 const { handleError } = injectNotificationManager()
-const { offline, refreshBrowserOffline } = useNetworkStatus()
+const { browserOffline, offline, refreshBrowserOffline } = useNetworkStatus()
 const queryClient = useQueryClient()
 const route = useRoute()
 const router = useRouter()
@@ -384,20 +333,6 @@ type MinecraftCredential = {
 	}
 }
 
-type YggdrasilProfile = {
-	id: string
-	name: string
-}
-
-type SavedYggdrasilLogin = {
-	api_root: string
-	login: string
-}
-
-type YggdrasilLoginResult =
-	| { status: 'complete'; credentials: MinecraftCredential }
-	| { status: 'select_profile'; flow_id: string; profiles: YggdrasilProfile[] }
-
 const STARLIGHT_YGGDRASIL_API_ROOT = 'https://skin.starlight.cool/yggdrasil'
 
 const accounts: Ref<MinecraftCredential[]> = ref([])
@@ -412,21 +347,11 @@ let refreshGeneration = 0
 let headRefreshTimer: ReturnType<typeof setTimeout> | undefined
 let defaultUserUpdateQueue = Promise.resolve()
 const minecraftLoginModal = ref<InstanceType<typeof MinecraftLoginModal> | null>(null)
-const yggdrasilAccountModal = ref<InstanceType<typeof ModalWrapper> | null>(null)
-const yggdrasilProfileModal = ref<InstanceType<typeof ModalWrapper> | null>(null)
-const yggdrasilApiRoot = ref(STARLIGHT_YGGDRASIL_API_ROOT)
-const yggdrasilLogin = ref('')
-const yggdrasilPassword = ref('')
-const rememberYggdrasilPassword = ref(true)
-const savedYggdrasilLogins = ref<SavedYggdrasilLogin[]>([])
-const pendingYggdrasilFlowId = ref<string | undefined>()
-const pendingYggdrasilProfiles = ref<YggdrasilProfile[]>([])
-const yggdrasilFormValid = computed(
-	() =>
-		yggdrasilApiRoot.value.trim().length > 0 &&
-		yggdrasilLogin.value.trim().length > 0 &&
-		yggdrasilPassword.value.length > 0,
-)
+const launcherAccountIds = computed(() => new Set(accounts.value.map((account) => account.profile.id)))
+
+async function refreshSkinSitePlayers() {
+	await requestSkinSitePlayers().catch(() => {})
+}
 
 function createSkinHeadDataUrl(textureUrl: string) {
 	const escapedTextureUrl = textureUrl
@@ -721,185 +646,6 @@ async function onMicrosoftLogin(account: MinecraftCredential) {
 	}
 }
 
-async function showYggdrasilAccountModal() {
-	yggdrasilApiRoot.value = STARLIGHT_YGGDRASIL_API_ROOT
-	yggdrasilLogin.value = ''
-	yggdrasilPassword.value = ''
-	rememberYggdrasilPassword.value = true
-	pendingYggdrasilFlowId.value = undefined
-	pendingYggdrasilProfiles.value = []
-	await loadSavedYggdrasilLogins()
-	yggdrasilAccountModal.value?.show()
-}
-
-async function loadSavedYggdrasilLogins() {
-	const storedLogins = await list_yggdrasil_saved_logins().catch(handleError)
-	const savedLogins: SavedYggdrasilLogin[] = Array.isArray(storedLogins)
-		? [...storedLogins].filter(
-				(savedLogin) => savedLogin.api_root.replace(/\/+$/, '') === STARLIGHT_YGGDRASIL_API_ROOT,
-			)
-		: []
-	const savedLoginKeys = new Set(
-		savedLogins.map((savedLogin) => `${savedLogin.api_root}\n${savedLogin.login}`),
-	)
-
-	for (const account of accounts.value) {
-		if (
-			!account.yggdrasil ||
-			account.yggdrasil.api_root.replace(/\/+$/, '') !== STARLIGHT_YGGDRASIL_API_ROOT
-		)
-			continue
-		const savedLogin = {
-			api_root: account.yggdrasil.api_root,
-			login: account.yggdrasil.login,
-		}
-		const key = `${savedLogin.api_root}\n${savedLogin.login}`
-		if (savedLoginKeys.has(key)) continue
-
-		try {
-			const password = await get_yggdrasil_password(savedLogin.api_root, savedLogin.login)
-			if (!password) continue
-			await set_yggdrasil_password(savedLogin.api_root, savedLogin.login, password)
-			savedLogins.push(savedLogin)
-			savedLoginKeys.add(key)
-		} catch {
-			continue
-		}
-	}
-
-	savedYggdrasilLogins.value = savedLogins.sort((left, right) =>
-		left.login.localeCompare(right.login),
-	)
-}
-
-async function selectSavedYggdrasilLogin(savedLogin: SavedYggdrasilLogin) {
-	if (loginDisabled.value) return
-
-	loginDisabled.value = true
-	try {
-		const password = await get_yggdrasil_password(savedLogin.api_root, savedLogin.login)
-		if (!password) {
-			await delete_yggdrasil_password(savedLogin.api_root, savedLogin.login)
-			await loadSavedYggdrasilLogins()
-			return
-		}
-		yggdrasilApiRoot.value = savedLogin.api_root
-		yggdrasilLogin.value = savedLogin.login
-		yggdrasilPassword.value = password
-		rememberYggdrasilPassword.value = true
-	} catch (error) {
-		handleError(error as Error)
-	} finally {
-		loginDisabled.value = false
-	}
-}
-
-async function removeSavedYggdrasilLogin(savedLogin: SavedYggdrasilLogin) {
-	if (loginDisabled.value) return
-
-	loginDisabled.value = true
-	try {
-		await delete_yggdrasil_password(savedLogin.api_root, savedLogin.login)
-		savedYggdrasilLogins.value = savedYggdrasilLogins.value.filter(
-			(entry) => entry.api_root !== savedLogin.api_root || entry.login !== savedLogin.login,
-		)
-		if (
-			yggdrasilApiRoot.value === savedLogin.api_root &&
-			yggdrasilLogin.value === savedLogin.login
-		) {
-			yggdrasilPassword.value = ''
-			rememberYggdrasilPassword.value = false
-		}
-	} catch (error) {
-		handleError(error as Error)
-	} finally {
-		loginDisabled.value = false
-	}
-}
-
-async function loadRememberedYggdrasilPassword() {
-	if (
-		!rememberYggdrasilPassword.value ||
-		!yggdrasilApiRoot.value.trim() ||
-		!yggdrasilLogin.value.trim() ||
-		yggdrasilPassword.value
-	)
-		return
-
-	try {
-		const password = await get_yggdrasil_password(
-			yggdrasilApiRoot.value.trim(),
-			yggdrasilLogin.value.trim(),
-		)
-		if (password) yggdrasilPassword.value = password
-	} catch {
-		return
-	}
-}
-
-async function persistYggdrasilPasswordPreference() {
-	try {
-		if (rememberYggdrasilPassword.value) {
-			await set_yggdrasil_password(
-				yggdrasilApiRoot.value.trim(),
-				yggdrasilLogin.value.trim(),
-				yggdrasilPassword.value,
-			)
-		} else {
-			await delete_yggdrasil_password(yggdrasilApiRoot.value.trim(), yggdrasilLogin.value.trim())
-		}
-	} catch (error) {
-		handleError(error as Error)
-	}
-}
-
-async function addYggdrasilAccount() {
-	if (!yggdrasilFormValid.value || loginDisabled.value) return
-	if (yggdrasilApiRoot.value.trim().replace(/\/+$/, '') !== STARLIGHT_YGGDRASIL_API_ROOT) return
-
-	loginDisabled.value = true
-	try {
-		const result = (await begin_yggdrasil_login(
-			yggdrasilApiRoot.value.trim(),
-			yggdrasilLogin.value.trim(),
-			yggdrasilPassword.value,
-		)) as YggdrasilLoginResult
-		if (result.status === 'complete') {
-			await persistYggdrasilPasswordPreference()
-			yggdrasilAccountModal.value?.hide()
-			await setAccount(result.credentials)
-		} else {
-			pendingYggdrasilFlowId.value = result.flow_id
-			pendingYggdrasilProfiles.value = result.profiles
-			yggdrasilAccountModal.value?.hide()
-			yggdrasilProfileModal.value?.show()
-		}
-	} catch (error) {
-		handleError(error as Error)
-	} finally {
-		loginDisabled.value = false
-	}
-}
-
-async function selectYggdrasilProfile(profileId: string) {
-	if (!pendingYggdrasilFlowId.value || loginDisabled.value) return
-
-	loginDisabled.value = true
-	try {
-		const account = (await finish_yggdrasil_login(
-			pendingYggdrasilFlowId.value,
-			profileId,
-		)) as MinecraftCredential
-		await persistYggdrasilPasswordPreference()
-		yggdrasilProfileModal.value?.hide()
-		await setAccount(account)
-	} catch (error) {
-		handleError(error as Error)
-	} finally {
-		loginDisabled.value = false
-	}
-}
-
 async function logout(account: MinecraftCredential) {
 	await remove_user(account.profile.id).catch(handleError)
 	await refreshValues()
@@ -946,18 +692,43 @@ const messages = defineMessages({
 		id: 'minecraft-account.skin-site.sync-error',
 		defaultMessage: 'Could not verify the skin site session. Retrying automatically.',
 	},
-	addSkinGameAccount: {
-		id: 'minecraft-account.add-skin-game-account',
-		defaultMessage: 'Add skin site game account',
+	skinSitePlayers: {
+		id: 'minecraft-account.skin-site.players',
+		defaultMessage: 'Skin site players ({count})',
+	},
+	retrySkinSitePlayers: {
+		id: 'minecraft-account.skin-site.players.retry',
+		defaultMessage: 'Retry',
+	},
+	noSkinSitePlayers: {
+		id: 'minecraft-account.skin-site.players.empty',
+		defaultMessage: 'No player profiles are attached to this skin site account.',
+	},
+	skinSitePlayersError: {
+		id: 'minecraft-account.skin-site.players.error',
+		defaultMessage: 'Could not refresh the player list. Previously loaded players are kept.',
+	},
+	skinSitePlayerReady: {
+		id: 'minecraft-account.skin-site.player.ready',
+		defaultMessage: 'Ready to launch',
+	},
+	skinSitePlayerSynced: {
+		id: 'minecraft-account.skin-site.player.synced',
+		defaultMessage: 'Synced from skin site',
 	},
 	offlineMode: {
 		id: 'minecraft-account.offline-mode',
 		defaultMessage: 'Offline mode',
 	},
-	offlineModeDescription: {
-		id: 'minecraft-account.offline-mode.description',
+	offlineModeNoInternetDescription: {
+		id: 'minecraft-account.offline-mode.description.no-internet',
 		defaultMessage:
-			'Only offline accounts are available. You can launch fully downloaded instances.',
+			'It looks like this device may not be connected to the internet. You can currently only launch fully downloaded instances and will most likely be unable to connect to StarLight servers. Check your network connection. If you are using a proxy, try disabling or enabling it, then refresh the connection status below.',
+	},
+	offlineModeServerUnavailableDescription: {
+		id: 'minecraft-account.offline-mode.description.server-unavailable',
+		defaultMessage:
+			"Your internet connection is working, but StarLight's authentication server cannot be reached. The StarLight server may be undergoing maintenance, or your proxy may be misconfigured. If you are using a proxy, try disabling or enabling it, then refresh the connection status below. If that does not help, contact a server administrator in the StarLight community group to confirm the maintenance status.",
 	},
 	refreshNetworkStatus: {
 		id: 'minecraft-account.offline-mode.refresh',
@@ -982,58 +753,6 @@ const messages = defineMessages({
 	thirdPartyBadge: {
 		id: 'minecraft-account.third-party-badge',
 		defaultMessage: 'StarLight skin',
-	},
-	thirdPartyModalTitle: {
-		id: 'minecraft-account.third-party-modal.title',
-		defaultMessage: 'Sign in with StarLight skin',
-	},
-	thirdPartyModalDescription: {
-		id: 'minecraft-account.third-party-modal.description',
-		defaultMessage: 'Sign in with your StarLight skin account.',
-	},
-	apiRootLabel: {
-		id: 'minecraft-account.third-party-modal.api-root',
-		defaultMessage: 'StarLight skin API address',
-	},
-	apiRootPlaceholder: {
-		id: 'minecraft-account.third-party-modal.api-root-placeholder',
-		defaultMessage: 'https://skin.starlight.cool/yggdrasil',
-	},
-	accountLabel: {
-		id: 'minecraft-account.third-party-modal.account',
-		defaultMessage: 'Account or email',
-	},
-	accountPlaceholder: {
-		id: 'minecraft-account.third-party-modal.account-placeholder',
-		defaultMessage: 'Enter your account or email',
-	},
-	passwordLabel: {
-		id: 'minecraft-account.third-party-modal.password',
-		defaultMessage: 'Password',
-	},
-	rememberPassword: {
-		id: 'minecraft-account.third-party-modal.remember-password',
-		defaultMessage: 'Save this login on this device',
-	},
-	savedLogins: {
-		id: 'minecraft-account.third-party-modal.saved-logins',
-		defaultMessage: 'Saved logins',
-	},
-	removeSavedLogin: {
-		id: 'minecraft-account.third-party-modal.remove-saved-login',
-		defaultMessage: 'Remove saved login',
-	},
-	signInButton: {
-		id: 'minecraft-account.third-party-modal.sign-in',
-		defaultMessage: 'Sign in',
-	},
-	selectProfileTitle: {
-		id: 'minecraft-account.third-party-profile.title',
-		defaultMessage: 'Select a profile',
-	},
-	selectProfileDescription: {
-		id: 'minecraft-account.third-party-profile.description',
-		defaultMessage: 'Choose the Minecraft profile to use with this account.',
 	},
 	offlineAccount: {
 		id: 'minecraft-account.offline-account',
