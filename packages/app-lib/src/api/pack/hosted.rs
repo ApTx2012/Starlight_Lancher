@@ -12,14 +12,17 @@ use crate::{
         download_to_path,
     },
 };
-use futures::FutureExt;
+use futures::{FutureExt, StreamExt, stream};
 use progress::PackProgress;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::{
     collections::{BTreeMap, HashSet},
     path::{Path, PathBuf},
-    sync::{Arc, LazyLock},
+    sync::{
+        Arc, LazyLock,
+        atomic::{AtomicUsize, Ordering},
+    },
 };
 use tokio::{
     io::AsyncReadExt,
@@ -968,71 +971,117 @@ async fn synchronize_with_progress(
         .map(|(file, _, _)| file.size)
         .sum::<u64>();
     let total_files = pending_downloads.len();
-    let mut completed_bytes = 0;
-    for (index, (file, url, object)) in
-        pending_downloads.into_values().enumerate()
-    {
-        ensure_session(&auth).await?;
-        let url = if let Some(external) = &file.external {
-            match crate::api::curseforge::get_file(
-                external.project_id,
-                external.file_id,
-            )
+    if total_files > 0 {
+        let concurrency = crate::api::settings::get()
             .await?
-            .download_url
-            {
-                Some(url) => url,
-                None => crate::api::curseforge::get_download_url(
-                    external.project_id,
-                    external.file_id,
-                )
-                .await?
-                .ok_or_else(|| {
-                    invalid("This CurseForge file requires a manual download")
-                })?,
-            }
-        } else {
-            url
-        };
-        let label =
-            format!("文件 {}/{} · {}", index + 1, total_files, file.path);
-        progress.download(completed_bytes, total_bytes, &label, index == 0);
-        let mut transferred = 0;
-        let mut on_progress = |received: u64, _total: u64| {
-            transferred = received.min(file.size);
-            progress.download(
-                completed_bytes + transferred,
-                total_bytes,
-                &label,
-                false,
-            );
-            futures::future::ready(Ok(())).boxed()
-        };
-        let mut request = DownloadRequest::new(&url, ResourceClass::Modpack)
-            .with_integrity(Integrity {
-                size: Some(file.size),
-                sha256: Some(file.sha256),
-                ..Default::default()
-            });
-        if url.starts_with(&format!("{API}/files/")) {
-            request = request.with_header("Authorization", auth.clone());
-        }
-        download_to_path(
-            request,
-            &object,
-            &state.fetch_semaphore,
-            &state.pool,
-            Some(&mut on_progress),
-        )
-        .await?;
-        completed_bytes += file.size;
-        downloaded += file.size;
+            .effective_max_concurrent_downloads()
+            .clamp(1, 16);
+        let current = std::sync::Mutex::new(BTreeMap::<String, u64>::new());
+        let completed = AtomicUsize::new(0);
         progress.download(
-            completed_bytes,
+            0,
             total_bytes,
-            &label,
-            index + 1 == total_files,
+            &format!("文件 0/{total_files}"),
+            true,
         );
+        let results = stream::iter(pending_downloads.into_values().map(
+            |(file, url, object)| {
+                let current = &current;
+                let completed = &completed;
+                let state = &state;
+                let auth = &auth;
+                async move {
+                    ensure_session(auth).await?;
+                    let url = if let Some(external) = &file.external {
+                        match crate::api::curseforge::get_file(
+                            external.project_id,
+                            external.file_id,
+                        )
+                        .await?
+                        .download_url
+                        {
+                            Some(url) => url,
+                            None => crate::api::curseforge::get_download_url(
+                                external.project_id,
+                                external.file_id,
+                            )
+                            .await?
+                            .ok_or_else(|| {
+                                invalid(
+                                    "This CurseForge file requires a manual download",
+                                )
+                            })?,
+                        }
+                    } else {
+                        url
+                    };
+                    let file_size = file.size;
+                    let file_path = file.path.clone();
+                    let progress_key = file.path.clone();
+                    let mut on_progress = |received: u64, _total: u64| {
+                        let mut bytes = current
+                            .lock()
+                            .unwrap_or_else(|poisoned| poisoned.into_inner());
+                        bytes.insert(progress_key.clone(), received.min(file_size));
+                        progress.download(
+                            bytes.values().sum(),
+                            total_bytes,
+                            &format!(
+                                "文件 {}/{} · {}",
+                                completed.load(Ordering::Relaxed),
+                                total_files,
+                                file_path
+                            ),
+                            false,
+                        );
+                        futures::future::ready(Ok(())).boxed()
+                    };
+                    let mut request =
+                        DownloadRequest::new(&url, ResourceClass::Modpack)
+                            .with_integrity(Integrity {
+                                size: Some(file_size),
+                                sha256: Some(file.sha256),
+                                ..Default::default()
+                            });
+                    if url.starts_with(&format!("{API}/files/")) {
+                        request = request
+                            .with_header("Authorization", auth.clone());
+                    }
+                    download_to_path(
+                        request,
+                        &object,
+                        &state.fetch_semaphore,
+                        &state.pool,
+                        Some(&mut on_progress),
+                    )
+                    .await?;
+                    let completed_files =
+                        completed.fetch_add(1, Ordering::Relaxed) + 1;
+                    let completed_bytes = {
+                        let mut bytes = current
+                            .lock()
+                            .unwrap_or_else(|poisoned| poisoned.into_inner());
+                        bytes.insert(progress_key, file_size);
+                        bytes.values().sum()
+                    };
+                    progress.download(
+                        completed_bytes,
+                        total_bytes,
+                        &format!(
+                            "文件 {completed_files}/{total_files} · {file_path}"
+                        ),
+                        completed_files == total_files,
+                    );
+                    Ok::<_, crate::Error>(file_size)
+                }
+            },
+        ))
+        .buffer_unordered(concurrency)
+        .collect::<Vec<_>>()
+        .await;
+        downloaded += results.into_iter().try_fold(0, |sum, result| {
+            Ok::<u64, crate::Error>(sum + result?)
+        })?;
     }
     ensure_session(&auth).await?;
     downloaded += tagged::download(

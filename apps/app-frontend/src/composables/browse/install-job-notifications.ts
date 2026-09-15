@@ -21,6 +21,7 @@ import {
 	type InstallPhaseId,
 	type InstallProgress,
 } from '@/helpers/install'
+import { createInstallJobNotificationFilter } from '@/helpers/install-job-notification-visibility'
 import { effectiveInstallProgress, hasDeterminateInstallProgress } from '@/helpers/install-progress'
 import { get_many as getInstances } from '@/helpers/instance'
 import type { DownloadManager } from '@/providers/download-manager'
@@ -258,15 +259,6 @@ const failureSummaryMessages = defineMessages({
 	},
 })
 
-const visibleJobStatuses = new Set<InstallJobStatus>([
-	'queued',
-	'running',
-	'canceling',
-	'waiting_for_user',
-	'failed',
-	'interrupted',
-])
-const retainedJobStatuses = new Set<InstallJobStatus>(['succeeded', 'canceled'])
 const activeJobStatuses = new Set<InstallJobStatus>([
 	'queued',
 	'running',
@@ -724,6 +716,8 @@ export async function useInstallJobNotifications(opts: {
 		return buttons
 	}
 
+	const filterVisibleJobs = createInstallJobNotificationFilter(opts.manager.jobs.value)
+
 	function setJobs(nextJobs: InstallJobSnapshot[]) {
 		for (const job of nextJobs) {
 			if (!jobOrder.has(job.job_id)) {
@@ -731,12 +725,7 @@ export async function useInstallJobNotifications(opts: {
 			}
 		}
 
-		const currentJobIds = new Set(jobs.value.map((job) => job.job_id))
-		const visibleJobs = nextJobs.filter(
-			(job) =>
-				visibleJobStatuses.has(job.status) ||
-				(retainedJobStatuses.has(job.status) && currentJobIds.has(job.job_id)),
-		)
+		const visibleJobs = filterVisibleJobs(nextJobs)
 		syncProgressSnapshots(visibleJobs)
 
 		jobs.value = visibleJobs.sort(

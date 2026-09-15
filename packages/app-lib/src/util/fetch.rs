@@ -917,6 +917,32 @@ fn official_route(url: &str, resource: ResourceClass) -> DownloadRoute {
     route
 }
 
+fn add_starlight_direct_recovery_route(routes: &mut Vec<DownloadRoute>) {
+    let recovery_routes = routes
+        .iter()
+        .filter(|route| {
+            route.proxy == ProxyPolicy::System
+                && Url::parse(&route.url).ok().is_some_and(|url| {
+                    url.host_str() == Some("skin.starlight.cool")
+                        && url.path().starts_with("/starlight/mod/packs/files/")
+                })
+        })
+        .cloned()
+        .map(|mut route| {
+            route.proxy = ProxyPolicy::Direct;
+            route
+        })
+        .collect::<Vec<_>>();
+
+    for recovery in recovery_routes {
+        if !routes.iter().any(|route| {
+            route.url == recovery.url && route.proxy == recovery.proxy
+        }) {
+            routes.push(recovery);
+        }
+    }
+}
+
 fn is_official_route(route: &DownloadRoute) -> bool {
     !route.is_mirror && route.source == DownloadRouteSource::Official
 }
@@ -1375,8 +1401,18 @@ fn reqwest_client_builder() -> reqwest::ClientBuilder {
         .user_agent(crate::launcher_user_agent())
 }
 
+fn disable_file_content_decoding(
+    builder: reqwest::ClientBuilder,
+) -> reqwest::ClientBuilder {
+    // File endpoints occasionally arrive through proxies or CDNs with a stale
+    // Content-Encoding header even though the body already contains the raw
+    // file. Keep transport bytes untouched; download integrity validation is
+    // the authoritative check and every request explicitly asks for identity.
+    builder.no_gzip().no_brotli().no_deflate().no_zstd()
+}
+
 fn file_reqwest_client_builder() -> reqwest::ClientBuilder {
-    reqwest_client_builder()
+    disable_file_content_decoding(reqwest_client_builder())
         .http2_adaptive_window(true)
         .http2_keep_alive_interval(Some(time::Duration::from_secs(15)))
 }
@@ -1406,7 +1442,7 @@ pub async fn configured_client() -> crate::Result<reqwest::Client> {
 }
 
 fn http1_file_reqwest_client_builder() -> reqwest::ClientBuilder {
-    reqwest_client_builder().http1_only()
+    disable_file_content_decoding(reqwest_client_builder()).http1_only()
 }
 
 pub static INSECURE_REQWEST_CLIENT: LazyLock<reqwest::Client> =
@@ -3341,6 +3377,21 @@ fn byte_range_header_value(
     })
 }
 
+fn apply_file_transport_headers(
+    mut request: reqwest::RequestBuilder,
+    range_start: Option<u64>,
+    range_end: Option<u64>,
+) -> reqwest::RequestBuilder {
+    // Downloaded files are validated against their unencoded size and hash.
+    // Request the original bytes from the very first attempt so a proxy or CDN
+    // cannot leave reqwest retrying a broken compressed response body.
+    request = request.header(header::ACCEPT_ENCODING, "identity");
+    if let Some(range) = byte_range_header_value(range_start, range_end) {
+        request = request.header(header::RANGE, range);
+    }
+    request
+}
+
 async fn send_path_request_with_clients(
     route: &DownloadRoute,
     custom_header: Option<&(String, String)>,
@@ -3383,7 +3434,11 @@ async fn send_path_request_with_clients(
         };
         let same_as_original = same_origin(&original, &current);
         let allow_sensitive = route.allow_sensitive_headers && same_as_original;
-        let mut request = client.get(current.clone());
+        let mut request = apply_file_transport_headers(
+            client.get(current.clone()),
+            range_start,
+            range_end,
+        );
         if let Some((name, value)) = custom_header
             && (allow_sensitive || !is_sensitive_header(name))
             && (!name.eq_ignore_ascii_case("x-api-key")
@@ -3393,11 +3448,6 @@ async fn send_path_request_with_clients(
         }
         if allow_sensitive && let Some(credentials) = credentials {
             request = request.header("Authorization", &credentials.session);
-        }
-        if let Some(range) = byte_range_header_value(range_start, range_end) {
-            request = request
-                .header(header::RANGE, range)
-                .header(header::ACCEPT_ENCODING, "identity");
         }
         let response = match request.send().await {
             Ok(response) => response,
@@ -5522,6 +5572,13 @@ async fn download_to_path_inner(
     if routes.is_empty() {
         routes.push(official_route(&request.url, request.resource));
     }
+    // A local/system proxy can successfully return many small authenticated
+    // objects and then truncate a later response body. Add a same-origin direct
+    // transport and let observed route health choose which transport goes
+    // first. Sensitive headers remain constrained to the original origin by
+    // send_path_request_with_clients.
+    add_starlight_direct_recovery_route(&mut routes);
+    order_auto_routes(&mut routes, request.resource, false);
     let part_path = suffixed_path(destination, ".part");
 
     if !request.integrity.is_empty()
@@ -6427,7 +6484,7 @@ async fn download_to_path_inner(
                 let mut alternate_probe: Option<RouteProbeFuture<'_>> = None;
                 let mut alternate_probe_finished = false;
                 let mut confirmed_switch = None;
-                let mut transfer_error: Option<crate::Error> = None;
+                let mut transfer_error: Option<(crate::Error, bool)> = None;
                 loop {
                     tokio::select! {
                         item = stream.next() => {
@@ -6437,13 +6494,15 @@ async fn download_to_path_inner(
                             let chunk = match item {
                                 Ok(chunk) => chunk,
                                 Err(error) => {
+                                    let decode_failure = error.is_decode();
                                     if is_h2_protocol_failure(&error)
                                         && let Some(authority) =
                                             url_authority(&final_url)
                                     {
                                         record_authority_h2_failure(&authority);
                                     }
-                                    transfer_error = Some(error.into());
+                                    transfer_error =
+                                        Some((error.into(), decode_failure));
                                     break;
                                 }
                             };
@@ -6519,9 +6578,14 @@ async fn download_to_path_inner(
                                     idle_ms = elapsed.as_millis(),
                                     "Download body idle deadline exceeded"
                                 );
-                                transfer_error = Some(crate::ErrorKind::NetworkError(
-                                    format!("download body idle for {}", elapsed.as_secs()),
-                                ).into());
+                                transfer_error = Some((
+                                    crate::ErrorKind::NetworkError(format!(
+                                        "download body idle for {}",
+                                        elapsed.as_secs()
+                                    ))
+                                    .into(),
+                                    false,
+                                ));
                                 break;
                             }
                             if matches!(
@@ -6580,7 +6644,7 @@ async fn download_to_path_inner(
                     break;
                 }
 
-                if let Some(error) = transfer_error {
+                if let Some((error, decode_failure)) = transfer_error {
                     record_route_failure(route, request.resource, None);
                     record_native_transfer_failure(route, None);
                     preserve_or_remove_partial(
@@ -6589,12 +6653,22 @@ async fn download_to_path_inner(
                         any_route_can_resume(&routes),
                     )
                     .await?;
+                    if decode_failure && attempts < file_attempt_budget {
+                        busted_for_route = Some((
+                            route_index,
+                            cache_busted_download_url(&route.url, attempts),
+                        ));
+                    }
                     record_download_attempt_failure(
                         &mut attempt_history,
                         route,
                         attempts,
                         &error,
-                        "resume_or_switch",
+                        if decode_failure {
+                            "cache_bust_and_resume_or_switch"
+                        } else {
+                            "resume_or_switch"
+                        },
                         Some(status),
                         remote_addr,
                         Some(http_version),
@@ -8586,6 +8660,96 @@ mod tests {
         let redirected = byte_range_header_value(Some(1024), Some(2047));
         assert_eq!(original.as_deref(), Some("bytes=1024-2047"));
         assert_eq!(redirected, original);
+    }
+
+    #[test]
+    fn file_requests_disable_content_encoding_from_the_first_attempt() {
+        let client = reqwest::Client::new();
+        let full = apply_file_transport_headers(
+            client.get("https://example.com/file.jar"),
+            None,
+            None,
+        )
+        .build()
+        .unwrap();
+        assert_eq!(
+            full.headers().get(header::ACCEPT_ENCODING).unwrap(),
+            "identity"
+        );
+        assert!(!full.headers().contains_key(header::RANGE));
+
+        let resumed = apply_file_transport_headers(
+            client.get("https://example.com/file.jar"),
+            Some(1024),
+            None,
+        )
+        .build()
+        .unwrap();
+        assert_eq!(
+            resumed.headers().get(header::ACCEPT_ENCODING).unwrap(),
+            "identity"
+        );
+        assert_eq!(
+            resumed.headers().get(header::RANGE).unwrap(),
+            "bytes=1024-"
+        );
+    }
+
+    #[test]
+    fn starlight_hosted_files_have_a_direct_recovery_route() {
+        let mut routes = vec![official_route(
+            "https://skin.starlight.cool/starlight/mod/packs/files/release/hash",
+            ResourceClass::Modpack,
+        )];
+
+        add_starlight_direct_recovery_route(&mut routes);
+
+        assert_eq!(routes.len(), 2);
+        assert_eq!(routes[0].proxy, ProxyPolicy::System);
+        assert_eq!(routes[1].proxy, ProxyPolicy::Direct);
+        assert_eq!(routes[0].url, routes[1].url);
+        assert!(routes[1].allow_sensitive_headers);
+    }
+
+    #[test]
+    fn unrelated_downloads_do_not_bypass_the_configured_proxy() {
+        let mut routes = vec![official_route(
+            "https://libraries.minecraft.net/example.jar",
+            ResourceClass::MinecraftLibrary,
+        )];
+
+        add_starlight_direct_recovery_route(&mut routes);
+
+        assert_eq!(routes.len(), 1);
+        assert_eq!(routes[0].proxy, ProxyPolicy::System);
+    }
+
+    #[tokio::test]
+    async fn file_client_ignores_a_stale_content_encoding_header() {
+        let body = b"raw jar bytes".to_vec();
+        let (url, requests, server) = spawn_http_fixture(
+            "200 OK",
+            "Content-Encoding: gzip\r\n",
+            body.clone(),
+            Duration::ZERO,
+        )
+        .await;
+        let route = direct_test_route(url, DownloadRouteSource::Official);
+        let client = file_reqwest_client_builder()
+            .no_proxy()
+            .redirect(reqwest::redirect::Policy::none())
+            .build()
+            .unwrap();
+
+        let (response, _) = send_path_request_with_clients(
+            &route, None, None, None, None, &client, &client, None,
+        )
+        .await
+        .unwrap();
+
+        assert_eq!(response.bytes().await.unwrap().as_ref(), body.as_slice());
+        assert_eq!(requests.load(Ordering::Relaxed), 1);
+        server.abort();
     }
 
     #[tokio::test]
