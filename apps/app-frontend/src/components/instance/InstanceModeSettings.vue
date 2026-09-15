@@ -11,7 +11,10 @@ const query = useInstanceMode(() => props.instanceId)
 const save = useSetInstanceMode()
 const { formatMessage } = useVIntl()
 const messages = defineMessages({
-	saving: { id: 'app.instance-mode.saving', defaultMessage: 'Saving instance type…' },
+	saving: {
+		id: 'app.instance-mode.saving',
+		defaultMessage: 'Applying instance type and installing the server modpack when needed…',
+	},
 	loading: { id: 'app.instance-mode.loading', defaultMessage: 'Loading instance type…' },
 	retry: { id: 'app.instance-mode.retry', defaultMessage: 'Retry' },
 })

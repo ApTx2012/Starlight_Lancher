@@ -5626,6 +5626,7 @@ async fn download_to_path_inner(
             destination,
             &part_path,
             h2_policy,
+            progress.as_deref_mut(),
         )
         .await
         {

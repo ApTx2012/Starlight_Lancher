@@ -1,11 +1,11 @@
-
 <script setup lang="ts">
 import { DownloadIcon } from '@modrinth/assets'
-import { defineMessages, useVIntl } from '@modrinth/ui'
+import { defineMessages, ProgressBar, useVIntl } from '@modrinth/ui'
 import { computed, onUnmounted, ref } from 'vue'
 
 import { loading_listener } from '@/helpers/events'
 import type { LoadingBar } from '@/helpers/state'
+import { progress_bars_list } from '@/helpers/state'
 
 const { formatMessage } = useVIntl()
 
@@ -15,6 +15,7 @@ const messages = defineMessages({
 })
 
 interface LoadingEventPayload {
+	total?: number | null
 	event: LoadingBar['bar_type']
 	loader_uuid: string
 	fraction: number | null
@@ -22,6 +23,7 @@ interface LoadingEventPayload {
 }
 
 interface LaunchProgressItem {
+	waiting: boolean
 	key: string
 	message: string
 	fraction: number | null
@@ -29,6 +31,7 @@ interface LaunchProgressItem {
 
 // 启动相关（以及准备）阶段会发的 loading 类型；安装/下载也一并显示，便于用户看到进度
 const LAUNCH_BAR_TYPES = new Set([
+	'hosted_pack_sync',
 	'minecraft_download',
 	'instance_update',
 	'zip_extract',
@@ -54,6 +57,7 @@ function applyEvent(payload: LoadingEventPayload) {
 	if (!isVisible(payload.event)) return
 
 	activeMap.set(payload.loader_uuid, {
+		waiting: payload.total === 0,
 		key: payload.loader_uuid,
 		message: payload.message,
 		fraction: payload.fraction,
@@ -64,13 +68,28 @@ function applyEvent(payload: LoadingEventPayload) {
 const hasProgress = computed(() => progressItems.value.length > 0)
 
 function percent(item: LaunchProgressItem): string {
-	if (item.fraction == null || !Number.isFinite(item.fraction)) return ''
+	if (item.waiting || item.fraction == null || !Number.isFinite(item.fraction)) return ''
 	return `${Math.round(Math.max(0, Math.min(1, item.fraction)) * 100)}%`
 }
 
+let initializing = true
+const buffered: LoadingEventPayload[] = []
 const unlistenLoading = await loading_listener((payload: LoadingEventPayload) => {
-	applyEvent(payload)
+	if (initializing) buffered.push(payload)
+	else applyEvent(payload)
 })
+const bars = await progress_bars_list().catch(() => ({}))
+for (const bar of Object.values(bars)) {
+	applyEvent({
+		event: bar.bar_type,
+		loader_uuid: String(bar.loading_bar_uuid),
+		fraction: bar.total ? (bar.current ?? 0) / bar.total : 0,
+		total: bar.total,
+		message: bar.message ?? '',
+	})
+}
+initializing = false
+for (const payload of buffered) applyEvent(payload)
 
 onUnmounted(() => {
 	unlistenLoading?.()
@@ -96,12 +115,7 @@ onUnmounted(() => {
 						{{ percent(item) }}
 					</span>
 				</div>
-				<div class="h-1 w-full overflow-hidden rounded-full bg-surface-4">
-					<div
-						class="h-full rounded-full bg-brand transition-[width] duration-200"
-						:style="{ width: percent(item) || '100%' }"
-					/>
-				</div>
+				<ProgressBar :progress="item.fraction ?? 0" :waiting="item.waiting" full-width />
 			</li>
 		</ul>
 	</section>

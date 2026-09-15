@@ -1,20 +1,33 @@
 {
+  "app.hosted-mods.title": { "message": "Updating server Mods" },
+  "app.hosted-mods.description": { "message": "The game starts after all required updates have been installed." },
+  "app.hosted-mods.complete": { "message": "Downloaded" },
+  "app.hosted-mods.downloads": { "message": "View downloads" },
+  "app.hosted-mods.close": { "message": "Close" },
+  "app.hosted-packs.progress.retry": { "message": "Return to the instance to retry" },
+  "app.hosted-packs.progress.preparing": { "message": "Preparing modpack installation…" },
+  "app.hosted-packs.progress.downloads": { "message": "View downloads" },
+  "app.hosted-packs.open-instance": { "message": "Open installed instance" },
+  "app.hosted-packs.retry-install": { "message": "Retry installation" },
+  "app.hosted-packs.auto-installing": { "message": "Downloading and installing the server modpack…" },
+  "app.hosted-packs.auto-description": { "message": "Download and automatically install the modpack from StarLight to play on the StarLight server with one click." },
+  "app.hosted-packs.auto-install": { "message": "Install the StarLight modpack" },
   "app.onboarding.instance-mode.title": { "message": "Choose your instance type" },
-  "app.onboarding.instance-mode.description": { "message": "Choose StarLight to play on the StarLight server and automatically sync its approved updates. Local instances skip StarLight sync, start faster, and let you use your own modpacks for other servers or single-player. You can change this later in instance settings." },
+  "app.onboarding.instance-mode.description": { "message": "StarLight automatically installs the administrator-selected modpack and versions, then checks and completes updates before every launch. A StarLight login is required. Choose Local to select your own versions and modpacks for other servers or single-player." },
   "app.instance-mode.title": { "message": "Instance type" },
   "app.instance-mode.starlight": { "message": "StarLight instance" },
   "app.instance-mode.local": { "message": "Local instance" },
-  "app.instance-mode.starlight-description": { "message": "Automatically syncs changes published by the StarLight server. Required for playing on StarLight. Select and install the official modpack in Mod management before your first launch." },
+  "app.instance-mode.starlight-description": { "message": "Required for playing on StarLight. Automatically installs the server-selected modpack, Minecraft version, and loader. Every launch requires a StarLight login and checks for updates before starting." },
   "app.instance-mode.local-description": { "message": "Does not sync StarLight server changes. Skips sync checks for faster startup and lets you choose your own modpacks. Best for third-party servers and personal single-player worlds." },
-  "app.instance-mode.saving": { "message": "Saving instance type…" },
+  "app.instance-mode.saving": { "message": "Applying instance type and installing the server modpack when needed…" },
   "app.instance-mode.loading": { "message": "Loading instance type…" },
   "app.instance-mode.retry": { "message": "Retry" },
   "app.instance-mode.local-packs-title": { "message": "Local modpacks" },
   "app.instance-mode.local-packs": { "message": "Choose any modpack to install as a local instance. Existing files and worlds are kept when you switch to Local; StarLight changes will no longer be synchronized." },
   "app.instance-mode.browse": { "message": "Browse modpacks" },
   "app.instance-mode.import": { "message": "Import as a local instance" },
-  "app.hosted-packs.title": {"message": "Published modpacks"},
-  "app.hosted-packs.description": {"message": "Install an approved modpack into this instance. Future online launches automatically download changed files. Use a separate empty instance for each pack; saves and personal settings are preserved."},
+  "app.hosted-packs.title": { "message": "Server-managed modpack" },
+  "app.hosted-packs.description": { "message": "The administrator selects this modpack and its versions. Every launch checks for updates and downloads changes before starting. A valid StarLight login and network connection are required." },
   "app.hosted-packs.refresh": {"message": "Refresh"},
   "app.hosted-packs.loading": {"message": "Loading published modpacks…"},
   "app.hosted-packs.bound": {"message": "Installed: {name} · {version}"},
@@ -23,7 +36,7 @@
   "app.hosted-packs.preserved": {"message": "Preserved {count} locally modified or personal files"},
   "app.hosted-packs.empty": {"message": "No modpacks have been approved for publication yet."},
   "app.hosted-packs.update": {"message": "Synchronize now"},
-  "app.hosted-packs.install": {"message": "Install and enable automatic sync"},
+  "app.hosted-packs.install": { "message": "Retry automatic installation" },
   "app.hosted-packs.management": {"message": "Content management"},
   "app.hosted-packs.mods": {"message": "Manage mods"},
   "app.hosted-packs.packs": {"message": "Manage modpacks"},
@@ -5721,12 +5734,6 @@
   "app.notification.warning": {
     "message": "Warning"
   },
-  "app.onboarding.account.description": {
-    "message": "When you are ready, sign in, switch accounts, or open your profile here. No deadline."
-  },
-  "app.onboarding.account.title": {
-    "message": "Accounts, on your schedule"
-  },
   "app.onboarding.action.click-create": {
     "message": "Click Create new instance to continue"
   },
@@ -5763,32 +5770,11 @@
   "app.onboarding.action.finish-area": {
     "message": "Click anywhere and you are all set"
   },
-  "app.onboarding.action.open-gradient-text": {
-    "message": "Open Gradient text generator to continue"
-  },
-  "app.onboarding.action.open-recipe-generator": {
-    "message": "Open Recipe generator to continue"
-  },
-  "app.onboarding.action.open-schematic-workshop": {
-    "message": "Open Schematic workshop to continue"
-  },
-  "app.onboarding.action.open-seed-map": {
-    "message": "Open Seed map to continue"
-  },
-  "app.onboarding.action.return-lab": {
-    "message": "Click Lab to continue"
-  },
   "app.onboarding.action.skip": {
     "message": "Leave the tour"
   },
   "app.onboarding.action.start": {
     "message": "Take the tour"
-  },
-  "app.onboarding.ai.description": {
-    "message": "Connect text-model providers once, choose the models you want available, or switch every AI feature off in one place."
-  },
-  "app.onboarding.ai.title": {
-    "message": "Bring your own AI provider"
   },
   "app.onboarding.appearance.description": {
     "message": "Theme, accent, backgrounds, and window effects all live here. Make the launcher feel familiar."
@@ -5868,23 +5854,11 @@
   "app.onboarding.favorites.title": {
     "message": "Keep a short list"
   },
-  "app.onboarding.home-customize.description": {
-    "message": "Use the bottom-right edit control to add, resize, and configure widgets. While editing, switch between an automatically packed grid and a free grid that preserves empty cells."
-  },
-  "app.onboarding.home-customize.title": {
-    "message": "Arrange it your way"
-  },
   "app.onboarding.home-layout.description": {
-    "message": "Use the bottom-right control to switch between Information Home and Minimal Home. Widget editing stays with Information Home."
+    "message": "Use the bottom-right control to switch between the StarLight skin site home and the focused instance launcher."
   },
   "app.onboarding.home-layout.title": {
-    "message": "Change the amount of detail"
-  },
-  "app.onboarding.home-widgets.description": {
-    "message": "Information Home is built from widgets for recent activity, playtime, instances, worlds, and servers. The grid reflows as the window or account sidebar changes."
-  },
-  "app.onboarding.home-widgets.title": {
-    "message": "Your Home, your layout"
+    "message": "Switch your home"
   },
   "app.onboarding.instance-actions.description": {
     "message": "Launch, stop, repair, configure, export, or open the instance from its header."
@@ -5898,56 +5872,20 @@
   "app.onboarding.instance-tabs.title": {
     "message": "The rest of the workshop"
   },
-  "app.onboarding.java.description": {
-    "message": "The Java runtimes that start Minecraft live here. Technical, but well-behaved."
-  },
-  "app.onboarding.java.title": {
-    "message": "Java, under the hood"
-  },
-  "app.onboarding.lab-editor.description": {
-    "message": "Edit text, choose colors, preview the result, and copy the format your Minecraft setup expects."
-  },
-  "app.onboarding.lab-editor.title": {
-    "message": "Build and copy in one place"
-  },
-  "app.onboarding.lab-recipe-generator.description": {
-    "message": "Pick a Java version, fill the recipe slots, and copy or export the JSON locally."
-  },
-  "app.onboarding.lab-recipe-generator.title": {
-    "message": "Craft data pack recipes"
-  },
-  "app.onboarding.lab-schematic.description": {
-    "message": "Open a local .litematic or .schem file, or choose one from an installed instance. The 3D workspace keeps viewing, measurement, layer controls, materials, and local edits together."
-  },
-  "app.onboarding.lab-schematic.title": {
-    "message": "Inspect a build before placing it"
-  },
-  "app.onboarding.lab-seed-map.description": {
-    "message": "Enter a seed or load one from an instance, then inspect biomes, structures, and ore layers on the local map."
-  },
-  "app.onboarding.lab-seed-map.title": {
-    "message": "Find a world before you load it"
-  },
   "app.onboarding.lab-tools.description": {
-    "message": "Create formatted text and recipe data packs, explore Java worlds, and inspect schematic builds without leaving the launcher."
+    "message": "Create and edit skins, generate formatted text and recipes, explore seeds, inspect schematics, and translate mods locally."
   },
   "app.onboarding.lab-tools.title": {
     "message": "Local tools for Minecraft"
   },
   "app.onboarding.lab.description": {
-    "message": "The Lab keeps local Minecraft tools inside the launcher, without another website or account."
+    "message": "The Lab keeps Minecraft creation, world, and maintenance tools inside the launcher."
   },
   "app.onboarding.lab.title": {
     "message": "Useful tools, built in"
   },
-  "app.onboarding.language.description": {
-    "message": "Pick the launcher language and manage translations. No decoder ring required."
-  },
-  "app.onboarding.language.title": {
-    "message": "Speak your language"
-  },
   "app.onboarding.library-page.description": {
-    "message": "Filter by modpack, server, or custom setup, then open any instance to manage it."
+    "message": "Switch between all instances, modpacks, and custom setups, then open any instance to manage it."
   },
   "app.onboarding.library-page.title": {
     "message": "Everything, in its place"
@@ -5974,28 +5912,16 @@
     "message": "Make it yours"
   },
   "app.onboarding.skins-page.description": {
-    "message": "Add, preview, sort, and apply skins here. No pressure to sign in just yet."
+    "message": "Select a profile, preview its available skins, and apply changes when that account supports skin management."
   },
   "app.onboarding.skins-page.title": {
     "message": "Your skin drawer"
   },
   "app.onboarding.skins.description": {
-    "message": "Keep your Minecraft skins together. Signing in can wait until you feel like it."
+    "message": "Choose a skin site player or Minecraft account, then preview and apply the skins available to that profile."
   },
   "app.onboarding.skins.title": {
     "message": "A new look, maybe"
-  },
-  "app.onboarding.translation.description": {
-    "message": "Translate Modrinth project titles, summaries, and descriptions while you browse. Keep the original, show both, or make the translation the main character."
-  },
-  "app.onboarding.translation.title": {
-    "message": "Translation, the Starlight way"
-  },
-  "app.onboarding.updates.description": {
-    "message": "Choose when Starlight checks for updates and whether it installs them for you."
-  },
-  "app.onboarding.updates.title": {
-    "message": "Stay in the loop"
   },
   "app.onboarding.welcome.description": {
     "message": "Your instances, content, worlds, and downloads now have one home. Let us take a quick lap before you settle in."

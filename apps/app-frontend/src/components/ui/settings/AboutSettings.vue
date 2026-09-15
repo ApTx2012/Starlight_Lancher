@@ -5,7 +5,6 @@ import { getVersion } from '@tauri-apps/api/app'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import { defineAsyncComponent, inject, nextTick, onScopeDispose, ref, shallowRef } from 'vue'
 
-import ColorMineAvatar from '@/components/ui/easteregg/color-mine/ColorMineAvatar.vue'
 import EasterEggContributorsModal from '@/components/ui/easteregg/EasterEggContributorsModal.vue'
 import EasterEggGameModal from '@/components/ui/easteregg/EasterEggGameModal.vue'
 import { AxolotlBrandConfig } from '@/config'
@@ -17,7 +16,7 @@ import { type AboutMemberExperience, getAboutMemberExperience } from './about-me
 const { formatMessage } = useVIntl()
 const version = await getVersion()
 const experienceHost = ref<HTMLElement>()
-const activeMemberExperience = shallowRef<AboutMemberExperience>()
+const activeMemberExperience = shallowRef<Extract<AboutMemberExperience, { kind: 'scene' }>>()
 const pressingMemberName = ref<string>()
 let longPressTimer: number | undefined
 let pressStart = { x: 0, y: 0 }
@@ -41,9 +40,13 @@ function startMemberLongPress(member: TeamMember, event: PointerEvent) {
 	pressStart = { x: event.clientX, y: event.clientY }
 	pressingMemberName.value = member.name
 	longPressTimer = window.setTimeout(async () => {
-		activeMemberExperience.value = experience
 		suppressNextMemberClick = true
 		cancelMemberLongPress()
+		if (experience.kind === 'color-mine') {
+			openColorMine()
+			return
+		}
+		activeMemberExperience.value = experience
 		await nextTick()
 		experienceHost.value?.scrollIntoView({ behavior: 'smooth', block: 'center' })
 	}, experience.longPressDuration)
@@ -300,56 +303,37 @@ const messages = defineMessages({
 				{{ formatMessage(messages.developmentTeam) }}
 			</h3>
 			<div class="grid gap-3 sm:grid-cols-2">
-				<template v-for="member in teamMembers" :key="member.name">
-					<div
-						v-if="member.name === 'Disy920'"
-						class="flex min-w-0 items-center gap-3 rounded-xl bg-surface-4 p-3 transition-colors hover:bg-surface-5"
-					>
-						<ColorMineAvatar
-							:src="member.avatarUrl"
-							:name="member.name"
-							:href="member.url"
-							@activate="openColorMine"
-						/>
-						<a
-							:href="member.url"
-							target="_blank"
-							rel="noopener noreferrer"
-							class="flex min-w-0 flex-1 items-center gap-3"
-						>
-							<span class="min-w-0 flex-1 truncate font-semibold text-contrast">{{
-								member.name
-							}}</span>
-							<ExternalIcon v-if="member.url" class="size-4 shrink-0 text-secondary" />
-						</a>
-					</div>
-					<a
-						v-else
-						:href="member.url ?? undefined"
-						target="_blank"
-						rel="noopener noreferrer"
-						class="flex min-w-0 items-center gap-3 rounded-xl bg-surface-4 p-3 transition-colors hover:bg-surface-5"
-						@pointerdown="startMemberLongPress(member, $event)"
-						@pointermove="moveMemberLongPress"
-						@pointerup="cancelMemberLongPress"
-						@pointerleave="cancelMemberLongPress"
-						@click="handleMemberClick"
-						@contextmenu="handleMemberContextMenu(member, $event)"
-					>
-						<Avatar
-							:src="member.avatarUrl"
-							:alt="member.name"
-							size="2.5rem"
-							circle
-							no-shadow
-							loading="lazy"
-						/>
-						<span class="min-w-0 flex-1 truncate font-semibold text-contrast">
-							{{ member.name }}
-						</span>
-						<ExternalIcon v-if="member.url" class="size-4 shrink-0 text-secondary" />
-					</a>
-				</template>
+				<a
+					v-for="member in teamMembers"
+					:key="member.name"
+					:href="member.url ?? undefined"
+					target="_blank"
+					rel="noopener noreferrer"
+					class="flex min-w-0 items-center gap-3 rounded-xl bg-surface-4 p-3 transition-colors hover:bg-surface-5"
+					:class="{ 'member-card-holding': pressingMemberName === member.name }"
+					@pointerdown="startMemberLongPress(member, $event)"
+					@pointermove="moveMemberLongPress"
+					@pointerup="cancelMemberLongPress"
+					@pointercancel="cancelMemberLongPress"
+					@pointerleave="cancelMemberLongPress"
+					@blur="cancelMemberLongPress"
+					@click="handleMemberClick"
+					@contextmenu="handleMemberContextMenu(member, $event)"
+					@dragstart.prevent
+				>
+					<Avatar
+						:src="member.avatarUrl"
+						:alt="member.name"
+						size="2.5rem"
+						circle
+						no-shadow
+						loading="lazy"
+					/>
+					<span class="min-w-0 flex-1 truncate font-semibold text-contrast">
+						{{ member.name }}
+					</span>
+					<ExternalIcon v-if="member.url" class="size-4 shrink-0 text-secondary" />
+				</a>
 			</div>
 		</section>
 		<details class="group pt-4 about-settings-details">
@@ -415,6 +399,11 @@ const messages = defineMessages({
 
 .about-panel-compact {
 	padding: var(--gap-lg);
+}
+
+.member-card-holding {
+	outline: 2px solid var(--color-brand);
+	outline-offset: 2px;
 }
 
 .about-page :deep(.rounded-xl.bg-surface-4) {

@@ -39,7 +39,7 @@
 					})
 				}}
 			</p>
-			<p v-if="syncing" role="status">{{ formatMessage(messages.syncing) }}</p>
+			<HostedPackProgress :instance-id="instanceId" :active="syncing" />
 			<div v-if="result" role="status" class="rounded-xl bg-bg-raised p-4">
 				<p>
 					{{
@@ -59,10 +59,9 @@
 					</ul>
 				</details>
 			</div>
-			<p v-if="!loading && ready && !catalog.length">{{ formatMessage(messages.empty) }}</p>
+
 			<article
-				v-for="pack in catalog"
-				:key="pack.packId"
+				v-if="pack"
 				class="flex flex-wrap items-center justify-between gap-4 rounded-xl bg-bg-raised p-4"
 			>
 				<div>
@@ -73,16 +72,7 @@
 					</p>
 				</div>
 				<ButtonStyled color="brand"
-					><button
-						type="button"
-						:disabled="
-							!ready ||
-							syncing ||
-							loading ||
-							(!!binding && binding.publication.packId !== pack.packId)
-						"
-						@click="sync(pack.packId)"
-					>
+					><button type="button" :disabled="!ready || syncing || loading" @click="sync">
 						{{ formatMessage(binding ? messages.update : messages.install) }}
 					</button></ButtonStyled
 				>
@@ -92,28 +82,29 @@
 </template>
 <script setup lang="ts">
 import { ButtonStyled, defineMessages, useVIntl } from '@modrinth/ui'
-import { inject, ref, watch } from 'vue'
+import { computed, inject, ref, watch } from 'vue'
+import { useHostedSync } from '@/composables/useHostedSync'
+import { injectDownloadManager } from '@/providers/download-manager'
 import { useRouter } from 'vue-router'
 
 import InstanceModeSettings from '@/components/instance/InstanceModeSettings.vue'
+import HostedPackProgress from '@/components/instance/HostedPackProgress.vue'
 import { useInstanceMode } from '@/composables/useInstanceMode'
 
 import {
 	type HostedBinding,
 	hostedBinding,
-	hostedCatalog,
+	hostedDefault,
 	type HostedPublication,
-	hostedSync,
-	type HostedSyncResult,
 } from '@/helpers/hosted-packs'
 const props = defineProps<{ instanceId: string }>()
 const modeQuery = useInstanceMode(() => props.instanceId)
 const router = useRouter()
-const showCreation = inject<
-	(options: { skipSetupType: boolean; initialMode: 'import'; instanceMode: 'local' }) => void
->('showCreationModalWithOptions')
+const showCreation = inject<(options: { skipSetupType: boolean; initialMode: 'import' }) => void>(
+	'showCreationModalWithOptions',
+)
 function importLocal() {
-	showCreation?.({ skipSetupType: true, initialMode: 'import', instanceMode: 'local' })
+	showCreation?.({ skipSetupType: true, initialMode: 'import' })
 }
 const { formatMessage } = useVIntl()
 const messages = defineMessages({
@@ -125,11 +116,11 @@ const messages = defineMessages({
 	},
 	browse: { id: 'app.instance-mode.browse', defaultMessage: 'Browse modpacks' },
 	importLocal: { id: 'app.instance-mode.import', defaultMessage: 'Import as a local instance' },
-	title: { id: 'app.hosted-packs.title', defaultMessage: 'Published modpacks' },
+	title: { id: 'app.hosted-packs.title', defaultMessage: 'Server-managed modpack' },
 	description: {
 		id: 'app.hosted-packs.description',
 		defaultMessage:
-			'Install an approved modpack into this instance. Future online launches automatically download changed files. Use a separate empty instance for each pack; saves and personal settings are preserved.',
+			'The administrator selects this modpack and its versions. Every launch checks for updates and downloads changes before starting. A valid StarLight login and network connection are required.',
 	},
 	refresh: { id: 'app.hosted-packs.refresh', defaultMessage: 'Refresh' },
 	loading: { id: 'app.hosted-packs.loading', defaultMessage: 'Loading published modpacks…' },
@@ -151,15 +142,27 @@ const messages = defineMessages({
 		defaultMessage: 'No modpacks have been approved for publication yet.',
 	},
 	update: { id: 'app.hosted-packs.update', defaultMessage: 'Synchronize now' },
-	install: { id: 'app.hosted-packs.install', defaultMessage: 'Install and enable automatic sync' },
+	install: { id: 'app.hosted-packs.install', defaultMessage: 'Retry automatic installation' },
 })
-const catalog = ref<HostedPublication[]>([])
+const pack = ref<HostedPublication | null>(null)
 const binding = ref<HostedBinding | null>(null)
-const result = ref<HostedSyncResult | null>(null)
+const task = useHostedSync(() => props.instanceId)
+const result = task.result
+const manager = injectDownloadManager()
 const loading = ref(false)
-const syncing = ref(false)
+const syncing = computed(
+	() =>
+		task.busy.value ||
+		manager.legacyDownloads.value.some(
+			(bar) =>
+				bar.bar_type?.type === 'hosted_pack_sync' &&
+				bar.bar_type.instance_id === props.instanceId &&
+				!bar.bar_type.error,
+		),
+)
 const ready = ref(false)
-const error = ref('')
+const loadError = ref('')
+const error = computed(() => loadError.value || task.error.value)
 let generation = 0
 async function load() {
 	if (modeQuery.data.value !== 'starlight') return
@@ -167,46 +170,36 @@ async function load() {
 	const instanceId = props.instanceId
 	loading.value = true
 	ready.value = false
-	error.value = ''
+	loadError.value = ''
 	try {
-		const [packs, installed] = await Promise.all([hostedCatalog(), hostedBinding(instanceId)])
+		const [official, installed] = await Promise.all([hostedDefault(), hostedBinding(instanceId)])
 		if (current !== generation) return
-		catalog.value = packs
+		pack.value = official
 		binding.value = installed
 		ready.value = true
 	} catch (cause) {
-		if (current === generation) error.value = String(cause)
+		if (current === generation) loadError.value = String(cause)
 	} finally {
 		if (current === generation) loading.value = false
 	}
 }
-async function sync(packId: string) {
+async function sync() {
 	if (syncing.value || !ready.value || modeQuery.data.value !== 'starlight') return
-	const instanceId = props.instanceId
-	syncing.value = true
-	error.value = ''
-	result.value = null
-	try {
-		const completed = await hostedSync(instanceId, packId)
-		if (props.instanceId !== instanceId) return
-		result.value = completed
-		await load()
-	} catch (cause) {
-		if (props.instanceId === instanceId) error.value = String(cause)
-	} finally {
-		syncing.value = false
-	}
+	loadError.value = ''
+	await task.sync()
 }
+watch(syncing, (busy, wasBusy) => {
+	if (!busy && wasBusy) void load()
+})
 watch(
 	() => [props.instanceId, modeQuery.data.value] as const,
 	() => {
 		generation++
 		loading.value = false
 		ready.value = false
-		error.value = ''
-		catalog.value = []
+		loadError.value = ''
+		pack.value = null
 		binding.value = null
-		result.value = null
 		void load()
 	},
 	{ immediate: true },

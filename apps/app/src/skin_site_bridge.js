@@ -1,4 +1,4 @@
-// Runs inside the embedded skin site only. The JWT never leaves that origin.
+// Only the allowlisted launcher parent may request a JWT for native pack downloads.
 ;(() => {
 	if (location.origin !== 'https://skin.starlight.cool' || window.parent === window) return
 
@@ -202,11 +202,7 @@
 								},
 							)
 							const skinBody = await skinResponse.json().catch(() => null)
-							if (
-								!skinResponse.ok ||
-								!skinBody?.payload ||
-								typeof skinBody.payload !== 'object'
-							)
+							if (!skinResponse.ok || !skinBody?.payload || typeof skinBody.payload !== 'object')
 								return { player, skinData: null }
 							return { player, skinData: skinBody.payload }
 						} catch {
@@ -435,6 +431,23 @@
 			parentOrigin = event.origin
 			publish(snapshot.status, snapshot.user)
 			void checkSession(true)
+			return
+		}
+		if (
+			event.data?.type === 'starlight-pack-token-request' &&
+			parentOrigin === event.origin &&
+			typeof event.data.requestId === 'string' &&
+			/^pack-token-\d+-\d+$/.test(event.data.requestId)
+		) {
+			let token = null
+			try {
+				token = localStorage.getItem('loginToken') || null
+			} catch {}
+			if (snapshot.status !== 'signed-in' || token !== lastToken) token = null
+			window.parent.postMessage(
+				{ type: 'starlight-pack-token-result', requestId: event.data.requestId, token },
+				parentOrigin,
+			)
 			return
 		}
 		if (

@@ -157,6 +157,30 @@ test('logout, invalid token, network error and account switching replace old sta
 	assert.equal(h.messages.at(-1).data.status, 'signed-out')
 })
 
+test('pack JWT is returned only for an explicit request from the connected launcher', async () => {
+	const h = harness()
+	h.token('pack.jwt.secret')
+	const request = { type: 'starlight-pack-token-request', requestId: 'pack-token-1-1' }
+	await h.message(request)
+	await h.connect('https://evil.example')
+	assert.equal(h.messages.length, 0)
+	await h.connect()
+	assert.ok(!JSON.stringify(h.messages).includes('pack.jwt.secret'))
+	await h.message(request, 'https://evil.example')
+	await h.message(request, 'http://localhost:5201', {})
+	assert.ok(!JSON.stringify(h.messages).includes('pack.jwt.secret'))
+	await h.message(request)
+	assert.equal(h.messages.at(-1).data.type, 'starlight-pack-token-result')
+	assert.equal(h.messages.at(-1).data.token, 'pack.jwt.secret')
+	assert.equal(h.messages.at(-1).target, 'http://localhost:5201')
+	h.token('unverified.account.token')
+	await h.message({ ...request, requestId: 'pack-token-1-2' })
+	assert.equal(h.messages.at(-1).data.token, null)
+	h.token(null)
+	await h.message({ ...request, requestId: 'pack-token-1-3' })
+	assert.equal(h.messages.at(-1).data.token, null)
+})
+
 test('a delayed response cannot restore the user after logout', async () => {
 	const h = harness()
 	let finish

@@ -1,12 +1,25 @@
 {
+  "app.hosted-mods.title": { "message": "正在更新服务器 Mod" },
+  "app.hosted-mods.description": { "message": "所有更新安装完成后将继续启动游戏。" },
+  "app.hosted-mods.complete": { "message": "下载完成" },
+  "app.hosted-mods.downloads": { "message": "查看下载" },
+  "app.hosted-mods.close": { "message": "关闭" },
+  "app.hosted-packs.progress.retry": { "message": "返回实例重试" },
+  "app.hosted-packs.progress.preparing": { "message": "正在准备整合包安装…" },
+  "app.hosted-packs.progress.downloads": { "message": "查看下载" },
+  "app.hosted-packs.open-instance": { "message": "打开已安装实例" },
+  "app.hosted-packs.retry-install": { "message": "重试安装" },
+  "app.hosted-packs.auto-installing": { "message": "正在下载并安装服务器整合包…" },
+  "app.hosted-packs.auto-description": { "message": "从StarLight服务器获取整合包并自动安装，可一键游玩StarLight服务器" },
+  "app.hosted-packs.auto-install": { "message": "安装 StarLight 官方整合包" },
   "app.onboarding.instance-mode.title": { "message": "选择实例类型" },
-  "app.onboarding.instance-mode.description": { "message": "游玩 StarLight 服务器请选择 StarLight 实例，它会自动同步管理员批准的更新。本地实例跳过 StarLight 同步，启动更快，可自选整合包，适合第三方服务器与单人游玩。之后也可以在实例设置中切换。" },
+  "app.onboarding.instance-mode.description": { "message": "StarLight 实例自动安装管理员指定的整合包和版本，每次启动先检查并完成更新，需要登录 StarLight 账号。本地实例可自选版本和整合包，适合第三方服务器与单人游玩。" },
   "app.instance-mode.title": { "message": "实例类型" },
   "app.instance-mode.starlight": { "message": "StarLight 实例" },
   "app.instance-mode.local": { "message": "本地实例" },
-  "app.instance-mode.starlight-description": { "message": "自动同步 StarLight 服务器推送的变更，游玩 StarLight 服务器必选。首次启动前，请在 Mod 管理中选择并安装官方整合包。" },
+  "app.instance-mode.starlight-description": { "message": "游玩 StarLight 服务器必选。自动安装服务器指定的整合包、游戏版本和加载器。每次启动需要登录 StarLight，检查并完成更新后再进入游戏。" },
   "app.instance-mode.local-description": { "message": "不会同步 StarLight 服务器的变更。跳过同步检查，启动更快，可自选整合包安装，更适合第三方服务器与本地个人游玩。" },
-  "app.instance-mode.saving": { "message": "正在保存实例类型…" },
+  "app.instance-mode.saving": { "message": "正在应用实例类型，并按需安装服务器整合包…" },
   "app.instance-mode.loading": { "message": "正在读取实例类型…" },
   "app.instance-mode.retry": { "message": "重试" },
   "app.instance-mode.local-packs-title": { "message": "本地整合包" },
@@ -16,8 +29,8 @@
   "app.hosted-packs.management": {"message": "内容管理"},
   "app.hosted-packs.mods": {"message": "管理 Mod"},
   "app.hosted-packs.packs": {"message": "管理整合包"},
-  "app.hosted-packs.title": {"message": "已发布整合包"},
-  "app.hosted-packs.description": {"message": "将审核通过的整合包安装到当前实例。此后联网启动时自动下载变动文件。每个整合包请使用单独的空实例；存档和个人设置会保留。"},
+  "app.hosted-packs.title": { "message": "服务器管理的整合包" },
+  "app.hosted-packs.description": { "message": "整合包和版本由管理员指定。每次启动都会检查服务器更新，有变更时先下载并安装，再启动游戏。需要有效的 StarLight 登录状态和网络连接。" },
   "app.hosted-packs.refresh": {"message": "刷新"},
   "app.hosted-packs.loading": {"message": "正在获取已发布整合包…"},
   "app.hosted-packs.bound": {"message": "已安装：{name} · {version}"},
@@ -26,7 +39,7 @@
   "app.hosted-packs.preserved": {"message": "保留了 {count} 个本地修改或个人文件"},
   "app.hosted-packs.empty": {"message": "暂无审核通过的整合包。"},
   "app.hosted-packs.update": {"message": "立即同步"},
-  "app.hosted-packs.install": {"message": "安装并启用自动同步"},
+  "app.hosted-packs.install": { "message": "重试自动安装" },
   "app.home.luck.title": { "message": "每日幸运指数" },
   "app.home.luck.get": { "message": "一键获取" },
   "app.home.luck.login-to-get": { "message": "登录后获取" },
@@ -5807,12 +5820,6 @@
   "app.notification.warning": {
     "message": "警告"
   },
-  "app.onboarding.account.description": {
-    "message": "想登录、切换账号或看看个人资料，随时来这里。没人打卡。"
-  },
-  "app.onboarding.account.title": {
-    "message": "账号，随你安排"
-  },
   "app.onboarding.action.click-create": {
     "message": "点击创建新实例，继续"
   },
@@ -5849,32 +5856,11 @@
   "app.onboarding.action.finish-area": {
     "message": "点击任意位置，收工"
   },
-  "app.onboarding.action.open-gradient-text": {
-    "message": "打开渐变文字生成器，继续"
-  },
-  "app.onboarding.action.open-recipe-generator": {
-    "message": "打开配方生成器，继续"
-  },
-  "app.onboarding.action.open-schematic-workshop": {
-    "message": "打开投影工坊，继续"
-  },
-  "app.onboarding.action.open-seed-map": {
-    "message": "打开种子地图，继续"
-  },
-  "app.onboarding.action.return-lab": {
-    "message": "点击实验室，继续"
-  },
   "app.onboarding.action.skip": {
     "message": "先不逛了"
   },
   "app.onboarding.action.start": {
     "message": "带我逛逛"
-  },
-  "app.onboarding.ai.description": {
-    "message": "统一连接文本模型供应商、选择要使用的模型，也可在这里一键关闭所有 AI 功能。"
-  },
-  "app.onboarding.ai.title": {
-    "message": "连接你的 AI 供应商"
   },
   "app.onboarding.appearance.description": {
     "message": "主题、强调色、背景和窗口效果都在这里。把启动器调成你熟悉的样子。"
@@ -5954,23 +5940,11 @@
   "app.onboarding.favorites.title": {
     "message": "留个清单"
   },
-  "app.onboarding.home-customize.description": {
-    "message": "使用右下角的编辑控件添加、调整和配置小组件。编辑时可在自动排满的网格与保留空格的自由网格之间切换。"
-  },
-  "app.onboarding.home-customize.title": {
-    "message": "按你的方式排列"
-  },
   "app.onboarding.home-layout.description": {
-    "message": "使用右下角控件切换信息主页和极简主页；小组件编辑仅在信息主页中提供。"
+    "message": "使用右下角控件在 StarLight 皮肤站主页与专注的实例启动页之间切换。"
   },
   "app.onboarding.home-layout.title": {
-    "message": "切换信息密度"
-  },
-  "app.onboarding.home-widgets.description": {
-    "message": "信息主页由最近活动、游玩时间、实例、世界和服务器小组件组成。窗口或账号侧边栏变化时，网格会自动重排。"
-  },
-  "app.onboarding.home-widgets.title": {
-    "message": "你的主页，你的布局"
+    "message": "切换主页样式"
   },
   "app.onboarding.instance-actions.description": {
     "message": "从实例页头部启动、停止、修复、配置、导出或打开这个实例。"
@@ -5984,56 +5958,20 @@
   "app.onboarding.instance-tabs.title": {
     "message": "剩下的工作台"
   },
-  "app.onboarding.java.description": {
-    "message": "启动 Minecraft 的 Java 运行环境在这。技术活，但它很听话。"
-  },
-  "app.onboarding.java.title": {
-    "message": "Java，在后台"
-  },
-  "app.onboarding.lab-editor.description": {
-    "message": "编辑文本、选择颜色、实时预览，并复制适用于 Minecraft 配置的格式。"
-  },
-  "app.onboarding.lab-editor.title": {
-    "message": "在同一处编辑和复制"
-  },
-  "app.onboarding.lab-recipe-generator.description": {
-    "message": "选择 Java 版本、填充配方槽位，然后在本地复制或导出 JSON。"
-  },
-  "app.onboarding.lab-recipe-generator.title": {
-    "message": "制作数据包配方"
-  },
-  "app.onboarding.lab-schematic.description": {
-    "message": "打开本地 .litematic 或 .schem 文件，也可以从已安装实例中选择。3D 工作区集中提供查看、测量、图层控制、材料统计和本地编辑。"
-  },
-  "app.onboarding.lab-schematic.title": {
-    "message": "放置前先检查建筑"
-  },
-  "app.onboarding.lab-seed-map.description": {
-    "message": "输入种子或从实例载入，然后在本地地图中查看群系、结构与矿物图层。"
-  },
-  "app.onboarding.lab-seed-map.title": {
-    "message": "加载世界前先找到它"
-  },
   "app.onboarding.lab-tools.description": {
-    "message": "生成带格式的文字、探索 Java 世界，并直接在启动器中检查投影建筑。"
+    "message": "在本地编辑皮肤、生成格式文字与配方、探索种子、检查投影并翻译模组。"
   },
   "app.onboarding.lab-tools.title": {
     "message": "Minecraft 本地工具"
   },
   "app.onboarding.lab.description": {
-    "message": "实验室将本地 Minecraft 工具放进启动器，无需打开其他网站或注册额外账号。"
+    "message": "实验室把 Minecraft 创作、世界与维护工具集中放在启动器里。"
   },
   "app.onboarding.lab.title": {
     "message": "内置的实用工具"
   },
-  "app.onboarding.language.description": {
-    "message": "在这里选择启动器语言和管理翻译。不需要翻译腔。"
-  },
-  "app.onboarding.language.title": {
-    "message": "说你的语言"
-  },
   "app.onboarding.library-page.description": {
-    "message": "按整合包、服务器或自定义配置筛选，再打开任意实例管理。"
+    "message": "在全部实例、整合包和自定义配置之间切换，再打开任意实例进行管理。"
   },
   "app.onboarding.library-page.title": {
     "message": "各就各位"
@@ -6060,28 +5998,16 @@
     "message": "按你的方式使用"
   },
   "app.onboarding.skins-page.description": {
-    "message": "在这里添加、预览、排序和应用皮肤。现在不登录也完全没关系。"
+    "message": "选择玩家资料，预览可用皮肤；账号支持皮肤管理时，还可以直接应用更改。"
   },
   "app.onboarding.skins-page.title": {
     "message": "你的皮肤抽屉"
   },
   "app.onboarding.skins.description": {
-    "message": "把 Minecraft 皮肤放在一起管理。想登录的时候再登录。"
+    "message": "选择皮肤站玩家或 Minecraft 账号，然后预览并应用该玩家可用的皮肤。"
   },
   "app.onboarding.skins.title": {
     "message": "换个造型吧"
-  },
-  "app.onboarding.translation.description": {
-    "message": "浏览时直接翻译 Modrinth 项目的标题、摘要和介绍。保留原文、双语同屏，或者让译文站 C 位，都由你决定。"
-  },
-  "app.onboarding.translation.title": {
-    "message": "翻译，是 Starlight 的拿手活"
-  },
-  "app.onboarding.updates.description": {
-    "message": "决定 Starlight 何时检查更新，以及是否替你安装。"
-  },
-  "app.onboarding.updates.title": {
-    "message": "保持在线"
   },
   "app.onboarding.welcome.description": {
     "message": "实例、内容、世界和下载，现在都有了同一个家。正式开玩之前，先快速逛一圈。"

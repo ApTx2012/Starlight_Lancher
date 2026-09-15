@@ -107,6 +107,7 @@ pub(crate) async fn try_download_via_h2(
     destination: &Path,
     part_path: &Path,
     policy: super::native::NativeH2Policy,
+    progress: Option<&mut fetch::FetchProgressFn<'_>>,
 ) -> H2DownloadOutcome {
     if request
         .cancellation
@@ -229,6 +230,7 @@ pub(crate) async fn try_download_via_h2(
             part_path,
             total_size,
             concurrency,
+            progress,
         )
         .await;
     }
@@ -282,6 +284,7 @@ pub(crate) async fn try_download_via_h2(
         &integrity,
         total_size,
         policy,
+        progress,
     )
     .await;
     match result {
@@ -460,6 +463,7 @@ async fn single_stream(
     integrity: &Integrity,
     total_size: u64,
     policy: super::native::NativeH2Policy,
+    mut progress: Option<&mut fetch::FetchProgressFn<'_>>,
 ) -> crate::Result<DownloadResult> {
     let mut headers = request_headers(request, route);
     headers.insert(ACCEPT_ENCODING, HeaderValue::from_static("identity"));
@@ -511,6 +515,9 @@ async fn single_stream(
         super::h2_receive::release_capacity(&mut stream, chunk.len())?;
         if progress_gate.should_report(downloaded, total_size) {
             record_install_progress(request, downloaded, total_size).await;
+            if let Some(callback) = progress.as_deref_mut() {
+                callback(downloaded, total_size).await?;
+            }
         }
         if policy.abort_if_slow
             && matches!(
@@ -530,6 +537,9 @@ async fn single_stream(
     }
     file.flush().await?;
     drop(file);
+    if let Some(callback) = progress.as_deref_mut() {
+        callback(downloaded, total_size).await?;
+    }
     let computed = hashers.finish(downloaded);
     record_install_stage(
         request,
@@ -759,6 +769,96 @@ impl AssetBatchConnectionGroup {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use bytes::Bytes;
+
+    #[tokio::test]
+    async fn single_stream_reports_bytes_before_the_response_finishes() {
+        let size = 512 * 1024;
+        let data = Bytes::from(vec![42; size]);
+        let progress_seen = Arc::new(tokio::sync::Notify::new());
+        let server_progress = Arc::clone(&progress_seen);
+        let server_data = data.clone();
+        let (client_io, server_io) = tokio::io::duplex(1024 * 1024);
+        let server = tokio::spawn(async move {
+            let mut connection =
+                h2::server::handshake(server_io).await.unwrap();
+            while let Some(result) = connection.accept().await {
+                let (_, mut respond) = result.unwrap();
+                let data = server_data.clone();
+                let progress = Arc::clone(&server_progress);
+                tokio::spawn(async move {
+                    let mut stream = respond
+                        .send_response(http::Response::new(()), false)
+                        .unwrap();
+                    stream.send_data(data.slice(..size / 2), false).unwrap();
+                    progress.notified().await;
+                    stream.send_data(data.slice(size / 2..), true).unwrap();
+                });
+            }
+        });
+        let mut builder = h2::client::Builder::new();
+        builder.initial_window_size(1024 * 1024);
+        let (sender, driver) =
+            builder.handshake::<_, Bytes>(client_io).await.unwrap();
+        let client = tokio::spawn(driver);
+        let connection = SharedH2Connection::for_test(sender);
+        let directory = tempfile::tempdir().unwrap();
+        let destination = directory.path().join("pack.zip");
+        let part = directory.path().join("pack.zip.part");
+        let integrity =
+            Integrity::sha1(sha1_smol::Sha1::from(&data[..]).hexdigest())
+                .with_size(size as u64);
+        let request = DownloadRequest::new(
+            "https://h2-progress.test/pack.zip",
+            fetch::ResourceClass::Modpack,
+        )
+        .with_integrity(integrity.clone());
+        let route = DownloadRoute {
+            url: request.url.clone(),
+            source: fetch::DownloadRouteSource::Official,
+            is_mirror: false,
+            allow_sensitive_headers: true,
+            supports_range: true,
+            proxy: fetch::ProxyPolicy::Direct,
+        };
+        let mut reports = Vec::new();
+        let mut progress = |current, total| {
+            reports.push((current, total));
+            progress_seen.notify_one();
+            Box::pin(async { Ok(()) })
+                as Pin<Box<dyn Future<Output = crate::Result<()>> + Send>>
+        };
+        let result = tokio::time::timeout(
+            Duration::from_secs(5),
+            single_stream(
+                &connection,
+                &request.url.parse().unwrap(),
+                &request,
+                &route,
+                &destination,
+                &part,
+                &integrity,
+                size as u64,
+                super::super::native::NativeH2Policy {
+                    allow_cold_connection: true,
+                    abort_if_slow: false,
+                    expected_speed: None,
+                },
+                Some(&mut progress),
+            ),
+        )
+        .await;
+        client.abort();
+        server.abort();
+        result.unwrap().unwrap();
+        assert!(
+            reports
+                .iter()
+                .any(|&(current, total)| current > 0 && current < total)
+        );
+        assert_eq!(reports.last(), Some(&(size as u64, size as u64)));
+        assert_eq!(tokio::fs::read(destination).await.unwrap(), data);
+    }
 
     #[test]
     fn asset_batch_expansion_requires_sustained_saturation() {

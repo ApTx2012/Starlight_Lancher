@@ -143,6 +143,7 @@ import { useScrollIndicator } from '../../composables/scroll-indicator'
 import { injectModalBehavior } from '../../providers'
 import { commonMessages } from '../../utils/common-messages'
 import ButtonStyled from '../base/ButtonStyled.vue'
+import { createModalTransition } from './modal-transition'
 
 const { formatMessage } = useVIntl()
 
@@ -220,6 +221,7 @@ const headerId = `${modalId}-header`
 const closeLabel = computed(() => formatMessage(commonMessages.closeButton))
 
 const open = ref(false)
+const transition = createModalTransition()
 const visible = ref(false)
 const stackDepth = ref(0)
 const modalBodyRef = ref<HTMLElement | null>(null)
@@ -237,6 +239,8 @@ function getFocusableElements(): HTMLElement[] {
 }
 
 function show(event?: MouseEvent) {
+	const current = transition.begin(true)
+	if (!current) return
 	props.onShow?.()
 	const wasEmpty = modalStackSize() === 0
 	stackDepth.value = modalStackSize()
@@ -255,8 +259,10 @@ function show(event?: MouseEvent) {
 		mouseY.value = Math.round(window.innerHeight / 2)
 	}
 	setTimeout(() => {
+		if (!current()) return
 		visible.value = true
 		nextTick(() => {
+			if (!current()) return
 			const focusable = getFocusableElements()
 			if (focusable.length > 0) {
 				focusable[0].focus()
@@ -271,6 +277,8 @@ async function hide() {
 	if (props.disableClose) {
 		return
 	}
+	const current = transition.begin(false)
+	if (!current) return
 	props.onHide?.()
 	resetMousePosition()
 	visible.value = false
@@ -289,9 +297,10 @@ async function hide() {
 	await new Promise<void>((resolve) => {
 		setTimeout(resolve, 300)
 	})
+	if (!current()) return
 	open.value = false
 	await nextTick()
-	props.onAfterHide?.()
+	if (current()) props.onAfterHide?.()
 }
 
 async function scrollToBottom(behavior: ScrollBehavior = 'smooth') {
@@ -336,7 +345,9 @@ function resetMousePosition() {
 }
 
 onUnmounted(() => {
-	if (open.value) {
+	const wasActive = transition.isActive()
+	transition.dispose()
+	if (wasActive) {
 		popModal()
 		window.removeEventListener('keydown', handleWindowKeyDown)
 		window.removeEventListener('mousedown', updateMousePosition)

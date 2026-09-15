@@ -1,12 +1,25 @@
 {
+  "app.hosted-mods.title": { "message": "正在更新伺服器 Mod" },
+  "app.hosted-mods.description": { "message": "所有更新安裝完成後將繼續啟動遊戲。" },
+  "app.hosted-mods.complete": { "message": "下載完成" },
+  "app.hosted-mods.downloads": { "message": "查看下載" },
+  "app.hosted-mods.close": { "message": "關閉" },
+  "app.hosted-packs.progress.retry": { "message": "返回實例重試" },
+  "app.hosted-packs.progress.preparing": { "message": "正在準備整合包安裝…" },
+  "app.hosted-packs.progress.downloads": { "message": "查看下載" },
+  "app.hosted-packs.open-instance": { "message": "開啟已安裝實例" },
+  "app.hosted-packs.retry-install": { "message": "重試安裝" },
+  "app.hosted-packs.auto-installing": { "message": "正在下載並安裝伺服器整合包…" },
+  "app.hosted-packs.auto-description": { "message": "從StarLight伺服器取得整合包並自動安裝，可一鍵遊玩StarLight伺服器" },
+  "app.hosted-packs.auto-install": { "message": "安裝 StarLight 官方整合包" },
   "app.onboarding.instance-mode.title": { "message": "選擇實例類型" },
-  "app.onboarding.instance-mode.description": { "message": "遊玩 StarLight 伺服器請選擇 StarLight 實例，它會自動同步管理員核准的更新。本地實例跳過 StarLight 同步，啟動更快，可自行選擇整合包，適合第三方伺服器與單人遊玩。之後也可以在實例設定中切換。" },
+  "app.onboarding.instance-mode.description": { "message": "StarLight 實例自動安裝管理員指定的整合包和版本，每次啟動先檢查並完成更新，需要登入 StarLight 帳號。本地實例可自行選擇版本和整合包，適合第三方伺服器與單人遊玩。" },
   "app.instance-mode.title": { "message": "實例類型" },
   "app.instance-mode.starlight": { "message": "StarLight 實例" },
   "app.instance-mode.local": { "message": "本機實例" },
-  "app.instance-mode.starlight-description": { "message": "自動同步 StarLight 伺服器推送的變更，遊玩 StarLight 伺服器必選。首次啟動前，請在 Mod 管理中選擇並安裝官方整合包。" },
+  "app.instance-mode.starlight-description": { "message": "遊玩 StarLight 伺服器必選。自動安裝伺服器指定的整合包、遊戲版本和載入器。每次啟動需要登入 StarLight，檢查並完成更新後再進入遊戲。" },
   "app.instance-mode.local-description": { "message": "不會同步 StarLight 伺服器的變更。略過同步檢查，啟動更快，可自行選擇整合包安裝，更適合第三方伺服器與本機個人遊玩。" },
-  "app.instance-mode.saving": { "message": "正在儲存實例類型…" },
+  "app.instance-mode.saving": { "message": "正在套用實例類型，並視需要安裝伺服器整合包…" },
   "app.instance-mode.loading": { "message": "正在讀取實例類型…" },
   "app.instance-mode.retry": { "message": "重試" },
   "app.instance-mode.local-packs-title": { "message": "本機整合包" },
@@ -16,8 +29,8 @@
   "app.hosted-packs.management": {"message": "內容管理"},
   "app.hosted-packs.mods": {"message": "管理 Mod"},
   "app.hosted-packs.packs": {"message": "管理整合包"},
-  "app.hosted-packs.title": {"message": "已發布整合包"},
-  "app.hosted-packs.description": {"message": "將審核通過的整合包安裝到目前實例。之後連線啟動時自動下載變動檔案。每個整合包請使用獨立的空實例；存檔和個人設定會保留。"},
+  "app.hosted-packs.title": { "message": "伺服器管理的整合包" },
+  "app.hosted-packs.description": { "message": "整合包和版本由管理員指定。每次啟動都會檢查伺服器更新，有變更時先下載並安裝，再啟動遊戲。需要有效的 StarLight 登入狀態和網路連線。" },
   "app.hosted-packs.refresh": {"message": "重新整理"},
   "app.hosted-packs.loading": {"message": "正在取得已發布整合包…"},
   "app.hosted-packs.bound": {"message": "已安裝：{name} · {version}"},
@@ -26,7 +39,7 @@
   "app.hosted-packs.preserved": {"message": "保留了 {count} 個本機修改或個人檔案"},
   "app.hosted-packs.empty": {"message": "尚無審核通過的整合包。"},
   "app.hosted-packs.update": {"message": "立即同步"},
-  "app.hosted-packs.install": {"message": "安裝並啟用自動同步"},
+  "app.hosted-packs.install": { "message": "重試自動安裝" },
   "app.home.luck.title": { "message": "每日幸運指數" },
   "app.home.luck.get": { "message": "一鍵獲取" },
   "app.home.luck.login-to-get": { "message": "登入後獲取" },
@@ -5528,12 +5541,6 @@
   "app.notification.warning": {
     "message": "警告"
   },
-  "app.onboarding.account.description": {
-    "message": "想登錄、切換帳號或看看個人資料，隨時來這裡。沒人打卡。"
-  },
-  "app.onboarding.account.title": {
-    "message": "帳號，隨你安排"
-  },
   "app.onboarding.action.click-create": {
     "message": "點擊創建新實例，繼續"
   },
@@ -5570,32 +5577,11 @@
   "app.onboarding.action.finish-area": {
     "message": "點擊任意位置，收工"
   },
-  "app.onboarding.action.open-gradient-text": {
-    "message": "打開漸變文字生成器，繼續"
-  },
-  "app.onboarding.action.open-recipe-generator": {
-    "message": "開啟配方生成器，繼續"
-  },
-  "app.onboarding.action.open-schematic-workshop": {
-    "message": "開啟投影工坊，繼續"
-  },
-  "app.onboarding.action.open-seed-map": {
-    "message": "打開種子地圖，繼續"
-  },
-  "app.onboarding.action.return-lab": {
-    "message": "點擊實驗室，查看另一個項目"
-  },
   "app.onboarding.action.skip": {
     "message": "先不逛了"
   },
   "app.onboarding.action.start": {
     "message": "帶我逛逛"
-  },
-  "app.onboarding.ai.description": {
-    "message": "統一連線文字模型供應商、選擇要使用的模型，也可在這裡一鍵關閉所有 AI 功能。"
-  },
-  "app.onboarding.ai.title": {
-    "message": "連線你的 AI 供應商"
   },
   "app.onboarding.appearance.description": {
     "message": "Theme, accent, background, and window behavior. Make this launcher look familiar."
@@ -5675,23 +5661,11 @@
   "app.onboarding.favorites.title": {
     "message": "留個清單"
   },
-  "app.onboarding.home-customize.description": {
-    "message": "使用右下角的編輯控制元件新增、調整和配置小元件。編輯時可在自動排滿的網格與保留空格的自由網格之間切換。"
-  },
-  "app.onboarding.home-customize.title": {
-    "message": "按你的方式排列"
-  },
   "app.onboarding.home-layout.description": {
-    "message": "隨時使用這個懸浮按鈕，在資訊首頁和極簡首頁之間切換。"
+    "message": "使用右下角控制項，在 StarLight 皮膚站首頁與專注的實例啟動頁之間切換。"
   },
   "app.onboarding.home-layout.title": {
-    "message": "切換資訊密度"
-  },
-  "app.onboarding.home-widgets.description": {
-    "message": "資訊主頁由最近活動、遊玩時間、例項、世界和伺服器小元件組成。視窗或賬號側邊欄變化時，網格會自動重排。"
-  },
-  "app.onboarding.home-widgets.title": {
-    "message": "你的主頁，你的佈局"
+    "message": "切換首頁樣式"
   },
   "app.onboarding.instance-actions.description": {
     "message": "從實例頁頭部啟動、停止、修復、配置、導出或打開這個實例。"
@@ -5705,56 +5679,20 @@
   "app.onboarding.instance-tabs.title": {
     "message": "剩下的工作台"
   },
-  "app.onboarding.java.description": {
-    "message": "啟動 Minecraft 的 Java 運行環境在這。技術活，但它很聽話。"
-  },
-  "app.onboarding.java.title": {
-    "message": "Java，在後台"
-  },
-  "app.onboarding.lab-editor.description": {
-    "message": "編輯文本、選擇顏色、即時預覽，並複製適用於 Minecraft 配置的格式。"
-  },
-  "app.onboarding.lab-editor.title": {
-    "message": "在同一處編輯和複製"
-  },
-  "app.onboarding.lab-recipe-generator.description": {
-    "message": "選擇 Java 版本、填充配方槽位，然後在本地複製或匯出 JSON。"
-  },
-  "app.onboarding.lab-recipe-generator.title": {
-    "message": "製作資料包配方"
-  },
-  "app.onboarding.lab-schematic.description": {
-    "message": "開啟本地 .litematic 或 .schem 檔案，也可以從已安裝例項中選擇。3D 工作區集中提供檢視、測量、圖層控制、材料統計和本地編輯。"
-  },
-  "app.onboarding.lab-schematic.title": {
-    "message": "放置前先檢查建築"
-  },
-  "app.onboarding.lab-seed-map.description": {
-    "message": "輸入種子或從實例載入，然後在本地地圖中查看群系、結構與礦物圖層。"
-  },
-  "app.onboarding.lab-seed-map.title": {
-    "message": "載入世界前先找到它"
-  },
   "app.onboarding.lab-tools.description": {
-    "message": "生成帶格式的漸變文字，或用本地種子地圖探索 Java 世界。"
+    "message": "在本機編輯皮膚、生成格式文字與配方、探索種子、檢查投影並翻譯模組。"
   },
   "app.onboarding.lab-tools.title": {
-    "message": "首批兩個項目"
+    "message": "Minecraft 本機工具"
   },
   "app.onboarding.lab.description": {
-    "message": "實驗室將本地 Minecraft 工具放進啟動器，無需打開其他網站或註冊額外帳號。"
+    "message": "實驗室把 Minecraft 創作、世界與維護工具集中放在啟動器裡。"
   },
   "app.onboarding.lab.title": {
     "message": "內建的實用工具"
   },
-  "app.onboarding.language.description": {
-    "message": "在這裡選擇啟動器語言和管理翻譯。不需要翻譯腔。"
-  },
-  "app.onboarding.language.title": {
-    "message": "說你的語言"
-  },
   "app.onboarding.library-page.description": {
-    "message": "按整合包、伺服器或自訂配置篩選，再打開任意實例管理。"
+    "message": "在全部實例、整合包與自訂配置之間切換，再開啟任意實例進行管理。"
   },
   "app.onboarding.library-page.title": {
     "message": "各就各位"
@@ -5781,28 +5719,16 @@
     "message": "按你的方式使用"
   },
   "app.onboarding.skins-page.description": {
-    "message": "在這裡添加、預覽、排序和應用皮膚。現在不登錄也完全沒關係。"
+    "message": "選擇玩家資料並預覽可用皮膚；帳號支援皮膚管理時，還可以直接套用變更。"
   },
   "app.onboarding.skins-page.title": {
     "message": "你的皮膚抽屜"
   },
   "app.onboarding.skins.description": {
-    "message": "把 Minecraft 皮膚放在一起管理。想登錄的時候再登錄。"
+    "message": "選擇皮膚站玩家或 Minecraft 帳號，然後預覽並套用該玩家可用的皮膚。"
   },
   "app.onboarding.skins.title": {
     "message": "換個造型吧"
-  },
-  "app.onboarding.translation.description": {
-    "message": "瀏覽時直接翻譯 Modrinth 項目的標題、摘要和介紹。保留原文、雙語同屏，或者讓譯文站 C 位，都由你決定。"
-  },
-  "app.onboarding.translation.title": {
-    "message": "翻譯，是 Starlight 的拿手活"
-  },
-  "app.onboarding.updates.description": {
-    "message": "決定 Starlight 何時檢查更新，以及是否替你安裝。"
-  },
-  "app.onboarding.updates.title": {
-    "message": "保持在線"
   },
   "app.onboarding.welcome.description": {
     "message": "實例、內容、世界和下載，現在都有了同一個家。正式開玩之前，先快速逛一圈。"

@@ -168,6 +168,7 @@ pub fn emit_loading(
                         .to_string(),
                     event: loading_bar.bar_type.clone(),
                     loader_uuid: loading_bar.loading_bar_uuid,
+                    total: Some(loading_bar.total),
                 },
             )
             .map_err(EventError::from)?;
@@ -179,6 +180,64 @@ pub fn emit_loading(
     }
 
     Ok(())
+}
+
+/// Set measured phase progress without completing the task at a phase boundary.
+/// A zero total represents a phase whose amount of work is not yet known.
+pub fn set_loading(
+    key: &LoadingBarId,
+    current: u64,
+    total: u64,
+    message: &str,
+) -> crate::Result<()> {
+    let event_state = crate::EventState::get()?;
+    let Some(mut bar) = event_state.loading_bars.get_mut(&key.0) else {
+        return Err(EventError::NoLoadingBar(key.0).into());
+    };
+    bar.current = current.min(total) as f64;
+    bar.total = total as f64;
+    bar.message = message.to_owned();
+    let fraction = if total == 0 {
+        0.0
+    } else {
+        bar.current / bar.total
+    };
+    bar.last_sent = fraction;
+    #[cfg(feature = "tauri")]
+    event_state
+        .app
+        .emit(
+            "loading",
+            LoadingPayload {
+                fraction: Some(fraction),
+                message: bar.message.clone(),
+                event: bar.bar_type.clone(),
+                loader_uuid: bar.loading_bar_uuid,
+                total: Some(bar.total),
+            },
+        )
+        .map_err(EventError::from)?;
+    #[cfg(feature = "cli")]
+    {
+        bar.cli_progress_bar.set_message(bar.message.clone());
+        bar.cli_progress_bar
+            .set_position((fraction * CLI_PROGRESS_BAR_TOTAL as f64) as u64);
+    }
+    Ok(())
+}
+
+pub fn fail_hosted_loading(key: &LoadingBarId, error: &str) {
+    if let Ok(state) = crate::EventState::get()
+        && let Some(mut bar) = state.loading_bars.get_mut(&key.0)
+    {
+        match &mut bar.bar_type {
+            LoadingBarType::HostedPackSync { error: failure, .. }
+            | LoadingBarType::HostedModDownload { error: failure, .. } => {
+                *failure = Some(error.to_owned())
+            }
+            _ => {}
+        }
+    }
 }
 
 // emit_warning(message)

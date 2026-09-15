@@ -72,22 +72,38 @@
 					</div>
 					<div class="min-w-0 flex-grow">
 						<div class="truncate font-semibold text-contrast">{{ bar.title || bar.message }}</div>
-						<div class="truncate text-sm text-secondary">{{ bar.message }}</div>
+						<div class="break-words text-sm text-secondary">{{ bar.message }}</div>
 					</div>
-					<TagItem>
+					<TagItem
+						v-if="['hosted_pack_sync', 'hosted_mod_download'].includes(bar.bar_type?.type ?? '')"
+						>StarLight</TagItem
+					>
+					<TagItem v-else>
 						<component :is="providerIcon(legacyProvider(bar))" />
 						{{ providerLabel(legacyProvider(bar)) }}
 					</TagItem>
-					<Badge color="orange" :type="statusLabel('running')" />
+					<Badge
+						:color="bar.bar_type?.error ? 'red' : 'orange'"
+						:type="statusLabel(bar.bar_type?.error ? 'failed' : 'running')"
+					/>
 				</div>
 				<ProgressBar
+					v-if="!bar.bar_type?.error"
 					class="mt-4"
 					full-width
 					:progress="legacyPercent(bar)"
 					:max="100"
 					:label="formatMessage(messages.progress)"
-					show-progress
+					:waiting="!bar.total"
+					:show-progress="Boolean(bar.total)"
 				/>
+				<RouterLink
+					v-else
+					:to="`/instance/${encodeURIComponent(bar.bar_type?.instance_id ?? '')}/mods`"
+					class="mt-3 inline-block text-brand hover:underline"
+				>
+					{{ formatMessage(messages.hostedRetry) }}
+				</RouterLink>
 			</Card>
 
 			<Card
@@ -140,10 +156,7 @@
 							v-if="downloadDetails(job).length"
 							class="mt-1 flex flex-wrap items-center gap-2 text-sm text-secondary"
 						>
-							<template
-								v-for="(metric, index) in downloadDetails(job)"
-								:key="`${index}-${metric}`"
-							>
+							<template v-for="(metric, index) in downloadDetails(job)" :key="`${index}-${metric}`">
 								<BulletDivider v-if="index > 0" />
 								<span>{{ metric }}</span>
 							</template>
@@ -389,10 +402,10 @@
 		<Card v-else class="flex flex-1">
 			<EmptyState
 				class="my-auto"
-				:type="query ? 'no-search-result' : 'no-tasks'"
-				:heading="formatMessage(query ? messages.noResultsTitle : messages.emptyTitle)"
+				:type="hasFilters ? 'no-search-result' : 'no-tasks'"
+				:heading="formatMessage(hasFilters ? messages.noResultsTitle : messages.emptyTitle)"
 				:description="
-					formatMessage(query ? messages.noResultsDescription : messages.emptyDescription)
+					formatMessage(hasFilters ? messages.noResultsDescription : messages.emptyDescription)
 				"
 			/>
 		</Card>
@@ -503,6 +516,10 @@ const focusedJobId = computed(() => focusedDownloadJobId(route.query.job))
 const focusState = ref(createDownloadFocusState(focusedJobId.value))
 
 const messages = defineMessages({
+	hostedRetry: {
+		id: 'app.hosted-packs.progress.retry',
+		defaultMessage: 'Return to the instance to retry',
+	},
 	newDownload: { id: 'app.downloads.new-download', defaultMessage: 'New download' },
 	inProgress: { id: 'app.downloads.in-progress', defaultMessage: 'In progress' },
 	history: { id: 'app.downloads.history', defaultMessage: 'History' },
@@ -727,10 +744,22 @@ const phaseMessages = defineMessages({
 	rolling_back: { id: 'app.downloads.phase.rolling-back', defaultMessage: 'Rolling back changes' },
 } satisfies Record<InstallPhaseId, MessageDescriptor>)
 
-const legacyDownloads = manager.legacyDownloads
+const legacyDownloads = computed(() => {
+	const normalized = query.value.trim().toLowerCase()
+	return manager.legacyDownloads.value.filter((bar) => {
+		if (provider.value !== 'all' && legacyProvider(bar) !== provider.value) return false
+		return (
+			!normalized ||
+			[bar.title, bar.message, bar.bar_type?.instance_name, bar.bar_type?.file_name].some((value) =>
+				value?.toLowerCase().includes(normalized),
+			)
+		)
+	})
+})
 const historyJobs = manager.historyJobs
 const providerOptions = [
 	'all',
+	'starlight',
 	'modrinth',
 	'curse_forge',
 	'minecraft',
@@ -739,6 +768,12 @@ const providerOptions = [
 	'local',
 ]
 const historyStatusOptions = ['all', 'succeeded', 'failed', 'interrupted', 'canceled']
+const hasFilters = computed(
+	() =>
+		Boolean(query.value.trim()) ||
+		provider.value !== 'all' ||
+		(tab.value === 'history' && historyStatus.value !== 'all'),
+)
 const downloadTabs = computed(() => [
 	{
 		href: 'active',
@@ -786,8 +821,9 @@ function displayIcon(icon: string) {
 	return /^(https?:|data:|blob:|asset:|tauri:)/.test(icon) ? icon : convertFileSrc(icon)
 }
 
-function providerLabel(value: InstallJobSnapshot['provider']) {
+function providerLabel(value: InstallJobSnapshot['provider'] | 'starlight') {
 	return {
+		starlight: 'StarLight',
 		modrinth: 'Modrinth',
 		curse_forge: 'CurseForge',
 		minecraft: 'Minecraft',
@@ -800,10 +836,10 @@ function providerLabel(value: InstallJobSnapshot['provider']) {
 function providerFilterLabel(value: string) {
 	return value === 'all'
 		? formatMessage(messages.allSources)
-		: providerLabel(value as InstallJobSnapshot['provider'])
+		: providerLabel(value as InstallJobSnapshot['provider'] | 'starlight')
 }
 
-function providerIcon(value: InstallJobSnapshot['provider']) {
+function providerIcon(value: InstallJobSnapshot['provider'] | 'starlight') {
 	return value === 'curse_forge'
 		? CurseForgeIcon
 		: value === 'modrinth'
@@ -821,7 +857,9 @@ function jobTypeIcon(job: InstallJobSnapshot) {
 	return job.kind === 'upgrade_unmanaged_instance' ? RefreshCwIcon : providerIcon(job.provider)
 }
 
-function legacyProvider(bar: LoadingBar): InstallJobSnapshot['provider'] {
+function legacyProvider(bar: LoadingBar): InstallJobSnapshot['provider'] | 'starlight' {
+	if (['hosted_pack_sync', 'hosted_mod_download'].includes(bar.bar_type?.type ?? ''))
+		return 'starlight'
 	if (bar.bar_type?.type === 'pack_download' || bar.bar_type?.type === 'pack_file_download')
 		return 'curse_forge'
 	if (bar.bar_type?.type === 'minecraft_download') return 'minecraft'
@@ -1254,14 +1292,12 @@ async function resolveMissing(job: InstallJobSnapshot) {
 				(item) =>
 					item.status === 'skipped' && item.manual_url && item.project_id && item.version_id,
 			)
-			.map(
-				(item): CurseForgeManualDownloadItem => ({
-					projectId: Number(item.project_id),
-					fileId: Number(item.version_id),
-					fileName: item.name,
-					websiteUrl: item.manual_url ?? undefined,
-				}),
-			)
+			.map((item): CurseForgeManualDownloadItem => ({
+				projectId: Number(item.project_id),
+				fileId: Number(item.version_id),
+				fileName: item.name,
+				websiteUrl: item.manual_url ?? undefined,
+			}))
 		const instanceId = job.instance_id
 		const hasGeneralMissingItems = job.items.some((item) => item.status === 'failed')
 		if (instanceId && (job.provider === 'curse_forge' || fallbackCurseForgeItems.length > 0)) {

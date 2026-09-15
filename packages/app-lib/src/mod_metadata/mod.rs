@@ -83,23 +83,109 @@ pub(crate) fn is_env_dependency_id(id: &str) -> bool {
 pub fn extract_mod_metadata(bytes: &Bytes) -> Option<LocalModMetadata> {
     let cursor = std::io::Cursor::new(&**bytes);
     let mut archive = zip::ZipArchive::new(cursor).ok()?;
+    extract_archive_metadata(&mut archive)
+}
 
+/// Read only metadata entries without loading the entire Mod JAR into memory.
+pub fn read_mod_metadata(path: &std::path::Path) -> Option<LocalModMetadata> {
+    let mut archive =
+        zip::ZipArchive::new(std::fs::File::open(path).ok()?).ok()?;
+    for name in [
+        "fabric.mod.json",
+        "quilt.mod.json",
+        "META-INF/mods.toml",
+        "META-INF/neoforge.mods.toml",
+        "mcmod.info",
+        "META-INF/MANIFEST.MF",
+    ] {
+        if archive
+            .by_name(name)
+            .ok()
+            .is_some_and(|entry| entry.size() > 2 * 1024 * 1024)
+        {
+            return None;
+        }
+    }
+    extract_archive_metadata(&mut archive)
+}
+
+/// All top-level Mod IDs in a JAR, used to replace multi-Mod archives safely.
+pub fn read_mod_ids(path: &std::path::Path) -> Vec<String> {
+    use std::io::Read;
+    let Ok(file) = std::fs::File::open(path) else {
+        return Vec::new();
+    };
+    let Ok(mut archive) = zip::ZipArchive::new(file) else {
+        return Vec::new();
+    };
+    let mut ids = std::collections::BTreeSet::new();
+    for name in ["META-INF/neoforge.mods.toml", "META-INF/mods.toml"] {
+        let Ok(file) = archive.by_name(name) else {
+            continue;
+        };
+        if file.size() > 2 * 1024 * 1024 {
+            continue;
+        }
+        let mut content = String::new();
+        if file
+            .take(2 * 1024 * 1024)
+            .read_to_string(&mut content)
+            .is_ok()
+            && let Ok(parsed) = toml::from_str::<toml_mod::ModsToml>(&content)
+        {
+            ids.extend(
+                parsed
+                    .mods
+                    .unwrap_or_default()
+                    .into_iter()
+                    .filter_map(|entry| entry.mod_id),
+            );
+        }
+    }
+    for name in ["fabric.mod.json", "quilt.mod.json", "mcmod.info"] {
+        let Ok(file) = archive.by_name(name) else {
+            continue;
+        };
+        if file.size() > 2 * 1024 * 1024 {
+            continue;
+        }
+        if let Ok(value) = serde_json::from_reader::<_, serde_json::Value>(
+            file.take(2 * 1024 * 1024),
+        ) {
+            if let Some(id) = value
+                .get("id")
+                .or_else(|| value.pointer("/quilt_loader/id"))
+                .and_then(|v| v.as_str())
+            {
+                ids.insert(id.to_owned());
+            }
+            if let Some(mods) = value.as_array() {
+                ids.extend(mods.iter().filter_map(|entry| {
+                    entry.get("modid")?.as_str().map(str::to_owned)
+                }));
+            }
+        }
+    }
+    ids.into_iter().collect()
+}
+
+fn extract_archive_metadata<R: std::io::Read + std::io::Seek>(
+    archive: &mut zip::ZipArchive<R>,
+) -> Option<LocalModMetadata> {
     // Try each known metadata path in priority order.
-    if let Some(meta) = try_fabric(&mut archive) {
+    if let Some(meta) = try_fabric(archive) {
         return Some(meta);
     }
-    if let Some(meta) = try_quilt(&mut archive) {
+    if let Some(meta) = try_quilt(archive) {
         return Some(meta);
     }
-    if let Some(meta) =
-        try_toml_path(&mut archive, "META-INF/neoforge.mods.toml")
-    {
+    if let Some(meta) = try_toml_path(archive, "META-INF/neoforge.mods.toml") {
         return Some(meta);
     }
-    if let Some(meta) = try_toml_path(&mut archive, "META-INF/mods.toml") {
+    if let Some(meta) = try_toml_path(archive, "META-INF/mods.toml") {
         return Some(meta);
     }
-    if let Some(meta) = try_mcmod_info(&mut archive) {
+    if let Some(meta) = try_mcmod_info(archive) {
         return Some(meta);
     }
 
@@ -108,8 +194,8 @@ pub fn extract_mod_metadata(bytes: &Bytes) -> Option<LocalModMetadata> {
 
 // ── format-specific parsers ────────────────────────────────────────────────
 
-fn try_fabric(
-    archive: &mut zip::ZipArchive<std::io::Cursor<&[u8]>>,
+fn try_fabric<R: std::io::Read + std::io::Seek>(
+    archive: &mut zip::ZipArchive<R>,
 ) -> Option<LocalModMetadata> {
     let mut file = archive.by_name("fabric.mod.json").ok()?;
     let parsed: fabric::FabricModJson =
@@ -141,8 +227,8 @@ fn try_fabric(
     })
 }
 
-fn try_quilt(
-    archive: &mut zip::ZipArchive<std::io::Cursor<&[u8]>>,
+fn try_quilt<R: std::io::Read + std::io::Seek>(
+    archive: &mut zip::ZipArchive<R>,
 ) -> Option<LocalModMetadata> {
     let mut file = archive.by_name("quilt.mod.json").ok()?;
     let parsed: fabric::QuiltModJson =
@@ -167,8 +253,8 @@ fn try_quilt(
     })
 }
 
-fn try_toml_path(
-    archive: &mut zip::ZipArchive<std::io::Cursor<&[u8]>>,
+fn try_toml_path<R: std::io::Read + std::io::Seek>(
+    archive: &mut zip::ZipArchive<R>,
     path: &str,
 ) -> Option<LocalModMetadata> {
     let mut content = String::new();
@@ -263,8 +349,8 @@ fn try_toml_path(
     })
 }
 
-fn try_mcmod_info(
-    archive: &mut zip::ZipArchive<std::io::Cursor<&[u8]>>,
+fn try_mcmod_info<R: std::io::Read + std::io::Seek>(
+    archive: &mut zip::ZipArchive<R>,
 ) -> Option<LocalModMetadata> {
     let mut file = archive.by_name("mcmod.info").ok()?;
     let entries: Vec<mcmod_info::McmodInfoEntry> =
@@ -324,9 +410,9 @@ fn extract_contact_url(contact: &Option<serde_json::Value>) -> Option<String> {
 /// `${file.jarVersion}`) which the loader substitutes from the JAR manifest at
 /// runtime; surface the real `Implementation-Version` from the manifest when
 /// present, falling back to the original value otherwise.
-fn resolve_toml_version(
+fn resolve_toml_version<R: std::io::Read + std::io::Seek>(
     version: Option<String>,
-    archive: &mut zip::ZipArchive<std::io::Cursor<&[u8]>>,
+    archive: &mut zip::ZipArchive<R>,
 ) -> Option<String> {
     let placeholder = version.clone()?;
     if !placeholder.starts_with("${") {
@@ -344,6 +430,21 @@ fn resolve_toml_version(
 #[cfg(test)]
 mod tests {
     use std::io::Write;
+
+    #[test]
+    fn reads_every_declared_mod_id_from_disk_without_including_dependencies() {
+        let jar = build_jar(&[(
+            "META-INF/mods.toml",
+            "[[mods]]\nmodId = \"first\"\nversion = \"1\"\n[[mods]]\nmodId = \"second\"\nversion = \"1\"\n[[dependencies.first]]\nmodId = \"minecraft\"\n",
+        )]);
+        let mut file = tempfile::NamedTempFile::new().unwrap();
+        file.write_all(&jar).unwrap();
+        assert_eq!(super::read_mod_ids(file.path()), vec!["first", "second"]);
+        assert_eq!(
+            super::read_mod_metadata(file.path()).unwrap().mod_id,
+            "first"
+        );
+    }
 
     fn build_jar(entries: &[(&str, &str)]) -> bytes::Bytes {
         let mut buffer = std::io::Cursor::new(Vec::new());

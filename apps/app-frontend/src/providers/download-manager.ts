@@ -2,7 +2,15 @@ import { createContext } from '@modrinth/ui'
 import { computed, type ComputedRef, type Ref, ref } from 'vue'
 
 import { setCurseForgeManualDownloads } from '@/helpers/curseforge-manual'
-import { download_request_listener, install_job_listener, loading_listener } from '@/helpers/events'
+import { onHostedPackAttemptStarted } from '@/helpers/hosted-packs'
+import { createHostedDownloadFailures } from '@/helpers/hosted-download-failures'
+import { forgetHostedCreation } from '@/composables/useHostedCreation'
+import {
+	download_request_listener,
+	install_job_listener,
+	loading_listener,
+	instance_listener,
+} from '@/helpers/events'
 import {
 	download_history_clear,
 	download_job_cancel,
@@ -21,6 +29,8 @@ import { progress_bars_list } from '@/helpers/state'
 
 const activeStatuses = new Set(['queued', 'running', 'canceling', 'waiting_for_user'])
 export const downloadBarTypes = new Set([
+	'hosted_mod_download',
+	'hosted_pack_sync',
 	'java_download',
 	'pack_file_download',
 	'pack_download',
@@ -73,11 +83,14 @@ export interface DownloadManager {
 export function createDownloadManager(handleError: (error: unknown) => void): DownloadManager {
 	const jobs = ref<InstallJobSnapshot[]>([])
 	const legacyDownloads = ref<LoadingBar[]>([])
+	const hostedFailures = createHostedDownloadFailures()
 	let started = false
 	let disposed = false
 	let unlistenJobs: (() => void) | null = null
 	let unlistenRequests: (() => void) | null = null
 	let unlistenLoading: (() => void) | null = null
+	let unlistenHostedAttempts: (() => void) | null = null
+	let unlistenInstances: (() => void) | null = null
 	let initializing = false
 	const pendingInitialUpdates: Array<
 		{ kind: 'job'; job: InstallJobSnapshot } | { kind: 'request'; update: DownloadRequestUpdate }
@@ -86,6 +99,7 @@ export function createDownloadManager(handleError: (error: unknown) => void): Do
 	const pendingRequestUpdates: DownloadRequestUpdate[] = []
 	let requestFlushTimer: ReturnType<typeof setTimeout> | null = null
 	let legacyRefreshTimer: ReturnType<typeof setTimeout> | null = null
+	let legacyRefreshGeneration = 0
 
 	function persistManualDownloadsFromJob(job: InstallJobSnapshot) {
 		if (job.status !== 'waiting_for_user' && job.status !== 'succeeded') return
@@ -263,16 +277,32 @@ export function createDownloadManager(handleError: (error: unknown) => void): Do
 	}
 
 	async function refreshLegacyDownloads() {
+		const generation = ++legacyRefreshGeneration
 		const bars = await progress_bars_list().catch((error) => {
 			handleError(error)
 			return {}
 		})
+		if (disposed || generation !== legacyRefreshGeneration) return
 		legacyDownloads.value = Object.values(bars)
+			.filter((bar) => !hostedFailures.isRetired(String(bar.loading_bar_uuid)))
 			.filter((bar) => downloadBarTypes.has(bar.bar_type?.type ?? ''))
+			.filter(
+				(bar) =>
+					!(
+						bar.bar_type?.type === 'hosted_pack_sync' &&
+						hostedFailures.has(bar.bar_type.instance_id ?? '')
+					),
+			)
 			.map((bar) => ({
 				...bar,
-				title: bar.title ?? bar.bar_type?.pack_name ?? bar.bar_type?.instance_name ?? bar.message,
+				title:
+					bar.title ??
+					bar.bar_type?.file_name ??
+					bar.bar_type?.pack_name ??
+					bar.bar_type?.instance_name ??
+					bar.message,
 			}))
+		legacyDownloads.value.push(...hostedFailures.values())
 	}
 
 	function scheduleLegacyRefresh() {
@@ -283,15 +313,38 @@ export function createDownloadManager(handleError: (error: unknown) => void): Do
 		}, 300)
 	}
 
+	function clearHostedAttempt(instanceId: string) {
+		hostedFailures.begin(instanceId, legacyDownloads.value)
+		legacyRefreshGeneration++
+		legacyDownloads.value = legacyDownloads.value.filter(
+			(bar) => !hostedFailures.isRetired(String(bar.loading_bar_uuid)),
+		)
+	}
+
 	async function start() {
 		if (started || disposed) return
 		started = true
+		unlistenHostedAttempts = onHostedPackAttemptStarted(clearHostedAttempt)
+		unlistenInstances = await instance_listener((event: { event: string; instance_id: string }) => {
+			if (event.event !== 'removed') return
+			forgetHostedCreation(event.instance_id)
+			clearHostedAttempt(event.instance_id)
+		})
 		initializing = true
 		unlistenRequests = await download_request_listener((update: DownloadRequestUpdate) =>
 			updateRequest(update),
 		)
 		unlistenJobs = await install_job_listener((job: InstallJobSnapshot) => setJob(job))
-		unlistenLoading = await loading_listener(() => scheduleLegacyRefresh())
+		unlistenLoading = await loading_listener(
+			(payload: {
+				fraction: number | null
+				loader_uuid: string
+				event: LoadingBar['bar_type']
+			}) => {
+				hostedFailures.update(payload)
+				scheduleLegacyRefresh()
+			},
+		)
 		await Promise.all([refresh(), refreshLegacyDownloads()])
 		initializing = false
 		for (const update of pendingInitialUpdates.splice(0)) {
@@ -396,7 +449,11 @@ export function createDownloadManager(handleError: (error: unknown) => void): Do
 		legacyDownloads,
 		activeJobs,
 		historyJobs,
-		activeCount: computed(() => activeJobs.value.length + legacyDownloads.value.length),
+		activeCount: computed(
+			() =>
+				activeJobs.value.length +
+				legacyDownloads.value.filter((bar) => !bar.bar_type?.error).length,
+		),
 		queuedCount: computed(() => jobs.value.filter((job) => job.status === 'queued').length),
 		start,
 		refresh,
@@ -428,6 +485,8 @@ export function createDownloadManager(handleError: (error: unknown) => void): Do
 			unlistenJobs?.()
 			unlistenRequests?.()
 			unlistenLoading?.()
+			unlistenHostedAttempts?.()
+			unlistenInstances?.()
 		},
 	}
 }

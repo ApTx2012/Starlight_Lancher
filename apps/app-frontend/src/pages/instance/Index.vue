@@ -417,6 +417,7 @@ import {
 import { useInstanceConsole } from '@/composables/useInstanceConsole'
 import { useMinecraftLaunchError } from '@/composables/useMinecraftLaunchError'
 import { useNetworkStatus } from '@/composables/useNetworkStatus'
+import { useInstanceMode } from '@/composables/useInstanceMode'
 import { postUpgradeNoticeQueryKey, usePostUpgradeNotice } from '@/composables/usePostUpgradeNotice'
 import { useSymlinkWarningDismiss } from '@/composables/useSymlinkWarningDismiss'
 import { get_project_v3 } from '@/helpers/cache.js'
@@ -514,6 +515,7 @@ const { offline } = useNetworkStatus()
 
 const instance = ref<GameInstance>()
 const instanceId = computed(() => instance.value?.id)
+const instanceModeQuery = useInstanceMode(() => instance.value?.id ?? props.id)
 const postUpgradeNoticeQuery = usePostUpgradeNotice(() => instance.value?.id ?? props.id)
 const postUpgradeNotice = computed(() => postUpgradeNoticeQuery.data.value ?? null)
 const symlinkWarning = useSymlinkWarningDismiss(instanceId)
@@ -532,7 +534,9 @@ const isServerInstance = ref(false)
 const linkedProjectV3 = ref<Labrinth.Projects.v3.Project>()
 const selected = ref<unknown[]>([])
 const canUpgradeInstance = computed(() =>
-	instance.value ? isUnmanagedUpgradeEligible(instance.value) : false,
+	instance.value && instanceModeQuery.data.value === 'local'
+		? isUnmanagedUpgradeEligible(instance.value)
+		: false,
 )
 
 const minecraftServer = computed(() => linkedProjectV3.value?.minecraft_server)
@@ -774,7 +778,6 @@ const startInstance = async (context: string) => {
 		launchElapsedTimer = undefined
 		loading.value = false
 	}
-
 }
 
 const stopInstance = async (context: string) => {

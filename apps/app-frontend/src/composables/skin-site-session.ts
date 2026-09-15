@@ -24,6 +24,49 @@ let connectedFrame: Window | null = null
 let luckRequestSequence = 0
 let playersRequestSequence = 0
 let skinUpdateRequestSequence = 0
+let packTokenRequestSequence = 0
+const pendingPackTokens = new Map<
+	string,
+	{
+		resolve: (token: string) => void
+		reject: (error: Error) => void
+		timeout: ReturnType<typeof setTimeout>
+	}
+>()
+
+function rejectPendingPackTokens() {
+	for (const request of pendingPackTokens.values()) {
+		clearTimeout(request.timeout)
+		request.reject(new Error('StarLight 登录状态已变化，请重试。'))
+	}
+	pendingPackTokens.clear()
+}
+
+export function requestSkinSiteDownloadToken(): Promise<string> {
+	if (!connectedFrame || status.value !== 'signed-in' || !user.value) {
+		return Promise.reject(
+			new Error('请先在启动器中登录 StarLight 皮肤站，再下载整合包。无需选择玩家。'),
+		)
+	}
+	const requestId = `pack-token-${Date.now()}-${++packTokenRequestSequence}`
+	return new Promise((resolve, reject) => {
+		const timeout = setTimeout(() => {
+			pendingPackTokens.delete(requestId)
+			reject(new Error('获取 StarLight 登录凭据超时，请重试。'))
+		}, 10_000)
+		pendingPackTokens.set(requestId, { resolve, reject, timeout })
+		try {
+			connectedFrame?.postMessage(
+				{ type: 'starlight-pack-token-request', requestId },
+				SKIN_SITE_ORIGIN,
+			)
+		} catch {
+			clearTimeout(timeout)
+			pendingPackTokens.delete(requestId)
+			reject(new Error('无法读取 StarLight 登录状态，请重新登录。'))
+		}
+	})
+}
 
 type PendingLuckRequest = {
 	resolve: (luck: number) => void
@@ -96,6 +139,7 @@ function rejectPendingSkinUpdateRequests(message: string) {
 
 export function setSkinSiteFrame(frame: Window | null) {
 	if (connectedFrame === frame) return
+	rejectPendingPackTokens()
 	rejectPendingLuckRequests('The skin site connection changed.')
 	rejectPendingPlayersRequests('The skin site connection changed.')
 	rejectPendingSkinUpdateRequests('The skin site connection changed.')
@@ -115,6 +159,7 @@ export function openSkinSiteLogin() {
 }
 
 export function resetSkinSiteSession() {
+	rejectPendingPackTokens()
 	rejectPendingLuckRequests('The skin site session ended.')
 	rejectPendingPlayersRequests('The skin site session ended.')
 	rejectPendingSkinUpdateRequests('The skin site session ended.')
@@ -224,6 +269,22 @@ export function receiveSkinSiteMessage(event: MessageEvent, frame: Window | null
 	if (!frame || event.source !== frame || event.origin !== SKIN_SITE_ORIGIN) return false
 	const data = event.data
 	if (!data || typeof data !== 'object') return false
+	if (data.type === 'starlight-pack-token-result') {
+		const pending = pendingPackTokens.get(data.requestId)
+		if (!pending) return false
+		clearTimeout(pending.timeout)
+		pendingPackTokens.delete(data.requestId)
+		if (
+			status.value === 'signed-in' &&
+			typeof data.token === 'string' &&
+			data.token.length > 0 &&
+			data.token.length <= 16_384 &&
+			!/\s/.test(data.token)
+		) {
+			pending.resolve(data.token)
+		} else pending.reject(new Error('StarLight 登录凭据不可用，请重新登录。'))
+		return true
+	}
 
 	if (data.type === 'starlight-skin-players-result') {
 		if (typeof data.requestId !== 'string') return false
@@ -331,6 +392,7 @@ export function receiveSkinSiteMessage(event: MessageEvent, frame: Window | null
 		)
 			return false
 		if (user.value?.uuid && user.value.uuid !== data.user.uuid) {
+			rejectPendingPackTokens()
 			rejectPendingPlayersRequests('The skin site account changed.')
 			rejectPendingSkinUpdateRequests('The skin site account changed.')
 			players.value = []
@@ -343,6 +405,7 @@ export function receiveSkinSiteMessage(event: MessageEvent, frame: Window | null
 		}
 		refreshPlayers = true
 	} else {
+		rejectPendingPackTokens()
 		rejectPendingLuckRequests('The skin site session is unavailable.')
 		rejectPendingPlayersRequests('The skin site session is unavailable.')
 		rejectPendingSkinUpdateRequests('The skin site session is unavailable.')

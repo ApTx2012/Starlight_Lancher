@@ -312,6 +312,7 @@ interface RunningProcess {
 }
 
 interface LoadingEventPayload {
+	total?: number | null
 	event: LoadingBar['bar_type']
 	loader_uuid: string
 	fraction: number | null
@@ -435,7 +436,6 @@ const unlistenProcess = await process_listener(async () => {
 const stop = async (process: RunningProcess) => {
 	try {
 		await killProcess(process.uuid).catch(handleError)
-
 	} catch (e) {
 		console.error(e)
 	}
@@ -629,6 +629,7 @@ function isVisibleLoadingBar(loadingBar: LoadingBar): boolean {
 	return (
 		loadingBar.bar_type?.type !== 'launcher_update' &&
 		[
+			'hosted_pack_sync',
 			'java_download',
 			'pack_file_download',
 			'pack_download',
@@ -655,8 +656,8 @@ function applyLoadingEvent(payload: LoadingEventPayload): boolean {
 	const loadingBar = formatLoadingBars({
 		loading_bar_uuid: payload.loader_uuid,
 		message: payload.message,
-		current: payload.fraction,
-		total: 1,
+		current: payload.fraction * (payload.total ?? 1),
+		total: payload.total ?? 1,
 		bar_type: payload.event,
 	})
 	if (!isVisibleLoadingBar(loadingBar)) return false

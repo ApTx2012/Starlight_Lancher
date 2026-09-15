@@ -14,7 +14,9 @@ use uuid::Uuid;
 pub fn init<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
     tauri::plugin::Builder::new("install")
         .invoke_handler(tauri::generate_handler![
-            hosted_catalog,
+            hosted_default,
+            hosted_set_session,
+            hosted_create,
             hosted_binding,
             hosted_sync,
             hosted_instance_mode,
@@ -54,9 +56,18 @@ pub fn init<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
 }
 
 #[tauri::command]
-pub async fn hosted_catalog() -> Result<Vec<theseus::pack::hosted::Publication>>
-{
-    Ok(theseus::pack::hosted::catalog().await?)
+pub async fn hosted_set_session(token: Option<String>) -> Result<()> {
+    Ok(theseus::pack::hosted::set_session(token).await?)
+}
+
+#[tauri::command]
+pub async fn hosted_default() -> Result<theseus::pack::hosted::Publication> {
+    Ok(theseus::pack::hosted::default_publication().await?)
+}
+
+#[tauri::command]
+pub async fn hosted_create() -> Result<String> {
+    Ok(theseus::pack::hosted::create().await?)
 }
 
 #[tauri::command]
@@ -84,9 +95,8 @@ pub async fn hosted_binding(
 #[tauri::command]
 pub async fn hosted_sync(
     instance_id: String,
-    pack_id: String,
 ) -> Result<theseus::pack::hosted::SyncResult> {
-    Ok(theseus::pack::hosted::synchronize(&instance_id, &pack_id).await?)
+    Ok(theseus::pack::hosted::synchronize(&instance_id).await?)
 }
 
 #[derive(Deserialize)]
@@ -140,6 +150,14 @@ pub async fn install_get_modpack_preview(
 pub async fn install_create_instance(
     request: InstallCreateInstanceRequest,
 ) -> Result<InstallJobSnapshot> {
+    if request.instance_mode == theseus::data::InstanceMode::StarLight {
+        return Err(theseus::ErrorKind::InputError(
+            "StarLight 实例的版本由服务器决定，请使用官方整合包自动安装入口"
+                .into(),
+        )
+        .as_error()
+        .into());
+    }
     let job = theseus::install::create_instance_with_adjuncts(
         request.name.trim().to_string(),
         request.game_version,

@@ -54,6 +54,7 @@ pub(crate) async fn download(
     part_path: &Path,
     total_size: u64,
     concurrency: usize,
+    mut progress: Option<&mut fetch::FetchProgressFn<'_>>,
 ) -> H2DownloadOutcome {
     if request
         .cancellation
@@ -103,19 +104,33 @@ pub(crate) async fn download(
             progress_delta,
         ));
     }
+    let mut progress_interval =
+        tokio::time::interval(Duration::from_millis(200));
+    progress_interval
+        .set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+    let cancellation = request.cancellation.clone().unwrap_or_default();
     loop {
-        let next = if let Some(cancellation) = request.cancellation.as_ref() {
-            tokio::select! {
-                biased;
-                _ = cancellation.cancelled() => {
+        let next = tokio::select! {
+            biased;
+            _ = cancellation.cancelled() => {
+                drop(tasks);
+                drop(output);
+                return H2DownloadOutcome::Canceled;
+            }
+            _ = progress_interval.tick(), if progress.is_some() => {
+                if let Some(callback) = progress.as_deref_mut()
+                    && callback(downloaded.load(Ordering::Relaxed).min(total_size), total_size).await.is_err()
+                {
                     drop(tasks);
                     drop(output);
-                    return H2DownloadOutcome::Canceled;
+                    return H2DownloadOutcome::Fallback {
+                        failure: H2DownloadFailure::Io,
+                        preserve_partial: false,
+                    };
                 }
-                result = tasks.next() => result,
+                continue;
             }
-        } else {
-            tasks.next().await
+            result = tasks.next() => result,
         };
         let Some(result) = next else {
             break;
@@ -130,6 +145,14 @@ pub(crate) async fn download(
         }
     }
     drop(output);
+    if let Some(callback) = progress.as_deref_mut()
+        && callback(total_size, total_size).await.is_err()
+    {
+        return H2DownloadOutcome::Fallback {
+            failure: H2DownloadFailure::Io,
+            preserve_partial: false,
+        };
+    }
     let verification = if let Some(cancellation) = request.cancellation.as_ref()
     {
         tokio::select! {
@@ -385,6 +408,10 @@ mod tests {
                             )
                             .unwrap();
                         offset += length;
+                        if offset == start + length {
+                            tokio::time::sleep(Duration::from_millis(300))
+                                .await;
+                        }
                     }
                 });
             }
@@ -420,6 +447,18 @@ mod tests {
         };
         let uri = route.url.parse().unwrap();
 
+        let mut reports = Vec::new();
+        let mut progress = |current, total| {
+            reports.push((current, total));
+            Box::pin(async { Ok(()) })
+                as std::pin::Pin<
+                    Box<
+                        dyn std::future::Future<Output = crate::Result<()>>
+                            + Send,
+                    >,
+                >
+        };
+
         let result = download(
             &connection,
             &uri,
@@ -429,10 +468,16 @@ mod tests {
             &part_path,
             data.len() as u64,
             8,
+            Some(&mut progress),
         )
         .await;
 
         assert!(matches!(result, H2DownloadOutcome::Completed(_)));
+        let size = data.len() as u64;
+        assert!(reports.iter().any(|&(current, total)| current > 0
+            && current < size
+            && total == size));
+        assert_eq!(reports.last(), Some(&(size, size)));
         assert_eq!(request_count.load(Ordering::Relaxed), 8);
         assert_eq!(tokio::fs::read(destination).await.unwrap(), *data);
         client_driver.abort();
@@ -504,6 +549,7 @@ mod tests {
                 &part_for_task,
                 2 * 1024 * 1024,
                 16,
+                None,
             )
             .await
         });

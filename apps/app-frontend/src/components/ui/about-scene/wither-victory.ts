@@ -4,6 +4,10 @@ import swordTextureUrl from '@/assets/about-scene/netherite-sword.png'
 import cleanUrl from '@/assets/about-scene/victory-clean.jpg'
 import originalUrl from '@/assets/about-scene/victory-master.jpg'
 import correctedPoseUrl from '@/assets/about-scene/victory-pose.jpg'
+import removedBeamsUrl from '@/assets/about-scene/wither-beams-removed.png'
+import rebuiltWitherUrl from '@/assets/about-scene/wither-shoulder-cleanup.png'
+
+import { witherShieldSurfaces } from './wither-shield'
 
 type Point = [number, number]
 type Vertex = [number, number, number]
@@ -17,11 +21,16 @@ export function createWitherVictoryScene(canvas: HTMLCanvasElement) {
 	const original = new Image()
 	const clean = new Image()
 	const correctedPose = new Image()
+	const rebuiltWither = new Image()
+	const removedBeams = new Image()
 	const swordTexture = new Image()
 	const cloudTexture = new Image()
 	const moonTexture = new Image()
 	const W = 2048,
 		H = W / 3,
+		artworkWidth = 2172,
+		artworkHeight = 724,
+		artworkScale = artworkWidth / W,
 		TAU = Math.PI * 2
 	let time = 0,
 		last = 0,
@@ -36,7 +45,8 @@ export function createWitherVictoryScene(canvas: HTMLCanvasElement) {
 		layer.height = Math.ceil(h)
 		return layer
 	}
-	const base = makeLayer()
+	const base = makeLayer(artworkWidth, artworkHeight)
+	const shield = makeLayer(artworkWidth, artworkHeight)
 	const star = makeLayer(180, 180)
 	const starFace = makeLayer(180, 180)
 	const swordFace = makeLayer(128, 128)
@@ -87,86 +97,6 @@ export function createWitherVictoryScene(canvas: HTMLCanvasElement) {
 		I: '#fff6da',
 		S: '#fffef1',
 	}
-	const shieldSurfaces: Point[][] = [
-		[
-			[986, 442],
-			[1124, 466],
-			[1096, 541],
-			[982, 532],
-		],
-		[
-			[1110, 462],
-			[1304, 482],
-			[1258, 625],
-			[1000, 605],
-		],
-		[
-			[1304, 482],
-			[1379, 504],
-			[1390, 614],
-			[1258, 625],
-		],
-		[
-			[1328, 481],
-			[1428, 424],
-			[1472, 446],
-			[1390, 523],
-		],
-		[
-			[1014, 603],
-			[1170, 626],
-			[1136, 683],
-			[869, 683],
-		],
-		[
-			[792, 481],
-			[950, 451],
-			[987, 550],
-			[835, 604],
-		],
-		[
-			[792, 481],
-			[835, 604],
-			[821, 625],
-			[780, 533],
-		],
-		[
-			[835, 604],
-			[987, 550],
-			[974, 589],
-			[821, 625],
-		],
-		[
-			[1165, 357],
-			[1301, 355],
-			[1247, 471],
-			[1108, 441],
-		],
-		[
-			[1301, 355],
-			[1358, 419],
-			[1311, 500],
-			[1247, 471],
-		],
-		[
-			[1483, 398],
-			[1626, 470],
-			[1558, 590],
-			[1404, 514],
-		],
-		[
-			[1626, 470],
-			[1655, 549],
-			[1606, 637],
-			[1558, 590],
-		],
-		[
-			[1404, 514],
-			[1558, 590],
-			[1606, 637],
-			[1449, 592],
-		],
-	]
 	// Irregular failing-lamp events: brief reignitions, weak sputters, and dark gaps.
 	const shieldEvents = [
 		[0, 0.68, 0.48],
@@ -259,10 +189,12 @@ export function createWitherVictoryScene(canvas: HTMLCanvasElement) {
 	function prepare() {
 		// Restore the sharp master for all unaffected materials, anatomy and terrain.
 		const b = base.getContext('2d')!
+		b.setTransform(artworkScale, 0, 0, artworkScale, 0, 0)
 		b.imageSmoothingEnabled = false
 		b.drawImage(original, 0, 0, W, H)
-		const sky = makeLayer(),
+		const sky = makeLayer(artworkWidth, artworkHeight),
 			skyCtx = sky.getContext('2d')!
+		skyCtx.setTransform(artworkScale, 0, 0, artworkScale, 0, 0)
 		skyCtx.drawImage(clean, 0, 0, W, H)
 		skyCtx.globalCompositeOperation = 'destination-in'
 		const skyFade = skyCtx.createLinearGradient(0, 409, 0, 448)
@@ -270,7 +202,7 @@ export function createWitherVictoryScene(canvas: HTMLCanvasElement) {
 		skyFade.addColorStop(1, 'transparent')
 		skyCtx.fillStyle = skyFade
 		skyCtx.fillRect(0, 0, W, 442)
-		b.drawImage(sky, 0, 0)
+		b.drawImage(sky, 0, 0, W, H)
 		const restore = (source: HTMLImageElement, polygon: Point[]) => {
 			b.save()
 			b.beginPath()
@@ -341,7 +273,7 @@ export function createWitherVictoryScene(canvas: HTMLCanvasElement) {
 		ms.fillRect(-140, -135, 280, 270)
 		ms.restore()
 		b.drawImage(moonSky, 193, -20)
-		// Use original sharp head faces, preserving their exact silhouette without a sky border.
+		// Restore the sharp skull planes covered by the sky plate.
 		restore(original, [
 			[1159, 355],
 			[1318, 352],
@@ -350,7 +282,7 @@ export function createWitherVictoryScene(canvas: HTMLCanvasElement) {
 			[1246, 474],
 			[1107, 443],
 		])
-		// Local broken-sternum and old-blade removal; the unaffected ribs stay from the master.
+		// Remove the old painted blade without resampling the rest of the creature.
 		restore(clean, [
 			[975, 339],
 			[1002, 334],
@@ -365,7 +297,7 @@ export function createWitherVictoryScene(canvas: HTMLCanvasElement) {
 			[1053, 502],
 			[1006, 476],
 		])
-		// Remove the two baked blue lightning remnants without replacing the whole Wither.
+		// Retain the previously approved removal of baked lightning below the skulls.
 		restore(clean, [
 			[900, 595],
 			[948, 572],
@@ -385,6 +317,49 @@ export function createWitherVictoryScene(canvas: HTMLCanvasElement) {
 			[1284, 579],
 			[1318, 525],
 			[1320, 470],
+		])
+		// Use regeneration only to erase the two unwanted shoulder slabs. The skulls,
+		// ribs, character and background retain their original sharp source pixels.
+		restore(rebuiltWither, [
+			[963, 423],
+			[1014, 417],
+			[1049, 431],
+			[1074, 479],
+			[1066, 495],
+			[1017, 511],
+			[985, 524],
+			[963, 466],
+		])
+		restore(rebuiltWither, [
+			[1360, 415],
+			[1392, 414],
+			[1429, 427],
+			[1448, 445],
+			[1405, 506],
+			[1398, 532],
+			[1355, 528],
+			[1319, 514],
+			[1324, 494],
+		])
+		// Replace only the removed beam silhouettes with the newly exposed background.
+		// No full-frame regeneration or feathering: unaffected source pixels stay intact.
+		restore(removedBeams, [
+			[976, 480],
+			[1146, 462],
+			[1152, 488],
+			[1124, 508],
+			[999, 530],
+			[990, 542],
+		])
+		restore(removedBeams, [
+			[1294, 489],
+			[1404, 498],
+			[1445, 548],
+			[1452, 629],
+			[1402, 621],
+			[1305, 615],
+			[1299, 549],
+			[1283, 521],
 		])
 		restore(correctedPose, [
 			[811, 377],
@@ -673,57 +648,70 @@ export function createWitherVictoryScene(canvas: HTMLCanvasElement) {
 		const level = shieldLevel(t)
 		canvas.dataset.shieldIntensity = level.toFixed(3)
 		if (level < 0.003) return
-		ctx.save()
-		ctx.globalCompositeOperation = 'screen'
+		const surface = shield.getContext('2d')!
+		surface.setTransform(artworkScale, 0, 0, artworkScale, 0, 0)
+		surface.clearRect(0, 0, W, H + 1)
+		surface.save()
+		surface.globalCompositeOperation = 'source-over'
+		const trace = (points: Point[]) => {
+			surface.beginPath()
+			points.forEach((p, i) => (i ? surface.lineTo(...p) : surface.moveTo(...p)))
+			surface.closePath()
+		}
 		// Tight fractured-cavity contour: blue armor remains on the surrounding ribs.
-		ctx.beginPath()
-		ctx.rect(0, 0, W, H)
-		wound.forEach((p, i) => (i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])))
-		ctx.closePath()
-		ctx.clip('evenodd')
-		shieldSurfaces.forEach((quad, index) => {
+		surface.beginPath()
+		surface.rect(0, 0, W, H)
+		wound.forEach((p, i) => (i ? surface.lineTo(p[0], p[1]) : surface.moveTo(p[0], p[1])))
+		surface.closePath()
+		surface.clip('evenodd')
+		witherShieldSurfaces.forEach(({ plane: quad, outline = quad, shade = 1 }, index) => {
 			const map = (u: number, v: number): Point => [
 				(1 - v) * ((1 - u) * quad[0][0] + u * quad[1][0]) +
 					v * ((1 - u) * quad[3][0] + u * quad[2][0]),
 				(1 - v) * ((1 - u) * quad[0][1] + u * quad[1][1]) +
 					v * ((1 - u) * quad[3][1] + u * quad[2][1]),
 			]
-			const alpha = level * (0.79 + 0.21 * rand(index + Math.floor(t * 7)))
-			path(quad)
-			ctx.fillStyle = `rgba(55,126,203,${alpha * 0.57})`
-			ctx.fill()
-			ctx.save()
-			path(quad)
-			ctx.clip()
+			const alpha = level * shade * (0.79 + 0.21 * rand(index + Math.floor(t * 7)))
+			trace(outline)
+			surface.fillStyle = `rgba(55,126,203,${alpha * 0.38})`
+			surface.fill()
+			surface.save()
+			trace(outline)
+			surface.clip()
 			for (let row = 0; row < 8; row++)
 				for (let col = 0; col < 8; col++) {
 					const grain = rand(row * 17 + col * 5 + index * 139)
 					if (grain < 0.56) continue
-					path([
+					trace([
 						map(col / 8, row / 8),
 						map((col + 1) / 8, row / 8),
 						map((col + 1) / 8, (row + 1) / 8),
 						map(col / 8, (row + 1) / 8),
 					])
-					ctx.fillStyle = `rgba(104,167,223,${alpha * (grain - 0.4) * 0.42})`
-					ctx.fill()
+					surface.fillStyle = `rgba(104,167,223,${alpha * (grain - 0.4) * 0.42})`
+					surface.fill()
 				}
 			// Stepped translucent bands wrap each actual surface, like the supplied armor image.
 			for (let band = -1; band < 3; band++)
 				for (let col = 0; col < 8; col++) {
 					const v = band * 0.48 + (t / 24) * 0.48 + Math.floor(rand(col + index * 11) * 3) / 32
 					const height = 0.034 + rand(col * 3 + band + index) * 0.022
-					path([
+					trace([
 						map(col / 8, v),
 						map((col + 1) / 8, v),
 						map((col + 1) / 8, v + height),
 						map(col / 8, v + height),
 					])
-					ctx.fillStyle = `rgba(210,229,172,${alpha * 0.75})`
-					ctx.fill()
+					surface.fillStyle = `rgba(210,229,172,${alpha * 0.75})`
+					surface.fill()
 				}
-			ctx.restore()
+			surface.restore()
 		})
+		surface.restore()
+		// Composite the fitted faces once, without bright overlaps at shared bone edges.
+		ctx.save()
+		ctx.globalCompositeOperation = 'screen'
+		ctx.drawImage(shield, 0, 0, W, H)
 		ctx.restore()
 	}
 	function drawClouds(elapsed: number) {
@@ -773,9 +761,10 @@ export function createWitherVictoryScene(canvas: HTMLCanvasElement) {
 		ctx.clearRect(0, 0, W, H)
 		const cycle = (t * TAU) / 24
 		ctx.save()
-		ctx.translate(W / 2, H / 2)
-		ctx.scale(1.008, 1.008)
-		ctx.translate(-W / 2 + Math.sin(cycle) * 1.6, -H / 2 + Math.sin(cycle * 2) * 0.7)
+		// Keep the static plate pixel-stable; animate only the independent effects.
+		// The full-resolution master is sampled once, without a floating camera zoom.
+		ctx.imageSmoothingEnabled = true
+		ctx.imageSmoothingQuality = 'high'
 		ctx.drawImage(base, 0, 0, W, H)
 		drawMoon()
 		drawClouds(elapsed)
@@ -883,7 +872,10 @@ export function createWitherVictoryScene(canvas: HTMLCanvasElement) {
 		if (destroyed) return
 		const width = canvas.getBoundingClientRect().width
 		if (width <= 0) return
-		canvas.width = Math.min(W, Math.max(1, Math.round(width * Math.min(2, devicePixelRatio || 1))))
+		canvas.width = Math.min(
+			artworkWidth,
+			Math.max(1, Math.round(width * Math.min(2, devicePixelRatio || 1))),
+		)
 		canvas.height = Math.round(canvas.width / 3)
 		cloudField?.resize(canvas.width, canvas.height)
 		if (ready) draw(time)
@@ -903,7 +895,16 @@ export function createWitherVictoryScene(canvas: HTMLCanvasElement) {
 			img.onerror = () => reject(new Error('Unable to load about-page artwork'))
 			img.src = url
 		})
-	const imageAssets = [original, clean, swordTexture, correctedPose, cloudTexture, moonTexture]
+	const imageAssets = [
+		original,
+		clean,
+		swordTexture,
+		correctedPose,
+		cloudTexture,
+		moonTexture,
+		rebuiltWither,
+		removedBeams,
+	]
 	const loading = Promise.all([
 		loaded(original, originalUrl),
 		loaded(clean, cleanUrl),
@@ -911,6 +912,8 @@ export function createWitherVictoryScene(canvas: HTMLCanvasElement) {
 		loaded(correctedPose, correctedPoseUrl),
 		loaded(cloudTexture, cloudTextureUrl),
 		loaded(moonTexture, moonTextureUrl),
+		loaded(rebuiltWither, rebuiltWitherUrl),
+		loaded(removedBeams, removedBeamsUrl),
 	])
 		.then(() => {
 			if (destroyed) return
@@ -941,7 +944,7 @@ export function createWitherVictoryScene(canvas: HTMLCanvasElement) {
 			reducedMotion.removeEventListener('change', updatePlayback)
 			cloudField?.dispose()
 			cloudField = undefined
-			for (const layer of [base, star, starFace, swordFace, grippingFingers]) {
+			for (const layer of [base, shield, star, starFace, swordFace, grippingFingers]) {
 				layer.width = 1
 				layer.height = 1
 			}

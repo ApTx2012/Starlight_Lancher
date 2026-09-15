@@ -109,6 +109,7 @@ impl Drop for LoadingBarId {
                                 message: "Completed".to_string(),
                                 event,
                                 loader_uuid,
+                                total: Some(bar.total),
                             },
                         );
                         tracing::trace!(
@@ -137,6 +138,18 @@ impl Drop for LoadingBarId {
 #[serde(rename_all = "snake_case")]
 pub enum LoadingBarType {
     LegacyDataMigration,
+    HostedPackSync {
+        instance_id: String,
+        instance_name: String,
+        error: Option<String>,
+    },
+    HostedModDownload {
+        instance_id: String,
+        instance_name: String,
+        batch_id: String,
+        file_name: String,
+        error: Option<String>,
+    },
     DirectoryMove {
         old: PathBuf,
         new: PathBuf,
@@ -189,6 +202,7 @@ pub struct LoadingPayload {
     pub loader_uuid: Uuid,
     pub fraction: Option<f64>, // by convention, if optional, it means the loading is done
     pub message: String,
+    pub total: Option<f64>,
 }
 
 #[derive(Serialize, Clone)]

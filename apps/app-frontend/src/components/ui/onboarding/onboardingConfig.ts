@@ -41,24 +41,6 @@ export const onboardingMessages = defineMessages({
 		defaultMessage: 'Your last next launcher.',
 	},
 	start: { id: 'app.onboarding.action.start', defaultMessage: 'Take the tour' },
-	homeWidgetsTitle: {
-		id: 'app.onboarding.home-widgets.title',
-		defaultMessage: 'Your Home, your layout',
-	},
-	homeWidgetsDescription: {
-		id: 'app.onboarding.home-widgets.description',
-		defaultMessage:
-			'Information Home is built from widgets for recent activity, playtime, instances, worlds, and servers. The grid reflows as the window or account sidebar changes.',
-	},
-	homeCustomizeTitle: {
-		id: 'app.onboarding.home-customize.title',
-		defaultMessage: 'Arrange it your way',
-	},
-	homeCustomizeDescription: {
-		id: 'app.onboarding.home-customize.description',
-		defaultMessage:
-			'Use the bottom-right edit control to add, resize, and configure widgets. While editing, switch between an automatically packed grid and a free grid that preserves empty cells.',
-	},
 	discoverTitle: { id: 'app.onboarding.discover.title', defaultMessage: 'Find something new' },
 	discoverDescription: {
 		id: 'app.onboarding.discover.description',
@@ -90,12 +72,12 @@ export const onboardingMessages = defineMessages({
 	},
 	homeLayoutTitle: {
 		id: 'app.onboarding.home-layout.title',
-		defaultMessage: 'Change the amount of detail',
+		defaultMessage: 'Switch your home',
 	},
 	homeLayoutDescription: {
 		id: 'app.onboarding.home-layout.description',
 		defaultMessage:
-			'Use the bottom-right control to switch between Information Home and Minimal Home. Widget editing stays with Information Home.',
+			'Use the bottom-right control to switch between the StarLight skin site home and the focused instance launcher.',
 	},
 	continueArea: {
 		id: 'app.onboarding.action.continue-area',
@@ -105,7 +87,7 @@ export const onboardingMessages = defineMessages({
 	skinsDescription: {
 		id: 'app.onboarding.skins.description',
 		defaultMessage:
-			'Keep your Minecraft skins together. Signing in can wait until you feel like it.',
+			'Choose a skin site player or Minecraft account, then preview and apply the skins available to that profile.',
 	},
 	clickSkins: {
 		id: 'app.onboarding.action.click-skins',
@@ -114,16 +96,8 @@ export const onboardingMessages = defineMessages({
 	skinsPageTitle: { id: 'app.onboarding.skins-page.title', defaultMessage: 'Your skin drawer' },
 	skinsPageDescription: {
 		id: 'app.onboarding.skins-page.description',
-		defaultMessage: 'Add, preview, sort, and apply skins here. No pressure to sign in just yet.',
-	},
-	accountTitle: {
-		id: 'app.onboarding.account.title',
-		defaultMessage: 'Accounts, on your schedule',
-	},
-	accountDescription: {
-		id: 'app.onboarding.account.description',
 		defaultMessage:
-			'When you are ready, sign in, switch accounts, or open your profile here. No deadline.',
+			'Select a profile, preview its available skins, and apply changes when that account supports skin management.',
 	},
 	downloadsTitle: { id: 'app.onboarding.downloads.title', defaultMessage: 'Download control room' },
 	downloadsDescription: {
@@ -160,35 +134,6 @@ export const onboardingMessages = defineMessages({
 		defaultMessage:
 			'Theme, accent, backgrounds, and window effects all live here. Make the launcher feel familiar.',
 	},
-	languageTitle: { id: 'app.onboarding.language.title', defaultMessage: 'Speak your language' },
-	languageDescription: {
-		id: 'app.onboarding.language.description',
-		defaultMessage: 'Pick the launcher language and manage translations. No decoder ring required.',
-	},
-	translationTitle: {
-		id: 'app.onboarding.translation.title',
-		defaultMessage: 'Translation, the Starlight way',
-	},
-	translationDescription: {
-		id: 'app.onboarding.translation.description',
-		defaultMessage:
-			'Translate Modrinth project titles, summaries, and descriptions while you browse. Keep the original, show both, or make the translation the main character.',
-	},
-	aiTitle: {
-		id: 'app.onboarding.ai.title',
-		defaultMessage: 'Bring your own AI provider',
-	},
-	aiDescription: {
-		id: 'app.onboarding.ai.description',
-		defaultMessage:
-			'Connect text-model providers once, choose the models you want available, or switch every AI feature off in one place.',
-	},
-	javaTitle: { id: 'app.onboarding.java.title', defaultMessage: 'Java, under the hood' },
-	javaDescription: {
-		id: 'app.onboarding.java.description',
-		defaultMessage:
-			'The Java runtimes that start Minecraft live here. Technical, but well-behaved.',
-	},
 	defaultsTitle: { id: 'app.onboarding.defaults.title', defaultMessage: 'Start ahead' },
 	defaultsDescription: {
 		id: 'app.onboarding.defaults.description',
@@ -203,12 +148,6 @@ export const onboardingMessages = defineMessages({
 		id: 'app.onboarding.resources.description',
 		defaultMessage:
 			'Choose how content downloads and installs, from download sources to safety checks.',
-	},
-	updatesTitle: { id: 'app.onboarding.updates.title', defaultMessage: 'Stay in the loop' },
-	updatesDescription: {
-		id: 'app.onboarding.updates.description',
-		defaultMessage:
-			'Choose when Starlight checks for updates and whether it installs them for you.',
 	},
 	clickTab: { id: 'app.onboarding.action.click-tab', defaultMessage: 'Click this tab to continue' },
 	libraryTitle: { id: 'app.onboarding.library.title', defaultMessage: 'Your launch shelf' },
@@ -228,7 +167,7 @@ export const onboardingMessages = defineMessages({
 	libraryPageDescription: {
 		id: 'app.onboarding.library-page.description',
 		defaultMessage:
-			'Filter by modpack, server, or custom setup, then open any instance to manage it.',
+			'Switch between all instances, modpacks, and custom setups, then open any instance to manage it.',
 	},
 	createTitle: { id: 'app.onboarding.create.title', defaultMessage: 'Make a fresh start' },
 	createDescription: {
@@ -247,7 +186,7 @@ export const onboardingMessages = defineMessages({
 	instanceModeDescription: {
 		id: 'app.onboarding.instance-mode.description',
 		defaultMessage:
-			'Choose StarLight to play on the StarLight server and automatically sync its approved updates. Local instances skip StarLight sync, start faster, and let you use your own modpacks for other servers or single-player. You can change this later in instance settings.',
+			'StarLight automatically installs the administrator-selected modpack and versions, then checks and completes updates before every launch. A StarLight login is required. Choose Local to select your own versions and modpacks for other servers or single-player.',
 	},
 	creationDescription: {
 		id: 'app.onboarding.creation.description',
@@ -320,7 +259,7 @@ export const onboardingMessages = defineMessages({
 	labDescription: {
 		id: 'app.onboarding.lab.description',
 		defaultMessage:
-			'The Lab keeps local Minecraft tools inside the launcher, without another website or account.',
+			'The Lab keeps Minecraft creation, world, and maintenance tools inside the launcher.',
 	},
 	clickLab: {
 		id: 'app.onboarding.action.click-lab',
@@ -333,63 +272,7 @@ export const onboardingMessages = defineMessages({
 	labToolsDescription: {
 		id: 'app.onboarding.lab-tools.description',
 		defaultMessage:
-			'Create formatted text and recipe data packs, explore Java worlds, and inspect schematic builds without leaving the launcher.',
-	},
-	openGradientText: {
-		id: 'app.onboarding.action.open-gradient-text',
-		defaultMessage: 'Open Gradient text generator to continue',
-	},
-	labEditorTitle: {
-		id: 'app.onboarding.lab-editor.title',
-		defaultMessage: 'Build and copy in one place',
-	},
-	labEditorDescription: {
-		id: 'app.onboarding.lab-editor.description',
-		defaultMessage:
-			'Edit text, choose colors, preview the result, and copy the format your Minecraft setup expects.',
-	},
-	labSeedMapTitle: {
-		id: 'app.onboarding.lab-seed-map.title',
-		defaultMessage: 'Find a world before you load it',
-	},
-	labSeedMapDescription: {
-		id: 'app.onboarding.lab-seed-map.description',
-		defaultMessage:
-			'Enter a seed or load one from an instance, then inspect biomes, structures, and ore layers on the local map.',
-	},
-	returnToLab: {
-		id: 'app.onboarding.action.return-lab',
-		defaultMessage: 'Click Lab to continue',
-	},
-	openSeedMap: {
-		id: 'app.onboarding.action.open-seed-map',
-		defaultMessage: 'Open Seed map to continue',
-	},
-	openSchematicWorkshop: {
-		id: 'app.onboarding.action.open-schematic-workshop',
-		defaultMessage: 'Open Schematic workshop to continue',
-	},
-	openRecipeGenerator: {
-		id: 'app.onboarding.action.open-recipe-generator',
-		defaultMessage: 'Open Recipe generator to continue',
-	},
-	labRecipeGeneratorTitle: {
-		id: 'app.onboarding.lab-recipe-generator.title',
-		defaultMessage: 'Craft data pack recipes',
-	},
-	labRecipeGeneratorDescription: {
-		id: 'app.onboarding.lab-recipe-generator.description',
-		defaultMessage:
-			'Pick a Java version, fill the recipe slots, and copy or export the JSON locally.',
-	},
-	labSchematicTitle: {
-		id: 'app.onboarding.lab-schematic.title',
-		defaultMessage: 'Inspect a build before placing it',
-	},
-	labSchematicDescription: {
-		id: 'app.onboarding.lab-schematic.description',
-		defaultMessage:
-			'Open a local .litematic or .schem file, or choose one from an installed instance. The 3D workspace keeps viewing, measurement, layer controls, materials, and local edits together.',
+			'Create and edit skins, generate formatted text and recipes, explore seeds, inspect schematics, and translate mods locally.',
 	},
 	skip: { id: 'app.onboarding.action.skip', defaultMessage: 'Leave the tour' },
 	mascotAlt: { id: 'app.onboarding.mascot-alt', defaultMessage: 'Starlight guide' },
@@ -458,18 +341,6 @@ export const onboardingTours: Record<OnboardingMode, OnboardingStep[]> = {
 			),
 		),
 		inspect(
-			'home-widget-grid',
-			'home-widget-grid',
-			onboardingMessages.homeWidgetsTitle,
-			onboardingMessages.homeWidgetsDescription,
-		),
-		inspect(
-			'home-widget-customize',
-			'home-widget-customize',
-			onboardingMessages.homeCustomizeTitle,
-			onboardingMessages.homeCustomizeDescription,
-		),
-		inspect(
 			'home-layout-switch',
 			'home-layout-switch',
 			onboardingMessages.homeLayoutTitle,
@@ -524,16 +395,6 @@ export const onboardingTours: Record<OnboardingMode, OnboardingStep[]> = {
 			onboardingMessages.skinsPageDescription,
 		),
 		step(
-			'account',
-			'inspect',
-			copy(
-				onboardingMessages.accountTitle,
-				onboardingMessages.accountDescription,
-				onboardingMessages.continueArea,
-			),
-			control('account-entry'),
-		),
-		step(
 			'lab-navigation',
 			'navigate',
 			copy(
@@ -548,90 +409,6 @@ export const onboardingTours: Record<OnboardingMode, OnboardingStep[]> = {
 			'lab-tools',
 			onboardingMessages.labToolsTitle,
 			onboardingMessages.labToolsDescription,
-		),
-		step(
-			'lab-gradient-text-navigation',
-			'navigate',
-			copy(
-				onboardingMessages.labEditorTitle,
-				onboardingMessages.labEditorDescription,
-				onboardingMessages.openGradientText,
-			),
-			control('lab-gradient-text-card', '/lab/gradient-text'),
-		),
-		inspect(
-			'lab-gradient-text-editor',
-			'lab-gradient-text-editor',
-			onboardingMessages.labEditorTitle,
-			onboardingMessages.labEditorDescription,
-		),
-		step(
-			'lab-return-navigation',
-			'navigate',
-			copy(
-				onboardingMessages.labSeedMapTitle,
-				onboardingMessages.labSeedMapDescription,
-				onboardingMessages.returnToLab,
-			),
-			control('nav-lab', '/lab'),
-		),
-		step(
-			'lab-seed-map-navigation',
-			'navigate',
-			copy(
-				onboardingMessages.labSeedMapTitle,
-				onboardingMessages.labSeedMapDescription,
-				onboardingMessages.openSeedMap,
-			),
-			control('lab-seed-map-card', '/lab/seed-map'),
-		),
-		inspect(
-			'lab-seed-map-workspace',
-			'seed-map-workspace',
-			onboardingMessages.labSeedMapTitle,
-			onboardingMessages.labSeedMapDescription,
-		),
-		step(
-			'lab-return-schematic-navigation',
-			'navigate',
-			copy(
-				onboardingMessages.labSchematicTitle,
-				onboardingMessages.labSchematicDescription,
-				onboardingMessages.returnToLab,
-			),
-			control('nav-lab', '/lab'),
-		),
-		step(
-			'lab-schematic-navigation',
-			'navigate',
-			copy(
-				onboardingMessages.labSchematicTitle,
-				onboardingMessages.labSchematicDescription,
-				onboardingMessages.openSchematicWorkshop,
-			),
-			control('lab-schematic-preview-card', '/lab/schematic-preview'),
-		),
-		inspect(
-			'lab-schematic-workspace',
-			'schematic-preview-workspace',
-			onboardingMessages.labSchematicTitle,
-			onboardingMessages.labSchematicDescription,
-		),
-		step(
-			'lab-recipe-generator-navigation',
-			'navigate',
-			copy(
-				onboardingMessages.labRecipeGeneratorTitle,
-				onboardingMessages.labRecipeGeneratorDescription,
-				onboardingMessages.openRecipeGenerator,
-			),
-			control('lab-recipe-generator-card', '/lab/recipe-generator'),
-		),
-		inspect(
-			'lab-recipe-generator-workspace',
-			'recipe-generator-workspace',
-			onboardingMessages.labRecipeGeneratorTitle,
-			onboardingMessages.labRecipeGeneratorDescription,
 		),
 		step(
 			'downloads-navigation',
@@ -708,6 +485,7 @@ export const onboardingTours: Record<OnboardingMode, OnboardingStep[]> = {
 			{
 				targetId: 'creation-methods',
 				branchByTarget: {
+					'creation-method-starlight': { next: 'complete' },
 					'creation-method-custom': { creationPath: 'custom', next: 'creation-name' },
 					'creation-method-import': { next: 'complete' },
 				},

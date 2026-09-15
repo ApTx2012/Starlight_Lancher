@@ -642,11 +642,17 @@ pub(crate) fn is_native_library(library: &Library) -> bool {
             .is_some_and(|classifier| classifier.starts_with("natives-"))
 }
 
-/// Whether this library carries a Java artifact (regular JAR) that must be
-/// downloaded and placed on the classpath. A library can have both a Java
+/// Whether this library carries a non-native primary artifact that must be
+/// downloaded. This is normally a Java JAR, but loader processors can also
+/// declare archives and mapping files. A library can have both a primary
 /// artifact and native classifiers after manifest merging (LWJGL is the
 /// canonical example); the two are independent and must not be treated as
 /// mutually exclusive.
+///
+/// `include_in_classpath` only controls the final Minecraft runtime classpath.
+/// Forge and NeoForge deliberately exclude installer processor dependencies
+/// from that classpath, but those artifacts are still required while the
+/// loader processors run.
 pub(crate) fn needs_java_artifact(library: &Library) -> bool {
     // Four-part native coordinates (group:artifact:version:natives-*) store
     // their native archive metadata in downloads.artifact, which is not a
@@ -671,7 +677,7 @@ pub(crate) fn needs_java_artifact(library: &Library) -> bool {
     {
         return false;
     }
-    library.include_in_classpath
+    true
 }
 
 fn java_artifact_applies(
@@ -2851,6 +2857,26 @@ mod tests {
             .unwrap(),
             vec![format!("{LIBRARIES_MAVEN}/{artifact_path}")]
         );
+    }
+
+    #[test]
+    fn neoforge_processor_dependency_is_downloaded_outside_runtime_classpath() {
+        let library: Library = serde_json::from_value(serde_json::json!({
+            "name": "net.neoforged.installertools:installertools:2.1.2",
+            "include_in_classpath": false,
+            "downloadable": true,
+            "downloads": {"artifact": {
+                "path": "net/neoforged/installertools/installertools/2.1.2/installertools-2.1.2.jar",
+                "url": "https://maven.neoforged.net/releases/net/neoforged/installertools/installertools/2.1.2/installertools-2.1.2.jar",
+                "sha1": "72524c0362f812d8aa4cdb4c03e9b45e2b71ae3b",
+                "size": 83543
+            }}
+        }))
+        .unwrap();
+
+        assert!(!library.include_in_classpath);
+        assert!(needs_java_artifact(&library));
+        assert!(java_artifact_applies(&library, "x86_64", false));
     }
 
     #[test]

@@ -34,6 +34,7 @@ pub async fn plan_instance_upgrade(
     instance_id: &str,
     target_environment: crate::state::InstanceUpgradeEnvironment,
 ) -> crate::Result<InstanceUpgradePlan> {
+    ensure_local_version_management(instance_id).await?;
     let state = State::get().await?;
     let creation_watch =
         state.file_watcher.content_watch_snapshot(instance_id).await;
@@ -380,6 +381,7 @@ pub async fn execute_instance_upgrade(
     let state = State::get().await?;
     let handle = stored_plan_handle(plan_id)?;
     let mut stored = handle.lock().await;
+    ensure_local_version_management(&stored.plan.instance_id).await?;
     if stored.execution_started {
         return Err(crate::ErrorKind::InputError(
             "Upgrade plan execution has already started".to_string(),
@@ -638,10 +640,22 @@ fn stored_plan_handle(plan_id: &str) -> crate::Result<StoredUpgradePlan> {
         })
 }
 
+async fn ensure_local_version_management(
+    instance_id: &str,
+) -> crate::Result<()> {
+    if crate::pack::hosted::instance_mode(instance_id).await?
+        == crate::state::InstanceMode::StarLight
+    {
+        return Err(crate::ErrorKind::InputError("StarLight 实例的游戏版本和加载器由服务器整合包管理，不能手动选择版本".into()).as_error());
+    }
+    Ok(())
+}
+
 async fn ensure_current_revision(
     stored: &mut StoredUpgradePlanState,
     state: &State,
 ) -> crate::Result<crate::state::instances::commands::ReadOnlyUpgradeSource> {
+    ensure_local_version_management(&stored.plan.instance_id).await?;
     let current_revision = content_rows::get_applied_content_set(
         &stored.plan.instance_id,
         &state.pool,

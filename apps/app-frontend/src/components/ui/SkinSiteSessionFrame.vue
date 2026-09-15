@@ -1,18 +1,31 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
+import { clearHostedSession } from '@/helpers/hosted-packs'
 
 import {
 	receiveSkinSiteMessage,
 	resetSkinSiteSession,
 	setSkinSiteFrame,
 	SKIN_SITE_ORIGIN,
+	skinSiteStatus,
+	skinSiteUser,
 } from '@/composables/skin-site-session'
 
 const frame = ref<HTMLIFrameElement>()
 let lastMessage = 0
 let expiryTimer: ReturnType<typeof setInterval> | undefined
 
+watch(
+	[skinSiteStatus, () => skinSiteUser.value?.uuid],
+	() => {
+		void clearHostedSession().catch(() => {})
+	},
+	{ flush: 'sync' },
+)
+
 function connect() {
+	resetSkinSiteSession()
+	lastMessage = 0
 	const contentWindow = frame.value?.contentWindow ?? null
 	setSkinSiteFrame(contentWindow)
 	contentWindow?.postMessage({ type: 'starlight-skin-session-connect' }, SKIN_SITE_ORIGIN)
@@ -35,6 +48,7 @@ onUnmounted(() => {
 	clearInterval(expiryTimer)
 	setSkinSiteFrame(null)
 	resetSkinSiteSession()
+	void clearHostedSession().catch(() => {})
 })
 </script>
 

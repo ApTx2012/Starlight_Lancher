@@ -1,4 +1,6 @@
 //! Administrator-approved skin-site packs. Only content-addressed changed files cross the network.
+mod progress;
+mod tagged;
 use crate::{
     State,
     state::{
@@ -6,9 +8,12 @@ use crate::{
         InstanceLaunchOverridesPatch, InstanceMode, ModLoader,
     },
     util::fetch::{
-        DownloadRequest, Integrity, ResourceClass, download_to_path, fetch_json,
+        DownloadRequest, Integrity, ResourceClass, configured_client,
+        download_to_path,
     },
 };
+use futures::FutureExt;
+use progress::PackProgress;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::{
@@ -26,6 +31,42 @@ const BINDING: &str = ".starlight-pack.json";
 const JOURNAL: &str = ".starlight-pack-pending.json";
 static GATES: LazyLock<dashmap::DashMap<String, Arc<Mutex<()>>>> =
     LazyLock::new(dashmap::DashMap::new);
+static SESSION: Mutex<Option<DownloadSession>> = Mutex::const_new(None);
+
+struct DownloadSession {
+    authorization: String,
+    updated: std::time::Instant,
+}
+
+impl DownloadSession {
+    fn new(token: String) -> crate::Result<Self> {
+        if token.is_empty()
+            || token.len() > 16_384
+            || token.bytes().any(|b| !b.is_ascii_graphic())
+        {
+            return Err(invalid("StarLight 登录凭据无效，请重新登录"));
+        }
+        Ok(Self {
+            authorization: format!("Bearer {token}"),
+            updated: std::time::Instant::now(),
+        })
+    }
+
+    fn authorization(&self) -> crate::Result<String> {
+        if self.updated.elapsed() > std::time::Duration::from_secs(90) {
+            return Err(invalid("StarLight 登录状态需要刷新，请重试"));
+        }
+        Ok(self.authorization.clone())
+    }
+}
+
+/// The embedded skin site's JWT is held in memory only; the server validates it.
+pub async fn set_session(token: Option<String>) -> crate::Result<()> {
+    let mut session = SESSION.lock().await;
+    *session = None;
+    *session = token.map(DownloadSession::new).transpose()?;
+    Ok(())
+}
 
 fn instance_gate(instance_id: &str) -> Arc<Mutex<()>> {
     GATES.entry(instance_id.to_owned()).or_default().clone()
@@ -38,9 +79,13 @@ pub struct Runtime {
     pub loader: String,
     pub loader_version: Option<String>,
 }
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct PackFile {
+    #[serde(default)]
+    pub mod_ids: Vec<String>,
+    #[serde(default)]
+    pub external: Option<External>,
     pub path: String,
     pub sha256: String,
     pub size: u64,
@@ -49,7 +94,7 @@ pub struct PackFile {
     #[serde(default)]
     pub preserve: bool,
 }
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct External {
     pub project_id: u32,
@@ -83,6 +128,25 @@ pub struct Publication {
 pub struct Binding {
     pub publication: Publication,
     pub files: Vec<PackFile>,
+    #[serde(default)]
+    pub sync_marker: Option<String>,
+    #[serde(default)]
+    pub resolved_external: Vec<PackFile>,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct SyncState {
+    pack_id: String,
+    release_id: u64,
+    marker: String,
+}
+
+fn marker_matches(previous: &Binding, state: &SyncState) -> bool {
+    previous.sync_marker.as_deref() == Some(state.marker.as_str())
+        && state.marker == format!("{}:{}", state.pack_id, state.release_id)
+        && previous.publication.pack_id == state.pack_id
+        && previous.publication.release_id == state.release_id
 }
 #[derive(Deserialize)]
 struct Response<T> {
@@ -228,25 +292,105 @@ fn write_json<T: Serialize>(
     file.persist(dest).map_err(|e| e.error)?;
     Ok(())
 }
+async fn authorization() -> crate::Result<String> {
+    SESSION
+        .lock()
+        .await
+        .as_ref()
+        .ok_or_else(|| {
+            invalid("请先登录 StarLight 皮肤站，再下载整合包；无需选择玩家")
+        })?
+        .authorization()
+}
+
+async fn ensure_session(auth: &str) -> crate::Result<()> {
+    if !SESSION
+        .lock()
+        .await
+        .as_ref()
+        .is_some_and(|session| session.authorization == auth)
+    {
+        return Err(invalid("StarLight 登录状态已变化，请重试整合包同步"));
+    }
+    Ok(())
+}
+
 async fn request<T: serde::de::DeserializeOwned>(
     suffix: &str,
 ) -> crate::Result<T> {
+    let auth = authorization().await?;
+    request_authorized(suffix, &auth).await
+}
+
+async fn request_authorized<T: serde::de::DeserializeOwned>(
+    suffix: &str,
+    auth: &str,
+) -> crate::Result<T> {
+    ensure_session(auth).await?;
+    let response = configured_client()
+        .await?
+        .get(format!("{API}{suffix}"))
+        .header(reqwest::header::AUTHORIZATION, auth)
+        .header(reqwest::header::CACHE_CONTROL, "no-cache")
+        .timeout(std::time::Duration::from_secs(30))
+        .send()
+        .await?;
+    if matches!(response.status().as_u16(), 401 | 403) {
+        return Err(invalid(
+            "StarLight 登录凭据已失效或无权限，请重新登录后重试",
+        ));
+    }
+    let data: Response<T> = response.error_for_status()?.json().await?;
+    ensure_session(auth).await?;
+    Ok(data.payload)
+}
+
+pub async fn default_publication() -> crate::Result<Publication> {
+    request::<Option<Publication>>("/default")
+        .await?
+        .ok_or_else(|| {
+            invalid("管理员尚未指定已发布的默认整合包，请联系服务器管理员")
+        })
+}
+
+pub async fn create() -> crate::Result<String> {
+    let publication = default_publication().await?;
+    let runtime = &publication.manifest.runtime;
     let state = State::get().await?;
-    let response: Response<T> = fetch_json(
-        reqwest::Method::GET,
-        &format!("{API}{suffix}"),
-        None,
-        None,
-        None,
-        &state.api_semaphore,
-        &state.pool,
+    let instance = crate::state::create_instance(
+        crate::state::CreateInstance {
+            name: publication.manifest.name.clone(),
+            path: None,
+            game_version: runtime.game_version.clone(),
+            loader: ModLoader::try_from_string(&runtime.loader)?,
+            loader_version: runtime.loader_version.clone(),
+            icon_path: None,
+            link: crate::state::InstanceLink::Unmanaged,
+            symlink_target: None,
+            game_dir_override: None,
+        },
+        &state,
     )
     .await?;
-    Ok(response.payload)
+    crate::instance::edit(
+        &instance.id,
+        EditInstance {
+            launch_overrides: Some(InstanceLaunchOverridesPatch {
+                instance_mode: Some(InstanceMode::StarLight),
+                ..Default::default()
+            }),
+            ..Default::default()
+        },
+    )
+    .await?;
+    crate::event::emit::emit_instance(
+        &instance.id,
+        crate::event::InstancePayloadType::Created,
+    )
+    .await?;
+    Ok(instance.id)
 }
-pub async fn catalog() -> crate::Result<Vec<Publication>> {
-    request("").await
-}
+
 pub async fn binding(instance_id: &str) -> crate::Result<Option<Binding>> {
     read_json(&crate::instance::get_full_path(instance_id).await?, BINDING)
         .await
@@ -394,17 +538,14 @@ async fn recover(instance_id: &str) -> crate::Result<()> {
     Ok(())
 }
 
-pub async fn synchronize(
-    instance_id: &str,
-    pack_id: &str,
-) -> crate::Result<SyncResult> {
+pub async fn synchronize(instance_id: &str) -> crate::Result<SyncResult> {
     let _guard = instance_gate(instance_id).lock_owned().await;
     if instance_mode(instance_id).await? != InstanceMode::StarLight {
         return Err(invalid(
             "请先将实例类型设为 StarLight 实例，再同步官方整合包",
         ));
     }
-    synchronize_locked(instance_id, pack_id).await
+    synchronize_locked(instance_id).await
 }
 
 fn effective_mode(
@@ -451,6 +592,9 @@ pub async fn set_instance_mode(
             "外部关联、共享目录或由第三方整合包平台管理的实例不能开启 StarLight 自动同步，请创建独立实例",
         ));
     }
+    if mode == InstanceMode::StarLight {
+        synchronize_locked(instance_id).await?;
+    }
     crate::instance::edit(
         instance_id,
         EditInstance {
@@ -472,25 +616,37 @@ pub async fn prepare_launch(
     let guard = instance_gate(instance_id).lock_owned().await;
     recover(instance_id).await?;
     if instance_mode(instance_id).await? == InstanceMode::StarLight {
-        let b = binding(instance_id).await?.ok_or_else(|| invalid("StarLight 实例尚未配置官方整合包，请在 Mod 管理 → 管理整合包中选择并安装后再启动"))?;
-        if !offline {
-            synchronize_locked(instance_id, &b.publication.pack_id).await?;
+        if offline {
+            return Err(invalid(
+                "StarLight 实例必须登录并联网检查更新后才能启动；离线游玩请使用本地实例",
+            ));
         }
+        synchronize_locked(instance_id).await?;
     }
     Ok(guard)
 }
 
-async fn synchronize_locked(
-    instance_id: &str,
-    pack_id: &str,
-) -> crate::Result<SyncResult> {
-    uuid::Uuid::parse_str(pack_id)
-        .map_err(|_| invalid("Invalid modpack ID"))?;
+async fn synchronize_locked(instance_id: &str) -> crate::Result<SyncResult> {
     ensure_idle(instance_id).await?;
     recover(instance_id).await?;
     let metadata = crate::instance::get(instance_id)
         .await?
         .ok_or_else(|| invalid("Unknown instance"))?;
+    let progress =
+        PackProgress::new(instance_id, &metadata.instance.name).await?;
+    let result =
+        synchronize_with_progress(instance_id, metadata, &progress).await;
+    if let Err(error) = &result {
+        progress.fail(error);
+    }
+    result
+}
+
+async fn synchronize_with_progress(
+    instance_id: &str,
+    metadata: crate::state::InstanceMetadata,
+    progress: &PackProgress,
+) -> crate::Result<SyncResult> {
     if metadata.instance.linked_launcher.is_some()
         || metadata.instance.symlink_target.is_some()
         || !matches!(
@@ -505,29 +661,45 @@ async fn synchronize_locked(
     }
     let root = crate::instance::get_full_path(instance_id).await?;
     let previous: Option<Binding> = read_json(&root, BINDING).await?;
-    if previous
+    let auth = authorization().await?;
+    let sync_state =
+        request_authorized::<Option<SyncState>>("/sync-state", &auth)
+            .await?
+            .ok_or_else(|| {
+                invalid("管理员尚未指定已发布的默认整合包，请联系服务器管理员")
+            })?;
+    let pack_unchanged = previous
         .as_ref()
-        .is_some_and(|b| b.publication.pack_id != pack_id)
-    {
-        return Err(invalid(
-            "This instance is bound to another modpack; create a separate instance",
-        ));
-    }
-    let publication: Publication = request(&format!("/{pack_id}")).await?;
-    if publication.pack_id != pack_id
-        || publication.manifest.schema_version != 1
-    {
+        .is_some_and(|binding| marker_matches(binding, &sync_state))
+        && metadata.instance.install_stage == InstanceInstallStage::Installed;
+    let publication = if pack_unchanged {
+        progress.update(0, 0, "整合包已是最新，正在检查标签 Mod", true);
+        previous.as_ref().unwrap().publication.clone()
+    } else {
+        request_authorized::<Option<Publication>>("/default", &auth)
+            .await?
+            .ok_or_else(|| {
+                invalid("管理员尚未指定已发布的默认整合包，请联系服务器管理员")
+            })?
+    };
+    let sync_marker =
+        format!("{}:{}", publication.pack_id, publication.release_id);
+    uuid::Uuid::parse_str(&publication.pack_id)
+        .map_err(|_| invalid("Invalid modpack ID"))?;
+    if publication.manifest.schema_version != 1 {
         return Err(invalid("Invalid modpack publication"));
     }
-    if previous
-        .as_ref()
-        .is_some_and(|b| b.publication.release_id > publication.release_id)
-    {
+    if previous.as_ref().is_some_and(|b| {
+        b.publication.pack_id == publication.pack_id
+            && b.publication.release_id > publication.release_id
+    }) {
         return Err(invalid("Server returned an older modpack publication"));
     }
     let manifest = &publication.manifest;
     let loader = ModLoader::try_from_string(&manifest.runtime.loader)?;
-    let resolved_loader = if loader == ModLoader::Vanilla {
+    let resolved_loader = if pack_unchanged {
+        metadata.applied_content_set.loader_version.clone()
+    } else if loader == ModLoader::Vanilla {
         None
     } else {
         Some(crate::launcher::get_loader_version_from_profile(&manifest.runtime.game_version, loader, manifest.runtime.loader_version.as_deref()).await?.ok_or_else(|| invalid("Modpack loader version is unavailable for this Minecraft version"))?.id)
@@ -541,6 +713,18 @@ async fn synchronize_locked(
     tokio::fs::create_dir_all(&cache).await?;
     let state = State::get().await?;
     let mut files = manifest.files.clone();
+    let tagged_manifest = request_authorized::<tagged::TaggedManifest>(
+        &format!("/tagged-mods/{}", publication.release_id),
+        &auth,
+    )
+    .await?;
+    tagged_manifest.validate()?;
+    let mut resolved_external = Vec::new();
+    if pack_unchanged {
+        resolved_external =
+            previous.as_ref().unwrap().resolved_external.clone();
+        files.extend(resolved_external.iter().cloned());
+    }
     validate(&files)?;
     let mut downloaded = 0;
     let mut sources = BTreeMap::new();
@@ -551,7 +735,20 @@ async fn synchronize_locked(
         );
     }
     // Resolve CurseForge references using the launcher's existing API and integrity checks.
-    for external in &manifest.external {
+    for (external_index, external) in manifest.external.iter().enumerate() {
+        if pack_unchanged {
+            break;
+        }
+        progress.update(
+            0,
+            0,
+            &format!(
+                "正在解析外部模组 {}/{}",
+                external_index + 1,
+                manifest.external.len()
+            ),
+            true,
+        );
         let cf = crate::api::curseforge::get_file(
             external.project_id,
             external.file_id,
@@ -598,6 +795,19 @@ async fn synchronize_locked(
                     invalid("This CurseForge file requires a manual download")
                 })?,
             };
+            let label = format!(
+                "外部模组 {}/{} · {}",
+                external_index + 1,
+                manifest.external.len(),
+                cf.file_name
+            );
+            let mut transferred = 0;
+            let mut on_progress = |received: u64, _total: u64| {
+                transferred = received.min(cf.file_length);
+                progress.download(transferred, cf.file_length, &label, false);
+                futures::future::ready(Ok(())).boxed()
+            };
+            progress.download(0, cf.file_length, &label, true);
             download_to_path(
                 DownloadRequest::new(url, ResourceClass::CurseForge)
                     .with_integrity(
@@ -606,9 +816,10 @@ async fn synchronize_locked(
                 &staged,
                 &state.fetch_semaphore,
                 &state.pool,
-                None,
+                Some(&mut on_progress),
             )
             .await?;
+            progress.download(cf.file_length, cf.file_length, &label, true);
             downloaded += cf.file_length;
         } else if crate::util::fetch::sha1_file_async(&staged).await?
             != (cf.file_length, sha1)
@@ -622,14 +833,26 @@ async fn synchronize_locked(
         if !object.exists() {
             tokio::fs::copy(&staged, object).await?;
         }
-        files.push(PackFile {
+        let resolved = PackFile {
+            mod_ids: tagged::mod_ids(target(&cache, &sha256)?).await?,
+            external: Some(external.clone()),
             path,
             sha256,
             size: cf.file_length,
             force: true,
             preserve: false,
-        });
+        };
+        resolved_external.push(resolved.clone());
+        files.push(resolved);
     }
+    let duplicate_mods = tagged::merge(
+        &root,
+        &cache,
+        &mut files,
+        &mut sources,
+        &tagged_manifest,
+    )
+    .await?;
     validate(&files)?;
     if let Some(old) = &previous {
         validate(&old.files)?;
@@ -639,6 +862,7 @@ async fn synchronize_locked(
         .map(|b| b.files.iter().map(|f| (f.path.as_str(), f)).collect())
         .unwrap_or_default();
     let mut actions = Vec::new();
+    let mut pending_downloads = BTreeMap::new();
     let mut preserved = Vec::new();
     let next_paths: BTreeMap<_, _> = files
         .iter()
@@ -654,7 +878,21 @@ async fn synchronize_locked(
             ));
         }
     }
-    for f in &files {
+    for (index, f) in files.iter().enumerate() {
+        if pack_unchanged
+            && !tagged_manifest.contains(&f.path)
+            && old
+                .get(f.path.as_str())
+                .is_some_and(|prior| prior.sha256 == f.sha256)
+        {
+            continue;
+        }
+        progress.update(
+            index as u64,
+            files.len() as u64,
+            &format!("正在检查文件 · {}", f.path),
+            false,
+        );
         let live = target(&root, &f.path)?;
         let local = hash(&live).await?;
         if local.as_deref() == Some(&f.sha256) {
@@ -681,20 +919,9 @@ async fn synchronize_locked(
             let url = sources
                 .get(&f.path)
                 .ok_or_else(|| invalid("Missing modpack download source"))?;
-            download_to_path(
-                DownloadRequest::new(url, ResourceClass::Modpack)
-                    .with_integrity(Integrity {
-                        size: Some(f.size),
-                        sha256: Some(f.sha256.clone()),
-                        ..Default::default()
-                    }),
-                &object,
-                &state.fetch_semaphore,
-                &state.pool,
-                None,
-            )
-            .await?;
-            downloaded += f.size;
+            pending_downloads
+                .entry(f.sha256.clone())
+                .or_insert_with(|| (f.clone(), url.clone(), object));
         }
         actions.push(Action {
             path: f.path.clone(),
@@ -708,7 +935,9 @@ async fn synchronize_locked(
             if local.is_none() {
                 continue;
             }
-            if prior.preserve || local.as_deref() != Some(&prior.sha256) {
+            if !tagged::is_managed_file(prior)
+                && (prior.preserve || local.as_deref() != Some(&prior.sha256))
+            {
                 preserved.push(prior.path.clone());
                 continue;
             }
@@ -719,12 +948,110 @@ async fn synchronize_locked(
             });
         }
     }
+    for action in duplicate_mods {
+        preserved.retain(|path| path != &action.path);
+        if !actions.iter().any(|existing| existing.path == action.path) {
+            actions.push(action);
+        }
+    }
+    let mut tagged_downloads = Vec::new();
+    pending_downloads.retain(|_, (file, url, object)| {
+        if tagged_manifest.contains(&file.path) {
+            tagged_downloads.push((file.clone(), url.clone(), object.clone()));
+            false
+        } else {
+            true
+        }
+    });
+    let total_bytes = pending_downloads
+        .values()
+        .map(|(file, _, _)| file.size)
+        .sum::<u64>();
+    let total_files = pending_downloads.len();
+    let mut completed_bytes = 0;
+    for (index, (file, url, object)) in
+        pending_downloads.into_values().enumerate()
+    {
+        ensure_session(&auth).await?;
+        let url = if let Some(external) = &file.external {
+            match crate::api::curseforge::get_file(
+                external.project_id,
+                external.file_id,
+            )
+            .await?
+            .download_url
+            {
+                Some(url) => url,
+                None => crate::api::curseforge::get_download_url(
+                    external.project_id,
+                    external.file_id,
+                )
+                .await?
+                .ok_or_else(|| {
+                    invalid("This CurseForge file requires a manual download")
+                })?,
+            }
+        } else {
+            url
+        };
+        let label =
+            format!("文件 {}/{} · {}", index + 1, total_files, file.path);
+        progress.download(completed_bytes, total_bytes, &label, index == 0);
+        let mut transferred = 0;
+        let mut on_progress = |received: u64, _total: u64| {
+            transferred = received.min(file.size);
+            progress.download(
+                completed_bytes + transferred,
+                total_bytes,
+                &label,
+                false,
+            );
+            futures::future::ready(Ok(())).boxed()
+        };
+        let mut request = DownloadRequest::new(&url, ResourceClass::Modpack)
+            .with_integrity(Integrity {
+                size: Some(file.size),
+                sha256: Some(file.sha256),
+                ..Default::default()
+            });
+        if url.starts_with(&format!("{API}/files/")) {
+            request = request.with_header("Authorization", auth.clone());
+        }
+        download_to_path(
+            request,
+            &object,
+            &state.fetch_semaphore,
+            &state.pool,
+            Some(&mut on_progress),
+        )
+        .await?;
+        completed_bytes += file.size;
+        downloaded += file.size;
+        progress.download(
+            completed_bytes,
+            total_bytes,
+            &label,
+            index + 1 == total_files,
+        );
+    }
+    ensure_session(&auth).await?;
+    downloaded += tagged::download(
+        instance_id,
+        &metadata.instance.name,
+        tagged_downloads,
+        &auth,
+        progress,
+    )
+    .await?;
+    ensure_session(&auth).await?;
     if actions.is_empty()
         && !runtime_changed
         && metadata.instance.install_stage == InstanceInstallStage::Installed
-        && previous
-            .as_ref()
-            .is_some_and(|b| b.publication.release_id == publication.release_id)
+        && previous.as_ref().is_some_and(|b| {
+            b.sync_marker.as_deref() == Some(sync_marker.as_str())
+                && b.files == files
+                && b.resolved_external == resolved_external
+        })
     {
         return Ok(SyncResult {
             instance_id: instance_id.into(),
@@ -742,6 +1069,7 @@ async fn synchronize_locked(
     };
     write_json(&root, JOURNAL, &journal)?;
     let result = async {
+        progress.update(0, 0, "正在安装游戏组件", true);
         // Stage all content before changing the game/runtime. The journal blocks launch until recovery.
         crate::instance::edit(instance_id, EditInstance {
             install_stage: Some(InstanceInstallStage::PackInstalling),
@@ -751,22 +1079,46 @@ async fn synchronize_locked(
         if runtime_changed || journal.metadata.instance.install_stage != InstanceInstallStage::Installed {
             let mut job = crate::install::install_existing_instance(instance_id.to_string(), false).await?;
             loop {
+                progress.install(&job);
                 use crate::install::InstallJobStatus::*;
                 match job.status {
                     Succeeded => break,
                     Queued | Running => { tokio::time::sleep(std::time::Duration::from_millis(250)).await; job = crate::install::get_job(job.job_id).await?; }
-                    _ => { let _ = crate::install::cancel_job(job.job_id).await; return Err(invalid("Minecraft component installation did not finish; inspect Downloads and retry")); }
+                    status => {
+                        let details = job
+                            .error
+                            .as_ref()
+                            .or(job.rollback_error.as_ref())
+                            .map(|error| error.message.as_str())
+                            .unwrap_or(match status {
+                                WaitingForUser => "安装任务正在等待用户处理",
+                                Interrupted => "安装任务意外中断",
+                                Canceled | Canceling => "安装任务已取消",
+                                Failed => "安装任务失败",
+                                _ => "安装任务未能完成",
+                            });
+                        if status == WaitingForUser {
+                            let _ = crate::install::cancel_job(job.job_id).await;
+                        }
+                        return Err(invalid(format!(
+                            "Minecraft 游戏组件安装失败：{details}；请在“下载”中查看详情后重试"
+                        )));
+                    }
                 }
             }
         }
+        ensure_session(&auth).await?;
+        progress.update(0, 0, "正在应用更新", true);
         apply_files(&root, &cache, &journal.backup, &journal.actions).await?;
-        write_json(&root, BINDING, &Binding { publication: publication.clone(), files })?;
+        progress.update(0, 0, "正在完成安装", true);
+        write_json(&root, BINDING, &Binding { publication: publication.clone(), files, sync_marker: Some(sync_marker), resolved_external })?;
         crate::instance::edit(instance_id, EditInstance { install_stage: Some(InstanceInstallStage::Installed), ..Default::default() }).await?;
         crate::instance::sync_content_files(instance_id).await?;
         tokio::fs::remove_file(target(&root, JOURNAL)?).await?;
         Ok::<_, crate::Error>(())
     }.await;
     if let Err(error) = result {
+        progress.update(0, 0, "正在恢复安装前的文件", true);
         ensure_idle(instance_id).await.map_err(|busy| invalid(format!("Sync failed: {error}; recovery is pending until the active installation stops: {busy}")))?;
         restore(&root, &journal).await.map_err(|recovery| invalid(format!("Sync failed: {error}; recovery failed: {recovery}. Retry before launching.")))?;
         return Err(error);
@@ -783,6 +1135,58 @@ async fn synchronize_locked(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn sync_marker_requires_an_installed_publication_and_changes_on_default_or_release()
+     {
+        let mut binding: Binding = serde_json::from_value(serde_json::json!({
+            "publication": {"packId":"pack", "releaseId":3, "manifest": {
+                "schemaVersion":1, "name":"Pack", "version":"1", "format":"multimc",
+                "runtime":{"gameVersion":"1.20.1", "loader":"vanilla", "loaderVersion":null}, "files":[]
+            }}, "files":[]
+        })).unwrap();
+        let mut state = SyncState {
+            pack_id: "pack".into(),
+            release_id: 3,
+            marker: "pack:3".into(),
+        };
+        assert!(!marker_matches(&binding, &state));
+        binding.sync_marker = Some("pack:3".into());
+        assert!(marker_matches(&binding, &state));
+        state.release_id = 4;
+        assert!(!marker_matches(&binding, &state));
+        state.release_id = 3;
+        state.pack_id = "other".into();
+        assert!(!marker_matches(&binding, &state));
+        state.pack_id = "pack".into();
+        state.marker = "pack:4".into();
+        assert!(!marker_matches(&binding, &state));
+    }
+    #[test]
+    fn download_session_uses_site_token_without_a_game_profile() {
+        let mut session =
+            DownloadSession::new("site.jwt.token".into()).unwrap();
+        assert_eq!(session.authorization().unwrap(), "Bearer site.jwt.token");
+        session.updated -= std::time::Duration::from_secs(91);
+        assert!(session.authorization().is_err());
+        assert!(DownloadSession::new(String::new()).is_err());
+        assert!(
+            DownloadSession::new("token\r\nInjected: header".into()).is_err()
+        );
+    }
+
+    #[tokio::test]
+    async fn logout_and_invalid_replacement_clear_download_authorization() {
+        set_session(Some("first.jwt.token".into())).await.unwrap();
+        assert_eq!(authorization().await.unwrap(), "Bearer first.jwt.token");
+        let old = authorization().await.unwrap();
+        set_session(None).await.unwrap();
+        assert!(authorization().await.is_err());
+        assert!(ensure_session(&old).await.is_err());
+        set_session(Some("second.jwt.token".into())).await.unwrap();
+        assert!(ensure_session(&old).await.is_err());
+        assert!(set_session(Some("bad token".into())).await.is_err());
+        assert!(authorization().await.is_err());
+    }
     #[tokio::test]
     async fn instance_operations_exclude_each_other_without_blocking_other_instances()
      {
@@ -872,6 +1276,8 @@ mod tests {
     #[test]
     fn rejects_case_and_ancestor_collisions() {
         let make = |p: &str| PackFile {
+            mod_ids: Vec::new(),
+            external: None,
             path: p.into(),
             sha256: "a".repeat(64),
             size: 1,

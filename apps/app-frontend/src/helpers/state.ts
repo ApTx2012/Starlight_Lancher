@@ -6,6 +6,9 @@
 import { invoke } from '@tauri-apps/api/core'
 
 export interface LoadingBarType {
+	batch_id?: string
+	file_name?: string
+	error?: string | null
 	type?: string
 	version?: string
 	instance_id?: string
@@ -25,12 +28,7 @@ export interface LoadingBar {
 }
 
 export type OpeningCommandEvent =
-	| 'RunMRPack'
-	| 'InstallServer'
-	| 'InstallVersion'
-	| 'InstallMod'
-	| 'InstallModpack'
-	| string
+	'RunMRPack' | 'InstallServer' | 'InstallVersion' | 'InstallMod' | 'InstallModpack' | string
 
 export interface OpeningCommand {
 	event: OpeningCommandEvent

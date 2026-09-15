@@ -63,6 +63,13 @@ val authlibInjector by tasks.registering {
     outputs.file(output)
 
     doLast {
+        val cached = output.get().asFile
+        if (cached.isFile) {
+            val checksum = MessageDigest.getInstance("SHA-256")
+                .digest(cached.readBytes())
+                .joinToString("") { "%02x".format(it) }
+            if (checksum == inputs.properties["sha256"]) return@doLast
+        }
         val bytes = uri(
             "https://authlib-injector.yushi.moe/artifact/56/authlib-injector-1.2.8.jar",
         ).toURL().readBytes()

@@ -15,7 +15,7 @@ const messages = defineMessages({
 	starlightDescription: {
 		id: 'app.instance-mode.starlight-description',
 		defaultMessage:
-			'Automatically syncs changes published by the StarLight server. Required for playing on StarLight. Select and install the official modpack in Mod management before your first launch.',
+			'Required for playing on StarLight. Automatically installs the server-selected modpack, Minecraft version, and loader. Every launch requires a StarLight login and checks for updates before starting.',
 	},
 	localDescription: {
 		id: 'app.instance-mode.local-description',
