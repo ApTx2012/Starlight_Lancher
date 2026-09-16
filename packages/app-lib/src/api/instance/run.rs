@@ -78,19 +78,32 @@ async fn run_with_extra_launch_args_inner(
     let _hosted_guard =
         crate::pack::hosted::prepare_launch(instance_id, offline_mode).await?;
     let state = State::get().await?;
-    let launch_preparation_timeout =
+    let context =
         crate::state::instances::commands::get_instance_launch_context(
             instance_id,
             &state.pool,
         )
-        .await?
+        .await?;
+    let launch_preparation_timeout = context
+        .as_ref()
         .and_then(|context| context.launch_overrides.launch_preparation_timeout)
         .unwrap_or(DEFAULT_LAUNCH_PREPARATION_TIMEOUT)
         .clamp(
             MIN_LAUNCH_PREPARATION_TIMEOUT,
             MAX_LAUNCH_PREPARATION_TIMEOUT,
         );
-    let default_account = if offline_mode {
+    let saved_player = context
+        .as_ref()
+        .and_then(|context| context.launch_overrides.player.as_ref());
+    let default_account = if let Some(player) = saved_player {
+        if offline_mode
+            && player.account_type
+                != crate::state::MinecraftAccountType::Offline
+        {
+            return Err(crate::ErrorKind::InputError("当前实例绑定的是在线玩家，请恢复网络后启动，或在实例设置中手动切换玩家".into()).as_error());
+        }
+        Credentials::for_instance_player(player, &state.pool).await?
+    } else if offline_mode {
         Credentials::get_offline_credential(&state.pool)
             .await?
             .ok_or_else(|| {

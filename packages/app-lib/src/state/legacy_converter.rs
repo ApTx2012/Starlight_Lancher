@@ -611,6 +611,7 @@ where
     }
 
     let launch_overrides = InstanceLaunchOverrides {
+        player: None,
         instance_mode: None,
         instance_id: instance_id.clone(),
         java_path: input.java_path,

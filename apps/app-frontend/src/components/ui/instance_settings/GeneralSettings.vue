@@ -18,6 +18,7 @@ import { useRouter } from 'vue-router'
 
 import InstanceIcon from '@/components/ui/InstanceIcon.vue'
 import InstanceModeSettings from '@/components/instance/InstanceModeSettings.vue'
+import InstancePlayerSettings from '@/components/instance/InstancePlayerSettings.vue'
 import ConfirmDeleteInstanceModal from '@/components/ui/modal/ConfirmDeleteInstanceModal.vue'
 import { install_duplicate_instance } from '@/helpers/install'
 import { edit, edit_icon, get_full_path, remove } from '@/helpers/instance'
@@ -381,6 +382,7 @@ const messages = defineMessages({
 
 <template>
 	<InstanceModeSettings class="mb-6" :instance-id="instance.id" />
+	<InstancePlayerSettings :instance-id="instance.id" />
 	<ConfirmDeleteInstanceModal
 		ref="deleteConfirmModal"
 		:symlink-target="instance.symlink_target"

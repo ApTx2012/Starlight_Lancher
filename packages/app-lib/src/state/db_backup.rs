@@ -515,19 +515,18 @@ fn app_db_backup_dir_for(db_path: &Path) -> crate::Result<PathBuf> {
         ))
     })?;
 
-    let backup_dir = base.join("Backups").join("app-db");
-    match db_path
-        .parent()
-        .and_then(Path::file_name)
-        .and_then(|name| name.to_str())
-    {
-        Some("beta") | Some("release") => Ok(backup_dir.join(
-            db_path
-                .parent()
-                .and_then(Path::file_name)
-                .expect("database channel directory has a name"),
-        )),
-        _ => Ok(backup_dir),
+    Ok(default_app_db_backup_dir(base))
+}
+
+fn default_app_db_backup_dir(database_dir: &Path) -> PathBuf {
+    match database_dir.file_name().and_then(|name| name.to_str()) {
+        Some(channel @ ("beta" | "release")) => database_dir
+            .parent()
+            .unwrap_or_else(|| Path::new(""))
+            .join("Backups")
+            .join("app-db")
+            .join(channel),
+        _ => database_dir.join("Backups").join("app-db"),
     }
 }
 
@@ -652,6 +651,21 @@ async fn create_sqlite_snapshot(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn recovery_and_update_share_the_channel_backup_directory() {
+        for channel in ["release", "beta"] {
+            let settings = Path::new("launcher-settings");
+            assert_eq!(
+                default_app_db_backup_dir(&settings.join(channel)),
+                settings.join("Backups").join("app-db").join(channel)
+            );
+        }
+        assert_eq!(
+            default_app_db_backup_dir(Path::new("legacy-settings")),
+            Path::new("legacy-settings").join("Backups").join("app-db")
+        );
+    }
 
     async fn create_test_app_db(path: &Path, marker: &str) {
         let options = SqliteConnectOptions::new()

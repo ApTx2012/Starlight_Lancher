@@ -354,7 +354,8 @@ unsafe extern "system" fn maximize_if_owned_by_process(
     _: windows::Win32::Foundation::LPARAM,
 ) -> windows::core::BOOL {
     use windows::Win32::UI::WindowsAndMessaging::{
-        GetWindowThreadProcessId, IsWindowVisible, SW_MAXIMIZE, SetForegroundWindow, ShowWindow,
+        GetWindowThreadProcessId, IsWindowVisible, SW_MAXIMIZE,
+        SetForegroundWindow, ShowWindow,
     };
     use windows::core::BOOL;
 

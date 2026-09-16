@@ -7483,7 +7483,7 @@
     "message": "小鬼當家"
   },
   "app.skins.skin-site-account.description": {
-    "message": "在下方選擇皮膚後，可直接套用到 {player}。切換啟動器頁面時，皮膚站登入狀態也會保持。"
+    "message": "在下方選擇皮膚後，可直接套用到 {player}。"
   },
   "app.skins.skin-site-account.empty-description": {
     "message": "這個皮膚站帳號暫時沒有可用的玩家角色。"

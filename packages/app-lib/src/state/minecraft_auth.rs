@@ -798,6 +798,39 @@ impl Credentials {
         Self::get_active_with_refresh(exec, true).await
     }
 
+    pub async fn for_instance_player(
+        player: &crate::state::InstancePlayer,
+        exec: impl sqlx::Executor<'_, Database = sqlx::Sqlite> + Copy,
+    ) -> crate::Result<Self> {
+        let accounts = Self::get_all_without_refresh(exec).await?;
+        let mut account = accounts
+            .remove(&player.id)
+            .map(|(_, account)| account)
+            .ok_or_else(|| {
+                ErrorKind::InputError(format!(
+                "实例玩家 {} 已退出登录，请重新登录该玩家或在实例设置中切换",
+                player.name
+            ))
+            .as_error()
+            })?;
+        if account.account_type != player.account_type
+            || player.skin_site_user.as_ref().is_some_and(|user| {
+                account.yggdrasil.as_ref().is_none_or(|ygg| {
+                    ygg.login != *user
+                        || ygg.api_root
+                            != "https://skin.starlight.cool/yggdrasil"
+                })
+            })
+        {
+            return Err(ErrorKind::InputError(
+                "实例玩家身份不匹配，请在实例设置中重新选择".into(),
+            )
+            .as_error());
+        }
+        account.refresh(exec).await?;
+        Ok(account)
+    }
+
     pub async fn get_active_without_refresh(
         exec: impl sqlx::Executor<'_, Database = sqlx::Sqlite> + Copy,
     ) -> crate::Result<Option<Self>> {
@@ -901,6 +934,21 @@ impl Credentials {
         &self,
         exec: impl sqlx::Executor<'_, Database = sqlx::Sqlite> + Copy,
     ) -> crate::Result<()> {
+        self.upsert_inner(exec, false).await
+    }
+
+    pub(crate) async fn upsert_preserving_selection(
+        &self,
+        exec: impl sqlx::Executor<'_, Database = sqlx::Sqlite> + Copy,
+    ) -> crate::Result<()> {
+        self.upsert_inner(exec, true).await
+    }
+
+    async fn upsert_inner(
+        &self,
+        exec: impl sqlx::Executor<'_, Database = sqlx::Sqlite> + Copy,
+        preserve_selection: bool,
+    ) -> crate::Result<()> {
         let profile = self.maybe_online_profile().await;
         let expires = self.expires.timestamp();
         let uuid = profile.id.as_hyphenated().to_string();
@@ -922,7 +970,7 @@ impl Credentials {
             .as_ref()
             .map_or("", |account| account.client_token.as_str());
 
-        if self.active {
+        if self.active && !preserve_selection {
             sqlx::query!(
                 "
                 UPDATE minecraft_users
@@ -943,7 +991,7 @@ impl Credentials {
             )
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
             ON CONFLICT (uuid) DO UPDATE SET
-                active = $2,
+                active = CASE WHEN $12 THEN minecraft_users.active ELSE $2 END,
                 username = $3,
                 account_type = $4,
                 access_token = $5,
@@ -956,7 +1004,7 @@ impl Credentials {
             ",
         )
         .bind(uuid)
-        .bind(self.active)
+        .bind(self.active && !preserve_selection)
         .bind(&profile.name)
         .bind(account_type)
         .bind(&self.access_token)
@@ -966,6 +1014,7 @@ impl Credentials {
         .bind(yggdrasil_server_name)
         .bind(yggdrasil_login)
         .bind(yggdrasil_client_token)
+        .bind(preserve_selection)
         .execute(exec)
         .await?;
 
@@ -1041,6 +1090,75 @@ impl Serialize for Credentials {
 #[cfg(test)]
 mod offline_account_tests {
     use super::*;
+
+    #[tokio::test]
+    async fn instance_player_never_falls_back_to_global_account() {
+        let pool = sqlx::sqlite::SqlitePoolOptions::new()
+            .max_connections(1)
+            .connect("sqlite::memory:")
+            .await
+            .unwrap();
+        sqlx::migrate!().run(&pool).await.unwrap();
+        let first = Credentials::offline("First").unwrap();
+        let second = Credentials::offline("Second").unwrap();
+        first.upsert(&pool).await.unwrap();
+        let mut refreshed = Credentials::offline("First").unwrap();
+        refreshed.active = false;
+        refreshed.upsert_preserving_selection(&pool).await.unwrap();
+        assert_eq!(
+            Credentials::get_active_without_refresh(&pool)
+                .await
+                .unwrap()
+                .unwrap()
+                .offline_profile
+                .id,
+            first.offline_profile.id
+        );
+        second.upsert(&pool).await.unwrap();
+        first.upsert_preserving_selection(&pool).await.unwrap();
+        let binding = crate::state::InstancePlayer {
+            id: first.offline_profile.id,
+            name: "First".into(),
+            account_type: MinecraftAccountType::Offline,
+            skin_site_user: None,
+        };
+        assert_eq!(
+            Credentials::get_active_without_refresh(&pool)
+                .await
+                .unwrap()
+                .unwrap()
+                .offline_profile
+                .id,
+            second.offline_profile.id
+        );
+        assert_eq!(
+            Credentials::for_instance_player(&binding, &pool)
+                .await
+                .unwrap()
+                .offline_profile
+                .id,
+            first.offline_profile.id
+        );
+        let mismatched = crate::state::InstancePlayer {
+            account_type: MinecraftAccountType::Microsoft,
+            ..binding.clone()
+        };
+        assert!(
+            Credentials::for_instance_player(&mismatched, &pool)
+                .await
+                .is_err()
+        );
+        sqlx::query("DELETE FROM minecraft_users WHERE uuid = ?")
+            .bind(binding.id.to_string())
+            .execute(&pool)
+            .await
+            .unwrap();
+        assert!(
+            Credentials::for_instance_player(&binding, &pool)
+                .await
+                .is_err()
+        );
+    }
 
     #[test]
     fn creates_java_compatible_offline_uuid() {

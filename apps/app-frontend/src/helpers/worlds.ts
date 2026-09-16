@@ -4,6 +4,8 @@ import { invoke } from '@tauri-apps/api/core'
 import dayjs from 'dayjs'
 
 import { isOfflineMode } from '@/composables/useNetworkStatus'
+import { prepareInstancePlayer } from '@/helpers/instance-player'
+import { getInstanceMode, prepareHostedSession } from '@/helpers/hosted-packs'
 import { get_full_path, resolveGcLaunchIntent } from '@/helpers/instance'
 import { openPath } from '@/helpers/utils'
 
@@ -248,6 +250,8 @@ export async function start_join_singleplayer_world(
 	instanceId: string,
 	world: string,
 ): Promise<unknown> {
+	await prepareInstancePlayer(instanceId)
+	if (await getInstanceMode(instanceId) === 'starlight') await prepareHostedSession()
 	const { args, gcIntent } = await resolveGcLaunchIntent(instanceId)
 	return await invoke('plugin:worlds|start_join_singleplayer_world', {
 		instanceId,
@@ -259,6 +263,8 @@ export async function start_join_singleplayer_world(
 }
 
 export async function start_join_server(instanceId: string, address: string): Promise<unknown> {
+	await prepareInstancePlayer(instanceId)
+	if (await getInstanceMode(instanceId) === 'starlight') await prepareHostedSession()
 	const { args, gcIntent } = await resolveGcLaunchIntent(instanceId)
 	return await invoke('plugin:worlds|start_join_server', {
 		instanceId,

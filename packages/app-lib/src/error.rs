@@ -249,7 +249,11 @@ impl std::fmt::Display for Error {
 
 impl Error {
     pub(crate) fn with_context(mut self, context: impl Into<String>) -> Self {
-        self.context = Some(context.into());
+        let context = context.into();
+        self.context = Some(match self.context.take() {
+            Some(existing) => format!("{existing}\n{context}"),
+            None => context,
+        });
         self
     }
 

@@ -7,6 +7,7 @@ use std::time::Duration;
 use uuid::Uuid;
 
 use crate::State;
+pub use crate::state::InstancePlayer;
 pub use crate::state::YggdrasilLoginResult;
 use crate::state::{
     Credentials, MinecraftAccountType, MinecraftLoginFlow, MinecraftProfile,
@@ -170,6 +171,72 @@ pub async fn finish_yggdrasil_login(
 
 pub fn normalize_yggdrasil_api_root(api_root: &str) -> crate::Result<String> {
     crate::state::normalize_api_root(api_root)
+}
+
+pub async fn get_instance_player(
+    instance_id: &str,
+) -> crate::Result<Option<crate::state::InstancePlayer>> {
+    let state = State::get().await?;
+    let context =
+        crate::state::instances::commands::get_instance_launch_context(
+            instance_id,
+            &state.pool,
+        )
+        .await?
+        .ok_or_else(|| {
+            crate::ErrorKind::InputError("Unknown instance".into()).as_error()
+        })?;
+    Ok(context.launch_overrides.player)
+}
+
+pub async fn set_instance_player(
+    instance_id: &str,
+    player: crate::state::InstancePlayer,
+) -> crate::Result<()> {
+    let state = State::get().await?;
+    let accounts = Credentials::get_all_without_refresh(&state.pool).await?;
+    let account = accounts.get(&player.id).ok_or_else(|| {
+        crate::ErrorKind::InputError("所选玩家未登录，请重新登录该账号".into())
+            .as_error()
+    })?;
+    if account.account_type != player.account_type
+        || player.skin_site_user.as_ref().is_some_and(|user| {
+            account.yggdrasil.as_ref().is_none_or(|ygg| {
+                ygg.login != *user
+                    || ygg.api_root != "https://skin.starlight.cool/yggdrasil"
+            })
+        })
+    {
+        return Err(
+            crate::ErrorKind::InputError("玩家身份不匹配".into()).as_error()
+        );
+    }
+    drop(account);
+    crate::state::edit_instance(
+        instance_id,
+        crate::state::EditInstance {
+            launch_overrides: Some(
+                crate::state::InstanceLaunchOverridesPatch {
+                    player: Some(player),
+                    ..Default::default()
+                },
+            ),
+            ..Default::default()
+        },
+        &state.pool,
+    )
+    .await?;
+    Ok(())
+}
+
+pub async fn login_skin_site_player(
+    token: &str,
+    player_id: uuid::Uuid,
+    user_id: &str,
+) -> crate::Result<Credentials> {
+    let state = State::get().await?;
+    crate::state::login_skin_site_player(token, player_id, user_id, &state.pool)
+        .await
 }
 
 #[tracing::instrument]

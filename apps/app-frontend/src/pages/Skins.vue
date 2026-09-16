@@ -231,8 +231,7 @@ const messages = defineMessages({
 	},
 	skinSiteManagementDescription: {
 		id: 'app.skins.skin-site-account.description',
-		defaultMessage:
-			'Select a skin below and apply it directly to {player}. The skin site session remains available while you move between launcher pages.',
+		defaultMessage: 'Select a skin below and apply it directly to {player}.',
 	},
 	skinSiteMojangDescription: {
 		id: 'app.skins.skin-site-account.mojang-description',

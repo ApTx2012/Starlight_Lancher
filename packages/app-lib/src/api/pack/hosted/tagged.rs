@@ -184,6 +184,41 @@ mod tests {
         assert!(root.path().join("mods/personal.jar").is_file());
     }
 
+    #[tokio::test]
+    async fn identical_tagged_mod_keeps_the_modpack_file() {
+        let root = tempfile::tempdir().unwrap();
+        let original = PackFile {
+            mod_ids: vec![],
+            external: None,
+            path: "mods/example-from-pack.jar".into(),
+            sha256: "a".repeat(64),
+            size: 10,
+            force: true,
+            preserve: false,
+        };
+        let mut files = vec![original.clone()];
+        let mut sources = BTreeMap::from([(
+            original.path.clone(),
+            "https://example.invalid/pack-file".into(),
+        )]);
+        let mut tagged = manifest();
+        tagged.replaces.push(original.path.clone());
+
+        let actions = merge(
+            root.path(),
+            &root.path().join("cache"),
+            &mut files,
+            &mut sources,
+            &tagged,
+        )
+        .await
+        .unwrap();
+
+        assert!(actions.is_empty());
+        assert_eq!(files, vec![original]);
+        assert!(!sources.contains_key("mods/example.starlight.jar"));
+    }
+
     #[test]
     fn multi_mod_jar_cannot_be_partially_replaced() {
         assert!(is_managed_file(&manifest().files[0].pack_file()));
@@ -266,10 +301,33 @@ pub(super) async fn merge(
     if ids.is_empty() {
         return Ok(Vec::new());
     }
-    let mut replaced: HashSet<String> =
-        manifest.replaces.iter().cloned().collect();
+
+    // The modpack is the installation baseline. A tagged snapshot with the
+    // same content already passes verification, even when the skin site uses
+    // a canonical filename. Keep the pack's file and only replace it when the
+    // tagged JAR is actually different.
+    let satisfied_pack_paths: HashSet<String> = manifest
+        .files
+        .iter()
+        .filter_map(|tagged| {
+            files
+                .iter()
+                .find(|file| {
+                    is_mod_path(&file.path) && file.sha256 == tagged.sha256
+                })
+                .map(|file| file.path.clone())
+        })
+        .collect();
+    let mut replaced: HashSet<String> = manifest
+        .replaces
+        .iter()
+        .filter(|path| !satisfied_pack_paths.contains(*path))
+        .cloned()
+        .collect();
     for file in files.iter().filter(|file| is_mod_path(&file.path)) {
-        if replaced.contains(&file.path) {
+        if satisfied_pack_paths.contains(&file.path)
+            || replaced.contains(&file.path)
+        {
             continue;
         }
         let object = target(cache, &file.sha256)?;
@@ -284,6 +342,11 @@ pub(super) async fn merge(
     }
     files.retain(|file| !replaced.contains(&file.path));
     for file in &manifest.files {
+        if files.iter().any(|existing| {
+            is_mod_path(&existing.path) && existing.sha256 == file.sha256
+        }) {
+            continue;
+        }
         if files
             .iter()
             .any(|existing| existing.path.eq_ignore_ascii_case(&file.path))
@@ -299,6 +362,11 @@ pub(super) async fn merge(
         );
         files.push(file.pack_file());
     }
+    let desired_paths: HashSet<_> = files
+        .iter()
+        .filter(|file| is_mod_path(&file.path))
+        .map(|file| file.path.to_ascii_lowercase())
+        .collect();
     let mut duplicate_actions = Vec::new();
     let mods_dir = target(root, "mods")?;
     if mods_dir.is_dir() {
@@ -309,7 +377,9 @@ pub(super) async fn merge(
                 continue;
             };
             let path = format!("mods/{name}");
-            if !is_mod_path(&path) || manifest.contains(&path) {
+            if !is_mod_path(&path)
+                || desired_paths.contains(&path.to_ascii_lowercase())
+            {
                 continue;
             }
             let local = target(root, &path)?;

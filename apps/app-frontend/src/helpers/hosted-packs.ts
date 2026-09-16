@@ -3,6 +3,7 @@ import {
 	requestSkinSiteDownloadToken,
 	skinSiteStatus,
 	skinSiteUser,
+	waitForSkinSiteSession,
 } from '../composables/skin-site-session.ts'
 
 let sessionUpdate: Promise<void> = Promise.resolve()
@@ -28,6 +29,7 @@ export function clearHostedSession(): Promise<void> {
 }
 
 export async function prepareHostedSession(): Promise<void> {
+	await waitForSkinSiteSession()
 	const userId = skinSiteUser.value?.uuid
 	const token = await requestSkinSiteDownloadToken()
 	const update = sessionUpdate

@@ -31,6 +31,9 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             get_default_user,
             set_default_user,
             get_users,
+            get_instance_player,
+            set_instance_player,
+            login_skin_site_player,
         ])
         .build()
 }
@@ -318,6 +321,33 @@ pub async fn finish_yggdrasil_login(
 
 const YGGDRASIL_SAVED_LOGINS_KEY: &str = "yggdrasil-saved-logins";
 
+#[tauri::command]
+pub async fn get_instance_player(
+    instance_id: String,
+) -> Result<Option<minecraft_auth::InstancePlayer>> {
+    Ok(minecraft_auth::get_instance_player(&instance_id).await?)
+}
+
+#[tauri::command]
+pub async fn set_instance_player(
+    instance_id: String,
+    player: minecraft_auth::InstancePlayer,
+) -> Result<()> {
+    Ok(minecraft_auth::set_instance_player(&instance_id, player).await?)
+}
+
+#[tauri::command]
+pub async fn login_skin_site_player(
+    token: String,
+    player_id: uuid::Uuid,
+    user_id: String,
+) -> Result<Credentials> {
+    Ok(
+        minecraft_auth::login_skin_site_player(&token, player_id, &user_id)
+            .await?,
+    )
+}
+
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct SavedYggdrasilLogin {
     pub api_root: String,
@@ -443,22 +473,24 @@ fn yggdrasil_saved_logins_entry() -> Result<keyring::Entry> {
 
 fn read_yggdrasil_saved_logins() -> Result<Vec<SavedYggdrasilLogin>> {
     match yggdrasil_saved_logins_entry()?.get_password() {
-        Ok(saved_logins) => match serde_json::from_str::<Vec<SavedYggdrasilLogin>>(
-            &saved_logins,
-        ) {
-            Ok(saved_logins) => Ok(saved_logins
-                .into_iter()
-                .filter(|saved_login| {
-                    saved_login.api_root == STARLIGHT_YGGDRASIL_API_ROOT
-                })
-                .collect()),
-            Err(error) => {
-                tracing::warn!(
-                    "Ignoring an invalid saved Yggdrasil login index: {error}"
-                );
-                Ok(Vec::new())
+        Ok(saved_logins) => {
+            match serde_json::from_str::<Vec<SavedYggdrasilLogin>>(
+                &saved_logins,
+            ) {
+                Ok(saved_logins) => Ok(saved_logins
+                    .into_iter()
+                    .filter(|saved_login| {
+                        saved_login.api_root == STARLIGHT_YGGDRASIL_API_ROOT
+                    })
+                    .collect()),
+                Err(error) => {
+                    tracing::warn!(
+                        "Ignoring an invalid saved Yggdrasil login index: {error}"
+                    );
+                    Ok(Vec::new())
+                }
             }
-        },
+        }
         Err(keyring::Error::NoEntry) => Ok(Vec::new()),
         Err(error) => Err(keyring_error(error)),
     }

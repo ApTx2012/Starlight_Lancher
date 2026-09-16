@@ -16,7 +16,10 @@ mod tests {
     fn user_agent_is_unique_and_contains_no_contact_information() {
         let user_agent = user_agent("1.2.3", "windows");
 
-        assert_eq!(user_agent, "garbage-human-studio/starlight/1.2.3 (windows)");
+        assert_eq!(
+            user_agent,
+            "garbage-human-studio/starlight/1.2.3 (windows)"
+        );
         assert!(!user_agent.contains("ghs.red"));
         assert!(!user_agent.contains("http"));
         assert!(!user_agent.contains('@'));

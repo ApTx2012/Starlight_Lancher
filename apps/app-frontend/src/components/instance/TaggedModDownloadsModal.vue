@@ -133,14 +133,18 @@ function openDownloads() {
 			</section>
 		</div>
 		<template #actions>
-			<ButtonStyled
-				><button @click="openDownloads">
-					{{ formatMessage(messages.downloads) }}
-				</button></ButtonStyled
-			>
-			<ButtonStyled
-				><button @click="modal?.hide()">{{ formatMessage(messages.close) }}</button></ButtonStyled
-			>
+			<div class="flex w-full items-center justify-between gap-2">
+				<ButtonStyled>
+					<button @click="openDownloads">
+						{{ formatMessage(messages.downloads) }}
+					</button>
+				</ButtonStyled>
+				<ButtonStyled>
+					<button @click="modal?.hide()">
+						{{ formatMessage(messages.close) }}
+					</button>
+				</ButtonStyled>
+			</div>
 		</template>
 	</NewModal>
 </template>

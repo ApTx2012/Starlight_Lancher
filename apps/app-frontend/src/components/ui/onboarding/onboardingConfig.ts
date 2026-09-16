@@ -242,7 +242,7 @@ export const onboardingMessages = defineMessages({
 	instanceActionsDescription: {
 		id: 'app.onboarding.instance-actions.description',
 		defaultMessage:
-			'Launch, stop, repair, configure, export, or open the instance from its header.',
+			'Launch or configure this instance here. Choose a player on first launch; the instance remembers your choice until you switch it in settings.',
 	},
 	instanceTabsTitle: {
 		id: 'app.onboarding.instance-tabs.title',

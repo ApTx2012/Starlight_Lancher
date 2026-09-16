@@ -105,7 +105,11 @@ const REASSIGNABLE_FIRST_BYTE_TIMEOUT: time::Duration =
 const MAX_DOWNLOAD_ATTEMPT_HISTORY: usize = 12;
 const MAX_DOWNLOAD_DIAGNOSTIC_BYTES: usize = 8 * 1024;
 const MAX_FAILURE_COOLDOWN: time::Duration = time::Duration::from_secs(1);
-const H2_FALLBACK_TTL: time::Duration = MAX_FAILURE_COOLDOWN;
+// Once an authority has returned a broken HTTP/2 body, keep subsequent file
+// retries on HTTP/1.1 for the rest of a typical install. A one-second memory
+// allowed longer batch downloads to fall straight back onto the same bad H2
+// connection between retry rounds.
+const H2_FALLBACK_TTL: time::Duration = time::Duration::from_secs(10 * 60);
 const TASK_PROBE_MAX_ROUTES: usize = 3;
 const MAX_TASK_PROBE_STATES: usize = 64;
 #[cfg(not(test))]
@@ -6495,7 +6499,10 @@ async fn download_to_path_inner(
                                 Ok(chunk) => chunk,
                                 Err(error) => {
                                     let decode_failure = error.is_decode();
-                                    if is_h2_protocol_failure(&error)
+                                    if (is_h2_protocol_failure(&error)
+                                        || (decode_failure
+                                            && http_version
+                                                == reqwest::Version::HTTP_2))
                                         && let Some(authority) =
                                             url_authority(&final_url)
                                     {

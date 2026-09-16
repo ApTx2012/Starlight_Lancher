@@ -1,4 +1,4 @@
-import { readonly, ref } from 'vue'
+import { readonly, ref, watch } from 'vue'
 
 export const SKIN_SITE_ORIGIN = 'https://skin.starlight.cool'
 export type SkinSiteUser = { uuid: string; username: string }
@@ -113,6 +113,22 @@ export const skinSitePlayersStatus = readonly(playersStatus)
 export const selectedSkinSitePlayerId = readonly(selectedPlayerId)
 export const skinSiteFrameUrl = readonly(frameUrl)
 
+export async function waitForSkinSiteSession() {
+	if (status.value !== 'checking') return
+	await new Promise<void>((resolve, reject) => {
+		const stop = watch(status, next => {
+			if (next === 'checking') return
+			clearTimeout(timer)
+			stop()
+			resolve()
+		})
+		const timer = setTimeout(() => {
+			stop()
+			reject(new Error('皮肤站登录状态仍在检查，请稍后重试。'))
+		}, 10_000)
+	})
+}
+
 function rejectPendingLuckRequests(message: string) {
 	for (const request of pendingLuckRequests.values()) {
 		clearTimeout(request.timeout)
@@ -138,6 +154,7 @@ function rejectPendingSkinUpdateRequests(message: string) {
 }
 
 export function setSkinSiteFrame(frame: Window | null) {
+	if (frame && !user.value) status.value = 'checking'
 	if (connectedFrame === frame) return
 	rejectPendingPackTokens()
 	rejectPendingLuckRequests('The skin site connection changed.')

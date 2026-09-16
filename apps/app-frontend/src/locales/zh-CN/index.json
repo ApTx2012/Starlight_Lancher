@@ -1,4 +1,21 @@
 {
+	"app.instance-player.title": { "message": "选择实例玩家" },
+	"app.instance-player.remember": { "message": "选择后，此实例将一直使用该玩家。可在实例设置中切换。" },
+	"app.instance-player.restore": { "message": "请重新登录 {name}；要更换玩家，请前往实例设置。" },
+	"app.instance-player.loading": { "message": "正在读取已登录的玩家…" },
+	"app.instance-player.licensed": { "message": "正版玩家" },
+	"app.instance-player.skin": { "message": "皮肤站玩家" },
+	"app.instance-player.offline": { "message": "离线玩家" },
+	"app.instance-player.empty": { "message": "当前账号没有可用的皮肤站玩家，可在皮肤站创建玩家。" },
+	"app.instance-player.sign-in": { "message": "请登录账号后选择玩家。" },
+	"app.instance-player.retry": { "message": "重试" },
+	"app.instance-player.skin-login": { "message": "登录皮肤站" },
+	"app.instance-player.or": { "message": "或者" },
+	"app.instance-player.use-microsoft": { "message": "使用正版账号" },
+	"app.instance-player.saving": { "message": "正在保存实例玩家…" },
+	"app.instance-player.setting": { "message": "实例玩家" },
+	"app.instance-player.first-launch": { "message": "首次启动时选择玩家" },
+	"app.instance-player.change": { "message": "切换实例玩家" },
   "app.hosted-mods.title": { "message": "正在更新服务器 Mod" },
   "app.hosted-mods.description": { "message": "所有更新安装完成后将继续启动游戏。" },
   "app.hosted-mods.complete": { "message": "下载完成" },
@@ -5947,7 +5964,7 @@
     "message": "切换主页样式"
   },
   "app.onboarding.instance-actions.description": {
-    "message": "从实例页头部启动、停止、修复、配置、导出或打开这个实例。"
+    "message": "从这里启动或配置实例。首次启动选择玩家后会自动记住，之后可在实例设置中切换。"
   },
   "app.onboarding.instance-actions.title": {
     "message": "主操作台"
@@ -7792,7 +7809,7 @@
     "message": "小鬼当家"
   },
   "app.skins.skin-site-account.description": {
-    "message": "在下方选择皮肤后，可直接应用到 {player}。切换启动器页面时，皮肤站登录状态也会保持。"
+    "message": "在下方选择皮肤后，可直接应用到 {player}。"
   },
   "app.skins.skin-site-account.empty-description": {
     "message": "这个皮肤站账号暂时没有可用的玩家角色。"

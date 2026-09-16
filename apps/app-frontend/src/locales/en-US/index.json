@@ -1,4 +1,21 @@
 {
+	"app.instance-player.title": { "message": "Choose an instance player" },
+	"app.instance-player.remember": { "message": "This instance will keep using your choice. Switch players in instance settings." },
+	"app.instance-player.restore": { "message": "Sign in again as {name}. To choose someone else, open instance settings." },
+	"app.instance-player.loading": { "message": "Loading signed-in players…" },
+	"app.instance-player.licensed": { "message": "Minecraft account" },
+	"app.instance-player.skin": { "message": "Skin site player" },
+	"app.instance-player.offline": { "message": "Offline player" },
+	"app.instance-player.empty": { "message": "No available skin site players. You can create a player on the skin site." },
+	"app.instance-player.sign-in": { "message": "Sign in to choose a player." },
+	"app.instance-player.retry": { "message": "Retry" },
+	"app.instance-player.skin-login": { "message": "Sign in to skin site" },
+	"app.instance-player.or": { "message": "Or" },
+	"app.instance-player.use-microsoft": { "message": "Use a Minecraft account" },
+	"app.instance-player.saving": { "message": "Saving instance player…" },
+	"app.instance-player.setting": { "message": "Instance player" },
+	"app.instance-player.first-launch": { "message": "Choose a player on first launch" },
+	"app.instance-player.change": { "message": "Switch instance player" },
   "app.hosted-mods.title": { "message": "Updating server Mods" },
   "app.hosted-mods.description": { "message": "The game starts after all required updates have been installed." },
   "app.hosted-mods.complete": { "message": "Downloaded" },
@@ -5861,7 +5878,7 @@
     "message": "Switch your home"
   },
   "app.onboarding.instance-actions.description": {
-    "message": "Launch, stop, repair, configure, export, or open the instance from its header."
+    "message": "Launch or configure this instance here. Choose a player on first launch; the instance remembers your choice until you switch it in settings."
   },
   "app.onboarding.instance-actions.title": {
     "message": "The main controls"
@@ -7721,7 +7738,7 @@
     "message": "Tiny Takeover"
   },
   "app.skins.skin-site-account.description": {
-    "message": "Select a skin below and apply it directly to {player}. The skin site session remains available while you move between launcher pages."
+    "message": "Select a skin below and apply it directly to {player}."
   },
   "app.skins.skin-site-account.empty-description": {
     "message": "This skin site account does not have an available player profile yet."

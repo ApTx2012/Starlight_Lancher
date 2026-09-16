@@ -22,7 +22,8 @@ const { formatMessage } = useVIntl()
 const viewport = ref<HTMLElement>()
 const grid = ref<HTMLElement>()
 const view = ref({ left: 0, top: 0, width: 0, height: 0 })
-const brushCursor = ref({ x: 0, y: 0, color: '', visible: false })
+const brushCursor = ref<string>()
+const brushActive = computed(() => props.playing && props.selected >= 0)
 const large = computed(() => props.puzzle.difficulty !== 'easy')
 const visibleCells = computed(() =>
 	props.puzzle.answer.flatMap((color, i) =>
@@ -87,37 +88,21 @@ function onWheel(event: WheelEvent) {
 	void changeZoom(props.zoom + (event.deltaY < 0 ? 0.1 : -0.1))
 }
 
-function moveBrushCursor(event: PointerEvent) {
-	if (event.pointerType === 'touch') {
-		hideBrushCursor()
-		return
-	}
-	const cell = (event.target as Element | null)?.closest<HTMLButtonElement>('.mine-cell')
-	const visible = Boolean(
-		props.selected >= 0 && cell && !cell.disabled && !cell.classList.contains('mine-open'),
-	)
-	brushCursor.value = {
-		x: event.clientX,
-		y: event.clientY,
-		color: visible ? getComputedStyle(event.currentTarget as HTMLElement).color : '',
-		visible,
-	}
+let cursorColor = ''
+function updateBrushCursor() {
+	if (!brushActive.value || !grid.value) return
+	const color = getComputedStyle(grid.value).color
+	if (color === cursorColor) return
+	cursorColor = color
+	// Let the native cursor follow the pointer independently of Vue and board rendering.
+	// The hotspot is the same brush tip as the previous 32px floating SVG.
+	const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 1024 1024"><path fill="${color}" d="M358.681 586.386s-90.968 49.4-94.488 126.827c-3.519 77.428-77.427 133.74-102.063 140.778s360.157 22.971 332.002-142.444l-135.45-125.16zm169.099 52.56c14.016 13.601 17.565 32.675 7.929 42.606-9.635 9.93-28.81 6.954-42.823-6.647l-92.767-88.518c-14.015-13.6-17.565-32.675-7.929-42.605 9.636-9.93 28.81-6.955 42.824 6.646l92.766 88.518zm321.734-465.083c-25.144-17.055-47.741-1.763-57.477 3.805-29.097 19.485-237.243 221.77-327.69 315.194-11.105 14.8-18.59 26.294 34.663 79.546 44.95 44.95 65.896 42.012 88.66 22.603 37.906-37.906 199.299-262.926 258.92-348.713 9.792-14.092 29.851-54.17 2.924-72.435z"/></svg>`
+	brushCursor.value = `url("data:image/svg+xml,${encodeURIComponent(svg)}") 5 27, crosshair`
 }
 
-function hideBrushCursor() {
-	brushCursor.value.visible = false
-}
-
-watch(
-	() => [props.playing, props.selected] as const,
-	([playing, selected]) => {
-		if (!playing || selected < 0) hideBrushCursor()
-		else if (brushCursor.value.visible && grid.value) {
-			brushCursor.value.color = getComputedStyle(grid.value).color
-		}
-	},
-	{ flush: 'post' },
-)
+watch(() => [props.playing, props.selected], updateBrushCursor, {
+	flush: 'post',
+})
 
 function label(index: number) {
 	const values = {
@@ -135,6 +120,7 @@ function label(index: number) {
 
 let observer: ResizeObserver | undefined
 onMounted(() => {
+	updateBrushCursor()
 	observer = new ResizeObserver(updateView)
 	if (viewport.value) observer.observe(viewport.value)
 })
@@ -142,7 +128,10 @@ onScopeDispose(() => observer?.disconnect())
 defineExpose({
 	centerFirstClue,
 	setView,
-	getView: () => ({ left: viewport.value?.scrollLeft ?? 0, top: viewport.value?.scrollTop ?? 0 }),
+	getView: () => ({
+		left: viewport.value?.scrollLeft ?? 0,
+		top: viewport.value?.scrollTop ?? 0,
+	}),
 })
 </script>
 
@@ -152,16 +141,18 @@ defineExpose({
 			<div
 				ref="grid"
 				class="mine-grid"
-				:class="{ 'mine-grid-small': !large, 'mine-grid-brush-active': selected >= 0 }"
+				:class="{
+					'mine-grid-small': !large,
+					'mine-grid-brush-active': brushActive,
+				}"
 				:style="{
 					'--mine-size': puzzle.size,
 					'--mine-cell-size': `${40 * zoom}px`,
+					'--mine-brush-cursor': brushCursor,
 					color: selected >= 0 ? `var(--mine-color-${selected})` : undefined,
 				}"
 				:aria-label="formatMessage(messages.board, { size: puzzle.size })"
-				@pointermove="moveBrushCursor"
-				@pointerleave="hideBrushCursor"
-				@pointercancel="hideBrushCursor"
+				@pointerenter="updateBrushCursor"
 			>
 				<button
 					v-for="(_, i) in puzzle.answer"
@@ -190,24 +181,6 @@ defineExpose({
 				</button>
 			</div>
 		</div>
-		<Teleport to="body">
-			<svg
-				v-show="brushCursor.visible"
-				class="mine-brush-cursor"
-				:style="{
-					left: `${brushCursor.x}px`,
-					top: `${brushCursor.y}px`,
-					color: brushCursor.color,
-				}"
-				viewBox="0 0 1024 1024"
-				aria-hidden="true"
-			>
-				<path
-					fill="currentColor"
-					d="M358.681 586.386s-90.968 49.4-94.488 126.827c-3.519 77.428-77.427 133.74-102.063 140.778s360.157 22.971 332.002-142.444l-135.45-125.16zm169.099 52.56c14.016 13.601 17.565 32.675 7.929 42.606-9.635 9.93-28.81 6.954-42.823-6.647l-92.767-88.518c-14.015-13.6-17.565-32.675-7.929-42.605 9.636-9.93 28.81-6.955 42.824 6.646l92.766 88.518zm321.734-465.083c-25.144-17.055-47.741-1.763-57.477 3.805-29.097 19.485-237.243 221.77-327.69 315.194-11.105 14.8-18.59 26.294 34.663 79.546 44.95 44.95 65.896 42.012 88.66 22.603 37.906-37.906 199.299-262.926 258.92-348.713 9.792-14.092 29.851-54.17 2.924-72.435z"
-				/>
-			</svg>
-		</Teleport>
 		<div v-if="large" class="mine-overview">
 			<svg
 				class="mine-map"
@@ -260,7 +233,10 @@ defineExpose({
 
 <style scoped>
 .mine-navigation {
+	box-sizing: border-box;
+	width: 100%;
 	min-width: 0;
+	max-width: 100%;
 	display: grid;
 	gap: var(--gap-md);
 }
@@ -268,6 +244,9 @@ defineExpose({
 	grid-template-columns: minmax(0, 1fr) 7rem;
 }
 .mine-viewport {
+	box-sizing: border-box;
+	width: 100%;
+	max-width: 100%;
 	overflow: auto;
 	max-height: min(52vh, 32rem);
 	min-width: 0;
@@ -308,17 +287,9 @@ defineExpose({
 	user-select: none;
 	touch-action: manipulation;
 }
+.mine-grid-brush-active,
 .mine-grid-brush-active .mine-cell:not(.mine-open):not(:disabled) {
-	cursor: none;
-}
-.mine-brush-cursor {
-	position: fixed;
-	z-index: 2147483647;
-	width: 2rem;
-	height: 2rem;
-	filter: drop-shadow(0 1px 1px rgb(0 0 0 / 45%));
-	pointer-events: none;
-	transform: translate(-16%, -84%);
+	cursor: var(--mine-brush-cursor, crosshair);
 }
 .mine-cell:hover:not(:disabled) {
 	background: var(--surface-5);
@@ -390,14 +361,6 @@ defineExpose({
 	}
 	.mine-map {
 		width: 4.5rem;
-	}
-}
-@media (pointer: coarse) {
-	.mine-grid-brush-active .mine-cell:not(.mine-open):not(:disabled) {
-		cursor: pointer;
-	}
-	.mine-brush-cursor {
-		display: none;
 	}
 }
 </style>

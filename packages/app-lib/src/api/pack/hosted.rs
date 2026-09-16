@@ -1,6 +1,7 @@
 //! Administrator-approved skin-site packs. Only content-addressed changed files cross the network.
 mod progress;
 mod tagged;
+mod transport;
 use crate::{
     State,
     state::{
@@ -32,6 +33,7 @@ use tokio::{
 const API: &str = "https://skin.starlight.cool/starlight/mod/packs";
 const BINDING: &str = ".starlight-pack.json";
 const JOURNAL: &str = ".starlight-pack-pending.json";
+const MAX_HOSTED_CONCURRENT_FILES: usize = 8;
 static GATES: LazyLock<dashmap::DashMap<String, Arc<Mutex<()>>>> =
     LazyLock::new(dashmap::DashMap::new);
 static SESSION: Mutex<Option<DownloadSession>> = Mutex::const_new(None);
@@ -230,11 +232,42 @@ fn validate(files: &[PackFile]) -> crate::Result<()> {
     Ok(())
 }
 /// Reject symlinks and junctions in every existing ancestor, including internal state files.
+#[cfg(windows)]
+fn filesystem_path(path: &Path) -> PathBuf {
+    use std::ffi::OsString;
+    use std::os::windows::ffi::{OsStrExt, OsStringExt};
+
+    if !path.is_absolute() {
+        return path.to_path_buf();
+    }
+
+    let path = path.as_os_str().encode_wide().collect::<Vec<_>>();
+    const BACKSLASH: u16 = b'\\' as u16;
+    const QUESTION_MARK: u16 = b'?' as u16;
+    if path.starts_with(&[BACKSLASH, BACKSLASH, QUESTION_MARK, BACKSLASH]) {
+        return PathBuf::from(OsString::from_wide(&path));
+    }
+
+    let mut extended = "\\\\?\\".encode_utf16().collect::<Vec<_>>();
+    if path.starts_with(&[BACKSLASH, BACKSLASH]) {
+        extended.extend("UNC\\".encode_utf16());
+        extended.extend_from_slice(&path[2..]);
+    } else {
+        extended.extend_from_slice(&path);
+    }
+    PathBuf::from(OsString::from_wide(&extended))
+}
+
+#[cfg(not(windows))]
+fn filesystem_path(path: &Path) -> PathBuf {
+    path.to_path_buf()
+}
+
 fn target(root: &Path, relative: &str) -> crate::Result<PathBuf> {
     let mut path = root.to_path_buf();
     for part in relative.split('/') {
         path.push(part);
-        match std::fs::symlink_metadata(&path) {
+        match std::fs::symlink_metadata(filesystem_path(&path)) {
             Ok(meta) => {
                 #[cfg(windows)]
                 {
@@ -250,21 +283,32 @@ fn target(root: &Path, relative: &str) -> crate::Result<PathBuf> {
                 }
             }
             Err(e) if e.kind() == std::io::ErrorKind::NotFound => (),
-            Err(e) => return Err(e.into()),
+            Err(e) => {
+                return Err(
+                    crate::util::io::IOError::with_path(e, &path).into()
+                );
+            }
         }
     }
-    Ok(path)
+    // Windows' legacy Win32 path parser reports ERROR_PATH_NOT_FOUND once a
+    // perfectly valid pack path exceeds MAX_PATH. Extended-length paths keep
+    // deep KubeJS/data-pack trees addressable without changing their layout.
+    Ok(filesystem_path(&path))
 }
 async fn hash(path: &Path) -> crate::Result<Option<String>> {
     let mut input = match tokio::fs::File::open(path).await {
         Ok(f) => f,
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(None),
-        Err(e) => return Err(e.into()),
+        Err(e) => {
+            return Err(crate::util::io::IOError::with_path(e, path).into());
+        }
     };
     let mut digest = Sha256::new();
     let mut buffer = vec![0; 64 * 1024];
     loop {
-        let n = input.read(&mut buffer).await?;
+        let n = input.read(&mut buffer).await.map_err(|error| {
+            crate::util::io::IOError::with_path(error, path)
+        })?;
         if n == 0 {
             break;
         }
@@ -276,10 +320,11 @@ async fn read_json<T: serde::de::DeserializeOwned>(
     root: &Path,
     name: &str,
 ) -> crate::Result<Option<T>> {
-    match tokio::fs::read(target(root, name)?).await {
+    let path = target(root, name)?;
+    match tokio::fs::read(&path).await {
         Ok(bytes) => Ok(Some(serde_json::from_slice(&bytes)?)),
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(None),
-        Err(e) => Err(e.into()),
+        Err(e) => Err(crate::util::io::IOError::with_path(e, &path).into()),
     }
 }
 fn write_json<T: Serialize>(
@@ -289,10 +334,31 @@ fn write_json<T: Serialize>(
 ) -> crate::Result<()> {
     use std::io::Write;
     let dest = target(root, name)?;
-    let mut file = tempfile::NamedTempFile::new_in(root)?;
-    file.write_all(&serde_json::to_vec(value)?)?;
-    file.as_file().sync_all()?;
-    file.persist(dest).map_err(|e| e.error)?;
+    let mut file = tempfile::NamedTempFile::new_in(root).map_err(|error| {
+        crate::Error::from(crate::util::io::IOError::with_path(error, root))
+            .with_context(format!("创建 {name} 的临时文件失败"))
+    })?;
+    let temporary = file.path().to_path_buf();
+    file.write_all(&serde_json::to_vec(value)?)
+        .map_err(|error| {
+            crate::Error::from(crate::util::io::IOError::with_path(
+                error, &temporary,
+            ))
+            .with_context(format!("写入 {name} 的临时文件失败"))
+        })?;
+    file.as_file().sync_all().map_err(|error| {
+        crate::Error::from(crate::util::io::IOError::with_path(
+            error, &temporary,
+        ))
+        .with_context(format!("同步 {name} 的临时文件失败"))
+    })?;
+    file.persist(&dest).map_err(|error| {
+        crate::Error::from(error.error).with_context(format!(
+            "提交 {name} 失败；临时文件：{}；目标文件：{}",
+            temporary.display(),
+            dest.display()
+        ))
+    })?;
     Ok(())
 }
 async fn authorization() -> crate::Result<String> {
@@ -330,18 +396,22 @@ async fn request_authorized<T: serde::de::DeserializeOwned>(
     auth: &str,
 ) -> crate::Result<T> {
     ensure_session(auth).await?;
-    let response = configured_client()
-        .await?
-        .get(format!("{API}{suffix}"))
-        .header(reqwest::header::AUTHORIZATION, auth)
-        .header(reqwest::header::CACHE_CONTROL, "no-cache")
-        .timeout(std::time::Duration::from_secs(30))
-        .send()
-        .await?;
-    if matches!(response.status().as_u16(), 401 | 403) {
-        return Err(invalid(
-            "StarLight 登录凭据已失效或无权限，请重新登录后重试",
-        ));
+    let client = configured_client().await?;
+    let response =
+        transport::metadata_request(&client, &format!("{API}{suffix}"), auth)
+            .await?;
+    if !response.status().is_success() {
+        let message = transport::response_failure(
+            &client,
+            response,
+            "https://skin.starlight.cool/starlight/user",
+            suffix,
+            auth,
+        )
+        .await;
+        ensure_session(auth).await?;
+        tracing::warn!("{message}");
+        return Err(invalid(message));
     }
     let data: Response<T> = response.error_for_status()?.json().await?;
     ensure_session(auth).await?;
@@ -433,7 +503,13 @@ async fn apply_files(
 ) -> crate::Result<()> {
     for action in actions {
         let live = target(root, &action.path)?;
-        if hash(&live).await? != action.old_hash {
+        if hash(&live).await.map_err(|error| {
+            error.with_context(format!(
+                "检查整合包目标文件失败：{}",
+                live.display()
+            ))
+        })? != action.old_hash
+        {
             return Err(invalid(format!(
                 "File changed during sync: {}",
                 action.path
@@ -442,16 +518,82 @@ async fn apply_files(
         if action.old_hash.is_some() {
             let backup =
                 target(root, &format!("{}/{}", backup_dir, action.path))?;
-            tokio::fs::create_dir_all(backup.parent().unwrap()).await?;
-            tokio::fs::rename(&live, backup).await?;
+            let backup_parent = backup.parent().unwrap();
+            tokio::fs::create_dir_all(backup_parent).await.map_err(
+                |error| {
+                    crate::Error::from(crate::util::io::IOError::with_path(
+                        error,
+                        backup_parent,
+                    ))
+                    .with_context(format!(
+                        "创建整合包备份目录失败：{}",
+                        backup_parent.display()
+                    ))
+                },
+            )?;
+            tokio::fs::rename(&live, &backup).await.map_err(|error| {
+                crate::Error::from(error).with_context(format!(
+                    "备份整合包文件失败；源文件：{}；目标文件：{}",
+                    live.display(),
+                    backup.display()
+                ))
+            })?;
         }
         if let Some(next) = &action.next_hash {
-            tokio::fs::create_dir_all(live.parent().unwrap()).await?;
-            let staged =
-                tempfile::NamedTempFile::new_in(live.parent().unwrap())?;
-            tokio::fs::copy(target(cache, next)?, staged.path()).await?;
-            staged.as_file().sync_all()?;
-            staged.persist(&live).map_err(|e| e.error)?;
+            let live_parent = live.parent().unwrap();
+            tokio::fs::create_dir_all(live_parent)
+                .await
+                .map_err(|error| {
+                    crate::Error::from(crate::util::io::IOError::with_path(
+                        error,
+                        live_parent,
+                    ))
+                    .with_context(format!(
+                        "创建整合包目标目录失败：{}",
+                        live_parent.display()
+                    ))
+                })?;
+            let staged = tempfile::NamedTempFile::new_in(live_parent).map_err(
+                |error| {
+                    crate::Error::from(crate::util::io::IOError::with_path(
+                        error,
+                        live_parent,
+                    ))
+                    .with_context(format!(
+                        "创建整合包临时文件失败：{}",
+                        live.display()
+                    ))
+                },
+            )?;
+            let staged_path = staged.path().to_path_buf();
+            let cache_object = target(cache, next)?;
+            tokio::fs::copy(&cache_object, &staged_path)
+                .await
+                .map_err(|error| {
+                    crate::Error::from(error).with_context(format!(
+                        "复制整合包缓存文件失败；缓存文件：{}；临时文件：{}；目标文件：{}",
+                        cache_object.display(),
+                        staged_path.display(),
+                        live.display()
+                    ))
+                })?;
+            staged.as_file().sync_all().map_err(|error| {
+                crate::Error::from(crate::util::io::IOError::with_path(
+                    error,
+                    &staged_path,
+                ))
+                .with_context(format!(
+                    "同步整合包临时文件失败：{}",
+                    staged_path.display()
+                ))
+            })?;
+            staged.persist(&live).map_err(|error| {
+                crate::Error::from(error.error).with_context(format!(
+                    "提交整合包文件失败；临时文件：{}；目标文件：{}",
+                    staged_path.display(),
+                    live.display()
+                ))
+            })?;
         }
     }
     Ok(())
@@ -975,7 +1117,7 @@ async fn synchronize_with_progress(
         let concurrency = crate::api::settings::get()
             .await?
             .effective_max_concurrent_downloads()
-            .clamp(1, 16);
+            .clamp(1, MAX_HOSTED_CONCURRENT_FILES);
         let current = std::sync::Mutex::new(BTreeMap::<String, u64>::new());
         let completed = AtomicUsize::new(0);
         progress.download(
@@ -1038,6 +1180,10 @@ async fn synchronize_with_progress(
                     };
                     let mut request =
                         DownloadRequest::new(&url, ResourceClass::Modpack)
+                            // The batch already downloads several files in
+                            // parallel. Do not let an HTTP/1 fallback multiply
+                            // every large file into another four connections.
+                            .with_http1_segmented_download(false)
                             .with_integrity(Integrity {
                                 size: Some(file_size),
                                 sha256: Some(file.sha256),
@@ -1047,14 +1193,34 @@ async fn synchronize_with_progress(
                         request = request
                             .with_header("Authorization", auth.clone());
                     }
-                    download_to_path(
-                        request,
+                    let first_result = download_to_path(
+                        request.clone(),
                         &object,
                         &state.fetch_semaphore,
                         &state.pool,
                         Some(&mut on_progress),
                     )
-                    .await?;
+                    .await;
+                    if let Err(error) = first_result {
+                        tracing::warn!(
+                            path = %file_path,
+                            %error,
+                            "Parallel StarLight file download failed; retrying after the batch load has eased"
+                        );
+                        ensure_session(auth).await?;
+                        tokio::time::sleep(std::time::Duration::from_millis(
+                            750,
+                        ))
+                        .await;
+                        download_to_path(
+                            request,
+                            &object,
+                            &state.fetch_semaphore,
+                            &state.pool,
+                            Some(&mut on_progress),
+                        )
+                        .await?;
+                    }
                     let completed_files =
                         completed.fetch_add(1, Ordering::Relaxed) + 1;
                     let completed_bytes = {
@@ -1158,12 +1324,33 @@ async fn synchronize_with_progress(
         }
         ensure_session(&auth).await?;
         progress.update(0, 0, "正在应用更新", true);
-        apply_files(&root, &cache, &journal.backup, &journal.actions).await?;
+        apply_files(&root, &cache, &journal.backup, &journal.actions)
+            .await
+            .map_err(|error| error.with_context(format!(
+                "应用 StarLight 整合包文件失败；实例目录：{}",
+                root.display()
+            )))?;
         progress.update(0, 0, "正在完成安装", true);
-        write_json(&root, BINDING, &Binding { publication: publication.clone(), files, sync_marker: Some(sync_marker), resolved_external })?;
+        write_json(&root, BINDING, &Binding { publication: publication.clone(), files, sync_marker: Some(sync_marker), resolved_external })
+            .map_err(|error| error.with_context(format!(
+                "写入 StarLight 整合包绑定信息失败；实例目录：{}",
+                root.display()
+            )))?;
         crate::instance::edit(instance_id, EditInstance { install_stage: Some(InstanceInstallStage::Installed), ..Default::default() }).await?;
-        crate::instance::sync_content_files(instance_id).await?;
-        tokio::fs::remove_file(target(&root, JOURNAL)?).await?;
+        crate::instance::sync_content_files(instance_id).await.map_err(|error| {
+            error.with_context(format!(
+                "扫描 StarLight 整合包内容失败；实例目录：{}",
+                root.display()
+            ))
+        })?;
+        let journal_path = target(&root, JOURNAL)?;
+        tokio::fs::remove_file(&journal_path).await.map_err(|error| {
+            crate::Error::from(crate::util::io::IOError::with_path(
+                error,
+                &journal_path,
+            ))
+            .with_context("清理 StarLight 整合包安装日志失败")
+        })?;
         Ok::<_, crate::Error>(())
     }.await;
     if let Err(error) = result {

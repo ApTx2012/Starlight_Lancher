@@ -10,7 +10,7 @@ import {
 import { onUnmounted, shallowRef } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import { NewInstanceImage } from '@/assets/icons'
+import instanceThinkingImage from '@/assets/illustrations/instance-thinking.png'
 import { useNetworkStatus } from '@/composables/useNetworkStatus'
 import { DIRECT_LINKS_SYNCED_EVENT } from '@/helpers/direct-link-sync'
 import { instance_listener } from '@/helpers/events.js'
@@ -73,11 +73,15 @@ onUnmounted(() => {
 		<template v-if="instances && instances.length > 0">
 			<RouterView v-if="route.path.startsWith('/library')" :instances="instances" />
 		</template>
-		<div v-else class="no-instance flex flex-col items-center justify-center h-full gap-3">
-			<div class="icon">
-				<NewInstanceImage />
-			</div>
-			<h3>{{ formatMessage(messages.noInstances) }}</h3>
+		<div v-else class="flex flex-col items-center justify-center h-full gap-3">
+			<img
+				:src="instanceThinkingImage"
+				alt=""
+				aria-hidden="true"
+				class="h-40 w-40 object-contain"
+				draggable="false"
+			/>
+			<h3 class="m-0">{{ formatMessage(messages.noInstances) }}</h3>
 			<ButtonStyled color="brand">
 				<button
 					data-onboarding-id="create-instance"
@@ -91,19 +95,3 @@ onUnmounted(() => {
 		</div>
 	</div>
 </template>
-
-<style lang="scss" scoped>
-.no-instance {
-	p,
-	h3 {
-		margin: 0;
-	}
-
-	.icon {
-		svg {
-			width: 10rem;
-			height: 10rem;
-		}
-	}
-}
-</style>

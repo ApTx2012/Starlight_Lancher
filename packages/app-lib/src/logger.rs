@@ -22,17 +22,12 @@ const DEFAULT_CONSOLE_COLUMNS: usize = 80;
 #[cfg(debug_assertions)]
 const CONSOLE_TRUNCATION_MARKER: &str = "... [console output truncated]";
 
-#[cfg(not(debug_assertions))]
 const LAUNCHER_LOG_MAX_BYTES: u64 = 10 * 1024 * 1024;
-#[cfg(not(debug_assertions))]
 const LAUNCHER_WARN_ERROR_MAX_BYTES: u64 = 30 * 1024 * 1024;
-#[cfg(not(debug_assertions))]
 const LAUNCHER_LOG_MAX_FILES: usize = 5;
-#[cfg(not(debug_assertions))]
 const LAUNCHER_LOG_MAX_AGE: std::time::Duration =
     std::time::Duration::from_secs(3 * 24 * 60 * 60);
 
-#[cfg(any(test, not(debug_assertions)))]
 #[derive(Clone)]
 struct RotatingLogWriter {
     state: std::sync::Arc<std::sync::Mutex<RotatingLogState>>,
@@ -40,7 +35,6 @@ struct RotatingLogWriter {
     warn_error_max_bytes: u64,
 }
 
-#[cfg(any(test, not(debug_assertions)))]
 struct RotatingLogState {
     logs_dir: std::path::PathBuf,
     session_name: String,
@@ -51,7 +45,6 @@ struct RotatingLogState {
     max_age: std::time::Duration,
 }
 
-#[cfg(any(test, not(debug_assertions)))]
 impl RotatingLogWriter {
     fn new(
         logs_dir: std::path::PathBuf,
@@ -120,7 +113,6 @@ impl RotatingLogWriter {
     }
 }
 
-#[cfg(any(test, not(debug_assertions)))]
 impl RotatingLogState {
     fn write_event(
         &mut self,
@@ -157,7 +149,6 @@ impl RotatingLogState {
     }
 }
 
-#[cfg(any(test, not(debug_assertions)))]
 fn rotating_log_path(
     logs_dir: &std::path::Path,
     session_name: &str,
@@ -170,7 +161,6 @@ fn rotating_log_path(
     }
 }
 
-#[cfg(any(test, not(debug_assertions)))]
 fn open_log_file(path: &std::path::Path) -> std::io::Result<std::fs::File> {
     std::fs::OpenOptions::new()
         .create(true)
@@ -178,7 +168,6 @@ fn open_log_file(path: &std::path::Path) -> std::io::Result<std::fs::File> {
         .open(path)
 }
 
-#[cfg(any(test, not(debug_assertions)))]
 fn cleanup_launcher_logs(
     logs_dir: &std::path::Path,
     max_files: usize,
@@ -194,7 +183,6 @@ fn cleanup_launcher_logs(
     );
 }
 
-#[cfg(any(test, not(debug_assertions)))]
 fn cleanup_launcher_logs_at(
     logs_dir: &std::path::Path,
     max_files: usize,
@@ -244,7 +232,6 @@ fn cleanup_launcher_logs_at(
     }
 }
 
-#[cfg(any(test, not(debug_assertions)))]
 fn launcher_log_is_expired(
     created: std::time::SystemTime,
     now: std::time::SystemTime,
@@ -253,14 +240,12 @@ fn launcher_log_is_expired(
     now.duration_since(created).is_ok_and(|age| age > max_age)
 }
 
-#[cfg(any(test, not(debug_assertions)))]
 struct LogEventWriter {
     writer: RotatingLogWriter,
     buffer: Vec<u8>,
     max_file_bytes: u64,
 }
 
-#[cfg(any(test, not(debug_assertions)))]
 impl LogEventWriter {
     fn commit(&mut self) -> std::io::Result<()> {
         if self.buffer.is_empty() {
@@ -272,7 +257,6 @@ impl LogEventWriter {
     }
 }
 
-#[cfg(any(test, not(debug_assertions)))]
 impl std::io::Write for LogEventWriter {
     fn write(&mut self, buffer: &[u8]) -> std::io::Result<usize> {
         self.buffer.extend_from_slice(buffer);
@@ -285,14 +269,12 @@ impl std::io::Write for LogEventWriter {
     }
 }
 
-#[cfg(any(test, not(debug_assertions)))]
 impl Drop for LogEventWriter {
     fn drop(&mut self) {
         let _ = self.commit();
     }
 }
 
-#[cfg(any(test, not(debug_assertions)))]
 impl<'a> tracing_subscriber::fmt::MakeWriter<'a> for RotatingLogWriter {
     type Writer = LogEventWriter;
 
@@ -314,7 +296,6 @@ impl<'a> tracing_subscriber::fmt::MakeWriter<'a> for RotatingLogWriter {
     }
 }
 
-#[cfg(any(test, not(debug_assertions)))]
 impl RotatingLogWriter {
     fn event_writer(&self, max_file_bytes: u64) -> LogEventWriter {
         LogEventWriter {
@@ -627,11 +608,35 @@ impl std::io::Write for TruncatedConsoleWriter {
     }
 }
 
-// Handling for the live development logging
-// This will log to the console, and will not log to a file
+// Handling for live development logging. Keep the compact console output, but
+// also write the full event stream so exported error reports contain the
+// session that produced the error.
 #[cfg(debug_assertions)]
-pub fn start_logger(_app_identifier: &str) -> Option<()> {
+pub fn start_logger(app_identifier: &str) -> Option<()> {
+    use crate::prelude::DirectoryInfo;
+    use chrono::Local;
+    use tracing_subscriber::fmt::time::ChronoLocal;
     use tracing_subscriber::prelude::*;
+    let logs_dir = DirectoryInfo::launcher_logs_dir_path(app_identifier)
+        .or_else(|| {
+            eprintln!("Could not resolve launcher logs directory");
+            None
+        })?;
+    let session_name =
+        format!("session_{}", Local::now().format("%Y%m%d_%H%M%S"));
+    let file_writer = RotatingLogWriter::new(
+        logs_dir,
+        session_name,
+        LAUNCHER_LOG_MAX_BYTES,
+        LAUNCHER_WARN_ERROR_MAX_BYTES,
+        LAUNCHER_LOG_MAX_FILES,
+        LAUNCHER_LOG_MAX_AGE,
+    )
+    .map_err(|error| {
+        eprintln!("Could not start launcher log writer: {error}");
+        error
+    })
+    .ok()?;
     let filter = tracing_subscriber::EnvFilter::try_from_default_env()
         .unwrap_or_else(|_| {
             tracing_subscriber::EnvFilter::new("theseus=info,theseus_gui=info")
@@ -646,6 +651,12 @@ pub fn start_logger(_app_identifier: &str) -> Option<()> {
                 stdout: std::io::stdout(),
             }
         }))
+        .with(
+            tracing_subscriber::fmt::layer()
+                .with_writer(file_writer)
+                .with_ansi(false)
+                .with_timer(ChronoLocal::rfc_3339()),
+        )
         .with(filter)
         .with(tracing_error::ErrorLayer::default())
         .init();

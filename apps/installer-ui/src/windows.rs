@@ -148,7 +148,6 @@ pub fn run() -> Result<(), String> {
     let arguments = parse_arguments()?;
     let event_loop = EventLoopBuilder::<UserEvent>::with_user_event().build();
     let window = WindowBuilder::new()
-
         .with_title("Starlight Launcher")
         .with_inner_size(LogicalSize::new(940.0, 620.0))
         .with_min_inner_size(LogicalSize::new(940.0, 620.0))

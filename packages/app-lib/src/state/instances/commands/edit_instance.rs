@@ -54,6 +54,7 @@ pub struct EditInstance {
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct InstanceLaunchOverridesPatch {
+    pub player: Option<crate::state::InstancePlayer>,
     pub instance_mode: Option<crate::state::InstanceMode>,
     #[serde(
         default,
@@ -372,6 +373,9 @@ fn apply_launch_overrides_patch(
     }
     if let Some(mode) = patch.instance_mode {
         overrides.instance_mode = Some(mode);
+    }
+    if let Some(player) = patch.player {
+        overrides.player = Some(player);
     }
     if let Some(timeout) = patch.launch_preparation_timeout {
         overrides.launch_preparation_timeout = timeout;

@@ -301,6 +301,7 @@ defineExpose({ show })
 		:header="formatMessage(messages.title)"
 		width="56rem"
 		max-width="56rem"
+		scrollable
 		:closable="false"
 		:close-on-esc="false"
 		actions-divider
@@ -455,15 +456,21 @@ defineExpose({ show })
 	justify-content: space-between;
 }
 .mine-frame {
+	box-sizing: border-box;
+	min-width: 0;
+	max-width: 100%;
 	border: 2px solid var(--mine-ink);
 	border-radius: var(--radius-md);
 	padding: var(--gap-md);
 	background: var(--surface-2);
 }
 .mine-status {
+	min-width: 0;
+	max-width: 100%;
 	margin: 0 0 var(--gap-md);
 	color: var(--color-contrast);
 	font-size: 0.875rem;
+	overflow-wrap: anywhere;
 }
 .mine-actions {
 	justify-content: flex-end;

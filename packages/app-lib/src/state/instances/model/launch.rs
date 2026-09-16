@@ -15,7 +15,18 @@ pub enum InstanceMode {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct InstancePlayer {
+    pub id: uuid::Uuid,
+    pub name: String,
+    pub account_type: crate::state::MinecraftAccountType,
+    #[serde(default)]
+    pub skin_site_user: Option<String>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct InstanceLaunchOverrides {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub player: Option<InstancePlayer>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub instance_mode: Option<InstanceMode>,
     pub instance_id: String,
@@ -34,6 +45,7 @@ pub struct InstanceLaunchOverrides {
 impl InstanceLaunchOverrides {
     pub fn empty(instance_id: String) -> Self {
         Self {
+            player: None,
             instance_mode: None,
             instance_id,
             java_path: None,
@@ -55,6 +67,8 @@ impl InstanceLaunchOverrides {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub(crate) struct InstanceLaunchOverridesData {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub player: Option<InstancePlayer>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub instance_mode: Option<InstanceMode>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -83,6 +97,7 @@ impl InstanceLaunchOverridesData {
         instance_id: String,
     ) -> InstanceLaunchOverrides {
         InstanceLaunchOverrides {
+            player: self.player,
             instance_mode: self.instance_mode,
             instance_id,
             java_path: self.java_path,
@@ -101,6 +116,7 @@ impl InstanceLaunchOverridesData {
 impl From<&InstanceLaunchOverrides> for InstanceLaunchOverridesData {
     fn from(overrides: &InstanceLaunchOverrides) -> Self {
         Self {
+            player: overrides.player.clone(),
             instance_mode: overrides.instance_mode,
             java_path: overrides.java_path.clone(),
             extra_launch_args: overrides.extra_launch_args.clone(),
@@ -153,5 +169,36 @@ mod tests {
             "\"starlight\""
         );
         assert!(serde_json::from_str::<InstanceMode>("\"invalid\"").is_err());
+    }
+
+    #[test]
+    fn instance_player_survives_configuration_round_trip() {
+        let mut original = InstanceLaunchOverrides::empty("one".into());
+        let id = uuid::Uuid::new_v4();
+        original.player = Some(InstancePlayer {
+            id,
+            name: "SavedPlayer".into(),
+            account_type: crate::state::MinecraftAccountType::Yggdrasil,
+            skin_site_user: Some("owner".into()),
+        });
+        let encoded = serde_json::to_string(
+            &InstanceLaunchOverridesData::from(&original),
+        )
+        .unwrap();
+        let decoded: InstanceLaunchOverridesData =
+            serde_json::from_str(&encoded).unwrap();
+        let saved = decoded.into_launch_overrides("one".into()).player.unwrap();
+        assert_eq!(saved.id, id);
+        assert_eq!(saved.skin_site_user.as_deref(), Some("owner"));
+        assert_eq!(
+            saved.account_type,
+            crate::state::MinecraftAccountType::Yggdrasil
+        );
+        assert!(
+            serde_json::from_str::<InstanceLaunchOverridesData>("{}")
+                .unwrap()
+                .player
+                .is_none()
+        );
     }
 }

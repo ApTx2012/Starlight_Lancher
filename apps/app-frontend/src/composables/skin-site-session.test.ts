@@ -28,6 +28,17 @@ import {
 	skinSiteUser,
 } from './skin-site-session.ts'
 
+test('reconnecting the same skin site frame waits for verification instead of reporting signed out', () => {
+	const frame = { postMessage() {} } as unknown as Window
+	resetSkinSiteSession()
+	setSkinSiteFrame(frame)
+	resetSkinSiteSession()
+	setSkinSiteFrame(frame)
+	assert.equal(skinSiteStatus.value, 'checking')
+	setSkinSiteFrame(null)
+	resetSkinSiteSession()
+})
+
 test('hosted installation sends the JWT to native commands while Local needs no session', async () => {
 	const previousWindow = Object.getOwnPropertyDescriptor(globalThis, 'window')
 	const calls: Array<{ command: string; args: Record<string, unknown> }> = []

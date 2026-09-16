@@ -199,7 +199,8 @@ pub async fn begin_yggdrasil_login(
     .await?;
 
     // 收集本次登录可用的所有角色；优先使用 availableProfiles，回退到 selectedProfile。
-    let mut profiles: Vec<YggdrasilProfile> = response.available_profiles.clone();
+    let mut profiles: Vec<YggdrasilProfile> =
+        response.available_profiles.clone();
     if profiles.is_empty() {
         if let Some(selected) = response.selected_profile.clone() {
             profiles.push(selected);
@@ -607,9 +608,121 @@ fn create_credentials(
     }
 }
 
+pub async fn login_skin_site_player(
+    token: &str,
+    player_id: Uuid,
+    user_id: &str,
+    exec: impl sqlx::Executor<'_, Database = Sqlite> + Copy,
+) -> crate::Result<Credentials> {
+    #[derive(Deserialize)]
+    struct Envelope {
+        payload: SkinSiteLogin,
+    }
+    let client_token = Uuid::new_v4().to_string();
+    let response = reqwest::Client::builder()
+        .timeout(StdDuration::from_secs(30))
+        .redirect(reqwest::redirect::Policy::none())
+        .build()?
+        .post("https://skin.starlight.cool/starlight/launcher/login")
+        .bearer_auth(token)
+        .json(&json!({ "playerId": player_id, "clientToken": client_token }))
+        .send()
+        .await?;
+    if !response.status().is_success() {
+        return Err(ErrorKind::InputError(format!(
+            "皮肤站玩家登录失败（HTTP {}），请检查登录状态后重试",
+            response.status().as_u16()
+        ))
+        .as_error());
+    }
+    let login = response.json::<Envelope>().await?.payload;
+    let credential =
+        skin_site_credentials(login, player_id, user_id, &client_token)?;
+    credential.upsert_preserving_selection(exec).await?;
+    Ok(credential)
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct SkinSiteLogin {
+    access_token: String,
+    client_token: String,
+    selected_profile: YggdrasilProfile,
+    user_id: String,
+}
+
+fn skin_site_credentials(
+    login: SkinSiteLogin,
+    player_id: Uuid,
+    user_id: &str,
+    client_token: &str,
+) -> crate::Result<Credentials> {
+    if login.selected_profile.id != player_id
+        || login.user_id != user_id
+        || login.client_token != client_token
+        || login.access_token.is_empty()
+    {
+        return Err(ErrorKind::InputError(
+            "皮肤站返回的玩家身份不匹配，请重试".into(),
+        )
+        .as_error());
+    }
+    let mut credential = create_credentials(
+        login.selected_profile,
+        login.access_token,
+        login.client_token,
+        YggdrasilMetadata {
+            api_root: "https://skin.starlight.cool/yggdrasil".into(),
+            server_name: "StarLight".into(),
+            raw: String::new(),
+        },
+        user_id,
+    );
+    credential.active = false;
+    Ok(credential)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn skin_site_login_validates_identity_and_keeps_global_selection() {
+        let id = Uuid::new_v4();
+        let response = || SkinSiteLogin {
+            access_token: "game-token".into(),
+            client_token: "client".into(),
+            selected_profile: YggdrasilProfile {
+                id,
+                name: "Player".into(),
+            },
+            user_id: "owner".into(),
+        };
+        let credentials =
+            skin_site_credentials(response(), id, "owner", "client").unwrap();
+        assert!(!credentials.active);
+        assert_eq!(credentials.account_type, MinecraftAccountType::Yggdrasil);
+        assert_eq!(
+            credentials.yggdrasil.unwrap().api_root,
+            "https://skin.starlight.cool/yggdrasil"
+        );
+        assert!(
+            skin_site_credentials(
+                response(),
+                Uuid::new_v4(),
+                "owner",
+                "client"
+            )
+            .is_err()
+        );
+        assert!(
+            skin_site_credentials(response(), id, "other", "client").is_err()
+        );
+        assert!(
+            skin_site_credentials(response(), id, "owner", "other-client")
+                .is_err()
+        );
+    }
 
     #[test]
     fn normalizes_api_roots() {
