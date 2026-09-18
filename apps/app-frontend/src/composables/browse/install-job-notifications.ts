@@ -13,7 +13,6 @@ import type { Router } from 'vue-router'
 import {
 	install_job_dismiss,
 	install_job_repair_cache_and_retry,
-	install_job_retry,
 	install_job_support_details,
 	installJobInstanceId,
 	type InstallJobSnapshot,
@@ -674,7 +673,7 @@ export async function useInstallJobNotifications(opts: {
 				action: async () => {
 					if (repairingJobIds.value.has(job.job_id)) return
 					if (!requiresCacheRepair) {
-						await install_job_retry(job.job_id).catch(opts.handleError)
+						await opts.manager.retry(job.job_id).catch(opts.handleError)
 						await refresh()
 						return
 					}

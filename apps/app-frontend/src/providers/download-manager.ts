@@ -1,16 +1,22 @@
 import { createContext } from '@modrinth/ui'
 import { computed, type ComputedRef, type Ref, ref } from 'vue'
 
+import {
+	forgetHostedCreation,
+	markHostedCreationCompleted,
+	markHostedCreationFailed,
+} from '@/composables/useHostedCreation'
+import { runHostedSync } from '@/composables/useHostedSync'
 import { setCurseForgeManualDownloads } from '@/helpers/curseforge-manual'
-import { onHostedPackAttemptStarted } from '@/helpers/hosted-packs'
-import { createHostedDownloadFailures } from '@/helpers/hosted-download-failures'
-import { forgetHostedCreation } from '@/composables/useHostedCreation'
 import {
 	download_request_listener,
 	install_job_listener,
-	loading_listener,
 	instance_listener,
+	loading_listener,
 } from '@/helpers/events'
+import { createHostedDownloadFailures } from '@/helpers/hosted-download-failures'
+import { retryInstallJob } from '@/helpers/hosted-install-retry'
+import { getInstanceMode, onHostedPackAttemptStarted } from '@/helpers/hosted-packs'
 import {
 	download_history_clear,
 	download_job_cancel,
@@ -50,6 +56,7 @@ export interface DownloadManager {
 	refresh: () => Promise<void>
 	cancel: (jobId: string) => Promise<void>
 	retry: (jobId: string) => Promise<void>
+	retryHosted: (instanceId: string, sourceJobId?: string) => Promise<void>
 	resume: (jobId: string) => Promise<void>
 	skipMissingContent: (jobId: string) => Promise<void>
 	remove: (jobId: string) => Promise<void>
@@ -376,8 +383,29 @@ export function createDownloadManager(handleError: (error: unknown) => void): Do
 	}
 
 	async function retry(jobId: string) {
-		const job = await download_job_retry(jobId)
-		await reconcileJob(job)
+		const original =
+			jobs.value.find((candidate) => candidate.job_id === jobId) ?? (await download_job_get(jobId))
+		const job = await retryInstallJob(original, {
+			getInstanceMode,
+			retryHosted,
+			retryGeneric: download_job_retry,
+		})
+		if (job) await reconcileJob(job)
+	}
+
+	async function retryHosted(instanceId: string, sourceJobId?: string) {
+		try {
+			await runHostedSync(instanceId)
+		} catch (error) {
+			markHostedCreationFailed(instanceId, error)
+			throw error
+		}
+		markHostedCreationCompleted(instanceId)
+		if (sourceJobId) {
+			await download_job_delete(sourceJobId).catch(handleError)
+			jobs.value = jobs.value.filter((job) => job.job_id !== sourceJobId)
+		}
+		await refresh()
 	}
 
 	async function resume(jobId: string) {
@@ -459,6 +487,7 @@ export function createDownloadManager(handleError: (error: unknown) => void): Do
 		refresh,
 		cancel,
 		retry,
+		retryHosted,
 		resume,
 		skipMissingContent,
 		remove,

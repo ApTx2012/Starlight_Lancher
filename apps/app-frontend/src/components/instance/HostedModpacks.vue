@@ -83,20 +83,20 @@
 <script setup lang="ts">
 import { ButtonStyled, defineMessages, useVIntl } from '@modrinth/ui'
 import { computed, inject, ref, watch } from 'vue'
-import { useHostedSync } from '@/composables/useHostedSync'
-import { injectDownloadManager } from '@/providers/download-manager'
 import { useRouter } from 'vue-router'
 
-import InstanceModeSettings from '@/components/instance/InstanceModeSettings.vue'
 import HostedPackProgress from '@/components/instance/HostedPackProgress.vue'
+import InstanceModeSettings from '@/components/instance/InstanceModeSettings.vue'
+import { markHostedCreationCompleted } from '@/composables/useHostedCreation'
+import { useHostedSync } from '@/composables/useHostedSync'
 import { useInstanceMode } from '@/composables/useInstanceMode'
-
 import {
 	type HostedBinding,
 	hostedBinding,
 	hostedDefault,
 	type HostedPublication,
 } from '@/helpers/hosted-packs'
+import { injectDownloadManager } from '@/providers/download-manager'
 const props = defineProps<{ instanceId: string }>()
 const modeQuery = useInstanceMode(() => props.instanceId)
 const router = useRouter()
@@ -186,7 +186,8 @@ async function load() {
 async function sync() {
 	if (syncing.value || !ready.value || modeQuery.data.value !== 'starlight') return
 	loadError.value = ''
-	await task.sync()
+	const result = await task.sync()
+	if (result) markHostedCreationCompleted(props.instanceId)
 }
 watch(syncing, (busy, wasBusy) => {
 	if (!busy && wasBusy) void load()

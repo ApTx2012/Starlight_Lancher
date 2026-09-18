@@ -99,7 +99,7 @@
 				/>
 				<RouterLink
 					v-else
-					:to="`/instance/${encodeURIComponent(bar.bar_type?.instance_id ?? '')}/mods`"
+					:to="hostedRetryRoute(bar.bar_type?.instance_id ?? '')"
 					class="mt-3 inline-block text-brand hover:underline"
 				>
 					{{ formatMessage(messages.hostedRetry) }}
@@ -471,6 +471,7 @@ import { useRoute, useRouter } from 'vue-router'
 import MissingModpackContentModal from '@/components/ui/modal/MissingModpackContentModal.vue'
 import { listPendingCurseForgeManualDownloads } from '@/helpers/curseforge'
 import type { CurseForgeManualDownloadItem } from '@/helpers/curseforge-manual'
+import { hostedRetryRoute } from '@/helpers/hosted-install-retry'
 import {
 	download_job_support_details,
 	type InstallJobSnapshot,

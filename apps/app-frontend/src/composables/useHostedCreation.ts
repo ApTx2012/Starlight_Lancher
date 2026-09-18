@@ -1,6 +1,8 @@
-import { ref } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
-import { hostedCreate, hostedSync } from '../helpers/hosted-packs.ts'
+import { ref } from 'vue'
+
+import { hostedCreate } from '../helpers/hosted-packs.ts'
+import { runHostedSync } from './useHostedSync.ts'
 
 const installing = ref(false)
 const installError = ref('')
@@ -14,6 +16,18 @@ export function forgetHostedCreation(instanceId: string) {
 	createdInstance.value = undefined
 	completed.value = false
 	installError.value = ''
+}
+
+export function markHostedCreationCompleted(instanceId: string) {
+	if (createdInstance.value !== instanceId) return
+	installError.value = ''
+	completed.value = true
+}
+
+export function markHostedCreationFailed(instanceId: string, cause: unknown) {
+	if (createdInstance.value !== instanceId) return
+	completed.value = false
+	installError.value = String(cause)
 }
 
 export function useHostedCreation() {
@@ -42,12 +56,15 @@ export function useHostedCreation() {
 			if (completed.value) return createdInstance.value
 			createdInstance.value ??= await hostedCreate(gameDirRoot)
 			const instanceId = createdInstance.value
-			await hostedSync(instanceId)
+			await runHostedSync(instanceId)
 			if (attempt !== generation) return
-			completed.value = true
+			markHostedCreationCompleted(instanceId)
 			return instanceId
 		} catch (cause) {
-			if (attempt === generation) installError.value = String(cause)
+			if (attempt === generation) {
+				if (createdInstance.value) markHostedCreationFailed(createdInstance.value, cause)
+				else installError.value = String(cause)
+			}
 		} finally {
 			installing.value = false
 		}
