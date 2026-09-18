@@ -99,7 +99,10 @@ export interface HostedSyncResult {
 }
 export const hostedDefault = () =>
 	invokeWithSession<HostedPublication>('plugin:install|hosted_default')
-export const hostedCreate = () => invokeWithSession<string>('plugin:install|hosted_create')
+export const hostedCreate = (gameDirRoot?: string | null) =>
+	invokeWithSession<string>('plugin:install|hosted_create', {
+		gameDirRoot: gameDirRoot ?? null,
+	})
 export const hostedBinding = (instanceId: string) =>
 	invokeHosted<HostedBinding | null>('plugin:install|hosted_binding', { instanceId })
 export const hostedSync = (instanceId: string) => {

@@ -23,7 +23,7 @@ export function useHostedCreation() {
 			completed.value = false
 		}
 	}
-	async function install() {
+	async function install(gameDirRoot?: string | null) {
 		if (installing.value) return
 		installing.value = true
 		installError.value = ''
@@ -40,7 +40,7 @@ export function useHostedCreation() {
 				}
 			}
 			if (completed.value) return createdInstance.value
-			createdInstance.value ??= await hostedCreate()
+			createdInstance.value ??= await hostedCreate(gameDirRoot)
 			const instanceId = createdInstance.value
 			await hostedSync(instanceId)
 			if (attempt !== generation) return

@@ -4,6 +4,7 @@ import { BigOptionButton, Button, defineMessages, useVIntl } from '@modrinth/ui'
 import { inject, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import InstanceModeOptions from '@/components/instance/InstanceModeOptions.vue'
+import HostedGameDirModal from '@/components/instance/HostedGameDirModal.vue'
 import HostedPackProgress from '@/components/instance/HostedPackProgress.vue'
 import type { InstanceMode } from '@/helpers/hosted-packs'
 import { useHostedCreation } from '@/composables/useHostedCreation'
@@ -15,6 +16,18 @@ const { installing, installError, createdInstance, completed, acknowledge, insta
 const instanceMode = ref<InstanceMode>(
 	installing.value || createdInstance.value ? 'starlight' : 'local',
 )
+
+const hostedGameDirModal = ref<InstanceType<typeof HostedGameDirModal>>()
+
+// One-click StarLight installs reuse the same external game-directory choice
+// as the custom creation flow: the pack gets its own folder under `<root>`.
+function promptHostedGameDir() {
+	hostedGameDirModal.value?.show()
+}
+
+async function installHostedWithGameDir(gameDirRoot: string) {
+	await install(gameDirRoot)
+}
 async function openCompleted(instanceId: string) {
 	try {
 		const failure = await router.push(`/instance/${encodeURIComponent(instanceId)}/`)
@@ -103,7 +116,12 @@ async function handleStartFresh() {
 			await openCompleted(createdInstance.value)
 			return
 		}
-		await install()
+		if (createdInstance.value) {
+			// A previous attempt already created the instance; retry in place.
+			await install()
+			return
+		}
+		promptHostedGameDir()
 		return
 	}
 	showModal?.({
@@ -179,6 +197,10 @@ function handleImportExisting() {
 				/>
 			</div>
 
+			<HostedGameDirModal
+				ref="hostedGameDirModal"
+				@confirm="installHostedWithGameDir"
+			/>
 			<HostedPackProgress :instance-id="createdInstance" :active="installing" />
 			<p v-if="installError" class="m-0 text-red" role="alert">{{ installError }}</p>
 			<p v-if="instanceMode === 'local'" class="m-0 text-sm text-secondary">

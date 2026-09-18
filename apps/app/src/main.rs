@@ -232,6 +232,21 @@ async fn initialize_state(app: tauri::AppHandle) -> api::Result<()> {
     Ok(())
 }
 
+/// Directory that contains the launcher executable. Used as the default
+/// external game-directory root for the one-click StarLight install flow.
+#[tauri::command]
+fn get_launcher_root_dir() -> api::Result<String> {
+    let exe = std::env::current_exe().map_err(|error| {
+        theseus::Error::from(theseus::ErrorKind::FSError(error.to_string()))
+    })?;
+    let dir = exe.parent().ok_or_else(|| {
+        theseus::Error::from(theseus::ErrorKind::FSError(
+            "Launcher executable has no parent directory".to_string(),
+        ))
+    })?;
+    Ok(dir.to_string_lossy().into_owned())
+}
+
 #[tauri::command]
 fn get_update_channel(app: tauri::AppHandle) -> api::Result<String> {
     let channel = read_update_channel_state(&app)?
@@ -838,6 +853,7 @@ fn main() {
         .manage(PendingUpdateData::default())
         .invoke_handler(tauri::generate_handler![
             initialize_state,
+            get_launcher_root_dir,
             get_update_channel,
             get_current_app_database_path,
             set_update_channel,

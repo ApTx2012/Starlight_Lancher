@@ -426,10 +426,26 @@ pub async fn default_publication() -> crate::Result<Publication> {
         })
 }
 
-pub async fn create() -> crate::Result<String> {
+pub async fn create(
+    game_dir_root: Option<String>,
+) -> crate::Result<String> {
     let publication = default_publication().await?;
     let runtime = &publication.manifest.runtime;
     let state = State::get().await?;
+    // The pack's game files live in their own folder under the chosen root,
+    // e.g. `<root>/<pack name>`. Avoid a `versions/<name>` layout: that shape
+    // is reserved for externally linked launcher instances and would make the
+    // launcher expect a Minecraft version JSON beside the pack.
+    let game_dir_override = game_dir_root
+        .as_deref()
+        .map(str::trim)
+        .filter(|root| !root.is_empty())
+        .map(|root| {
+            Path::new(root)
+                .join(&publication.manifest.name)
+                .to_string_lossy()
+                .into_owned()
+        });
     let instance = crate::state::create_instance(
         crate::state::CreateInstance {
             name: publication.manifest.name.clone(),
@@ -440,7 +456,7 @@ pub async fn create() -> crate::Result<String> {
             icon_path: None,
             link: crate::state::InstanceLink::Unmanaged,
             symlink_target: None,
-            game_dir_override: None,
+            game_dir_override,
         },
         &state,
     )
