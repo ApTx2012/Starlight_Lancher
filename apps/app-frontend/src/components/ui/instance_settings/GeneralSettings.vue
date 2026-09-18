@@ -16,9 +16,9 @@ import { basename, dirname, join } from '@tauri-apps/api/path'
 import { computed, type Ref, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
-import InstanceIcon from '@/components/ui/InstanceIcon.vue'
 import InstanceModeSettings from '@/components/instance/InstanceModeSettings.vue'
 import InstancePlayerSettings from '@/components/instance/InstancePlayerSettings.vue'
+import InstanceIcon from '@/components/ui/InstanceIcon.vue'
 import ConfirmDeleteInstanceModal from '@/components/ui/modal/ConfirmDeleteInstanceModal.vue'
 import { install_duplicate_instance } from '@/helpers/install'
 import { edit, edit_icon, get_full_path, remove } from '@/helpers/instance'
@@ -231,7 +231,7 @@ async function setGameDirMode(mode: GameDirMode) {
 }
 
 const editInstanceObject = computed(() => ({
-	name: title.value.trim().substring(0, 32) ?? 'Instance',
+	name: title.value.trim(),
 }))
 
 watch(
@@ -441,7 +441,6 @@ const messages = defineMessages({
 				id="instance-name"
 				v-model="title"
 				autocomplete="off"
-				:maxlength="80"
 				wrapper-class="flex-grow"
 			/>
 		</div>
