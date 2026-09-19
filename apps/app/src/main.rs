@@ -77,9 +77,10 @@ fn blockbench_skin_response(
     } else {
         relative_path.to_path_buf()
     });
-    let contents = match fs::read(file_path) {
+    let contents = match fs::read(&file_path) {
         Ok(contents) => contents,
-        Err(_) => {
+        Err(error) => {
+            tracing::warn!(path = %file_path.display(), %error, "Skin editor resource could not be read");
             return Response::builder()
                 .status(StatusCode::NOT_FOUND)
                 .body(Vec::new())
@@ -88,10 +89,10 @@ fn blockbench_skin_response(
     };
     let contents = if is_compressed_bundle {
         let mut decompressed = Vec::new();
-        if flate2::read::GzDecoder::new(contents.as_slice())
+        if let Err(error) = flate2::read::GzDecoder::new(contents.as_slice())
             .read_to_end(&mut decompressed)
-            .is_err()
         {
+            tracing::warn!(path = %file_path.display(), %error, "Skin editor bundle could not be decoded");
             return Response::builder()
                 .status(StatusCode::INTERNAL_SERVER_ERROR)
                 .body(Vec::new())
@@ -123,6 +124,91 @@ fn blockbench_skin_response(
     response
         .body(contents)
         .expect("failed to build Blockbench skin response")
+}
+
+fn skin_editor_resource_errors(resource_dir: &Path) -> Vec<String> {
+    ["index.html", "css/setup.css", "dist/skin.bundle.js"]
+        .into_iter()
+        .filter(|path| {
+            let response = blockbench_skin_response(path, resource_dir);
+            !response.status().is_success() || response.body().is_empty()
+        })
+        .map(str::to_owned)
+        .collect()
+}
+
+#[cfg(test)]
+mod skin_editor_tests {
+    use super::*;
+    use std::io::Write;
+
+    fn editor_resources() -> tempfile::TempDir {
+        let directory = tempfile::tempdir().unwrap();
+        fs::create_dir(directory.path().join("css")).unwrap();
+        fs::create_dir(directory.path().join("dist")).unwrap();
+        fs::write(directory.path().join("index.html"), "<!doctype html>")
+            .unwrap();
+        fs::write(directory.path().join("css/setup.css"), "body {}").unwrap();
+        let mut bundle = flate2::write::GzEncoder::new(
+            Vec::new(),
+            flate2::Compression::default(),
+        );
+        bundle.write_all(b"window.editor = true;").unwrap();
+        fs::write(
+            directory.path().join("dist/skin.bundle.js.gz"),
+            bundle.finish().unwrap(),
+        )
+        .unwrap();
+        directory
+    }
+
+    #[test]
+    fn packaged_skin_editor_bundle_is_readable() {
+        let directory = editor_resources();
+        assert!(skin_editor_resource_errors(directory.path()).is_empty());
+        let response =
+            blockbench_skin_response("/dist/skin.bundle.js", directory.path());
+        assert_eq!(response.body(), b"window.editor = true;");
+        assert_eq!(
+            response.headers()[header::CONTENT_TYPE],
+            "text/javascript; charset=utf-8"
+        );
+    }
+
+    #[test]
+    fn missing_skin_editor_resources_are_reported() {
+        let directory = tempfile::tempdir().unwrap();
+        assert_eq!(
+            skin_editor_resource_errors(directory.path()),
+            ["index.html", "css/setup.css", "dist/skin.bundle.js"]
+        );
+    }
+
+    #[test]
+    fn corrupt_skin_editor_bundle_is_reported() {
+        let directory = editor_resources();
+        fs::write(
+            directory.path().join("dist/skin.bundle.js.gz"),
+            "invalid gzip",
+        )
+        .unwrap();
+        assert_eq!(
+            skin_editor_resource_errors(directory.path()),
+            ["dist/skin.bundle.js"]
+        );
+    }
+}
+
+#[tauri::command]
+fn get_skin_editor_resource_errors(
+    app: tauri::AppHandle,
+) -> Result<Vec<String>, String> {
+    let resource_dir = app
+        .path()
+        .resource_dir()
+        .map_err(|error| error.to_string())?
+        .join(BLOCKBENCH_SKIN_RESOURCE_DIR);
+    Ok(skin_editor_resource_errors(&resource_dir))
 }
 
 fn is_allowed_blockbench_skin_request(
@@ -685,6 +771,10 @@ fn main() {
         "axolotl-skin",
         move |context, request| {
             if !is_allowed_blockbench_skin_request(&request) {
+                tracing::warn!(
+                    path = request.uri().path(),
+                    "Skin editor resource request was rejected"
+                );
                 return Response::builder()
                     .status(StatusCode::FORBIDDEN)
                     .body(Vec::new())
@@ -703,6 +793,13 @@ fn main() {
     );
 
     builder = builder
+        .plugin(
+            tauri::plugin::Builder::<tauri::Wry>::new("skin-editor-errors")
+                .js_init_script_on_all_frames(include_str!(
+                    "skin_editor_bridge.js"
+                ))
+                .build(),
+        )
         .plugin(
             tauri::plugin::Builder::<tauri::Wry>::new("skin-site-session")
                 .js_init_script_on_all_frames(include_str!(
@@ -853,6 +950,7 @@ fn main() {
         .manage(PendingUpdateData::default())
         .invoke_handler(tauri::generate_handler![
             initialize_state,
+            get_skin_editor_resource_errors,
             get_launcher_root_dir,
             get_update_channel,
             get_current_app_database_path,

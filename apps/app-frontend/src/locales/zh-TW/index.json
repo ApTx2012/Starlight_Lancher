@@ -6575,6 +6575,12 @@
   "app.settings.defaults.environment-variables-placeholder": {
     "message": "輸入環境變數..."
   },
+  "app.settings.defaults.force-unicode-font": {
+    "message": "強制使用 Unicode 字型"
+  },
+  "app.settings.defaults.force-unicode-font-description": {
+    "message": "初始化新例項時使用 Unicode 字型。預設關閉；例項既有的字型設定會保留。"
+  },
   "app.settings.defaults.fullscreen": {
     "message": "全螢幕"
   },
