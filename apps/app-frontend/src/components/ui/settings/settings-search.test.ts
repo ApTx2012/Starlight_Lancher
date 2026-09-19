@@ -104,6 +104,28 @@ test('settings search index has unique entries with categories', () => {
 	assert.deepEqual(validateSettingsSearchEntries(), [])
 })
 
+test('Unicode font is searchable in Chinese and English', () => {
+	const entry = settingsSearchEntries.find((entry) => entry.id === 'defaults-unicode-font')!
+	assert.equal(entry.categoryId, 'launch-defaults')
+	assert.ok(
+		readFileSync(new URL('./DefaultInstanceSettings.vue', import.meta.url), 'utf8').includes(
+			`id="${getSettingsSearchTargetId(entry)}"`,
+		),
+	)
+	for (const translated of [false, true]) {
+		const documents = settingsSearchEntries.map((entry) => ({
+			item: entry,
+			text: translated
+				? (chineseLocale[entry.label.id]?.message ?? entry.label.defaultMessage ?? '')
+				: (entry.label.defaultMessage ?? ''),
+		}))
+		for (const query of translated ? ['字体', 'Unicode'] : ['font', 'Unicode']) {
+			const matches = filterSettingsSearchDocuments(query, documents)
+			assert.ok(matches.some(({ item }) => item.id === 'defaults-unicode-font'))
+		}
+	}
+})
+
 test('settings search keywords are valid message descriptors', () => {
 	for (const entry of settingsSearchEntries) {
 		for (const keyword of entry.keywords ?? []) {

@@ -3,21 +3,23 @@ use futures::StreamExt;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::sync::{Arc, Mutex};
-use tauri::http::HeaderValue;
 use tauri::http::header::ACCEPT;
+use tauri::http::HeaderValue;
 use tauri::{Manager, ResourceId, Runtime, Webview};
 use tauri_plugin_http::reqwest;
 use tauri_plugin_http::reqwest::ClientBuilder;
 use tauri_plugin_updater::{Error, Update, UpdaterExt};
 use theseus::{
-    LoadingBarType, emit_loading, init_loading, launcher_user_agent,
+    emit_loading, init_loading, launcher_user_agent, LoadingBarType,
 };
 use tokio::time::Instant;
 use url::Url;
 
-const UPDATE_SERVER_LATEST_URL: &str = "https://update.axlmc.org/latest";
-const UPDATE_SERVER_API: &str = "https://update.axlmc.org/api/versions";
-const UPDATE_SERVER_BASE: &str = "https://update.axlmc.org/";
+const STARLIGHT_UPDATE_LATEST_URL: &str =
+    "https://skin.starlight.cool/starlight/launcher/latest";
+const STARLIGHT_UPDATE_VERSIONS_URL: &str =
+    "https://skin.starlight.cool/starlight/launcher/versions";
+const STARLIGHT_UPDATE_BASE_URL: &str = "https://skin.starlight.cool/";
 
 // The updater plugin builds `Update` with no request timeout, so a stalled
 // connection would hang the download forever. Bound the whole download.
@@ -62,7 +64,10 @@ struct ArtifactEntry {
     variant: Option<String>,
     platform: String,
     architecture: String,
-    relative_path: String,
+    #[serde(default)]
+    relative_path: Option<String>,
+    #[serde(default)]
+    download_url: Option<String>,
     #[serde(default)]
     sha256: Option<String>,
     #[serde(default)]
@@ -94,7 +99,7 @@ async fn fetch_apt_deb_asset(version: &str) -> Result<AptDebAsset> {
         .user_agent(launcher_user_agent())
         .timeout(UPDATE_DOWNLOAD_TIMEOUT)
         .build()?
-        .get(UPDATE_SERVER_API)
+        .get(STARLIGHT_UPDATE_VERSIONS_URL)
         .send()
         .await?;
 
@@ -139,19 +144,38 @@ async fn fetch_apt_deb_asset(version: &str) -> Result<AptDebAsset> {
         )))
     })?;
 
-    let url =
-        Url::parse(&format!("{UPDATE_SERVER_BASE}{}", artifact.relative_path))
-            .map_err(|error| {
-                theseus::Error::from(theseus::ErrorKind::OtherError(
-                    error.to_string(),
-                ))
-            })?;
+    let url = artifact_download_url(artifact)?;
 
     Ok(AptDebAsset {
         url,
         sha256,
         size: artifact.size,
     })
+}
+
+fn artifact_download_url(artifact: &ArtifactEntry) -> Result<Url> {
+    if let Some(download_url) = artifact.download_url.as_deref() {
+        return Url::parse(download_url).map_err(|error| {
+            theseus::Error::from(theseus::ErrorKind::OtherError(
+                error.to_string(),
+            ))
+            .into()
+        });
+    }
+
+    let relative_path = artifact.relative_path.as_deref().ok_or_else(|| {
+        theseus::Error::from(theseus::ErrorKind::OtherError(
+            "Update catalog artifact has no download URL".to_string(),
+        ))
+    })?;
+    Url::parse(STARLIGHT_UPDATE_BASE_URL)
+        .and_then(|base| base.join(relative_path))
+        .map_err(|error| {
+            theseus::Error::from(theseus::ErrorKind::OtherError(
+                error.to_string(),
+            ))
+            .into()
+        })
 }
 
 // ── Updater plugin helpers ───────────────────────────────────────
@@ -183,7 +207,7 @@ fn update_platform() -> Result<&'static str> {
 }
 
 fn update_endpoint() -> Result<Url> {
-    Url::parse(UPDATE_SERVER_LATEST_URL).map_err(|error| {
+    Url::parse(STARLIGHT_UPDATE_LATEST_URL).map_err(|error| {
         theseus::Error::from(theseus::ErrorKind::OtherError(error.to_string()))
             .into()
     })

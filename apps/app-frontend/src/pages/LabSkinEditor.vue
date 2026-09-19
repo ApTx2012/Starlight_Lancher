@@ -6,6 +6,7 @@ import {
 	LoadingIndicator,
 	useVIntl,
 } from '@modrinth/ui'
+import { invoke } from '@tauri-apps/api/core'
 import { save } from '@tauri-apps/plugin-dialog'
 import { writeFile } from '@tauri-apps/plugin-fs'
 import { platform } from '@tauri-apps/plugin-os'
@@ -27,6 +28,11 @@ const messages = defineMessages({
 		id: 'app.lab.skin-editor.load-error-description',
 		defaultMessage: 'The embedded editor did not finish loading. Try again.',
 	},
+	resourceError: {
+		id: 'app.lab.skin-editor.resource-error',
+		defaultMessage:
+			'Skin editor files are missing or damaged. Reinstall the launcher or extract the complete portable archive.',
+	},
 	retry: { id: 'app.lab.skin-editor.retry', defaultMessage: 'Try again' },
 	exportSkin: { id: 'app.lab.skin-editor.export-skin', defaultMessage: 'Minecraft skin PNG' },
 })
@@ -40,7 +46,10 @@ const blockbenchLocale = computed(() => {
 })
 
 const editorState = ref<'loading' | 'ready' | 'error'>('loading')
+const errorDetail = ref('')
+const resourceError = ref(false)
 const frameKey = ref(0)
+let loadAttempt = 0
 let loadTimeout: number | undefined
 
 const editorUrl = computed(() => {
@@ -60,6 +69,8 @@ function clearLoadTimeout() {
 
 function beginEditorLoad() {
 	clearLoadTimeout()
+	errorDetail.value = ''
+	resourceError.value = false
 	editorState.value = 'loading'
 	loadTimeout = window.setTimeout(() => {
 		editorState.value = 'error'
@@ -77,11 +88,22 @@ function markEditorError() {
 }
 
 async function reloadEditor() {
+	const attempt = ++loadAttempt
 	beginEditorLoad()
-	if (!editorUrl.value) {
+	if (!import.meta.env.DEV) {
+		platformName.value = undefined
 		try {
-			platformName.value = await platform()
+			const errors = await invoke<string[]>('get_skin_editor_resource_errors')
+			if (attempt !== loadAttempt) return
+			if (errors.length) {
+				resourceError.value = true
+				errorDetail.value = errors.join(', ')
+				markEditorError()
+				return
+			}
+			platformName.value = platform()
 		} catch (error) {
+			if (attempt !== loadAttempt) return
 			markEditorError()
 			handleError(error)
 			return
@@ -104,7 +126,18 @@ function handleFrameLoad() {
 async function handleEditorMessage(event: MessageEvent<unknown>) {
 	if (event.source !== frame.value?.contentWindow) return
 	if (!event.data || typeof event.data !== 'object') return
-	const message = event.data as { type?: unknown; name?: unknown; dataUrl?: unknown }
+	const message = event.data as {
+		type?: unknown
+		name?: unknown
+		dataUrl?: unknown
+		error?: unknown
+	}
+	if (message.type === 'axolotl-skin-load-error' && typeof message.error === 'string') {
+		if (editorState.value === 'ready') return
+		errorDetail.value = message.error.slice(0, 1000)
+		markEditorError()
+		return
+	}
 	if (message.type === 'axolotl-skin-theme-ready') {
 		sendThemeToEditor()
 		markEditorReady()
@@ -149,15 +182,11 @@ onMounted(async () => {
 		attributeFilter: ['class', 'style'],
 	})
 	if (!import.meta.env.DEV) {
-		try {
-			platformName.value = await platform()
-		} catch (error) {
-			markEditorError()
-			handleError(error)
-		}
+		await reloadEditor()
 	}
 })
 onUnmounted(() => {
+	loadAttempt += 1
 	clearLoadTimeout()
 	window.removeEventListener('message', handleEditorMessage)
 	themeObserver?.disconnect()
@@ -184,7 +213,12 @@ onUnmounted(() => {
 			<h2 class="m-0 text-lg font-semibold text-contrast">
 				{{ formatMessage(messages.loadErrorTitle) }}
 			</h2>
-			<p class="m-0 max-w-md text-secondary">{{ formatMessage(messages.loadErrorDescription) }}</p>
+			<p class="m-0 max-w-md text-secondary">
+				{{ formatMessage(resourceError ? messages.resourceError : messages.loadErrorDescription) }}
+			</p>
+			<p v-if="errorDetail" class="m-0 max-w-xl break-words text-sm text-secondary">
+				{{ errorDetail }}
+			</p>
 			<ButtonStyled color="brand" @click="reloadEditor">
 				{{ formatMessage(messages.retry) }}
 			</ButtonStyled>
@@ -195,8 +229,8 @@ onUnmounted(() => {
 			ref="frame"
 			:title="formatMessage(messages.title)"
 			:src="editorUrl"
-			class="h-full min-h-0 w-full flex-1 border-0 transition-opacity duration-150"
-			:class="editorState === 'ready' ? 'opacity-100' : 'pointer-events-none opacity-0'"
+			class="h-full min-h-0 w-full flex-1 border-0"
+			:class="{ 'pointer-events-none': editorState !== 'ready' }"
 			:aria-label="formatMessage(messages.title)"
 			:aria-hidden="editorState !== 'ready'"
 			@load="handleFrameLoad"

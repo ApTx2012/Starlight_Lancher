@@ -12,6 +12,15 @@ import SettingsSection from './SettingsSection.vue'
 const { formatMessage } = useVIntl()
 
 const messages = defineMessages({
+	forceUnicodeFont: {
+		id: 'app.settings.defaults.force-unicode-font',
+		defaultMessage: 'Force Unicode font',
+	},
+	forceUnicodeFontDescription: {
+		id: 'app.settings.defaults.force-unicode-font-description',
+		defaultMessage:
+			'Use the Unicode font when initializing a new instance. Off by default; existing font settings are preserved.',
+	},
 	fullscreen: { id: 'app.settings.defaults.fullscreen', defaultMessage: 'Fullscreen' },
 	fullscreenDescription: {
 		id: 'app.settings.defaults.fullscreen-description',
@@ -200,6 +209,24 @@ watch(
 						autocomplete="off"
 						type="number"
 						:placeholder="formatMessage(messages.heightPlaceholder)"
+					/>
+				</template>
+			</SettingsRow>
+		</SettingsSection>
+
+		<SettingsSection>
+			<SettingsRow>
+				<template #label>
+					<span id="settings-target-defaults-unicode-font" tabindex="-1">
+						{{ formatMessage(messages.forceUnicodeFont) }}
+					</span>
+				</template>
+				<template #description>{{ formatMessage(messages.forceUnicodeFontDescription) }}</template>
+				<template #control>
+					<Toggle
+						id="force-unicode-font"
+						v-model="settings.force_unicode_font"
+						:aria-label="formatMessage(messages.forceUnicodeFont)"
 					/>
 				</template>
 			</SettingsRow>

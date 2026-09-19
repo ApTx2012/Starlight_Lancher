@@ -5066,6 +5066,9 @@
   "app.lab.skin-editor.retry": {
     "message": "Try again"
   },
+  "app.lab.skin-editor.resource-error": {
+    "message": "Skin editor files are missing or damaged. Reinstall the launcher or extract the complete portable archive."
+  },
   "app.lab.skin-editor.title": {
     "message": "Skin editor"
   },
@@ -6835,6 +6838,12 @@
   },
   "app.settings.defaults.environment-variables-placeholder": {
     "message": "Enter environment variables..."
+  },
+  "app.settings.defaults.force-unicode-font": {
+    "message": "Force Unicode font"
+  },
+  "app.settings.defaults.force-unicode-font-description": {
+    "message": "Use the Unicode font when initializing a new instance. Off by default; existing font settings are preserved."
   },
   "app.settings.defaults.fullscreen": {
     "message": "Fullscreen"

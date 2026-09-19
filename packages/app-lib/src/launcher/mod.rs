@@ -2326,6 +2326,7 @@ pub async fn launch_minecraft(
         && (!mc_set_options.is_empty()
             || offline_skin_pack.enabled_pack_id.is_some()
             || options_existed
+            || settings.force_unicode_font
             || !settings.locale.is_empty())
     {
         let (mut options_string, input_encoding) = if options_existed {
@@ -2353,6 +2354,7 @@ pub async fn launch_minecraft(
             launch_release_time,
             &options_string,
             instance_path.join("saves").exists(),
+            settings.force_unicode_font,
         );
 
         if !mc_set_options.is_empty()

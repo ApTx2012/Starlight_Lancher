@@ -255,6 +255,16 @@ export const settingsSearchEntries: SettingsSearchEntry[] = [
 		label: message('app.settings.defaults.environment-variables', 'Environment variables'),
 	},
 	{
+		id: 'defaults-unicode-font',
+		categoryId: 'launch-defaults',
+		targetId: 'settings-target-defaults-unicode-font',
+		label: message('app.settings.defaults.force-unicode-font', 'Force Unicode font'),
+		description: message(
+			'app.settings.defaults.force-unicode-font-description',
+			'Use the Unicode font when initializing a new instance. Off by default; existing font settings are preserved.',
+		),
+	},
+	{
 		id: 'defaults-launch-hooks',
 		categoryId: 'launch-defaults',
 		targetId: 'settings-target-defaults-launch-hooks',

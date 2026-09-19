@@ -1,0 +1,1 @@
+ALTER TABLE settings ADD COLUMN mc_force_unicode_font INTEGER NOT NULL DEFAULT FALSE;

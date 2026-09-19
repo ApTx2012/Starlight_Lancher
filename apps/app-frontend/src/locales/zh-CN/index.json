@@ -5152,6 +5152,9 @@
   "app.lab.skin-editor.retry": {
     "message": "重试"
   },
+  "app.lab.skin-editor.resource-error": {
+    "message": "皮肤编辑器文件缺失或损坏，请重新安装启动器，或完整解压便携版。"
+  },
   "app.lab.skin-editor.title": {
     "message": "皮肤编辑器"
   },
@@ -6894,6 +6897,12 @@
   },
   "app.settings.defaults.environment-variables-placeholder": {
     "message": "输入环境变量……"
+  },
+  "app.settings.defaults.force-unicode-font": {
+    "message": "强制使用 Unicode 字体"
+  },
+  "app.settings.defaults.force-unicode-font-description": {
+    "message": "初始化新实例时使用 Unicode 字体。默认关闭；实例已有的字体设置会保留。"
   },
   "app.settings.defaults.fullscreen": {
     "message": "全屏"

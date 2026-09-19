@@ -294,7 +294,9 @@ async function loadLatestChannelVersions() {
 	const versions = await Promise.all(
 		(['release', 'beta'] as const).map(async (channel) => {
 			try {
-				const response = await tauriFetch(`https://update.axlmc.org/latest?channel=${channel}`)
+				const response = await tauriFetch(
+					`https://skin.starlight.cool/starlight/launcher/latest?channel=${channel}`,
+				)
 				if (!response.ok) return [channel, undefined] as const
 				const payload = (await response.json()) as { version?: string }
 				return [channel, payload.version] as const

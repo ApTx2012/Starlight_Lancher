@@ -198,7 +198,7 @@ jobs:
         shell: pwsh
         run: |
           $version = "${{ github.ref_name }}" -replace '^v', ''
-          $appName = "Axolotl Launcher"
+          $appName = (Get-Content apps/app/tauri.conf.json -Raw | ConvertFrom-Json).mainBinaryName
           $outDir = "target/release/bundle/nsis"
           $buildDir = "target/portable-build"
           $publishDir = Join-Path $env:RUNNER_TEMP "windows-assets"
@@ -248,6 +248,15 @@ jobs:
           if (Test-Path $appExe) {
             New-Item -ItemType Directory -Force -Path "$buildDir\Axolotl" | Out-Null
             Copy-Item -Force $appExe "$buildDir\Axolotl\"
+
+            $editorResources = "target/release/resources/blockbench-skin"
+            foreach ($requiredFile in @('index.html', 'css/setup.css', 'dist/skin.bundle.js.gz')) {
+              if (!(Test-Path -LiteralPath (Join-Path $editorResources $requiredFile) -PathType Leaf)) {
+                throw "Missing skin editor resource: $requiredFile"
+              }
+            }
+            New-Item -ItemType Directory -Force -Path "$buildDir\Axolotl\resources" | Out-Null
+            Copy-Item -LiteralPath $editorResources -Destination "$buildDir\Axolotl\resources" -Recurse -Force
 
             # Create empty .Axolotl folder to trigger portable mode
             New-Item -ItemType Directory -Force -Path "$buildDir\Axolotl\.Axolotl" | Out-Null

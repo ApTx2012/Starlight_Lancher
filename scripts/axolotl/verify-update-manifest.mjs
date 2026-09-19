@@ -42,4 +42,22 @@ for (const platform of requiredPlatforms) {
 	}
 }
 
+for (const platform of ['linux-aarch64', 'linux-x86_64']) {
+	const artifact = manifest.apt?.[platform]
+	if (
+		!artifact ||
+		typeof artifact.sha256 !== 'string' ||
+		!/^[0-9a-f]{64}$/i.test(artifact.sha256) ||
+		!Number.isSafeInteger(artifact.size) ||
+		artifact.size <= 0
+	) {
+		throw new Error(`Missing Debian update for ${platform}`)
+	}
+
+	const url = new URL(artifact.url)
+	if (url.protocol !== 'https:') {
+		throw new Error(`Unexpected Debian update URL for ${platform}: ${artifact.url}`)
+	}
+}
+
 console.log(`Verified signed ${source} updater manifest for ${expectedVersion}`)

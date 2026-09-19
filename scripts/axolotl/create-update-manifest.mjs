@@ -62,11 +62,42 @@ for (const target of targets) {
 	}
 }
 
+function digest(asset) {
+	if (typeof asset.digest !== 'string' || !asset.digest.startsWith('sha256:')) {
+		throw new Error(`Release asset ${asset.name} has no SHA-256 digest`)
+	}
+	return asset.digest.slice('sha256:'.length)
+}
+
+const apt = {}
+for (const target of [
+	{ platform: 'linux-x86_64', assetSuffix: '_amd64.deb' },
+	{ platform: 'linux-aarch64', assetSuffix: '_arm64.deb' },
+]) {
+	const matches = assets.filter((asset) => asset.name?.endsWith(target.assetSuffix))
+	if (matches.length !== 1) {
+		throw new Error(
+			`Expected one release asset ending in ${target.assetSuffix}, found ${matches.length}`,
+		)
+	}
+	const asset = matches[0]
+	const url = asset.browser_download_url ?? asset.url
+	if (!url || !Number.isSafeInteger(asset.size) || asset.size <= 0) {
+		throw new Error(`Release asset ${asset.name} has invalid download metadata`)
+	}
+	apt[target.platform] = {
+		url,
+		sha256: digest(asset),
+		size: asset.size,
+	}
+}
+
 const manifest = {
 	version: tag.replace(/^v/, ''),
 	notes: release.body ?? '',
 	pub_date: new Date().toISOString(),
 	platforms,
+	apt,
 }
 
 fs.writeFileSync(outputPath, `${JSON.stringify(manifest, null, 2)}\n`)

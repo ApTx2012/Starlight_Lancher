@@ -183,6 +183,7 @@ export type AppSettings = {
 	custom_env_vars: [string, string][]
 	memory: MemorySettings
 	force_fullscreen: boolean
+	force_unicode_font: boolean
 	maximize_window: boolean
 	game_resolution: [number, number]
 	hide_on_process_start: boolean
@@ -227,6 +228,7 @@ function normalizeDownloadSettings(settings: AppSettings & LegacyMirrorSettings)
 	settings.auto_concurrent_downloads ??= true
 	settings.download_engine ??= 'legacy'
 	settings.auto_set_java_high_performance_mode ??= true
+	settings.force_unicode_font ??= false
 	settings.minecraft_metadata_source ??=
 		usesLegacyDefaults || !hasLegacySettings ? 'auto' : legacySource(settings.use_minecraft_mirror)
 	settings.minecraft_file_source ??=

@@ -24,11 +24,14 @@ enum LanguageCodeStyle {
 /// directory (e.g. modpacks that ship a preconfigured `options.txt`). For
 /// instances the player already uses, their in-game choice is kept and only
 /// its casing is normalized for the game version to avoid resets or crashes.
+/// The font preference is initialized independently of the language, only
+/// when a fresh instance has no explicit font choice in its options file.
 pub fn game_language_options(
     launcher_locale: &str,
     game_release_time: DateTime<Utc>,
     options_txt: &str,
     has_saves: bool,
+    force_unicode_font: bool,
 ) -> Vec<(String, String)> {
     let style = match language_code_style(game_release_time) {
         LanguageCodeStyle::Unsupported => return Vec::new(),
@@ -47,16 +50,21 @@ pub fn game_language_options(
             .as_deref()
             .and_then(|code| normalize_language_code(code, legacy_region_case))
     };
-    let Some(desired) = desired else {
-        return Vec::new();
-    };
-
     let mut options = Vec::new();
-    if current.as_deref() != Some(desired.as_str()) {
+    if let Some(desired) = desired
+        && current.as_deref() != Some(desired.as_str())
+    {
         options.push(("lang".to_string(), desired));
     }
-    if fresh && needs_unicode_font(launcher_locale) {
-        options.push(("forceUnicodeFont".to_string(), "true".to_string()));
+    if fresh
+        && !options_txt
+            .lines()
+            .any(|line| line.starts_with("forceUnicodeFont:"))
+    {
+        options.push((
+            "forceUnicodeFont".to_string(),
+            force_unicode_font.to_string(),
+        ));
     }
     options
 }
@@ -105,20 +113,6 @@ fn normalize_language_code(
     }
 }
 
-/// CJK glyphs are not covered by the game's default bitmap font in older
-/// versions, so first-time setups for these languages also force the
-/// unicode font.
-fn needs_unicode_font(launcher_locale: &str) -> bool {
-    launcher_locale
-        .split(['-', '_'])
-        .next()
-        .is_some_and(|language| {
-            language.eq_ignore_ascii_case("zh")
-                || language.eq_ignore_ascii_case("ja")
-                || language.eq_ignore_ascii_case("ko")
-        })
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -142,10 +136,10 @@ mod tests {
     #[test]
     fn fresh_instance_follows_launcher_language() {
         assert_eq!(
-            game_language_options("zh-CN", modern(), "", false),
+            game_language_options("zh-CN", modern(), "", false, false),
             vec![
                 ("lang".to_string(), "zh_cn".to_string()),
-                ("forceUnicodeFont".to_string(), "true".to_string()),
+                ("forceUnicodeFont".to_string(), "false".to_string()),
             ]
         );
     }
@@ -153,26 +147,50 @@ mod tests {
     #[test]
     fn legacy_versions_use_uppercase_region() {
         assert_eq!(
-            game_language_options("zh-CN", legacy(), "", false),
+            game_language_options("zh-CN", legacy(), "", false, false),
             vec![
                 ("lang".to_string(), "zh_CN".to_string()),
-                ("forceUnicodeFont".to_string(), "true".to_string()),
+                ("forceUnicodeFont".to_string(), "false".to_string()),
             ]
         );
     }
 
     #[test]
-    fn non_cjk_languages_skip_unicode_font() {
+    fn unicode_font_can_be_enabled_for_any_language() {
+        for locale in ["zh-CN", "zh-TW", "ja-JP", "ko-KR", "en-US", ""] {
+            let options =
+                game_language_options(locale, modern(), "", false, true);
+            assert!(
+                options.contains(&(
+                    "forceUnicodeFont".to_string(),
+                    "true".to_string()
+                )),
+                "{locale}"
+            );
+        }
+    }
+
+    #[test]
+    fn non_cjk_languages_also_use_the_font_default() {
         assert_eq!(
-            game_language_options("en-US", modern(), "", false),
-            vec![("lang".to_string(), "en_us".to_string())]
+            game_language_options("en-US", modern(), "", false, false),
+            vec![
+                ("lang".to_string(), "en_us".to_string()),
+                ("forceUnicodeFont".to_string(), "false".to_string()),
+            ]
         );
     }
 
     #[test]
     fn versions_before_1_1_are_left_alone() {
         assert_eq!(
-            game_language_options("zh-CN", release(2011, 11, 17), "", false),
+            game_language_options(
+                "zh-CN",
+                release(2011, 11, 17),
+                "",
+                false,
+                true
+            ),
             Vec::new()
         );
     }
@@ -184,6 +202,7 @@ mod tests {
                 "zh-CN",
                 modern(),
                 "fullscreen:false\nlang:ja_jp\n",
+                true,
                 true
             ),
             Vec::new()
@@ -193,7 +212,13 @@ mod tests {
     #[test]
     fn played_instances_get_their_casing_normalized() {
         assert_eq!(
-            game_language_options("en-US", modern(), "lang:zh_CN\n", true),
+            game_language_options(
+                "en-US",
+                modern(),
+                "lang:zh_CN\n",
+                true,
+                true
+            ),
             vec![("lang".to_string(), "zh_cn".to_string())]
         );
     }
@@ -201,10 +226,16 @@ mod tests {
     #[test]
     fn preconfigured_language_without_saves_is_overridden() {
         assert_eq!(
-            game_language_options("zh-TW", modern(), "lang:en_us\n", false),
+            game_language_options(
+                "zh-TW",
+                modern(),
+                "lang:en_us\n",
+                false,
+                false
+            ),
             vec![
                 ("lang".to_string(), "zh_tw".to_string()),
-                ("forceUnicodeFont".to_string(), "true".to_string()),
+                ("forceUnicodeFont".to_string(), "false".to_string()),
             ]
         );
     }
@@ -212,16 +243,25 @@ mod tests {
     #[test]
     fn matching_language_needs_no_update() {
         assert_eq!(
-            game_language_options("ja-JP", modern(), "lang:ja_jp\n", true),
+            game_language_options(
+                "ja-JP",
+                modern(),
+                "lang:ja_jp\n",
+                true,
+                false
+            ),
             Vec::new()
         );
     }
 
     #[test]
-    fn empty_locale_makes_no_changes() {
-        assert_eq!(game_language_options("", modern(), "", false), Vec::new());
+    fn empty_locale_only_initializes_the_font_default() {
         assert_eq!(
-            game_language_options("", modern(), "lang:zh_cn\n", true),
+            game_language_options("", modern(), "", false, false),
+            vec![("forceUnicodeFont".to_string(), "false".to_string())]
+        );
+        assert_eq!(
+            game_language_options("", modern(), "lang:zh_cn\n", true, false),
             Vec::new()
         );
     }
@@ -229,8 +269,39 @@ mod tests {
     #[test]
     fn crlf_options_files_are_parsed() {
         assert_eq!(
-            game_language_options("ko-KR", modern(), "lang:ko_kr\r\n", true),
+            game_language_options(
+                "ko-KR",
+                modern(),
+                "lang:ko_kr\r\n",
+                true,
+                false
+            ),
             Vec::new()
         );
+    }
+
+    #[test]
+    fn existing_font_choices_are_preserved_even_without_saves_or_language() {
+        for has_saves in [false, true] {
+            for enabled in [false, true] {
+                for language in ["", "lang:zh_cn\r\n"] {
+                    let options_txt = format!(
+                        "{language}forceUnicodeFont:{enabled}\r\nfullscreen:false\r\n"
+                    );
+                    let options = game_language_options(
+                        "zh-CN",
+                        modern(),
+                        &options_txt,
+                        has_saves,
+                        !enabled,
+                    );
+                    assert!(
+                        options
+                            .iter()
+                            .all(|(key, _)| key != "forceUnicodeFont")
+                    );
+                }
+            }
+        }
     }
 }

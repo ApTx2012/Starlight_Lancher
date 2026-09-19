@@ -166,6 +166,8 @@ pub struct Settings {
     pub memory: MemorySettings,
     pub force_fullscreen: bool,
     pub maximize_window: bool,
+    #[serde(default)]
+    pub force_unicode_font: bool,
     pub game_resolution: WindowSize,
     pub hide_on_process_start: bool,
     pub enter_lightweight_mode_on_game_launch: bool,
@@ -347,6 +349,11 @@ impl Settings {
             },
             force_fullscreen: res.mc_force_fullscreen == 1,
             maximize_window: res.mc_maximize_window == 1,
+            force_unicode_font: sqlx::query_scalar(
+                "SELECT mc_force_unicode_font FROM settings WHERE id = 0",
+            )
+            .fetch_one(exec)
+            .await?,
             game_resolution: WindowSize(
                 res.mc_game_resolution_x as u16,
                 res.mc_game_resolution_y as u16,
@@ -590,6 +597,12 @@ impl Settings {
             .bind(self.memory.optimize_before_launch)
             .execute(exec)
             .await?;
+        sqlx::query(
+            "UPDATE settings SET mc_force_unicode_font = ? WHERE id = 0",
+        )
+        .bind(self.force_unicode_font)
+        .execute(exec)
+        .await?;
 
         Ok(())
     }
@@ -1090,6 +1103,58 @@ mod tests {
 
         let reloaded = Settings::get(&pool).await.unwrap();
         assert!(!reloaded.bypass_curseforge_download_restrictions);
+    }
+
+    #[tokio::test]
+    async fn unicode_font_defaults_off_after_upgrade_and_round_trips() {
+        let migrator = sqlx::migrate!();
+        for previous_schema in [false, true] {
+            let pool = sqlx::sqlite::SqlitePoolOptions::new()
+                .max_connections(1)
+                .connect("sqlite::memory:")
+                .await
+                .unwrap();
+            if previous_schema {
+                let previous_migrator = sqlx::migrate::Migrator {
+                    migrations: std::borrow::Cow::Owned(
+                        migrator
+                            .iter()
+                            .filter(|migration| {
+                                migration.version < 20260919000000
+                            })
+                            .cloned()
+                            .collect(),
+                    ),
+                    ..sqlx::migrate::Migrator::DEFAULT
+                };
+                previous_migrator.run(&pool).await.unwrap();
+                sqlx::query(
+                    "UPDATE settings SET locale = 'zh-TW' WHERE id = 0",
+                )
+                .execute(&pool)
+                .await
+                .unwrap();
+            }
+            migrator.run(&pool).await.unwrap();
+
+            let mut settings = Settings::get(&pool).await.unwrap();
+            assert!(!settings.force_unicode_font);
+            if previous_schema {
+                assert_eq!(settings.locale, "zh-TW");
+            }
+            for enabled in [true, false] {
+                settings.force_unicode_font = enabled;
+                settings.update(&pool).await.unwrap();
+                let reloaded = Settings::get(&pool).await.unwrap();
+                assert_eq!(reloaded.force_unicode_font, enabled);
+            }
+
+            // Older clients and serialized settings omit the newly added field.
+            let mut legacy = serde_json::to_value(&settings).unwrap();
+            legacy.as_object_mut().unwrap().remove("force_unicode_font");
+            let restored: Settings = serde_json::from_value(legacy).unwrap();
+            assert!(!restored.force_unicode_font);
+        }
     }
 
     #[tokio::test]
