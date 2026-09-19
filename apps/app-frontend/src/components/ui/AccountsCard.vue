@@ -291,6 +291,7 @@ import {
 	users,
 } from '@/helpers/auth'
 import { process_listener } from '@/helpers/events'
+import { registerSkinSitePlayers } from '@/helpers/instance-player'
 import { getPlayerHeadUrl } from '@/helpers/rendering/batch-skin-renderer.ts'
 import type { Skin } from '@/helpers/skins'
 import { get_available_skins } from '@/helpers/skins'
@@ -630,10 +631,21 @@ async function setAccount(account: MinecraftCredential) {
 }
 
 watch(
-	[skinSitePlayers, defaultUser],
-	([availablePlayers, selectedLocalUser]) => {
+	[skinSitePlayers, defaultUser, skinSiteUser],
+	([availablePlayers, selectedLocalUser, siteUser]) => {
 		if (!selectedLocalUser && !selectedSkinSitePlayerId.value && availablePlayers.length > 0) {
 			selectSkinSitePlayer(availablePlayers[0].uuid)
+		}
+		// Register skin-site players as launcher accounts as soon as they are
+		// available, so the account picker shows them without requiring a first
+		// launch. `registerSkinSitePlayers` is idempotent and best-effort.
+		if (siteUser?.uuid && availablePlayers.length > 0) {
+			const pendingIds = availablePlayers.map((player) => player.uuid)
+			void registerSkinSitePlayers(pendingIds, siteUser.uuid)
+				.then(() => refreshValues())
+				.catch((error) => {
+					console.warn('Failed to register skin site players:', error)
+				})
 		}
 	},
 	{ immediate: true },
