@@ -118,7 +118,9 @@ pub async fn import_gdlauncher(
     let state = State::get().await?;
     finish_import(
         instance_id,
-        gdlauncher_instance_folder,
+        Some(gdlauncher_instance_folder),
+        None,
+        false,
         &state.io_semaphore,
         reporter,
         details,

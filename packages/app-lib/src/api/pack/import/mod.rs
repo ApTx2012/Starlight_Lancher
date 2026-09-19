@@ -661,6 +661,10 @@ pub(crate) struct ImportOverrides {
     pub game_version: Option<String>,
     pub loader: Option<ModLoader>,
     pub loader_version: Option<String>,
+    /// The user's explicit game directory (version isolation choice). When set,
+    /// it is the absolute path the instance should use as its working
+    /// directory; when `None`, the layout is auto-detected.
+    pub game_dir_override: Option<String>,
 }
 
 pub(crate) async fn import_instance_with_reporter(
@@ -1045,7 +1049,9 @@ pub async fn recache_icon(
 
 pub(crate) async fn copy_dotminecraft_with_reporter(
     instance_id: &str,
-    dotminecraft: PathBuf,
+    content_source: Option<PathBuf>,
+    version_dir: Option<PathBuf>,
+    isolated: bool,
     io_semaphore: &IoSemaphore,
     reporter: InstallProgressReporter,
     details: InstallPhaseDetails,
@@ -1053,7 +1059,36 @@ pub(crate) async fn copy_dotminecraft_with_reporter(
     let instance_path =
         crate::api::instance::get_full_path(instance_id).await?;
 
-    let files = collect_dotminecraft_files(&dotminecraft).await?;
+    let mut files: Vec<(PathBuf, PathBuf)> = Vec::new();
+
+    if let Some(content_root) = &content_source {
+        // Copy the shared content (mods/saves/config/…). When a specific
+        // version folder is in play, every sibling under `versions/` belongs to
+        // a different instance and must not be cloned here.
+        //
+        // - shared import: keep the selected version, drop the rest;
+        // - isolated import (甲): drop the whole `versions/` tree here — the
+        //   selected version is copied separately below and merged into the
+        //   instance root.
+        let keep_version = if isolated {
+            None
+        } else {
+            version_dir.as_deref()
+        };
+        let mut content_files =
+            collect_dotminecraft_files(content_root, keep_version, isolated)
+                .await?;
+        files.append(&mut content_files);
+    }
+
+    if isolated && let Some(version) = &version_dir {
+        // Merge the selected version files (`<name>.json`, `<name>.jar`, and any
+        // nested `mods/`, `config/`, … that live inside the version folder)
+        // directly into the instance root so the instance directory becomes a
+        // self-contained game dir.
+        let mut version_files = collect_version_files(version).await?;
+        files.append(&mut version_files);
+    }
 
     let total = files.len() as u64;
     if total == 0 {
@@ -1085,6 +1120,8 @@ pub(crate) async fn copy_dotminecraft_with_reporter(
 /// at the source root (`<dirname>.json` and `<dirname>.jar`).
 async fn collect_dotminecraft_files(
     dotminecraft: &Path,
+    keep_version: Option<&Path>,
+    isolated: bool,
 ) -> crate::Result<Vec<(PathBuf, PathBuf)>> {
     // Collect all files recursively
     let files = get_all_subfiles(dotminecraft, false).await?;
@@ -1097,6 +1134,14 @@ async fn collect_dotminecraft_files(
         .unwrap_or_default();
     let skip_json = format!("{dirname}.json");
     let skip_jar = format!("{dirname}.jar");
+
+    // When a specific version folder is requested from a shared `.minecraft`
+    // root, every other entry under `versions/` belongs to a different
+    // instance. Resolve the relative keep-path once so the loop can compare
+    // cheaply (e.g. `versions/1.21.1-NeoForge_21.1.250`).
+    let keep_relative = keep_version
+        .and_then(|version| version.strip_prefix(dotminecraft).ok())
+        .map(|rel| rel.to_path_buf());
 
     let mut collected = Vec::new();
     for abs_path in files {
@@ -1117,6 +1162,23 @@ async fn collect_dotminecraft_files(
         else {
             continue;
         };
+
+        // In the isolated strategy the whole `versions/` tree is handled
+        // separately (only the selected version is copied, and it is merged
+        // into the instance root), so skip it entirely here to avoid cloning
+        // sibling versions.
+        if isolated {
+            if rel.components().next().map(|c| c.as_os_str())
+                == Some("versions".as_ref())
+            {
+                continue;
+            }
+        } else if let Some(keep) = &keep_relative
+            && is_other_version_entry(&rel, keep)
+        {
+            continue;
+        }
+
         if rel
             .parent()
             .is_some_and(|path| !path.as_os_str().is_empty())
@@ -1130,6 +1192,70 @@ async fn collect_dotminecraft_files(
         }
     }
     Ok(collected)
+}
+
+/// Collects every file inside a selected `versions/<name>` folder, mapping each
+/// path relative to that folder so the contents merge directly into the
+/// instance root (the instance becomes a self-contained, version-isolated game
+/// dir).
+async fn collect_version_files(
+    version_dir: &Path,
+) -> crate::Result<Vec<(PathBuf, PathBuf)>> {
+    let files = get_all_subfiles(version_dir, false).await?;
+    let mut collected = Vec::new();
+    for abs_path in files {
+        let metadata = tokio::fs::symlink_metadata(&abs_path)
+            .await
+            .map_err(|error| IOError::with_path(error, &abs_path))?;
+        if crate::util::io::is_symlink_or_reparse(&metadata) {
+            tracing::warn!(
+                path = %abs_path.display(),
+                "Skipping nested symlink or reparse point while copying a version folder"
+            );
+            continue;
+        }
+        if let Ok(rel) = abs_path.strip_prefix(version_dir) {
+            collected.push((abs_path, rel.to_path_buf()));
+        }
+    }
+    Ok(collected)
+}
+
+/// True if `rel` lives under `versions/` but does not belong to the selected
+/// version folder `keep` (which is itself relative to the `.minecraft` root,
+/// e.g. `versions/1.21.1-NeoForge_21.1.250`).
+///
+/// `rel` may be the version directory itself, a file directly inside it, or a
+/// path nested deeper. Anything sharing the first two path components with
+/// `keep` is kept; every other `versions/<other>` entry is excluded.
+fn is_other_version_entry(rel: &Path, keep: &Path) -> bool {
+    let mut rel_components = rel.components();
+    let mut keep_components = keep.components();
+
+    // Both must start with the literal `versions` component.
+    if rel_components.next().map(|c| c.as_os_str()) != Some("versions".as_ref()) {
+        return false;
+    }
+    if keep_components.next().map(|c| c.as_os_str()) != Some("versions".as_ref()) {
+        return false;
+    }
+
+    let rel_version = rel_components.next().map(|c| c.as_os_str());
+    let keep_version = keep_components.next().map(|c| c.as_os_str());
+
+    // `rel` is always a *file* path relative to the `.minecraft` root. A file
+    // that sits directly under `versions/` (e.g. `versions/version_manifest.json`)
+    // has exactly two components and is shared metadata, not a version folder:
+    // leave it alone. Only when there is at least a third component
+    // (`versions/<name>/<file>`) can the second component be treated as a
+    // version directory name.
+    let rel_is_inside_version_dir = rel_components.next().is_some();
+
+    match (rel_version, keep_version) {
+        (Some(rel_v), Some(keep_v)) if rel_is_inside_version_dir => rel_v != keep_v,
+        // A file directly under `versions/`, shared metadata: keep it.
+        _ => false,
+    }
 }
 
 /// Copies the collected files into the instance profile concurrently, bounded
@@ -1225,7 +1351,7 @@ async fn copy_files_with_progress(
 /// back to the source folder itself: the game creates the content folders
 /// there on first run, and for imports the user's explicit game-dir choice
 /// (or no override, i.e. the managed symlink) decides the rest.
-fn resolve_import_game_root(source: &Path) -> PathBuf {
+pub(crate) fn resolve_import_game_root(source: &Path) -> PathBuf {
     // The source is itself the game root: either a whole Minecraft folder that
     // carries a game body, or any folder that already holds game content
     // (a version-isolated `versions/<name>` with mods/saves/config inside).
@@ -1300,19 +1426,27 @@ fn dir_has_game_content(root: &Path) -> bool {
 
 pub(crate) async fn finish_import(
     instance_id: &str,
-    dotminecraft: PathBuf,
+    content_source: Option<PathBuf>,
+    version_dir: Option<PathBuf>,
+    isolated: bool,
     io_semaphore: &IoSemaphore,
     reporter: InstallProgressReporter,
     details: InstallPhaseDetails,
     symlink: bool,
 ) -> crate::Result<()> {
-    let local_source = LocalRuntimeSource::discover(&dotminecraft);
+    // The directory the game body / version JSON lives in, used to discover the
+    // local runtime source. Prefer the selected version folder, else the
+    // content root.
+    let primary_source = version_dir
+        .clone()
+        .or_else(|| content_source.clone())
+        .ok_or_else(|| {
+            crate::ErrorKind::InputError(
+                "Import has no content source".to_string(),
+            )
+        })?;
+    let local_source = LocalRuntimeSource::discover(&primary_source);
 
-    // Respect an explicitly chosen game-dir override (the user's isolated /
-    // not-isolated selection, already stored on the instance row at creation).
-    // Only fall back to auto-detection for symlink imports that did not carry
-    // an explicit override, so copy imports always stay built-in (no override)
-    // and the frontend's choice is never clobbered.
     let state = crate::state::State::get().await?;
     let pool = &state.pool;
     let existing_override =
@@ -1324,17 +1458,15 @@ pub(crate) async fn finish_import(
         .map(|(_, override_dir)| override_dir)
         .unwrap_or(None);
     if existing_override.is_none() && symlink {
-        // For a non-version-isolated import the game content (mods, saves, config)
-        // lives in the `.minecraft` root, not in the detected `versions/<name>`
-        // subfolder. Detect that and record the override so the instance uses the
-        // real game root directly instead of an empty version subfolder.
-        let game_root = resolve_import_game_root(&dotminecraft);
-        if game_root != dotminecraft {
+        // For a symlinked import the game dir is the referenced source root,
+        // not the empty managed instance folder. Record it so the instance
+        // launches from the real location.
+        if let Some(content_root) = &content_source {
             crate::state::edit_instance(
                 instance_id,
                 crate::state::EditInstance {
                     game_dir_override: Some(Some(
-                        game_root.to_string_lossy().to_string(),
+                        content_root.to_string_lossy().to_string(),
                     )),
                     ..Default::default()
                 },
@@ -1345,6 +1477,11 @@ pub(crate) async fn finish_import(
     }
 
     if symlink {
+        let source_root = content_source.clone().ok_or_else(|| {
+            crate::ErrorKind::InputError(
+                "Symlink import requires a content source".to_string(),
+            )
+        })?;
         let state = State::get().await?;
         let relative_path =
             instance_rows::get_instance_path_by_id(instance_id, &state.pool)
@@ -1354,7 +1491,7 @@ pub(crate) async fn finish_import(
                 })?;
         // The instance's managed folder lives at instances_dir/<path>. This is
         // where the symlink is created; it must NOT go through the game-dir
-        // override (which points at the external .minecraft root).
+        // override (which points at the external source root).
         let instance_path =
             state.directories.instances_dir().join(&relative_path);
 
@@ -1402,7 +1539,7 @@ pub(crate) async fn finish_import(
                 return Err(error.into());
             }
             if let Err(error) =
-                io::create_symlink(&dotminecraft, &instance_path).await
+                io::create_symlink(&source_root, &instance_path).await
             {
                 let _ = io::rename_or_move(&backup_path, &instance_path).await;
                 watch_instance_folder(
@@ -1423,14 +1560,14 @@ pub(crate) async fn finish_import(
             )
             .await;
         } else {
-            io::create_symlink(&dotminecraft, &instance_path).await?;
+            io::create_symlink(&source_root, &instance_path).await?;
         }
 
         crate::state::edit_instance(
             instance_id,
             crate::state::EditInstance {
                 symlink_target: Some(Some(
-                    dotminecraft.to_string_lossy().to_string(),
+                    source_root.to_string_lossy().to_string(),
                 )),
                 ..Default::default()
             },
@@ -1440,7 +1577,9 @@ pub(crate) async fn finish_import(
     } else {
         copy_dotminecraft_with_reporter(
             instance_id,
-            dotminecraft,
+            content_source,
+            version_dir,
+            isolated,
             io_semaphore,
             reporter.clone(),
             details,

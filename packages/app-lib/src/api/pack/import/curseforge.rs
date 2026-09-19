@@ -221,7 +221,9 @@ pub async fn import_curseforge(
     let state = State::get().await?;
     finish_import(
         instance_id,
-        curseforge_instance_folder,
+        Some(curseforge_instance_folder),
+        None,
+        false,
         &state.io_semaphore,
         reporter,
         details,

@@ -170,7 +170,9 @@ pub(crate) async fn import_axolotl(
 
     finish_import(
         instance_id,
-        source_path,
+        Some(source_path),
+        None,
+        false,
         &state.io_semaphore,
         reporter,
         details,

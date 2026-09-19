@@ -3,7 +3,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use super::{ImportOverrides, instance_json};
+use super::{ImportOverrides, instance_json, resolve_import_game_root};
 use crate::{
     State,
     install::{InstallPhaseDetails, InstallProgressReporter},
@@ -29,29 +29,129 @@ pub async fn import_generic(
     overrides: &ImportOverrides,
     instance_path: Option<PathBuf>, // For compatible mode: path to versions/<version>/
 ) -> crate::Result<()> {
-    let (name, dotminecraft, json_path) = if let Some(ref inst_path) =
-        instance_path
-    {
-        let name = inst_path
+    // Resolve the source layout. Three inputs describe the same import from
+    // different angles and must be reconciled consistently:
+    //
+    // - `instance_folder`: the game root chosen by the caller (normally the
+    //   `.minecraft` root for a PCL/HMCL install, or the folder itself).
+    // - `instance_path`: when present, the specific `versions/<name>` folder
+    //   the user selected. A `.minecraft` root can hold many versions; only
+    //   this one belongs to the instance being imported.
+    // - `overrides.game_dir_override`: the user's explicit version-isolation
+    //   choice.
+    //
+    // The old behaviour copied/symlinked the whole `.minecraft` root and let
+    // the version folder dangle, which produced vanilla-only copies (mods
+    // stayed in versions/<name>) and cloned every sibling version too.
+    let layout = resolve_import_layout(
+        &instance_folder,
+        instance_path.as_deref(),
+        overrides.game_dir_override.as_deref(),
+    );
+
+    let info = detect_instance_info(&layout.json_source, overrides).await?;
+    register_instance(instance_id, &layout.name, &info).await?;
+    copy_instance_files(instance_id, &layout, reporter, details, symlink)
+        .await
+}
+
+/// The resolved source layout for a generic import.
+///
+/// `content_source` holds the shared game content (mods/saves/config) that
+/// belongs to the instance; `version_dir` is the selected `versions/<name>`
+/// folder. Both are merged into the instance directory by the copy/symlink
+/// stage, so a version-isolated import keeps the root-level mods it used to
+/// leave behind.
+struct ImportLayout {
+    /// Display name for the instance (the version folder name when isolated,
+    /// otherwise the game root folder name).
+    name: String,
+    /// Directory the version JSON is detected from.
+    json_source: PathBuf,
+    /// Directory whose game content (mods/saves/config) belongs to the
+    /// instance. For a shared root this is the root itself; for the "move the
+    /// root content into versions/<name>" isolation strategy this is still the
+    /// root, but its content is copied *into* the instance (which then becomes
+    /// the game dir).
+    content_source: Option<PathBuf>,
+    /// Selected `versions/<name>` folder, when the source is a shared root.
+    version_dir: Option<PathBuf>,
+    /// Whether the instance uses version isolation.
+    isolated: bool,
+}
+
+/// Reconciles the three import inputs into one layout.
+///
+/// Rules:
+/// - When `instance_path` is given it is the authoritative version folder; the
+///   instance is version-isolated unless the user explicitly asked to share.
+/// - When the user asked to share, the `.minecraft` root is the game dir.
+/// - Without a selected version folder, fall back to the old auto-detection so
+///   direct folder imports keep working.
+fn resolve_import_layout(
+    instance_folder: &Path,
+    selected_version: Option<&Path>,
+    game_dir_override: Option<&str>,
+) -> ImportLayout {
+    let root_name = instance_folder
+        .file_name()
+        .map(|n| n.to_string_lossy().to_string())
+        .unwrap_or_else(|| "imported".to_string());
+
+    // Explicit "version shared" choice: copy the whole `.minecraft` root.
+    let shared_forced = game_dir_override
+        .map(|dir| {
+            let normalized = dir.trim_end_matches(['/', '\\']);
+            normalized.eq_ignore_ascii_case(
+                instance_folder
+                    .to_string_lossy()
+                    .trim_end_matches(['/', '\\']),
+            )
+        })
+        .unwrap_or(false);
+
+    if let Some(version_dir) = selected_version {
+        let version_name = version_dir
             .file_name()
             .map(|n| n.to_string_lossy().to_string())
-            .unwrap_or_else(|| "imported".to_string());
-        tracing::debug!(
-            "import_generic: compatible mode - dotminecraft={}, json_path={}",
-            instance_folder.display(),
-            inst_path.display()
-        );
-        (name, instance_folder.to_path_buf(), inst_path.to_path_buf())
-    } else {
-        let (name, dotminecraft) = resolve_dotminecraft(&instance_folder);
-        let json_path = dotminecraft.clone(); // JSON detection will scan dotminecraft
-        (name, dotminecraft, json_path)
-    };
+            .unwrap_or_else(|| root_name.clone());
 
-    let info = detect_instance_info(&json_path, overrides).await?;
-    register_instance(instance_id, &name, &info).await?;
-    copy_instance_files(instance_id, &dotminecraft, reporter, details, symlink)
-        .await
+        if shared_forced {
+            // User explicitly chose to share the `.minecraft` root even though
+            // a version folder was selected.
+            return ImportLayout {
+                name: root_name,
+                json_source: version_dir.to_path_buf(),
+                content_source: Some(instance_folder.to_path_buf()),
+                version_dir: Some(version_dir.to_path_buf()),
+                isolated: false,
+            };
+        }
+
+        // Version-isolated strategy (甲): the instance becomes the game dir.
+        // The version files (`versions/<name>`) and the shared root content
+        // (mods/saves/config) are both merged into the instance, so mods that
+        // live at the `.minecraft` root survive the import instead of being
+        // left behind.
+        return ImportLayout {
+            name: version_name,
+            json_source: version_dir.to_path_buf(),
+            content_source: Some(instance_folder.to_path_buf()),
+            version_dir: Some(version_dir.to_path_buf()),
+            isolated: true,
+        };
+    }
+
+    // No explicit version folder: fall back to auto-detection.
+    let (name, dotminecraft) = resolve_dotminecraft(instance_folder);
+    let game_root = resolve_import_game_root(&dotminecraft);
+    ImportLayout {
+        name,
+        json_source: dotminecraft.clone(),
+        content_source: Some(game_root.clone()),
+        version_dir: None,
+        isolated: game_root != dotminecraft,
+    }
 }
 
 /// Stage 1 — resolve the name and the `.minecraft` directory of an imported
@@ -325,21 +425,30 @@ async fn resolve_loader_version(
 }
 
 /// Stage 4 — copy (or symlink) the source files into the instance profile.
+///
+/// Uses the reconciled [`ImportLayout`]: the shared content root (mods/saves/
+/// config) and the selected `versions/<name>` folder are both merged into the
+/// instance directory, so a version-isolated import keeps root-level content.
 async fn copy_instance_files(
     instance_id: &str,
-    dotminecraft: &Path,
+    layout: &ImportLayout,
     reporter: InstallProgressReporter,
     details: InstallPhaseDetails,
     symlink: bool,
 ) -> crate::Result<()> {
     let state = State::get().await?;
     tracing::debug!(
-        "import_generic: finishing import for instance_id={}",
-        instance_id
+        "import_generic: finishing import for instance_id={} content_source={:?} version_dir={:?} isolated={}",
+        instance_id,
+        layout.content_source,
+        layout.version_dir,
+        layout.isolated
     );
     finish_import(
         instance_id,
-        dotminecraft.to_path_buf(),
+        layout.content_source.clone(),
+        layout.version_dir.clone(),
+        layout.isolated,
         &state.io_semaphore,
         reporter,
         details,
@@ -399,6 +508,7 @@ mod tests {
             game_version: Some("1.20.1".to_string()),
             loader: Some(ModLoader::Fabric),
             loader_version: Some("0.15.11".to_string()),
+            ..Default::default()
         };
 
         let info = detect_instance_info(directory.path(), &overrides)
@@ -418,6 +528,7 @@ mod tests {
                 game_version: Some("1.20.1".to_string()),
                 loader: Some(ModLoader::Fabric),
                 loader_version: Some(loader_version.to_string()),
+                ..Default::default()
             };
 
             let info = detect_instance_info(directory.path(), &overrides)

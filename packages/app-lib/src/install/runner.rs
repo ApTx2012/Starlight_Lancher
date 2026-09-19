@@ -1529,10 +1529,10 @@ async fn run_request(
             game_version,
             loader,
             loader_version,
-            game_dir_override: _,
+            game_dir_override,
         } => {
             tracing::debug!(
-                "InstallRequest::ImportInstance: launcher_type={launcher_type} base_path={} instance_folder={instance_folder} symlink={symlink}",
+                "InstallRequest::ImportInstance: launcher_type={launcher_type} base_path={} instance_folder={instance_folder} symlink={symlink} game_dir_override={game_dir_override:?}",
                 base_path.display()
             );
             let Some(instance_id) = current_instance_id(job_state) else {
@@ -1562,6 +1562,7 @@ async fn run_request(
                     game_version,
                     loader,
                     loader_version,
+                    game_dir_override,
                 },
                 // TODO(B2): apply overrides to launcher-specific importers
                 // (MultiMC/Prism/ATLauncher/GDLauncher/Curseforge/ModrinthApp);
@@ -1590,8 +1591,12 @@ async fn run_request(
             let state = State::get().await?;
             crate::api::pack::import::copy_dotminecraft_with_reporter(
                 &instance_id,
-                crate::api::instance::get_full_path(&source_instance_id)
-                    .await?,
+                Some(
+                    crate::api::instance::get_full_path(&source_instance_id)
+                        .await?,
+                ),
+                None,
+                false,
                 &state.io_semaphore,
                 InstallProgressReporter::new(job_id, job_state.clone()),
                 InstallPhaseDetails::Empty,
@@ -2526,7 +2531,9 @@ async fn copy_physical_instance_contents(
     )?;
     crate::api::pack::import::copy_dotminecraft_with_reporter(
         target_instance_id,
-        source_path,
+        Some(source_path),
+        None,
+        false,
         &state.io_semaphore,
         InstallProgressReporter::new(job_id, job_state.clone()),
         InstallPhaseDetails::Empty,

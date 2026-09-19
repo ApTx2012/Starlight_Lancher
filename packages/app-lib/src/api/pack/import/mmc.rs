@@ -303,7 +303,9 @@ async fn import_mmc_unmanaged(
     let state = State::get().await?;
     finish_import(
         instance_id,
-        minecraft_folder,
+        Some(minecraft_folder),
+        None,
+        false,
         &state.io_semaphore,
         reporter,
         details,

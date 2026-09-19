@@ -196,7 +196,8 @@ pub(crate) fn normalize_imported_loader_version(
     game_version: &str,
     detected_version: &str,
 ) -> String {
-    let detected_version = detected_version.trim();
+    let detected_version = sanitize_loader_version(detected_version);
+    let detected_version = detected_version.as_str();
     let without_family = match loader {
         "fabric" | "legacy_fabric" => detected_version
             .strip_prefix("fabric-loader-")
@@ -212,7 +213,7 @@ pub(crate) fn normalize_imported_loader_version(
     }
     .unwrap_or(detected_version);
 
-    match loader {
+    let normalized = match loader {
         "fabric" | "legacy_fabric" | "quilt" => without_family
             .strip_suffix(&format!("-{game_version}"))
             .unwrap_or(without_family)
@@ -232,7 +233,8 @@ pub(crate) fn normalize_imported_loader_version(
                 .to_string()
         }
         _ => without_family.to_string(),
-    }
+    };
+    sanitize_loader_version(&normalized)
 }
 
 fn extract_version(
@@ -575,6 +577,11 @@ fn detect_adjuncts(
 
 /// Extracts the loader version string from JSON content by finding a needle
 /// and reading until a terminator character.
+///
+/// The terminator set includes `:` `]` `[` and whitespace because non-standard
+/// launcher JSONs (notably PCL) may embed the loader coordinate in a composite
+/// string such as `net.neoforged:neoforge:21.1.250:client]`, where the real
+/// version ends at the first extra `:` rather than at the closing quote.
 fn try_extract_version_from_needle(
     content: &str,
     needle: &str,
@@ -582,15 +589,30 @@ fn try_extract_version_from_needle(
 ) -> Option<String> {
     let pos = content.find(needle)?;
     let after = &content[pos + needle.len()..];
-    let end = after.find(&['"', ',', '\n', '}'] as &[char])?;
+    let end = after
+        .find(&['"', ',', '\n', '}', ']', '[', ':', ' '] as &[char])?;
     let ver = &after[..end];
     if let Some(ch) = split_at
         && let Some(pos) = ver.rfind(ch)
     {
-        Some(ver[pos + 1..].to_string())
+        Some(sanitize_loader_version(&ver[pos + 1..]))
     } else {
-        Some(ver.to_string())
+        Some(sanitize_loader_version(ver))
     }
+}
+
+/// Trims junk that non-standard launcher JSONs append to a loader coordinate
+/// (e.g. `21.1.250:client]`, `44.0.3 ` or `0.15.11\n`). Keeps only the leading
+/// version token so the metadata resolver receives a clean id.
+fn sanitize_loader_version(raw: &str) -> String {
+    let trimmed = raw.trim();
+    // Cut at the first character that cannot appear in a loader version id.
+    let end = trimmed
+        .find(|ch: char| {
+            !(ch.is_ascii_alphanumeric() || ch == '.' || ch == '-' || ch == '_' || ch == '+')
+        })
+        .unwrap_or(trimmed.len());
+    trimmed[..end].trim().to_string()
 }
 
 #[cfg(test)]
@@ -836,5 +858,36 @@ mod tests {
         assert_eq!(info.vanilla_name, "1.20.1");
         assert_eq!(info.loader.as_deref(), Some("fabric"));
         assert_eq!(info.loader_version.as_deref(), Some("0.15.11"));
+    }
+
+    #[test]
+    fn sanitizes_loader_version_with_launcher_suffix() {
+        // PCL and other launchers may embed composite coordinates such as
+        // `net.neoforged:neoforge:21.1.250:client]`; the extracted version must
+        // stop at the first extra `:` instead of swallowing `:client]`.
+        assert_eq!(sanitize_loader_version("21.1.250:client]"), "21.1.250");
+        assert_eq!(sanitize_loader_version("44.0.3 "), "44.0.3");
+        assert_eq!(sanitize_loader_version("0.15.11\n"), "0.15.11");
+        assert_eq!(sanitize_loader_version("1.21.1-52.0.0"), "1.21.1-52.0.0");
+        assert_eq!(
+            sanitize_loader_version("1.7.10-10.13.4.1614-1.7.10"),
+            "1.7.10-10.13.4.1614-1.7.10"
+        );
+    }
+
+    #[test]
+    fn detect_loader_version_stops_at_extra_colon() {
+        assert_loader(
+            r#"{
+                "id": "1.21.1-neoforge-21.1.250",
+                "libraries": [
+                    {
+                        "name": "net.neoforged:neoforge:21.1.250:client]"
+                    }
+                ]
+            }"#,
+            "neoforge",
+            Some("21.1.250"),
+        );
     }
 }

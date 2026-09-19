@@ -210,7 +210,9 @@ pub async fn import_instance(
     let state = State::get().await?;
     finish_import(
         instance_id,
-        source,
+        Some(source),
+        None,
+        false,
         &state.io_semaphore,
         reporter,
         details,
