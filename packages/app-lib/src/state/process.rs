@@ -616,220 +616,62 @@ impl Process {
         let mut buf_reader = BufReader::new(reader);
 
         if xml_logging {
-            let mut reader = Reader::from_reader(buf_reader);
-            reader.config_mut().enable_all_checks(false);
-
-            let mut buf = Vec::new();
-            let mut current_event = Log4jEvent::default();
-            let mut in_event = false;
-            let mut in_message = false;
-            let mut in_throwable = false;
-            let mut current_content = String::new();
+            // NOTE: we deliberately do NOT use quick-xml's streaming async reader
+            // here. Its parser marks itself `ParseState::Done` permanently after
+            // any I/O/parse error or a transient `Eof` (see quick-xml #513), so a
+            // single split XML frame on the live pipe would silently kill all
+            // further log forwarding — which is exactly the "logs stop after the
+            // client finished starting" bug.
+            //
+            // Instead we accumulate raw bytes into a buffer and cut out complete
+            // `<log4j:Event ...>…</log4j:Event>` frames, parsing each frame in one
+            // synchronous pass. Malformed or partial frames are skipped without
+            // poisoning the stream, so forwarding always continues.
+            let mut pending = String::new();
+            let mut chunk = [0u8; 8192];
 
             loop {
-                match reader.read_event_into_async(&mut buf).await {
+                let read = match tokio::io::AsyncReadExt::read(&mut buf_reader, &mut chunk).await {
+                    Ok(0) => break,
+                    Ok(n) => n,
                     Err(e) => {
-                        tracing::error!(
-                            "Error at position {}: {:?}",
-                            reader.buffer_position(),
-                            e
-                        );
+                        tracing::warn!("Live log read error: {e}");
                         break;
                     }
-                    // exits the loop when reaching end of file
-                    Ok(Event::Eof) => break,
+                };
 
-                    Ok(Event::Start(e)) => {
-                        match e.name().as_ref() {
-                            b"log4j:Event" => {
-                                // Reset for new event
-                                current_event = Log4jEvent::default();
-                                in_event = true;
+                pending.push_str(&String::from_utf8_lossy(&chunk[..read]));
 
-                                // Extract attributes
-                                for attr in e.attributes().flatten() {
-                                    let key = String::from_utf8_lossy(
-                                        attr.key.into_inner(),
-                                    )
-                                    .to_string();
-                                    let value =
-                                        String::from_utf8_lossy(&attr.value)
-                                            .to_string();
-
-                                    match key.as_str() {
-                                        "logger" => {
-                                            current_event.logger_name =
-                                                Some(value)
-                                        }
-                                        "level" => {
-                                            current_event.level = Some(value)
-                                        }
-                                        "thread" => {
-                                            current_event.thread_name =
-                                                Some(value)
-                                        }
-                                        "timestamp" => {
-                                            current_event.timestamp_millis =
-                                                value.parse::<i64>().ok()
-                                        }
-                                        _ => {}
-                                    }
-                                }
-                            }
-                            b"log4j:Message" => {
-                                in_message = true;
-                                current_content = String::new();
-                            }
-                            b"log4j:Throwable" => {
-                                in_throwable = true;
-                                current_content = String::new();
-                            }
-                            _ => {}
-                        }
-                    }
-                    Ok(Event::End(e)) => {
-                        match e.name().as_ref() {
-                            b"log4j:Message" => {
-                                in_message = false;
-                                current_event.message =
-                                    Some(current_content.clone());
-                            }
-                            b"log4j:Throwable" => {
-                                in_throwable = false;
-                                current_event.throwable =
-                                    if current_content.is_empty() {
-                                        None
-                                    } else {
-                                        Some(current_content.clone())
-                                    };
-
-                                // Write log entry + throwable to file
-                                if let Some(formatted_log) =
-                                    Self::format_log4j_entry(&current_event)
-                                {
-                                    if let Err(e) = Process::append_to_log_file(
-                                        &log_path,
-                                        &formatted_log,
-                                    ) {
-                                        tracing::error!(
-                                            "Failed to write to log file: {}",
-                                            e
-                                        );
-                                    }
-
-                                    if let Some(ref throwable) =
-                                        current_event.throwable
-                                        && let Err(e) =
-                                            Process::append_to_log_file(
-                                                &log_path, throwable,
-                                            )
-                                    {
-                                        tracing::error!(
-                                            "Failed to write throwable to log file: {}",
-                                            e
-                                        );
-                                    }
-                                }
-
-                                Self::emit_log4j_event(
-                                    instance_id,
-                                    &current_event,
-                                );
-                            }
-                            b"log4j:Event" => {
-                                in_event = false;
-                                // If no throwable was present, write the log entry at the end of the event
-                                if current_event.message.is_some()
-                                    && current_event.throwable.is_none()
-                                {
-                                    if let Some(formatted_log) =
-                                        Self::format_log4j_entry(&current_event)
-                                        && let Err(e) =
-                                            Process::append_to_log_file(
-                                                &log_path,
-                                                &formatted_log,
-                                            )
-                                    {
-                                        tracing::error!(
-                                            "Failed to write to log file: {}",
-                                            e
-                                        );
-                                    }
-
-                                    if let Some(timestamp_millis) =
-                                        current_event.timestamp_millis
-                                    {
-                                        let timestamp =
-                                            timestamp_millis.to_string();
-                                        let message = current_event
-                                            .message
-                                            .as_deref()
-                                            .unwrap_or("")
-                                            .trim();
-                                        crate::api::multiplayer::observe_minecraft_log(
-                                        instance_id,
-                                        instance_name,
-                                        process_id,
-                                        message,
-                                    )
-                                    .await;
-                                        if let Err(e) = Self::maybe_handle_server_join_logging(
-											instance_id,
-											&timestamp,
-											message,
-                                        ).await {
-                                            tracing::error!("Failed to handle server join logging: {e}");
-                                        }
-                                    }
-
-                                    Self::emit_log4j_event(
-                                        instance_id,
-                                        &current_event,
-                                    );
-                                }
-                            }
-                            _ => {}
-                        }
-                    }
-                    Ok(Event::Text(mut e)) => {
-                        if in_message || in_throwable {
-                            if let Ok(text) = e.xml_content() {
-                                append_bounded_log4j_content(
-                                    &mut current_content,
-                                    &text,
-                                );
-                            }
-                        } else if !in_event
-                            && !e.inplace_trim_end()
-                            && !e.inplace_trim_start()
-                            && let Ok(text) = e.xml_content()
-                        {
-                            if let Err(e) = Process::append_to_log_file(
-                                &log_path,
-                                &format!("{text}\n"),
-                            ) {
-                                tracing::error!(
-                                    "Failed to write to log file: {}",
-                                    e
-                                );
-                            }
-                            Self::emit_legacy_log(instance_id, &text);
-                        }
-                    }
-                    Ok(Event::CData(e)) => {
-                        if (in_message || in_throwable)
-                            && let Ok(text) = e.xml_content()
-                        {
-                            append_bounded_log4j_content(
-                                &mut current_content,
-                                &text,
-                            );
-                        }
-                    }
-                    _ => (),
+                // Drain every complete frame currently buffered.
+                while let Some(frame) = take_next_log4j_frame(&mut pending) {
+                    Self::handle_log4j_frame(
+                        instance_id,
+                        instance_name,
+                        process_id,
+                        &log_path,
+                        &frame,
+                    )
+                    .await;
                 }
 
-                buf.clear();
+                // Guard against a runaway buffer if no frame delimiters ever
+                // appear (e.g. raw non-XML output on a logging-configured
+                // instance). Flush it as legacy text so it is not lost.
+                if pending.len() > MAX_PERSISTED_LOG_LINE_BYTES {
+                    let text = std::mem::take(&mut pending);
+                    if let Err(e) = Self::append_to_log_file(&log_path, &text) {
+                        tracing::warn!("Failed to write to log file: {e}");
+                    }
+                    Self::emit_legacy_log(instance_id, text.trim_end());
+                }
+            }
+
+            // Flush any trailing partial content on stream end.
+            if !pending.trim().is_empty() {
+                if let Err(e) = Self::append_to_log_file(&log_path, &pending) {
+                    tracing::warn!("Failed to write to log file: {e}");
+                }
+                Self::emit_legacy_log(instance_id, pending.trim_end());
             }
         } else {
             while let Ok(Some(line)) =
@@ -859,6 +701,164 @@ impl Process {
                     }
                 }
             }
+        }
+    }
+
+    /// Parses one complete `<log4j:Event …>…</log4j:Event>` frame and forwards
+    /// its content to the log file / frontend. A frame that fails to parse is
+    /// logged and dropped; it never stops the reader loop.
+    async fn handle_log4j_frame(
+        instance_id: &str,
+        instance_name: &str,
+        process_id: &str,
+        log_path: &Path,
+        frame: &str,
+    ) {
+        let mut reader = Reader::from_str(frame);
+        reader.config_mut().enable_all_checks(false);
+
+        let mut current_event = Log4jEvent::default();
+        let mut in_message = false;
+        let mut in_throwable = false;
+        let mut current_content = String::new();
+
+        let mut buf = Vec::new();
+        loop {
+            match reader.read_event_into(&mut buf) {
+                Err(e) => {
+                    tracing::warn!("Malformed live log frame: {e}");
+                    break;
+                }
+                Ok(Event::Eof) => break,
+                Ok(Event::Start(e)) => match e.name().as_ref() {
+                    b"log4j:Event" => {
+                        current_event = Log4jEvent::default();
+                        for attr in e.attributes().flatten() {
+                            let key =
+                                String::from_utf8_lossy(attr.key.into_inner())
+                                    .to_string();
+                            let value = String::from_utf8_lossy(&attr.value)
+                                .to_string();
+                            match key.as_str() {
+                                "logger" => {
+                                    current_event.logger_name = Some(value)
+                                }
+                                "level" => current_event.level = Some(value),
+                                "thread" => {
+                                    current_event.thread_name = Some(value)
+                                }
+                                "timestamp" => {
+                                    current_event.timestamp_millis =
+                                        value.parse::<i64>().ok()
+                                }
+                                _ => {}
+                            }
+                        }
+                    }
+                    b"log4j:Message" => {
+                        in_message = true;
+                        current_content = String::new();
+                    }
+                    b"log4j:Throwable" => {
+                        in_throwable = true;
+                        current_content = String::new();
+                    }
+                    _ => {}
+                },
+                Ok(Event::End(e)) => match e.name().as_ref() {
+                    b"log4j:Message" => {
+                        in_message = false;
+                        current_event.message = Some(current_content.clone());
+                    }
+                    b"log4j:Throwable" => {
+                        in_throwable = false;
+                        current_event.throwable =
+                            if current_content.is_empty() {
+                                None
+                            } else {
+                                Some(current_content.clone())
+                            };
+                    }
+                    b"log4j:Event" => {
+                        if let Some(formatted) =
+                            Self::format_log4j_entry(&current_event)
+                        {
+                            if let Err(e) =
+                                Self::append_to_log_file(log_path, &formatted)
+                            {
+                                tracing::error!(
+                                    "Failed to write to log file: {e}"
+                                );
+                            }
+                            if let Some(ref throwable) = current_event.throwable
+                                && let Err(e) = Self::append_to_log_file(
+                                    log_path,
+                                    throwable,
+                                )
+                            {
+                                tracing::error!(
+                                    "Failed to write throwable to log file: {e}"
+                                );
+                            }
+
+                            if let Some(timestamp_millis) =
+                                current_event.timestamp_millis
+                            {
+                                let timestamp = timestamp_millis.to_string();
+                                let message = current_event
+                                    .message
+                                    .as_deref()
+                                    .unwrap_or("")
+                                    .trim();
+                                crate::api::multiplayer::observe_minecraft_log(
+                                    instance_id,
+                                    instance_name,
+                                    process_id,
+                                    message,
+                                )
+                                .await;
+                                if let Err(e) =
+                                    Self::maybe_handle_server_join_logging(
+                                        instance_id,
+                                        &timestamp,
+                                        message,
+                                    )
+                                    .await
+                                {
+                                    tracing::error!(
+                                        "Failed to handle server join logging: {e}"
+                                    );
+                                }
+                            }
+
+                            Self::emit_log4j_event(instance_id, &current_event);
+                        }
+                    }
+                    _ => {}
+                },
+                Ok(Event::Text(e)) => {
+                    if (in_message || in_throwable)
+                        && let Ok(text) = e.xml_content()
+                    {
+                        append_bounded_log4j_content(
+                            &mut current_content,
+                            &text,
+                        );
+                    }
+                }
+                Ok(Event::CData(e)) => {
+                    if (in_message || in_throwable)
+                        && let Ok(text) = e.xml_content()
+                    {
+                        append_bounded_log4j_content(
+                            &mut current_content,
+                            &text,
+                        );
+                    }
+                }
+                _ => (),
+            }
+            buf.clear();
         }
     }
 
@@ -1267,7 +1267,28 @@ impl Process {
         Ok(())
     }
 }
+/// Cuts the next complete `<log4j:Event …>…</log4j:Event>` frame out of the
+/// live buffer and returns it as an owned string, leaving any trailing partial
+/// frame in place.
+///
+/// Returns `None` when the buffer does not yet contain a full frame. This is a
+/// plain string operation on purpose: it never poisons any parser state, so a
+/// split or malformed frame on the live pipe cannot stop log forwarding.
+fn take_next_log4j_frame(buffer: &mut String) -> Option<String> {
+    const OPEN: &str = "<log4j:Event";
+    const CLOSE: &str = "</log4j:Event>";
 
+    let start = buffer.find(OPEN)?;
+    // Discard anything before the frame (raw text, XML prolog, …).
+    if start > 0 {
+        buffer.drain(..start);
+    }
+    let close = buffer.find(CLOSE)?;
+    let end = close + CLOSE.len();
+    let frame = buffer[..end].to_string();
+    buffer.drain(..end);
+    Some(frame)
+}
 #[cfg(test)]
 mod post_upgrade_tests {
     use super::*;

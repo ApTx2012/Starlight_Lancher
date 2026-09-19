@@ -19,32 +19,30 @@
 			/>
 		</div>
 
-		<div
-			v-else
-			class="log-viewport-spacer relative w-full min-w-max"
-			:style="{ height: totalHeight + 'px' }"
-		>
+		<!--
+			Native virtualization: every line is rendered, but `content-visibility:
+			auto` lets the browser skip layout/paint for off-screen lines, while
+			`contain-intrinsic-size` gives the skipped elements a placeholder size
+			so the scrollbar stays stable. This avoids the manual height estimation
+			that used to make tall (wrapped / highlighted) lines overlap.
+		-->
+		<div v-else class="log-viewport-spacer relative w-full min-w-max">
 			<div
-				class="absolute inset-x-0 top-0"
-				:style="{ transform: 'translateY(' + topOffset + 'px)' }"
+				v-for="item in lines"
+				:key="item.originalIndex"
+				:data-line="item.originalIndex + 1"
+				class="log-line log-line-cv flex items-stretch whitespace-pre"
+				:class="entryClass(item.line)"
+				:style="lineStyle"
 			>
-				<div
-					v-for="item in windowItems"
-					:key="item.originalIndex"
-					:data-line="item.originalIndex + 1"
-					class="log-line flex items-stretch whitespace-pre"
-					:class="entryClass(item.line)"
-					:style="{ height: estimateHeight(item) + 'px' }"
+				<span
+					class="flex shrink-0 w-[52px] items-center justify-end leading-none text-right text-secondary bg-surface-3 border-r border-solid border-surface-3 select-none overflow-hidden"
+					>{{ item.originalIndex + 1 }}</span
 				>
-					<span
-						class="flex shrink-0 w-[52px] items-center justify-end leading-none text-right text-secondary bg-surface-3 border-r border-solid border-surface-3 select-none overflow-hidden"
-						>{{ item.originalIndex + 1 }}</span
-					>
-					<span
-						class="log-line-content flex-1 px-2 break-all [overflow-wrap:anywhere]"
-						v-html="renderLine(item)"
-					></span>
-				</div>
+				<span
+					class="log-line-content flex-1 px-2 break-all [overflow-wrap:anywhere]"
+					v-html="renderLine(item)"
+				></span>
 			</div>
 		</div>
 
@@ -99,114 +97,21 @@ const props = withDefaults(
 )
 
 const viewportRef = ref<HTMLElement | null>(null)
-const scrollTop = ref(0)
-const viewportHeight = ref(0)
 const stickToBottom = ref(true)
 
-// 行高：单行 = 字号 × 1.4（与等宽字体匹配），wrap 时按估算折行数放大
-const lineHeightPx = computed(() => Math.round(props.fontSize * 1.4))
-// wrap 折行估算：0.6em 为等宽字符平均宽，乘 0.9 留保守余量（行高宁高勿矮，避免内容溢出重叠）
-const charsPerLine = computed(() => {
-	const vp = viewportRef.value
-	if (!vp) return 120
-	return Math.max(20, Math.floor((vp.clientWidth / (props.fontSize * 0.6)) * 0.9))
+// Placeholder row height for `contain-intrinsic-size`. Native
+// `content-visibility: auto` replaces this with the real measured height once a
+// line enters the viewport, so it only needs to be a reasonable estimate to
+// keep the scrollbar from jumping. Wrapped lines can be taller, so bias higher.
+const intrinsicLineHeight = computed(() => {
+	const single = Math.round(props.fontSize * 1.4)
+	return props.wrap ? single * 2 : single
 })
 
-function estimateHeight(item: ViewportLine): number {
-	if (!props.wrap) return lineHeightPx.value
-	const lines = Math.max(1, Math.ceil(item.line.text.length / charsPerLine.value))
-	return lines * lineHeightPx.value
-}
-
-// 高度前缀和缓存：lines/wrap/fontSize 变化时重建（O(n)），滚动时二分查找（O(log n)）
-// 总高度必须是响应式的：普通变量 + 无依赖 computed 会缓存过期值，
-// 清空控制台后模板不再读取它，重启后 spacer 会以旧高度渲染（底部空白）。
-let heightPrefix: number[] | null = null
-const heightTotal = ref(0)
-
-function rebuildHeights() {
-	const n = props.lines.length
-	if (!props.wrap) {
-		heightPrefix = null
-		heightTotal.value = n * lineHeightPx.value
-		return
-	}
-	const prefix = new Array<number>(n)
-	let acc = 0
-	for (let i = 0; i < n; i++) {
-		prefix[i] = acc
-		acc += estimateHeight(props.lines[i]!)
-	}
-	heightPrefix = prefix
-	heightTotal.value = acc
-}
-
-watch(
-	() => [props.lines, props.wrap, props.fontSize] as const,
-	([lines], previous) => {
-		rebuildHeights()
-		// A fresh stream after an empty console (clear, restart, initial
-		// hydration) always resumes bottom-following.
-		if (previous && previous[0].length === 0 && lines.length > 0) {
-			stickToBottom.value = true
-		}
-		if (lines.length === 0) {
-			// Reset the virtual window state along with the DOM scroll position;
-			// browsers may clamp silently without firing a scroll event.
-			scrollTop.value = 0
-			if (viewportRef.value) viewportRef.value.scrollTop = 0
-		}
-		if (stickToBottom.value) {
-			nextTick(scrollToBottom)
-		}
-	},
-	{ immediate: true },
-)
-
-const totalHeight = computed(() => heightTotal.value)
-
-// 虚拟窗口：可见行 + 上下缓冲
-const WINDOW_BUFFER = 15
-
-function computeWindow(): { items: ViewportLine[]; startIndex: number } {
-	const n = props.lines.length
-	if (n === 0) return { items: [], startIndex: 0 }
-
-	let start = 0
-	let end = n - 1
-
-	if (n > WINDOW_BUFFER * 2) {
-		if (props.wrap && heightPrefix) {
-			let lo = 0
-			let hi = n - 1
-			while (lo < hi) {
-				const mid = (lo + hi + 1) >> 1
-				if (heightPrefix[mid]! <= scrollTop.value) lo = mid
-				else hi = mid - 1
-			}
-			start = Math.max(0, lo - WINDOW_BUFFER)
-		} else {
-			const first = Math.floor(scrollTop.value / lineHeightPx.value)
-			start = Math.max(0, first - WINDOW_BUFFER)
-		}
-		end = Math.min(
-			n - 1,
-			start + Math.ceil(viewportHeight.value / lineHeightPx.value) + WINDOW_BUFFER * 2,
-		)
-	}
-
-	return { items: props.lines.slice(start, end + 1), startIndex: start }
-}
-
-const windowState = computed(computeWindow)
-const windowItems = computed(() => windowState.value.items)
-
-const topOffset = computed(() => {
-	const { startIndex } = windowState.value
-	if (startIndex === 0) return 0
-	if (props.wrap && heightPrefix) return heightPrefix[startIndex]!
-	return startIndex * lineHeightPx.value
-})
+const lineStyle = computed(() => ({
+	'content-visibility': 'auto',
+	'contain-intrinsic-size': `auto ${intrinsicLineHeight.value}px`,
+}))
 
 function entryClass(line: LogLine): string {
 	if (line.level === 'error') return 'entry-error'
@@ -235,42 +140,46 @@ function renderLine(item: ViewportLine): string {
 function handleScroll() {
 	const vp = viewportRef.value
 	if (!vp) return
-	scrollTop.value = vp.scrollTop
-	viewportHeight.value = vp.clientHeight
-	stickToBottom.value = vp.scrollTop + vp.clientHeight >= vp.scrollHeight - lineHeightPx.value * 2
+	stickToBottom.value = vp.scrollTop + vp.clientHeight >= vp.scrollHeight - 32
 }
 
 function scrollToBottom() {
 	const vp = viewportRef.value
 	if (!vp) return
 	vp.scrollTop = vp.scrollHeight
-	scrollTop.value = vp.scrollTop
 	stickToBottom.value = true
-}
-
-function syncViewportSize() {
-	const vp = viewportRef.value
-	if (!vp) return
-	viewportHeight.value = vp.clientHeight
-	// 窗口宽度影响 wrap 折行估算，resize 时重建高度缓存
-	if (props.wrap) rebuildHeights()
 }
 
 let resizeObserver: ResizeObserver | null = null
 
 onMounted(() => {
-	syncViewportSize()
 	if (stickToBottom.value) nextTick(scrollToBottom)
-	resizeObserver = new ResizeObserver(syncViewportSize)
+	resizeObserver = new ResizeObserver(() => {
+		if (stickToBottom.value) scrollToBottom()
+	})
 	if (viewportRef.value) resizeObserver.observe(viewportRef.value)
-	window.addEventListener('resize', syncViewportSize)
 })
 
 onBeforeUnmount(() => {
 	resizeObserver?.disconnect()
 	resizeObserver = null
-	window.removeEventListener('resize', syncViewportSize)
 })
+
+// Follow the tail while new lines stream in, but only when the user has not
+// scrolled up. A fresh stream after an empty console (clear, restart, initial
+// hydration) always resumes bottom-following.
+watch(
+	() => props.lines,
+	(lines, previous) => {
+		if (previous && previous.length === 0 && lines.length > 0) {
+			stickToBottom.value = true
+		}
+		if (stickToBottom.value) {
+			nextTick(scrollToBottom)
+		}
+	},
+	{ immediate: true },
+)
 
 defineExpose({
 	scrollToBottom,
