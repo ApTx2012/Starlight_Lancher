@@ -14,6 +14,7 @@ import {
 import { users } from '@/helpers/auth'
 import { getInstanceMode } from '@/helpers/hosted-packs'
 import {
+	PlayerSelectionNavigatedAwayError,
 	registerInstancePlayerPicker,
 	saveInstancePlayer,
 	waitForSkinSiteSession,
@@ -127,6 +128,14 @@ async function select(player: PlayerChoice) {
 function signInSkinSite() {
 	awaitingSkinLogin.value = true
 	hideForLogin = true
+	active.value = false
+	generation++
+	// Settle the pending selection so `prepareInstancePlayer` releases its
+	// in-flight entry; otherwise a later launch would await this forever and
+	// never re-prompt. The caller treats this sentinel as a silent abort.
+	rejectSelection?.(new PlayerSelectionNavigatedAwayError())
+	resolveSelection = undefined
+	rejectSelection = undefined
 	openSkinSiteLogin()
 	modal.value?.hide()
 	void router.push('/starlight-skin')

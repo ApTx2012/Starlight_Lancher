@@ -17,6 +17,18 @@ export type InstancePlayer = {
 	skin_site_user?: string | null
 }
 export type PlayerChoice = InstancePlayer & { head?: string }
+
+/**
+ * Thrown when the player picker is dismissed because the user navigated to the
+ * skin-site login page. Callers should treat this as a silent launch abort
+ * (the user will pick a player next time), not as a real failure.
+ */
+export class PlayerSelectionNavigatedAwayError extends Error {
+	constructor() {
+		super('已跳转至皮肤站登录，请登录后重新启动。')
+		this.name = 'PlayerSelectionNavigatedAwayError'
+	}
+}
 type Picker = (instanceId: string, locked: InstancePlayer | null) => Promise<InstancePlayer>
 let picker: Picker | undefined
 const preparing = new Map<string, Promise<void>>()

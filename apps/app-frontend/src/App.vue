@@ -113,6 +113,7 @@ import {
 } from '@/helpers/events.js'
 import { install_create_modpack_instance, install_get_modpack_preview } from '@/helpers/install'
 import { type DirectLinkSyncReport, get as getInstance, run } from '@/helpers/instance'
+import { PlayerSelectionNavigatedAwayError } from '@/helpers/instance-player'
 import { reconcileMojangAuthSourceAtStartup } from '@/helpers/mojang-auth'
 import { cancelLogin, get as getCreds, login, logout } from '@/helpers/mr_auth.ts'
 import { mergeUrlQuery, parseModrinthLink } from '@/helpers/project-links.ts'
@@ -1757,6 +1758,10 @@ async function handleCommand(e) {
 	} else if (e.event === 'LaunchInstance') {
 		const instance = await getInstance(e.id).catch(() => null)
 		const handleLaunchCommandError = async (launchError) => {
+			// Navigating to the skin-site login to pick a player is a deliberate
+			// user action, not a launch failure: stay silent and let the user
+			// re-trigger the launch after signing in.
+			if (launchError instanceof PlayerSelectionNavigatedAwayError) return
 			const handled =
 				(await minecraftCrashModal.value?.handleLaunchError(launchError, {
 					instance_id: e.id,
