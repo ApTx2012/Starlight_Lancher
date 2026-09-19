@@ -436,16 +436,23 @@ pub async fn create(
     // e.g. `<root>/<pack name>`. Avoid a `versions/<name>` layout: that shape
     // is reserved for externally linked launcher instances and would make the
     // launcher expect a Minecraft version JSON beside the pack.
-    let game_dir_override = game_dir_root
+    let game_dir_override = match game_dir_root
         .as_deref()
         .map(str::trim)
         .filter(|root| !root.is_empty())
-        .map(|root| {
-            Path::new(root)
-                .join(&publication.manifest.name)
-                .to_string_lossy()
-                .into_owned()
-        });
+    {
+        Some(root) => {
+            // The pack's game files live in their own folder under the chosen
+            // root, e.g. `<root>/<pack name>`. If that folder already exists
+            // (a previous install of the same pack, or a name clash), pick a
+            // suffixed sibling instead of sharing the folder with another
+            // instance.
+            let base = Path::new(root).join(&publication.manifest.name);
+            let resolved = unique_game_dir(&base);
+            Some(resolved.to_string_lossy().into_owned())
+        }
+        None => None,
+    };
     let instance = crate::state::create_instance(
         crate::state::CreateInstance {
             name: publication.manifest.name.clone(),
@@ -480,6 +487,29 @@ pub async fn create(
     Ok(instance.id)
 }
 
+/// Returns `base` when its directory does not exist yet; otherwise returns the
+/// first `base (n)` (n = 1, 2, …) whose directory is still free. Mirrors the
+/// instance-folder de-duplication in `create_instance::resolve_instance_path`,
+/// so re-installing the same hosted pack no longer makes two instances share a
+/// single game folder.
+fn unique_game_dir(base: &Path) -> PathBuf {
+    if !base.exists() {
+        return base.to_path_buf();
+    }
+    let parent = base.parent().unwrap_or_else(|| Path::new(""));
+    let name = base
+        .file_name()
+        .map(|n| n.to_string_lossy().into_owned())
+        .unwrap_or_else(|| "instance".to_string());
+    let mut which = 1u32;
+    loop {
+        let candidate = parent.join(format!("{name} ({which})"));
+        if !candidate.exists() {
+            return candidate;
+        }
+        which += 1;
+    }
+}
 pub async fn binding(instance_id: &str) -> crate::Result<Option<Binding>> {
     read_json(&crate::instance::get_full_path(instance_id).await?, BINDING)
         .await

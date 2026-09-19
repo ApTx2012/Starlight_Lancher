@@ -32,12 +32,17 @@ pub(crate) async fn remove_instance(
         .game_dir_override
         .as_deref()
         .map(PathBuf::from)
-        .filter(|path| is_version_isolated_game_dir(path))
+        .filter(|path| {
+            // Delete the external game directory when the instance owns it.
+            // A version-isolated `versions/<name>` folder is obviously
+            // exclusive; a plain `<root>/<pack name>` folder is also owned by
+            // this instance. A shared `.minecraft` root, however, holds the
+            // game's libraries/assets and must never be deleted with one
+            // instance.
+            is_version_isolated_game_dir(path)
+                || !is_shared_minecraft_root(path)
+        })
     {
-        // New instances created against a configured `.minecraft` root use
-        // a private `versions/<name>` directory. Remove that external
-        // directory when the instance is deleted, while preserving shared
-        // (non-isolated) overrides for backwards compatibility.
         game_dir_override
     } else {
         state.directories.instances_dir().join(&instance.path)
@@ -68,4 +73,13 @@ fn is_version_isolated_game_dir(path: &Path) -> bool {
         .and_then(Path::file_name)
         .and_then(|name| name.to_str())
         == Some("versions")
+}
+
+/// Heuristic: a shared `.minecraft` root holds the game's libraries and
+/// assets, which must survive the removal of any single instance that points
+/// at it. Instance-owned external folders (e.g. a hosted modpack's
+/// `<root>/<pack name>` directory) contain only mods/saves/config and no such
+/// shared game body.
+fn is_shared_minecraft_root(path: &Path) -> bool {
+    path.join("libraries").is_dir() || path.join("assets").is_dir()
 }
