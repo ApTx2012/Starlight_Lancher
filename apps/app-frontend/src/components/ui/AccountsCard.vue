@@ -164,6 +164,7 @@
 				<div v-for="account in accounts" :key="account.profile.id" class="flex gap-1 items-center">
 					<button
 						class="flex items-center flex-shrink flex-grow overflow-clip gap-2 p-2 border-0 bg-transparent cursor-pointer button-base min-w-0"
+						:disabled="accountSelectionPending"
 						@click="setAccount(account)"
 					>
 						<RadioButtonCheckedIcon
@@ -221,6 +222,7 @@
 							<CopyIcon />
 						</button>
 						<button
+							v-if="!account.skin_site_user"
 							v-tooltip="formatMessage(messages.removeAccount)"
 							type="button"
 							class="button-base border-0 bg-transparent p-1.5 cursor-pointer text-secondary hover:text-red"
@@ -291,7 +293,7 @@ import {
 	users,
 } from '@/helpers/auth'
 import { process_listener } from '@/helpers/events'
-import { registerSkinSitePlayers } from '@/helpers/instance-player'
+import { authenticateInstancePlayer } from '@/helpers/instance-player'
 import { getPlayerHeadUrl } from '@/helpers/rendering/batch-skin-renderer.ts'
 import type { Skin } from '@/helpers/skins'
 import { get_available_skins } from '@/helpers/skins'
@@ -353,11 +355,45 @@ type MinecraftCredential = {
 		server_name: string
 		login: string
 	}
+	skin_site_user?: string
+	head?: string
 }
 
 const STARLIGHT_YGGDRASIL_API_ROOT = 'https://skin.starlight.cool/yggdrasil'
 
-const accounts: Ref<MinecraftCredential[]> = ref([])
+const storedAccounts: Ref<MinecraftCredential[]> = ref([])
+const accounts = computed(() => {
+	// A site's player list is already authoritative for available choices.
+	// Game credentials are created only when the user selects a player.
+	const byId = new Map(
+		storedAccounts.value.map((account) => [
+			account.profile.id.replaceAll('-', '').toLowerCase(),
+			account,
+		]),
+	)
+	if (skinSiteStatus.value === 'signed-in' && skinSiteUser.value) {
+		for (const player of skinSitePlayers.value) {
+			if (player.isMojang) continue
+			const id = player.uuid.replaceAll('-', '').toLowerCase()
+			const stored = byId.get(id)
+			if (stored && stored.account_type !== 'yggdrasil') continue
+			byId.set(id, {
+				...stored,
+				account_type: 'yggdrasil',
+				profile: { ...stored?.profile, id: stored?.profile.id ?? player.uuid, name: player.name },
+				yggdrasil: {
+					api_root: STARLIGHT_YGGDRASIL_API_ROOT,
+					server_name: 'StarLight',
+					login: skinSiteUser.value.uuid,
+				},
+				skin_site_user: skinSiteUser.value.uuid,
+				head: player.headDataUrl,
+			})
+		}
+	}
+	return [...byId.values()].sort(compareMinecraftAccounts)
+})
+const accountSelectionPending = ref(false)
 const loginDisabled = ref(false)
 const defaultUser = ref<string | undefined>()
 const equippedSkin = ref<Skin | null>(null)
@@ -390,7 +426,7 @@ function hasResolvedAccountHead(account: MinecraftCredential) {
 }
 
 function hasMissingAccountHeads() {
-	return accounts.value.some(
+	return storedAccounts.value.some(
 		(account) => account.account_type !== 'offline' && !hasResolvedAccountHead(account),
 	)
 }
@@ -424,7 +460,7 @@ async function refreshValues(headRefreshAttempt = 0) {
 
 	defaultUser.value = selectedUser
 	if (offline.value && selectedUser) {
-		await persistDefaultUser(selectedUser)
+		await persistDefaultUser(selectedUser).catch(handleError)
 		if (generation !== refreshGeneration) return
 	}
 	const userList = await users(offline.value).catch(handleError)
@@ -433,7 +469,7 @@ async function refreshValues(headRefreshAttempt = 0) {
 	// MinecraftCredential but the TS types from the Tauri IPC bridge do not
 	// carry this refinement. The double cast is deliberate — the shape is
 	// correct and verified at runtime by the backend.
-	accounts.value = Array.isArray(userList)
+	storedAccounts.value = Array.isArray(userList)
 		? [...(userList as unknown as MinecraftCredential[])].filter(
 				(account) =>
 					account.account_type === 'microsoft' ||
@@ -441,8 +477,7 @@ async function refreshValues(headRefreshAttempt = 0) {
 						account.yggdrasil?.api_root.replace(/\/+$/, '') === STARLIGHT_YGGDRASIL_API_ROOT),
 			)
 		: []
-	accounts.value.sort(compareMinecraftAccounts)
-	await renderAccountHeads(accounts.value, generation)
+	await renderAccountHeads(storedAccounts.value, generation)
 	if (generation !== refreshGeneration) return
 	try {
 		const skins = await get_available_skins()
@@ -580,6 +615,7 @@ async function renderAccountHeads(accountList: MinecraftCredential[], generation
 
 const avatarUrl = computed(() => {
 	if (selectedAccount.value) {
+		if (selectedAccount.value.head) return selectedAccount.value.head
 		const cachedHeadUrl = accountHeadUrlCache.value.get(selectedAccount.value.profile.id)
 		if (cachedHeadUrl) return cachedHeadUrl
 	}
@@ -589,10 +625,11 @@ const avatarUrl = computed(() => {
 			return cachedUrl
 		}
 	}
-	return selectedAccount.value ? defaultSteveHeadUrl : axolotlLogo
+	return selectedAccount.value ? undefined : axolotlLogo
 })
 
 function getAccountAvatarUrl(account: MinecraftCredential) {
+	if (account.head) return account.head
 	const cachedHeadUrl = accountHeadUrlCache.value.get(account.profile.id)
 	if (cachedHeadUrl) {
 		return cachedHeadUrl
@@ -606,46 +643,49 @@ function getAccountAvatarUrl(account: MinecraftCredential) {
 			return cachedUrl
 		}
 	}
-	return defaultSteveHeadUrl
+	return undefined
 }
 
 function persistDefaultUser(userId: string) {
 	const update = defaultUserUpdateQueue.then(async () => {
-		await set_default_user(userId).catch(handleError)
+		await set_default_user(userId)
 	})
 	defaultUserUpdateQueue = update.catch(() => {})
 	return update
 }
 
 async function setAccount(account: MinecraftCredential) {
+	if (accountSelectionPending.value) return
+	accountSelectionPending.value = true
 	const userId = account.profile.id
 	refreshGeneration += 1
-	selectSkinSitePlayer(null)
-	defaultUser.value = userId
-	equippedSkin.value = null
-
-	await persistDefaultUser(userId)
-	if (defaultUser.value !== userId) return
-	await refreshValues()
-	if (defaultUser.value === userId) notifyAccountChange()
+	try {
+		if (account.skin_site_user) {
+			await authenticateInstancePlayer({
+				id: userId,
+				name: account.profile.name,
+				account_type: account.account_type,
+				skin_site_user: account.skin_site_user,
+			})
+		}
+		await persistDefaultUser(userId)
+		selectSkinSitePlayer(null)
+		defaultUser.value = userId
+		equippedSkin.value = null
+		notifyAccountChange()
+		await refreshValues()
+	} catch (error) {
+		handleError(error as Error)
+	} finally {
+		accountSelectionPending.value = false
+	}
 }
 
 watch(
 	[skinSitePlayers, defaultUser, skinSiteUser],
-	([availablePlayers, selectedLocalUser, siteUser]) => {
+	([availablePlayers, selectedLocalUser]) => {
 		if (!selectedLocalUser && !selectedSkinSitePlayerId.value && availablePlayers.length > 0) {
 			selectSkinSitePlayer(availablePlayers[0].uuid)
-		}
-		// Register skin-site players as launcher accounts as soon as they are
-		// available, so the account picker shows them without requiring a first
-		// launch. `registerSkinSitePlayers` is idempotent and best-effort.
-		if (siteUser?.uuid && availablePlayers.length > 0) {
-			const pendingIds = availablePlayers.map((player) => player.uuid)
-			void registerSkinSitePlayers(pendingIds, siteUser.uuid)
-				.then(() => refreshValues())
-				.catch((error) => {
-					console.warn('Failed to register skin site players:', error)
-				})
 		}
 	},
 	{ immediate: true },
@@ -697,7 +737,7 @@ async function copyAccountUuid(account: MinecraftCredential) {
 	}
 }
 
-const unlisten = await process_listener(async (e) => {
+const unlisten = await process_listener(async (e: { event: string }) => {
 	if (e.event === 'launched') {
 		await refreshValues()
 	}

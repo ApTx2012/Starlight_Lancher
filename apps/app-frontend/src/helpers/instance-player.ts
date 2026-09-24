@@ -6,9 +6,9 @@ import {
 	skinSiteUser,
 	waitForSkinSiteSession,
 } from '../composables/skin-site-session.ts'
-export { waitForSkinSiteSession } from '../composables/skin-site-session.ts'
-import { users } from './auth.js'
 import { isOfflineMode } from '../composables/useNetworkStatus.ts'
+import { users } from './auth.js'
+export { waitForSkinSiteSession } from '../composables/skin-site-session.ts'
 
 export type InstancePlayer = {
 	id: string
@@ -65,52 +65,6 @@ export async function authenticateInstancePlayer(player: InstancePlayer) {
 	})
 	if (skinSiteUser.value?.uuid !== player.skin_site_user || skinSiteStatus.value !== 'signed-in') {
 		throw new Error('皮肤站账号已变化，请重试。')
-	}
-}
-
-/**
- * Registers every skin-site player as a launcher account so they show up in the
- * account picker immediately after signing in to the skin site, instead of only
- * after a first launch. Idempotent: players that already exist in the account
- * list (matched by profile UUID) are skipped, and already-signed-in players are
- * not re-requested. Best-effort: a single player failing does not abort the rest.
- */
-export async function registerSkinSitePlayers(
-	playerIds: string[],
-	userUuid: string,
-): Promise<void> {
-	if (playerIds.length === 0) return
-	if (skinSiteStatus.value !== 'signed-in' || skinSiteUser.value?.uuid !== userUuid) return
-
-	let known = new Set<string>()
-	try {
-		const existing = await users()
-		known = new Set(
-			(existing as Array<{ profile?: { id?: string } }>)
-				.map((account) => account?.profile?.id)
-				.filter((id): id is string => typeof id === 'string'),
-		)
-	} catch {
-		// If the account list cannot be read, still attempt to register; the
-		// backend upsert is idempotent.
-	}
-
-	for (const playerId of playerIds) {
-		if (known.has(playerId)) continue
-		if (skinSiteStatus.value !== 'signed-in' || skinSiteUser.value?.uuid !== userUuid) return
-		try {
-			// Request a fresh download token per player: the skin site login
-			// endpoint may bind a token to a single player id.
-			const token = await requestSkinSiteDownloadToken()
-			await invoke('plugin:auth|login_skin_site_player', {
-				token,
-				playerId,
-				userId: userUuid,
-			})
-			known.add(playerId)
-		} catch (error) {
-			console.warn(`Failed to register skin site player ${playerId}:`, error)
-		}
 	}
 }
 
