@@ -1215,7 +1215,8 @@ async fn collect_version_files(
             continue;
         }
         if let Ok(rel) = abs_path.strip_prefix(version_dir) {
-            collected.push((abs_path, rel.to_path_buf()));
+            let rel = rel.to_path_buf();
+            collected.push((abs_path, rel));
         }
     }
     Ok(collected)

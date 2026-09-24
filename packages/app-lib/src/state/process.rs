@@ -648,7 +648,7 @@ impl Process {
                         instance_id,
                         instance_name,
                         process_id,
-                        &log_path,
+                        log_path.as_ref(),
                         &frame,
                     )
                     .await;

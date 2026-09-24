@@ -79,6 +79,7 @@ access-jwt*.txt
 
 # Codex local verification artifacts
 /.codex-*
+/.tmp/
 
 # Oh My Code
 .omc/
