@@ -62,9 +62,14 @@ const filterMessages = defineMessages({
 		id: 'content.filter.updates',
 		defaultMessage: 'Update available',
 	},
-	warnings: {
-		id: 'content.filter.warnings',
-		defaultMessage: 'Warnings',
+	clientOnly: {
+		id: 'content.filter.client-only',
+		defaultMessage: 'Client only',
+	},
+	clientOnlyDescription: {
+		id: 'content.filter.client-only-description',
+		defaultMessage:
+			'Includes client-only or singleplayer-only mods and mods that depend on them. These may be incompatible with dedicated servers.',
 	},
 	duplicates: {
 		id: 'content.filter.duplicates',
@@ -329,7 +334,11 @@ export function useContentPipeline(config: ContentPipelineConfig) {
 			row2.push({ id: 'updates', label: formatMessage(filterMessages.updates) })
 		}
 		if (showWarningsFilter && typeFiltered.some((m) => getClientWarningType(m) !== null)) {
-			row2.push({ id: 'warnings', label: formatMessage(filterMessages.warnings) })
+			row2.push({
+				id: 'warnings',
+				label: formatMessage(filterMessages.clientOnly),
+				tooltip: formatMessage(filterMessages.clientOnlyDescription),
+			})
 		}
 
 		if (hasEnabled && hasDisabled) {
@@ -472,26 +481,20 @@ export function useContentPipeline(config: ContentPipelineConfig) {
 	}
 
 	function toggleStatusFilter(filterId: string) {
-		if (filterId === 'enabled' || filterId === 'disabled') {
-			const index = selectedStatusFilters.value.indexOf(filterId)
-			const otherStatusFilter = filterId === 'enabled' ? 'disabled' : 'enabled'
-			if (index === -1) {
-				selectedStatusFilters.value = [
-					...selectedStatusFilters.value.filter((f) => f !== otherStatusFilter),
-					filterId,
-				]
-			} else {
-				selectedStatusFilters.value.splice(index, 1)
-			}
+		const filters = selectedStatusFilters.value
+		// Replace the array so both the pipeline and saved-filter watchers are notified.
+		if (filters.includes(filterId)) {
+			selectedStatusFilters.value = filters.filter((id) => id !== filterId)
 			return
 		}
 
-		const index = selectedStatusFilters.value.indexOf(filterId)
-		if (index === -1) {
-			selectedStatusFilters.value.push(filterId)
-		} else {
-			selectedStatusFilters.value.splice(index, 1)
+		if (filterId === 'enabled' || filterId === 'disabled') {
+			const otherStatusFilter = filterId === 'enabled' ? 'disabled' : 'enabled'
+			selectedStatusFilters.value = [...filters.filter((id) => id !== otherStatusFilter), filterId]
+			return
 		}
+
+		selectedStatusFilters.value = [...filters, filterId]
 	}
 
 	return {

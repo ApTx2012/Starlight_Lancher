@@ -38,4 +38,5 @@ export function canToggleContentItem(item: ContentItem): boolean {
 export interface ContentFilterOption {
 	id: string
 	label: string
+	tooltip?: string
 }

@@ -698,6 +698,12 @@
   "content.filter.updates": {
     "defaultMessage": "更新"
   },
+  "content.filter.client-only": {
+    "defaultMessage": "僅用戶端"
+  },
+  "content.filter.client-only-description": {
+    "defaultMessage": "包含僅供用戶端或單人遊戲使用的模組，以及依賴它們的模組。這些模組可能不相容於獨立伺服器。"
+  },
   "content.filter.warnings": {
     "defaultMessage": "警告"
   },
