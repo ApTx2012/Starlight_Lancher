@@ -426,9 +426,7 @@ pub async fn default_publication() -> crate::Result<Publication> {
         })
 }
 
-pub async fn create(
-    game_dir_root: Option<String>,
-) -> crate::Result<String> {
+pub async fn create(game_dir_root: Option<String>) -> crate::Result<String> {
     let publication = default_publication().await?;
     let runtime = &publication.manifest.runtime;
     let state = State::get().await?;
@@ -1036,14 +1034,8 @@ async fn synchronize_with_progress(
         resolved_external.push(resolved.clone());
         files.push(resolved);
     }
-    let duplicate_mods = tagged::merge(
-        &root,
-        &cache,
-        &mut files,
-        &mut sources,
-        &tagged_manifest,
-    )
-    .await?;
+    tagged::merge(&root, &cache, &mut files, &mut sources, &tagged_manifest)
+        .await?;
     validate(&files)?;
     if let Some(old) = &previous {
         validate(&old.files)?;
@@ -1137,12 +1129,6 @@ async fn synchronize_with_progress(
                 old_hash: local,
                 next_hash: None,
             });
-        }
-    }
-    for action in duplicate_mods {
-        preserved.retain(|path| path != &action.path);
-        if !actions.iter().any(|existing| existing.path == action.path) {
-            actions.push(action);
         }
     }
     let mut tagged_downloads = Vec::new();
@@ -1305,6 +1291,21 @@ async fn synchronize_with_progress(
     )
     .await?;
     ensure_session(&auth).await?;
+    let duplicate_mods = tagged::reconcile_staged(
+        &root,
+        &cache,
+        &mut files,
+        &mut sources,
+        &tagged_manifest,
+        &mut actions,
+    )
+    .await?;
+    for action in duplicate_mods {
+        preserved.retain(|path| path != &action.path);
+        if !actions.iter().any(|existing| existing.path == action.path) {
+            actions.push(action);
+        }
+    }
     if actions.is_empty()
         && !runtime_changed
         && metadata.instance.install_stage == InstanceInstallStage::Installed

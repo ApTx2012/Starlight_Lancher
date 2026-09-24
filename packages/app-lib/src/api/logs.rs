@@ -737,14 +737,35 @@ pub async fn get_generic_live_log_cursor(
     file.seek(SeekFrom::Start(display_start))
         .map_err(|e| IOError::with_path(e, &path))
         .await?; // Seek to cursor
-    file.take(MAX_LOG_DISPLAY_BYTES as u64)
+    // Snapshot the read length: bytes appended during this read belong to the
+    // next request, not to a cursor captured before they existed.
+    file.take(metadata.len().saturating_sub(display_start))
         .read_to_end(&mut buffer)
         .map_err(|e| IOError::with_path(e, &path))
         .await?; // Read to end of file
+    // Censor complete records, not halves of a credential split across file
+    // writes. After the process exits, also expose its unterminated final line.
+    if state.process_manager.get_all().iter().any(|process| {
+        process.instance_id == instance_id
+            || process.instance_path == instance_path
+    }) {
+        if let Some(end) = buffer.iter().rposition(|byte| *byte == b'\n') {
+            buffer.truncate(end + 1);
+        } else if buffer.len() < MAX_LOG_DISPLAY_BYTES {
+            buffer.clear();
+        }
+    }
+    // Leave an incomplete UTF-8 character for the next read (e.g. a split CJK
+    // character). Invalid complete sequences still use lossy decoding.
+    if let Err(error) = std::str::from_utf8(&buffer)
+        && error.error_len().is_none()
+    {
+        buffer.truncate(error.valid_up_to());
+    }
+    let cursor = display_start + buffer.len() as u64;
     let output = String::from_utf8_lossy(&buffer); // Convert to String
     let compacted =
         cap_log_for_display(compact_duplicate_lines(&output), source_truncated);
-    let cursor = metadata.len(); // Consume skipped output as well as the display window.
 
     let credentials = Credentials::get_all(&state.pool)
         .await?
@@ -828,6 +849,75 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn live_cursor_follows_file_appends_and_split_utf8() {
+        let (_minecraft, metadata) =
+            create_direct_link_fixture("logs-live-cursor").await;
+        let state = global_state().await;
+        let (path, game_dir_override) =
+            resolve_instance_path(&metadata.instance.id, &state)
+                .await
+                .unwrap();
+        let game_dir = state
+            .directories
+            .resolve_game_dir(&path, game_dir_override.as_deref());
+        let logs = state.directories.game_logs_dir(&game_dir);
+        std::fs::create_dir_all(&logs).unwrap();
+        let path = logs.join("latest.log");
+        std::fs::write(&path, b"startup\n").unwrap();
+        let first =
+            get_generic_live_log_cursor(&metadata.instance.id, "latest.log", 0)
+                .await
+                .unwrap();
+        assert_eq!(first.output.0, "startup\n");
+
+        let mut output = std::fs::OpenOptions::new()
+            .append(true)
+            .open(&path)
+            .unwrap();
+        let message = "进入世界\n".as_bytes();
+        // A file write ends in the middle of a Chinese character.
+        std::io::Write::write_all(&mut output, &message[..2]).unwrap();
+        let partial = get_generic_live_log_cursor(
+            &metadata.instance.id,
+            "latest.log",
+            first.cursor,
+        )
+        .await
+        .unwrap();
+        assert_eq!(partial.cursor, first.cursor);
+        assert!(partial.output.0.is_empty());
+        std::io::Write::write_all(&mut output, &message[2..]).unwrap();
+        let next = get_generic_live_log_cursor(
+            &metadata.instance.id,
+            "latest.log",
+            partial.cursor,
+        )
+        .await
+        .unwrap();
+        assert_eq!(next.output.0, "进入世界\n");
+        let idle = get_generic_live_log_cursor(
+            &metadata.instance.id,
+            "latest.log",
+            next.cursor,
+        )
+        .await
+        .unwrap();
+        assert!(idle.output.0.is_empty());
+        drop(output);
+
+        std::fs::write(&path, b"restart\n").unwrap();
+        let restarted = get_generic_live_log_cursor(
+            &metadata.instance.id,
+            "latest.log",
+            next.cursor,
+        )
+        .await
+        .unwrap();
+        assert!(restarted.new_file);
+        assert_eq!(restarted.output.0, "restart\n");
+    }
+
+    #[tokio::test]
     async fn direct_link_instance_resolves_to_linked_game_dir() {
         let state = global_state().await;
         let (minecraft, metadata) =
@@ -890,9 +980,10 @@ mod tests {
 
     #[test]
     fn display_compaction_bounds_many_distinct_lines() {
-        let log = (0..100_000)
+        let log = (0..300_000)
             .map(|index| format!("line-{index}\n"))
             .collect::<String>();
+        assert!(log.len() > MAX_LOG_DISPLAY_BYTES);
 
         let compacted = compact_log_for_display(&log);
 
