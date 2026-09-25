@@ -33,12 +33,12 @@ export const ANNOUNCEMENT_CHANGE_TYPES: readonly AnnouncementChangeType[] = [
 
 export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 	{
-		id: 'launcher-1.0.1-beta1',
-		version: '1.0.1-beta1',
+		id: 'launcher-1.0.0-beta12',
+		version: '1.0.0-beta12',
 		publishedAt: '2026-09-25',
 		title: {
-			'en-US': 'Starlight Launcher 1.0.1-beta1',
-			'zh-CN': 'Starlight Launcher 1.0.1-beta1',
+			'en-US': 'Starlight Launcher 1.0.0-beta12',
+			'zh-CN': 'Starlight Launcher 1.0.0-beta12',
 		},
 		changes: {
 			added: [
