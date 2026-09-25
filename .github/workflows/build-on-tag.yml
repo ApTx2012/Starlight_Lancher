@@ -1,7 +1,4 @@
-name: Starlight build & release
-
-# 打 tag（v*）时自动编译并发布 GitHub Release，产物包含各平台安装包。
-# 不含更新清单 / Update Server 通知 / CNB 镜像等步骤（自动更新流程单独处理）。
+name: Starlight release
 
 on:
   push:
@@ -12,14 +9,12 @@ permissions:
   contents: write
 
 concurrency:
-  group: starlight-build-${{ github.ref }}
+  group: axolotl-release-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
-  # 先生成该版本的更新说明（来自 announcement catalog）并创建带说明的 draft
-  # release；随后各平台 build 只负责上传产物，最后由 publish 转正。
   preflight:
-    name: Prepare release
+    name: Release preflight
     runs-on: ubuntu-24.04
     env:
       SQLX_OFFLINE: true
@@ -39,17 +34,40 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
 
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30 # stable
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Generate release notes
-        run: node scripts/axolotl/create-release-notes.mjs "${GITHUB_REF_NAME}" "${RUNNER_TEMP}/release-notes.md"
+      - name: Install Blockbench skin editor dependencies
+        run: npm ci
+        working-directory: third-party/blockbench
 
-      - name: Create draft release with notes
+      - name: Run release guardrails
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          release_notes="${RUNNER_TEMP}/release-notes.md"
+          node scripts/axolotl/check-migrations.mjs --release
+          node scripts/axolotl/brand-guard.mjs
+          node scripts/axolotl/i18n-check.mjs
+          cargo fmt --all --check
+
+      - name: Check updater signing configuration
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+        run: |
+          if [[ -z "${TAURI_SIGNING_PRIVATE_KEY:-}" ]]; then
+            echo '::error::Configure TAURI_SIGNING_PRIVATE_KEY with the private key matching apps/app/tauri-release.conf.json before publishing updates.'
+            exit 1
+          fi
+
+      - name: Prepare draft release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          release_notes="${RUNNER_TEMP}/axolotl-release-notes.md"
+          node scripts/axolotl/create-release-notes.mjs "${GITHUB_REF_NAME}" "$release_notes"
           existing_release="$(
             gh release list --limit 100 --json tagName \
               --jq ".[] | select(.tagName == \"${GITHUB_REF_NAME}\") | .tagName"
@@ -74,7 +92,7 @@ jobs:
     name: Build (${{ matrix.name }})
     needs: preflight
     strategy:
-      fail-fast: false
+      fail-fast: true
       max-parallel: 4
       matrix:
         include:
@@ -153,7 +171,7 @@ jobs:
       - name: Set release version
         run: node scripts/axolotl/set-version.mjs "${{ github.ref_name }}"
 
-      - name: Build and publish release assets
+      - name: Build and upload release assets
         uses: tauri-apps/tauri-action@1ddc7b49b13c3038297360482fcb3e058764d7c9 # v0.6.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -166,6 +184,7 @@ jobs:
           tauriScript: pnpm tauri
           args: ${{ matrix.args }}
           tagName: ${{ github.ref_name }}
+          releaseName: Starlight Launcher ${{ github.ref_name }}
           releaseDraft: true
           prerelease: ${{ contains(github.ref_name, '-') }}
           generateReleaseNotes: false
@@ -200,7 +219,7 @@ jobs:
             throw "Expected one modern installer, found $($modernInstallers.Count)"
           }
 
-          $modernName = "Starlight_Launcher_${version}_x64_modern-setup.exe"
+          $modernName = "Axolotl_Launcher_${version}_x64_modern-setup.exe"
           $modernPath = Join-Path $publishDir $modernName
           Copy-Item -Force $modernInstallers[0].FullName $modernPath
           gh release upload "${{ github.ref_name }}" $modernPath --clobber
@@ -221,7 +240,7 @@ jobs:
             throw "Expected one native NSIS installer, found $($nativeInstallers.Count)"
           }
 
-          $nativeName = "Starlight_Launcher_${version}_x64_nsis-setup.exe"
+          $nativeName = "Axolotl_Launcher_${version}_x64_nsis-setup.exe"
           $nativePath = Join-Path $publishDir $nativeName
           Copy-Item -Force $nativeInstallers[0].FullName $nativePath
           gh release upload "${{ github.ref_name }}" $nativePath --clobber
@@ -233,10 +252,11 @@ jobs:
             gh release upload "${{ github.ref_name }}" $nativeSignaturePath --clobber
           }
 
+          # Reuse the binary already built by tauri-action
           $appExe = "target/release/${appName}.exe"
           if (Test-Path $appExe) {
-            New-Item -ItemType Directory -Force -Path "$buildDir\Starlight" | Out-Null
-            Copy-Item -Force $appExe "$buildDir\Starlight\"
+            New-Item -ItemType Directory -Force -Path "$buildDir\Axolotl" | Out-Null
+            Copy-Item -Force $appExe "$buildDir\Axolotl\"
 
             $editorResources = "target/release/resources/blockbench-skin"
             foreach ($requiredFile in @('index.html', 'css/setup.css', 'dist/skin.bundle.js.gz')) {
@@ -244,26 +264,71 @@ jobs:
                 throw "Missing skin editor resource: $requiredFile"
               }
             }
-            New-Item -ItemType Directory -Force -Path "$buildDir\Starlight\resources" | Out-Null
-            Copy-Item -LiteralPath $editorResources -Destination "$buildDir\Starlight\resources" -Recurse -Force
+            New-Item -ItemType Directory -Force -Path "$buildDir\Axolotl\resources" | Out-Null
+            Copy-Item -LiteralPath $editorResources -Destination "$buildDir\Axolotl\resources" -Recurse -Force
 
-            New-Item -ItemType Directory -Force -Path "$buildDir\Starlight\.Starlight" | Out-Null
+            # Create empty .Axolotl folder to trigger portable mode
+            New-Item -ItemType Directory -Force -Path "$buildDir\Axolotl\.Axolotl" | Out-Null
 
-            $zipName = "Starlight_Launcher_${version}_x64_portable.zip"
+            # Create portable zip (for manual download)
+            $zipName = "Axolotl_Launcher_${version}_x64_portable.zip"
             $zipPath = Join-Path $publishDir $zipName
-            Compress-Archive -Path "$buildDir\Starlight" -DestinationPath $zipPath -Force
+            Compress-Archive -Path "$buildDir\Axolotl" -DestinationPath $zipPath -Force
             Write-Output "Created portable zip: $zipPath"
 
+            # Upload portable zip (for manual download only)
             gh release upload "${{ github.ref_name }}" "$zipPath" --clobber
           } else {
             throw "Binary not found at $appExe"
           }
-  # 所有平台构建完成后，把 preflight 创建的 draft release 转为正式发布。
-  publish:
-    name: Publish release
+
+  verify-and-publish:
+    name: Verify and publish
     needs: build
     runs-on: ubuntu-24.04
+    env:
+      UPDATE_SERVER_URL: ${{ secrets.UPDATE_SERVER_URL }}
+      UPDATE_SERVER_WEBHOOK_SECRET: ${{ secrets.UPDATE_SERVER_WEBHOOK_SECRET }}
+      CNB_TOKEN: ${{ secrets.CNB_TOKEN }}
+      CNB_REPO_URL_HTTPS: ${{ secrets.CNB_REPO_URL_HTTPS }}
     steps:
+      - name: Check out source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref }}
+
+      - name: Download updater signatures
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release download "${GITHUB_REF_NAME}" --pattern '*.sig' --dir release-check/signatures
+
+      - name: Download release metadata
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          release_id="$(
+            gh api "repos/${GITHUB_REPOSITORY}/releases" \
+              --paginate \
+              --jq ".[] | select(.tag_name == \"${GITHUB_REF_NAME}\") | .id"
+          )"
+          if [[ -z "$release_id" ]]; then
+            echo "Release ${GITHUB_REF_NAME} was not found"
+            exit 1
+          fi
+          gh api "repos/${GITHUB_REPOSITORY}/releases/${release_id}" > release-check/release.json
+
+      - name: Generate update manifest
+        run: node scripts/axolotl/create-update-manifest.mjs release-check/release.json release-check/signatures "${GITHUB_REF_NAME}" release-check/latest.json
+
+      - name: Verify update manifest
+        run: node scripts/axolotl/verify-update-manifest.mjs release-check/latest.json "${GITHUB_REF_NAME}"
+
+      - name: Upload update manifest
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "${GITHUB_REF_NAME}" release-check/latest.json --clobber
+
       - name: Publish release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -273,3 +338,97 @@ jobs:
           else
             gh release edit "${GITHUB_REF_NAME}" --draft=false --latest
           fi
+
+      - name: Refresh published GitHub release metadata
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          release_id="$(
+            gh api "repos/${GITHUB_REPOSITORY}/releases" \
+              --paginate \
+              --jq ".[] | select(.tag_name == \"${GITHUB_REF_NAME}\") | .id"
+          )"
+          if [[ -z "$release_id" ]]; then
+            echo "Published release ${GITHUB_REF_NAME} was not found"
+            exit 1
+          fi
+          gh api "repos/${GITHUB_REPOSITORY}/releases/${release_id}" > release-check/release.json
+
+      - name: Build Update Server artifact catalog
+        run: |
+          node scripts/axolotl/create-update-server-catalog.mjs \
+            release-check/release.json \
+            "${GITHUB_REF_NAME}" \
+            release-check/update-server-catalog.json
+          node scripts/axolotl/create-update-server-catalog.test.mjs
+
+      - name: Notify Update Server to publish release assets
+        if: ${{ env.UPDATE_SERVER_URL != '' && env.UPDATE_SERVER_WEBHOOK_SECRET != '' }}
+        env:
+          UPDATE_SERVER_URL: ${{ secrets.UPDATE_SERVER_URL }}
+          UPDATE_SERVER_WEBHOOK_SECRET: ${{ secrets.UPDATE_SERVER_WEBHOOK_SECRET }}
+          UPDATE_SERVER_FORCE_UPDATE: 'false'
+        run: |
+          node scripts/axolotl/publish-update-server.mjs \
+            release-check/update-server-catalog.json \
+            release-check/release.json \
+            "${GITHUB_REF_NAME}"
+
+      - name: Check out website branch
+        if: ${{ !contains(github.ref_name, '-') }}
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: main
+          clean: false
+
+      - name: Publish website download metadata
+        if: ${{ !contains(github.ref_name, '-') }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          node scripts/axolotl/create-website-release-metadata.mjs \
+            release-check/release.json \
+            apps/website/releases/latest.json
+          node scripts/axolotl/create-website-release-catalog.mjs \
+            apps/website/releases/catalog.json
+
+          git config user.name "Axolotl Release Bot"
+          git config user.email "release@axolotl.local"
+          git add apps/website/releases/latest.json apps/website/releases/catalog.json
+          if git diff --cached --quiet; then
+            echo "Website metadata is unchanged"
+          else
+            git commit -m "chore(website): update download metadata to ${GITHUB_REF_NAME} [skip ci]"
+            git push origin main
+          fi
+
+      - name: Mirror published release to CNB
+        if: ${{ env.CNB_TOKEN != '' && env.CNB_REPO_URL_HTTPS != '' }}
+        env:
+          CNB_REPO_URL_HTTPS: ${{ secrets.CNB_REPO_URL_HTTPS }}
+          CNB_TOKEN: ${{ secrets.CNB_TOKEN }}
+          CNB_TOKEN_USER_NAME: ${{ secrets.CNB_TOKEN_USER_NAME }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_API_BASE_URL: https://api.github.com/repos/${{ github.repository }}
+          GITHUB_RELEASE_BASE_URL: https://github.com/${{ github.repository }}/releases/download
+        run: |
+          set -euo pipefail
+          if [[ -z "${CNB_TOKEN:-}" ]]; then
+            echo "CNB_TOKEN is not configured"
+            exit 1
+          fi
+
+          cnb_url="${CNB_REPO_URL_HTTPS:-https://cnb.cool/axlmc/Axolotl.git}"
+          token_user="${CNB_TOKEN_USER_NAME:-cnb}"
+          auth="$(printf '%s:%s' "$token_user" "$CNB_TOKEN" | base64 -w0)"
+          git_cnb() {
+            git -c "http.extraHeader=Authorization: Basic $auth" "$@"
+          }
+
+          git fetch origin "refs/tags/${GITHUB_REF_NAME}:refs/tags/${GITHUB_REF_NAME}"
+          git_cnb push --force "$cnb_url" \
+            "refs/tags/${GITHUB_REF_NAME}:refs/tags/${GITHUB_REF_NAME}"
+
+          node scripts/axolotl/cnb-release.mjs finalize "${GITHUB_REF_NAME}" cnb-release/final
+          node scripts/axolotl/verify-update-manifest.mjs \
+            cnb-release/final/latest.json "${GITHUB_REF_NAME}" cnb

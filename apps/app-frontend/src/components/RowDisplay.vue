@@ -42,6 +42,7 @@ const { offline } = useNetworkStatus()
 const handleMinecraftLaunchError = useMinecraftLaunchError()
 
 const messages = defineMessages({
+	stopAll: { id: 'app.instance.stop-all', defaultMessage: 'Stop all windows of this instance' },
 	addContent: { id: 'app.instances.add-content', defaultMessage: 'Add content' },
 	viewInstance: { id: 'app.instances.view-instance', defaultMessage: 'View instance' },
 	duplicateInstance: {
@@ -265,7 +266,12 @@ onUnmounted(() => {
 		@delete="deleteInstance"
 	/>
 	<div ref="rowContainer" class="flex flex-col gap-4">
-		<div v-for="row in actualInstances" ref="rows" :key="row.label" class="row flex flex-col items-start overflow-hidden w-full min-w-full">
+		<div
+			v-for="row in actualInstances"
+			ref="rows"
+			:key="row.label"
+			class="row flex flex-col items-start overflow-hidden w-full min-w-full"
+		>
 			<HeadingLink class="mt-1" :to="row.route">
 				{{ row.label }}
 			</HeadingLink>
@@ -307,7 +313,7 @@ onUnmounted(() => {
 	</div>
 	<ContextMenu ref="instanceOptions" @option-clicked="handleOptionsClick">
 		<template #play> <PlayIcon /> {{ formatMessage(commonMessages.playButton) }} </template>
-		<template #stop> <StopCircleIcon /> {{ formatMessage(commonMessages.stopButton) }} </template>
+		<template #stop> <StopCircleIcon /> {{ formatMessage(messages.stopAll) }} </template>
 		<template #add_content> <PlusIcon /> {{ formatMessage(messages.addContent) }} </template>
 		<template #edit> <EyeIcon /> {{ formatMessage(messages.viewInstance) }} </template>
 		<template #delete> <TrashIcon /> {{ formatMessage(commonMessages.deleteLabel) }} </template>

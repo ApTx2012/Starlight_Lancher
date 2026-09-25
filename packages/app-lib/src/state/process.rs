@@ -310,13 +310,20 @@ impl ProcessManager {
 
         let log_path = logs_folder.join(LAUNCHER_LOG_PATH);
 
-        clear_log_buffer(instance_id);
+        let already_running = self
+            .get_all()
+            .iter()
+            .any(|process| process.instance_id == instance_id);
+        if !already_running {
+            clear_log_buffer(instance_id);
+        }
 
         {
             let mut log_file = OpenOptions::new()
                 .write(true)
                 .create(true)
-                .truncate(true)
+                .truncate(!already_running)
+                .append(already_running)
                 .open(&log_path)
                 .map_err(|e| IOError::with_path(e, &log_path))?;
 
@@ -490,8 +497,8 @@ impl ProcessManager {
     }
 
     pub async fn wait_for(&self, id: Uuid) -> crate::Result<()> {
-        if let Some(mut process) = self.processes.get_mut(&id) {
-            process.child.wait().await?;
+        while matches!(self.try_wait(id)?, Some(None)) {
+            tokio::time::sleep(std::time::Duration::from_millis(50)).await;
         }
         Ok(())
     }
@@ -499,7 +506,7 @@ impl ProcessManager {
     pub async fn kill(&self, id: Uuid) -> crate::Result<()> {
         if let Some(mut process) = self.processes.get_mut(&id) {
             process.manually_killed = true;
-            if let Err(error) = process.child.kill().await {
+            if let Err(error) = process.child.start_kill() {
                 process.manually_killed = false;
                 return Err(error.into());
             }
@@ -631,7 +638,12 @@ impl Process {
             let mut chunk = [0u8; 8192];
 
             loop {
-                let read = match tokio::io::AsyncReadExt::read(&mut buf_reader, &mut chunk).await {
+                let read = match tokio::io::AsyncReadExt::read(
+                    &mut buf_reader,
+                    &mut chunk,
+                )
+                .await
+                {
                     Ok(0) => break,
                     Ok(n) => n,
                     Err(e) => {
@@ -772,12 +784,12 @@ impl Process {
                     }
                     b"log4j:Throwable" => {
                         in_throwable = false;
-                        current_event.throwable =
-                            if current_content.is_empty() {
-                                None
-                            } else {
-                                Some(current_content.clone())
-                            };
+                        current_event.throwable = if current_content.is_empty()
+                        {
+                            None
+                        } else {
+                            Some(current_content.clone())
+                        };
                     }
                     b"log4j:Event" => {
                         if let Some(formatted) =
@@ -792,8 +804,7 @@ impl Process {
                             }
                             if let Some(ref throwable) = current_event.throwable
                                 && let Err(e) = Self::append_to_log_file(
-                                    log_path,
-                                    throwable,
+                                    log_path, throwable,
                                 )
                             {
                                 tracing::error!(
@@ -1176,7 +1187,15 @@ impl Process {
                 }
             }
         }
-        crate::api::multiplayer::minecraft_process_finished(&instance_id).await;
+        if !state
+            .process_manager
+            .get_all()
+            .iter()
+            .any(|process| process.instance_id == instance_id)
+        {
+            crate::api::multiplayer::minecraft_process_finished(&instance_id)
+                .await;
+        }
 
         // Now fully complete- update playtime one last time
         update_playtime(&mut last_updated_playtime, &instance_id, true).await;
@@ -1292,6 +1311,58 @@ fn take_next_log4j_frame(buffer: &mut String) -> Option<String> {
 #[cfg(test)]
 mod post_upgrade_tests {
     use super::*;
+
+    #[cfg(windows)]
+    #[tokio::test]
+    async fn waiting_for_one_process_leaves_registry_available() {
+        let manager = ProcessManager::new();
+        let mut child = Command::new("powershell.exe");
+        child
+            .args([
+                "-NoProfile",
+                "-NonInteractive",
+                "-Command",
+                "Start-Sleep -Seconds 30",
+            ])
+            .creation_flags(0x08000000)
+            .kill_on_drop(true);
+        let child = child.spawn().unwrap();
+        let uuid = Uuid::new_v4();
+        let rpc = crate::util::rpc::RpcServerBuilder::new()
+            .launch()
+            .await
+            .unwrap();
+        manager.processes.insert(
+            uuid,
+            Process {
+                metadata: ProcessMetadata {
+                    uuid,
+                    pid: child.id().unwrap(),
+                    maximize_window: false,
+                    instance_id: "first".into(),
+                    instance_path: "first".into(),
+                    instance_name: "First".into(),
+                    start_time: Utc::now(),
+                },
+                child,
+                manually_killed: false,
+                output_tasks: Vec::new(),
+                _main_class_keep_alive: tempfile::tempdir().unwrap(),
+                rpc_server: rpc,
+            },
+        );
+        let waiting = manager.wait_for(uuid);
+        tokio::pin!(waiting);
+        assert!(futures::poll!(&mut waiting).is_pending());
+        assert!(!manager.processes.try_get(&uuid).is_locked());
+        assert_eq!(manager.get_all().len(), 1);
+        manager.kill(uuid).await.unwrap();
+        tokio::time::timeout(std::time::Duration::from_secs(5), waiting)
+            .await
+            .unwrap()
+            .unwrap();
+        assert!(manager.was_manually_killed(uuid));
+    }
 
     #[test]
     fn live_log_lines_are_truncated_on_character_boundaries() {

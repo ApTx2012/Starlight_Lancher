@@ -23,6 +23,10 @@ pub(super) struct TaggedManifest {
 }
 
 impl TaggedManifest {
+    pub fn includes_content(&self, file: &PackFile) -> bool {
+        self.files.iter().any(|tagged| tagged.sha256 == file.sha256)
+    }
+
     pub fn contains(&self, path: &str) -> bool {
         self.files.iter().any(|file| file.path == path)
     }

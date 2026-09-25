@@ -3,14 +3,14 @@ use futures::StreamExt;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::sync::{Arc, Mutex};
-use tauri::http::header::ACCEPT;
 use tauri::http::HeaderValue;
+use tauri::http::header::ACCEPT;
 use tauri::{Manager, ResourceId, Runtime, Webview};
 use tauri_plugin_http::reqwest;
 use tauri_plugin_http::reqwest::ClientBuilder;
 use tauri_plugin_updater::{Error, Update, UpdaterExt};
 use theseus::{
-    emit_loading, init_loading, launcher_user_agent, LoadingBarType,
+    LoadingBarType, emit_loading, init_loading, launcher_user_agent,
 };
 use tokio::time::Instant;
 use url::Url;

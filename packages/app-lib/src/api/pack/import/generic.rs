@@ -51,8 +51,7 @@ pub async fn import_generic(
 
     let info = detect_instance_info(&layout.json_source, overrides).await?;
     register_instance(instance_id, &layout.name, &info).await?;
-    copy_instance_files(instance_id, &layout, reporter, details, symlink)
-        .await
+    copy_instance_files(instance_id, &layout, reporter, details, symlink).await
 }
 
 /// The resolved source layout for a generic import.

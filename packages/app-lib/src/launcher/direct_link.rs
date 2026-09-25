@@ -338,22 +338,6 @@ impl DirectLinkedLaunch {
         }
     }
 
-    pub(crate) fn natives_cache_key(&self) -> String {
-        let identity = format!(
-            "{}\0{}\0{}",
-            self.dot_minecraft.display(),
-            self.version_id,
-            self.version_json
-                .as_deref()
-                .unwrap_or_else(|| self.dot_minecraft.as_path())
-                .display()
-        );
-        format!(
-            "linked-{}",
-            sha1_smol::Sha1::from(identity.as_bytes()).hexdigest()
-        )
-    }
-
     pub(crate) fn library_path(
         &self,
         library: &LinkedLibrary,

@@ -1110,6 +1110,7 @@ const confirmUnlinkModal = ref<InstanceType<typeof ConfirmUnlinkModal>>()
 								<button
 									v-for="option in row2FilterOptions"
 									:key="option.id"
+									v-tooltip="option.tooltip"
 									class="relative pb-1 text-base font-semibold transition-colors"
 									:class="
 										selectedStatusFilters.includes(option.id)

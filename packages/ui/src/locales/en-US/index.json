@@ -872,6 +872,12 @@
   "content.filter.updates": {
     "defaultMessage": "Update available"
   },
+  "content.filter.client-only": {
+    "defaultMessage": "Client only"
+  },
+  "content.filter.client-only-description": {
+    "defaultMessage": "Includes client-only or singleplayer-only mods and mods that depend on them. These may be incompatible with dedicated servers."
+  },
   "content.filter.warnings": {
     "defaultMessage": "Warnings"
   },

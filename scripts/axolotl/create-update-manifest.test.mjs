@@ -62,7 +62,11 @@ try {
 	const verify = spawnSync(
 		process.execPath,
 		['scripts/axolotl/verify-update-manifest.mjs', outputPath, tag],
-		{ cwd: root, encoding: 'utf8' },
+		{
+			cwd: root,
+			encoding: 'utf8',
+			env: { ...process.env, GITHUB_REPOSITORY: 'Mystic-Stars/Axolotl' },
+		},
 	)
 	assert.equal(verify.status, 0, verify.stderr)
 } finally {

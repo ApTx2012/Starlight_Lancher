@@ -848,6 +848,12 @@
   "content.filter.updates": {
     "defaultMessage": "可更新"
   },
+  "content.filter.client-only": {
+    "defaultMessage": "仅客户端"
+  },
+  "content.filter.client-only-description": {
+    "defaultMessage": "包含仅供客户端或单人游戏使用的模组，以及依赖它们的模组。这些模组可能不兼容独立服务器。"
+  },
   "content.filter.warnings": {
     "defaultMessage": "警告"
   },

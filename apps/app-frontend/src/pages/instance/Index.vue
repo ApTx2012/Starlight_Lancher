@@ -156,34 +156,23 @@
 								{{ formatMessage(commonMessages.repairButton) }}
 							</button>
 						</ButtonStyled>
-						<ButtonStyled v-else-if="playing === true" color="red" size="large">
-							<button :disabled="stopping" @click="stopInstance('InstancePage')">
-								<StopCircleIcon />
-								{{
-									stopping
-										? formatMessage(messages.stopping)
-										: formatMessage(commonMessages.stopButton)
-								}}
+						<ButtonStyled v-else-if="loading" color="brand" size="large">
+							<button disabled>
+								<SpinnerIcon class="animate-spin" />
+								{{ formatMessage(messages.starting, { seconds: launchElapsedSeconds }) }}
 							</button>
 						</ButtonStyled>
-						<ButtonStyled
-							v-else-if="playing === false && loading === false && !isServerInstance"
-							color="brand"
-							size="large"
-						>
+						<ButtonStyled v-else-if="!isServerInstance" color="brand" size="large">
 							<button @click="startInstance('InstancePage')">
 								<PlayIcon />
-								{{ formatMessage(commonMessages.playButton) }}
+								{{ formatMessage(playing ? messages.launchAnother : commonMessages.playButton) }}
 							</button>
 						</ButtonStyled>
-						<div
-							v-else-if="playing === false && loading === false && isServerInstance"
-							class="joined-buttons"
-						>
+						<div v-else class="joined-buttons">
 							<ButtonStyled color="brand" size="large">
 								<button @click="handlePlayServer()">
 									<PlayIcon />
-									{{ formatMessage(commonMessages.playButton) }}
+									{{ formatMessage(playing ? messages.launchAnother : commonMessages.playButton) }}
 								</button>
 							</ButtonStyled>
 							<ButtonStyled color="brand" size="large">
@@ -214,14 +203,10 @@
 								</OverflowMenu>
 							</ButtonStyled>
 						</div>
-						<ButtonStyled
-							v-else-if="loading === true && playing === false"
-							color="brand"
-							size="large"
-						>
-							<button disabled>
-								<SpinnerIcon class="animate-spin" />
-								{{ formatMessage(messages.starting, { seconds: launchElapsedSeconds }) }}
+						<ButtonStyled v-if="playing" color="red" size="large">
+							<button :disabled="stopping || loading" @click="stopInstance('InstancePage')">
+								<StopCircleIcon />
+								{{ formatMessage(stopping ? messages.stopping : messages.stopAll) }}
 							</button>
 						</ButtonStyled>
 						<ButtonStyled circular size="large">
@@ -317,7 +302,7 @@
 		</div>
 		<ContextMenu ref="options" @option-clicked="handleOptionsClick">
 			<template #play> <PlayIcon /> {{ formatMessage(commonMessages.playButton) }} </template>
-			<template #stop> <StopCircleIcon /> {{ formatMessage(commonMessages.stopButton) }} </template>
+			<template #stop> <StopCircleIcon /> {{ formatMessage(messages.stopAll) }} </template>
 			<template #add_content> <PlusIcon /> {{ formatMessage(messages.addContent) }} </template>
 			<template #edit> <EditIcon /> {{ formatMessage(commonMessages.editButton) }} </template>
 			<template #copy_path> <ClipboardCopyIcon /> {{ formatMessage(messages.copyPath) }} </template>
@@ -437,6 +422,7 @@ import {
 } from '@/helpers/instance'
 import { getDisplayInstanceIcon } from '@/helpers/instance-icons'
 import { get_by_instance_id } from '@/helpers/process'
+import { isInstanceLaunching } from '@/helpers/instance-launch-state'
 import type { GameInstance } from '@/helpers/types'
 import { createInstanceShortcut, showInstanceInFolder } from '@/helpers/utils.js'
 import { refreshWorlds, type ServerStatus } from '@/helpers/worlds'
@@ -459,6 +445,8 @@ const props = defineProps<{
 const { formatMessage } = useVIntl()
 
 const messages = defineMessages({
+	launchAnother: { id: 'app.instance.launch-another', defaultMessage: 'Launch another window' },
+	stopAll: { id: 'app.instance.stop-all', defaultMessage: 'Stop all windows of this instance' },
 	neverPlayed: { id: 'app.instance.never-played', defaultMessage: 'Never played' },
 	upgradedTo: {
 		id: 'app.instance.post-upgrade-status',
@@ -520,7 +508,10 @@ const postUpgradeNoticeQuery = usePostUpgradeNotice(() => instance.value?.id ?? 
 const postUpgradeNotice = computed(() => postUpgradeNoticeQuery.data.value ?? null)
 const symlinkWarning = useSymlinkWarningDismiss(instanceId)
 const playing = ref(false)
-const loading = ref(false)
+const serverLaunchingId = ref<string>()
+const loading = computed(
+	() => isInstanceLaunching(props.id) || serverLaunchingId.value === props.id,
+)
 const launchElapsedSeconds = ref(0)
 const subpagePending = ref(false)
 const stopping = ref(false)
@@ -655,9 +646,10 @@ function fetchDeferredData(instanceId?: string) {
 }
 
 async function updatePlayState() {
-	const runningProcesses = await get_by_instance_id(props.id).catch(handleError)
-
-	playing.value = Array.isArray(runningProcesses) && runningProcesses.length > 0
+	const id = props.id
+	const runningProcesses = await get_by_instance_id(id).catch(handleError)
+	if (props.id === id && Array.isArray(runningProcesses))
+		playing.value = runningProcesses.length > 0
 }
 
 await fetchInstance()
@@ -665,6 +657,7 @@ watch(
 	() => props.id,
 	async () => {
 		if (route.path.startsWith('/instance')) {
+			playing.value = false
 			await fetchInstance()
 		}
 	},
@@ -741,19 +734,16 @@ watch(
 const options = ref<InstanceType<typeof ContextMenu> | null>(null)
 
 const startInstance = async (context: string) => {
-	if (!instance.value) return
-	if (!offline.value && updateToPlayModal.value?.hasUpdate) {
+	if (!instance.value || loading.value) return
+	const id = props.id
+	const name = instance.value.name
+	if (!playing.value && !offline.value && updateToPlayModal.value?.hasUpdate) {
 		updateToPlayModal.value.show(instance.value)
 		return
 	}
 
-	loading.value = true
-	launchElapsedSeconds.value = 0
-	launchElapsedTimer = setInterval(() => {
-		launchElapsedSeconds.value += 1
-	}, 1000)
 	try {
-		const result = await run(props.id)
+		const result = await run(id)
 		const gcNotice = result.gc_notice
 		if (gcNotice && gcReportFellBack(gcNotice)) {
 			addNotification({
@@ -764,39 +754,50 @@ const startInstance = async (context: string) => {
 				}),
 			})
 		}
-		playing.value = true
+		await updatePlayState()
 	} catch (err) {
 		const handled = await handleMinecraftLaunchError(err, {
-			instance_id: props.id,
-			instance_name: instance.value.name,
+			instance_id: id,
+			instance_name: name,
 		})
 		if (!handled) {
-			handleSevereError(err, { instanceId: props.id })
+			handleSevereError(err, { instanceId: id })
 		}
-	} finally {
-		clearInterval(launchElapsedTimer)
-		launchElapsedTimer = undefined
-		loading.value = false
 	}
 }
+
+watch(
+	[loading, () => props.id],
+	([busy]) => {
+		clearInterval(launchElapsedTimer)
+		launchElapsedSeconds.value = 0
+		launchElapsedTimer = busy
+			? setInterval(() => {
+					launchElapsedSeconds.value += 1
+				}, 1000)
+			: undefined
+	},
+	{ immediate: true },
+)
 
 const stopInstance = async (context: string) => {
 	stopping.value = true
 	await kill(props.id).catch(handleError)
 	stopping.value = false
-	playing.value = false
+	await updatePlayState()
 
 	if (!instance.value) return
 }
 
 const handlePlayServer = async () => {
-	if (!instance.value?.link?.project_id) return
-	loading.value = true
+	if (!instance.value?.link?.project_id || loading.value) return
+	const id = props.id
+	serverLaunchingId.value = id
 	try {
 		await playServerProject(instance.value.link.project_id)
 	} finally {
 		await updatePlayState()
-		loading.value = false
+		if (serverLaunchingId.value === id) serverLaunchingId.value = undefined
 	}
 }
 
@@ -933,8 +934,8 @@ const unlistenInstances = await instance_listener(
 )
 
 const unlistenProcesses = await process_listener((e: { event: string; instance_id: string }) => {
-	if (e.event === 'finished' && e.instance_id === props.id) {
-		playing.value = false
+	if (e.instance_id === props.id) {
+		void updatePlayState()
 		void queryClient.invalidateQueries({ queryKey: postUpgradeNoticeQueryKey(props.id) })
 	}
 })

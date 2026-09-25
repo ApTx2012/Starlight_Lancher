@@ -66,9 +66,7 @@ pub async fn hosted_default() -> Result<theseus::pack::hosted::Publication> {
 }
 
 #[tauri::command]
-pub async fn hosted_create(
-    game_dir_root: Option<String>,
-) -> Result<String> {
+pub async fn hosted_create(game_dir_root: Option<String>) -> Result<String> {
     Ok(theseus::pack::hosted::create(game_dir_root).await?)
 }
 
