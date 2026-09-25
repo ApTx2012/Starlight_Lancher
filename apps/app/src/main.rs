@@ -569,10 +569,9 @@ fn is_dev() -> bool {
 
 #[tauri::command]
 fn are_updates_enabled() -> bool {
-    // StarLight launcher ships without the built-in update checker.
-    // Keep the backend interface in place for a future user-supplied
-    // update URL to be wired in by replacing this no-op gate later.
-    false
+    // StarLight launcher enables the built-in updater; the endpoint and
+    // signing public key are configured in tauri-release.conf.json.
+    true
 }
 
 #[cfg(feature = "updater")]

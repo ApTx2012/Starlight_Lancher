@@ -33,9 +33,46 @@ export const ANNOUNCEMENT_CHANGE_TYPES: readonly AnnouncementChangeType[] = [
 
 export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 	{
+		id: 'launcher-1.0.0-beta14',
+		version: '1.0.0-beta14',
+		publishedAt: '2026-09-26',
+		title: {
+			'en-US': 'Starlight Launcher 1.0.0-beta14',
+			'zh-CN': 'Starlight Launcher 1.0.0-beta14',
+		},
+		changes: {
+			added: [
+				{
+					'en-US':
+						'Enabled the built-in automatic updater, so the launcher can check for and install new versions from the update channel.',
+					'zh-CN': '启用内置自动更新，启动器现在可以从更新通道检查并安装新版本。',
+				},
+			],
+			fixed: [
+				{
+					'en-US':
+						'Fixed the updater manifest download URL and release ordering so update checks succeed.',
+					'zh-CN': '修复更新清单的下载地址与发布顺序，更新检查现在可以成功。',
+				},
+				{
+					'en-US':
+						'Updated the signing key pair used to sign update packages.',
+					'zh-CN': '更新了用于签名更新包的密钥对。',
+				},
+			],
+			changed: [
+				{
+					'en-US':
+						'Removed upstream release announcements prior to 1.0.0-beta1.',
+					'zh-CN': '移除了 1.0.0-beta1 之前的上游版本公告。',
+				},
+			],
+		},
+	},
+	{
 		id: 'launcher-1.0.0-beta13',
 		version: '1.0.0-beta13',
-		publishedAt: '2026-09-26',
+		publishedAt: '2026-09-25',
 		title: {
 			'en-US': 'Starlight Launcher 1.0.0-beta13',
 			'zh-CN': 'Starlight Launcher 1.0.0-beta13',
