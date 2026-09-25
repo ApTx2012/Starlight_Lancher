@@ -1234,10 +1234,13 @@ fn is_other_version_entry(rel: &Path, keep: &Path) -> bool {
     let mut keep_components = keep.components();
 
     // Both must start with the literal `versions` component.
-    if rel_components.next().map(|c| c.as_os_str()) != Some("versions".as_ref()) {
+    if rel_components.next().map(|c| c.as_os_str()) != Some("versions".as_ref())
+    {
         return false;
     }
-    if keep_components.next().map(|c| c.as_os_str()) != Some("versions".as_ref()) {
+    if keep_components.next().map(|c| c.as_os_str())
+        != Some("versions".as_ref())
+    {
         return false;
     }
 
@@ -1253,7 +1256,9 @@ fn is_other_version_entry(rel: &Path, keep: &Path) -> bool {
     let rel_is_inside_version_dir = rel_components.next().is_some();
 
     match (rel_version, keep_version) {
-        (Some(rel_v), Some(keep_v)) if rel_is_inside_version_dir => rel_v != keep_v,
+        (Some(rel_v), Some(keep_v)) if rel_is_inside_version_dir => {
+            rel_v != keep_v
+        }
         // A file directly under `versions/`, shared metadata: keep it.
         _ => false,
     }

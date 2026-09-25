@@ -19,6 +19,7 @@ import type { GcContext, ResolvedGcStrategyId } from '@/helpers/gc/types'
 import { setLastGcLaunchReport } from '@/helpers/gc-notice'
 import { getInstanceMode, prepareHostedSession } from '@/helpers/hosted-packs'
 import { prepareInstancePlayer } from '@/helpers/instance-player'
+import { launchOnce } from '@/helpers/instance-launch-state'
 import { AUTO_GC_PRESET_ARG } from '@/helpers/java-arguments'
 import { get_jre, get_memory_status } from '@/helpers/jre.js'
 import { get as getSettings } from '@/helpers/settings'
@@ -1071,12 +1072,19 @@ export async function resolveGcLaunchIntent(
 
 // Run Minecraft using an instance
 // Returns the process metadata plus an optional GC fallback report.
-export async function run(
+export function run(
 	instanceId: string,
 	serverAddress: string | null = null,
 ): Promise<InstanceRunResult> {
+	return launchOnce(instanceId, () => launchInstance(instanceId, serverAddress))
+}
+
+async function launchInstance(
+	instanceId: string,
+	serverAddress: string | null,
+): Promise<InstanceRunResult> {
 	await prepareInstancePlayer(instanceId)
-	if (await getInstanceMode(instanceId) === 'starlight') await prepareHostedSession()
+	if ((await getInstanceMode(instanceId)) === 'starlight') await prepareHostedSession()
 	const { args, gcIntent } = await resolveGcLaunchIntent(instanceId)
 	const result = await invoke<InstanceRunResult>('plugin:instance|instance_run', {
 		instanceId,

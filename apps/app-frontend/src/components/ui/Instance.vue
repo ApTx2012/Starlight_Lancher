@@ -1,12 +1,5 @@
 <script setup>
-import {
-	DownloadIcon,
-	GameIcon,
-	PlayIcon,
-	SpinnerIcon,
-	StopCircleIcon,
-	TimerIcon,
-} from '@modrinth/assets'
+import { DownloadIcon, GameIcon, PlayIcon, SpinnerIcon, TimerIcon } from '@modrinth/assets'
 import {
 	Avatar,
 	ButtonStyled,
@@ -28,6 +21,7 @@ import { install_existing_instance, install_pack_to_existing_instance } from '@/
 import { kill, run } from '@/helpers/instance'
 import { getDisplayInstanceIcon } from '@/helpers/instance-icons'
 import { get_by_instance_id } from '@/helpers/process'
+import { isInstanceLaunching } from '@/helpers/instance-launch-state'
 import { showInstanceInFolder } from '@/helpers/utils.js'
 import { handleSevereError } from '@/store/error.js'
 
@@ -36,6 +30,7 @@ const formatRelativeTime = useRelativeTime()
 const { formatMessage } = useVIntl()
 const handleMinecraftLaunchError = useMinecraftLaunchError()
 const messages = defineMessages({
+	launchAnother: { id: 'app.instance.launch-another', defaultMessage: 'Launch another window' },
 	loading: { id: 'app.instance.loading', defaultMessage: 'Instance is loading...' },
 	played: { id: 'app.instance.played', defaultMessage: 'Played {time}' },
 	neverPlayed: { id: 'app.instance.never-played', defaultMessage: 'Never played' },
@@ -85,13 +80,8 @@ const isPlaying = computed(() => props.playing ?? internalPlaying.value)
 const displayIcon = computed(() =>
 	getDisplayInstanceIcon(props.instance.icon_path, props.instance.loader),
 )
-const loading = ref(false)
-const modLoading = computed(
-	() =>
-		loading.value ||
-		currentEvent.value === 'installing' ||
-		(currentEvent.value === 'launched' && !isPlaying.value),
-)
+const loading = computed(() => isInstanceLaunching(props.instance.id))
+const modLoading = computed(() => loading.value || installing.value)
 const installing = computed(() => props.instance.install_stage.includes('installing'))
 const installed = computed(() => props.instance.install_stage === 'installed')
 
@@ -105,31 +95,26 @@ const checkProcess = async () => {
 	if (props.playing !== undefined) return
 	const runningProcesses = await get_by_instance_id(props.instance.id).catch(handleError)
 
-	internalPlaying.value = runningProcesses.length > 0
+	if (Array.isArray(runningProcesses)) internalPlaying.value = runningProcesses.length > 0
 }
 
 const play = async (e, context) => {
 	e?.stopPropagation()
-	loading.value = true
-	await run(props.instance.id)
-		.catch(async (err) => {
-			const handled = await handleMinecraftLaunchError(err, {
-				instance_id: props.instance.id,
-				instance_name: props.instance.name,
-			})
-			if (!handled) handleSevereError(err, { instanceId: props.instance.id })
+	if (loading.value) return
+	await run(props.instance.id).catch(async (err) => {
+		const handled = await handleMinecraftLaunchError(err, {
+			instance_id: props.instance.id,
+			instance_name: props.instance.name,
 		})
-		.finally(() => {
-		})
-	loading.value = false
+		if (!handled) handleSevereError(err, { instanceId: props.instance.id })
+	})
+	await checkProcess()
 }
 
 const stop = async (e, context) => {
 	e?.stopPropagation()
-	internalPlaying.value = false
-
 	await kill(props.instance.id).catch(handleError)
-
+	await checkProcess()
 }
 
 const repair = async (e) => {
@@ -171,16 +156,11 @@ defineExpose({
 	instance: props.instance,
 })
 
-const currentEvent = ref(null)
-
 const unlisten =
 	props.playing === undefined
 		? await process_listener((e) => {
 				if (e.instance_id === props.instance.id) {
-					currentEvent.value = e.event
-					if (e.event === 'finished') {
-						internalPlaying.value = false
-					}
+					void checkProcess()
 				}
 			})
 		: () => undefined
@@ -212,15 +192,7 @@ onUnmounted(() => unlisten())
 				<span class="line-clamp-2">{{ instance.name }}</span>
 			</div>
 			<div class="flex items-center">
-				<ButtonStyled v-if="isPlaying" color="red" circular @mousehover="checkProcess">
-					<button
-						v-tooltip="formatMessage(commonMessages.stopButton)"
-						@click="(e) => stop(e, 'InstanceCard')"
-					>
-						<StopCircleIcon />
-					</button>
-				</ButtonStyled>
-				<ButtonStyled v-else-if="modLoading" color="standard" circular>
+				<ButtonStyled v-if="modLoading" color="standard" circular>
 					<button v-tooltip="formatMessage(messages.loading)" disabled>
 						<SpinnerIcon class="animate-spin" />
 					</button>
@@ -230,7 +202,7 @@ onUnmounted(() => unlisten())
 						v-tooltip="
 							offline && !installed
 								? formatMessage(messages.offlineInstalledOnly)
-								: formatMessage(commonMessages.playButton)
+								: formatMessage(isPlaying ? messages.launchAnother : commonMessages.playButton)
 						"
 						:disabled="offline && !installed"
 						@click="(e) => play(e, 'InstanceCard')"
@@ -290,17 +262,8 @@ onUnmounted(() => unlisten())
 					/>
 				</div>
 				<div class="absolute bottom-1.5 right-1.5 flex size-12 items-center justify-center">
-					<ButtonStyled v-if="isPlaying" size="large" color="red" circular>
-						<button
-							v-tooltip="formatMessage(commonMessages.stopButton)"
-							@click="(e) => stop(e, 'InstanceCard')"
-							@mousehover="checkProcess"
-						>
-							<StopCircleIcon />
-						</button>
-					</ButtonStyled>
 					<ButtonStyled
-						v-else-if="!modLoading && !installing && !installed"
+						v-if="!modLoading && !installing && !installed"
 						size="large"
 						color="brand"
 						circular
@@ -324,7 +287,9 @@ onUnmounted(() => unlisten())
 					</ButtonStyled>
 					<ButtonStyled v-else-if="!modLoading && !installing" size="large" color="brand" circular>
 						<button
-							v-tooltip="formatMessage(commonMessages.playButton)"
+							v-tooltip="
+								formatMessage(isPlaying ? messages.launchAnother : commonMessages.playButton)
+							"
 							:class="{
 								'pointer-events-none scale-75 opacity-0': disabled,
 								'scale-75 opacity-0 transition-all group-hover:scale-100 group-hover:opacity-100':
@@ -369,19 +334,8 @@ onUnmounted(() => unlisten())
 					:class="`transition-all ${modLoading || installing ? `brightness-[0.25] scale-[0.85]` : `group-hover:brightness-75`}`"
 				/>
 				<div class="absolute inset-0 flex items-center justify-center">
-					<ButtonStyled v-if="isPlaying" size="large" color="red" circular>
-						<button
-							v-tooltip="formatMessage(commonMessages.stopButton)"
-							:class="{ 'scale-100 opacity-100': isPlaying }"
-							class="transition-all origin-bottom opacity-0 card-shadow"
-							@click="(e) => stop(e, 'InstanceCard')"
-							@mousehover="checkProcess"
-						>
-							<StopCircleIcon />
-						</button>
-					</ButtonStyled>
 					<SpinnerIcon
-						v-else-if="modLoading || installing"
+						v-if="modLoading || installing"
 						v-tooltip="
 							modLoading
 								? formatMessage(messages.loading)
@@ -406,7 +360,9 @@ onUnmounted(() => unlisten())
 					</ButtonStyled>
 					<ButtonStyled v-else size="large" color="brand" circular>
 						<button
-							v-tooltip="formatMessage(commonMessages.playButton)"
+							v-tooltip="
+								formatMessage(isPlaying ? messages.launchAnother : commonMessages.playButton)
+							"
 							:class="`transition-all scale-75 origin-bottom card-shadow ${disabled ? 'opacity-0 scale-75' : 'opacity-0 group-hover:scale-100 group-hover:opacity-100 group-focus-within:scale-100 group-focus-within:opacity-100'}`"
 							@click="(e) => play(e, 'InstanceCard')"
 							@mousehover="checkProcess"

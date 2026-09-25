@@ -1,4 +1,4 @@
-name: Axolotl release
+name: Starlight release
 
 on:
   push:
@@ -53,6 +53,15 @@ jobs:
           node scripts/axolotl/i18n-check.mjs
           cargo fmt --all --check
 
+      - name: Check updater signing configuration
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+        run: |
+          if [[ -z "${TAURI_SIGNING_PRIVATE_KEY:-}" ]]; then
+            echo '::error::Configure TAURI_SIGNING_PRIVATE_KEY with the private key matching apps/app/tauri-release.conf.json before publishing updates.'
+            exit 1
+          fi
+
       - name: Prepare draft release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -72,7 +81,7 @@ jobs:
           release_args=(
             --draft
             --notes-file "$release_notes"
-            --title "Axolotl Launcher ${GITHUB_REF_NAME}"
+            --title "Starlight Launcher ${GITHUB_REF_NAME}"
           )
           if [[ "${GITHUB_REF_NAME}" == *-* ]]; then
             release_args+=(--prerelease)
@@ -175,7 +184,7 @@ jobs:
           tauriScript: pnpm tauri
           args: ${{ matrix.args }}
           tagName: ${{ github.ref_name }}
-          releaseName: Axolotl Launcher ${{ github.ref_name }}
+          releaseName: Starlight Launcher ${{ github.ref_name }}
           releaseDraft: true
           prerelease: ${{ contains(github.ref_name, '-') }}
           generateReleaseNotes: false
@@ -277,12 +286,17 @@ jobs:
     name: Verify and publish
     needs: build
     runs-on: ubuntu-24.04
+    env:
+      UPDATE_SERVER_URL: ${{ secrets.UPDATE_SERVER_URL }}
+      UPDATE_SERVER_WEBHOOK_SECRET: ${{ secrets.UPDATE_SERVER_WEBHOOK_SECRET }}
+      CNB_TOKEN: ${{ secrets.CNB_TOKEN }}
+      CNB_REPO_URL_HTTPS: ${{ secrets.CNB_REPO_URL_HTTPS }}
     steps:
       - name: Check out source
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
-          ref: main
+          ref: ${{ github.ref }}
 
       - name: Download updater signatures
         env:
@@ -349,6 +363,7 @@ jobs:
           node scripts/axolotl/create-update-server-catalog.test.mjs
 
       - name: Notify Update Server to publish release assets
+        if: ${{ env.UPDATE_SERVER_URL != '' && env.UPDATE_SERVER_WEBHOOK_SECRET != '' }}
         env:
           UPDATE_SERVER_URL: ${{ secrets.UPDATE_SERVER_URL }}
           UPDATE_SERVER_WEBHOOK_SECRET: ${{ secrets.UPDATE_SERVER_WEBHOOK_SECRET }}
@@ -358,6 +373,13 @@ jobs:
             release-check/update-server-catalog.json \
             release-check/release.json \
             "${GITHUB_REF_NAME}"
+
+      - name: Check out website branch
+        if: ${{ !contains(github.ref_name, '-') }}
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: main
+          clean: false
 
       - name: Publish website download metadata
         if: ${{ !contains(github.ref_name, '-') }}
@@ -381,11 +403,14 @@ jobs:
           fi
 
       - name: Mirror published release to CNB
+        if: ${{ env.CNB_TOKEN != '' && env.CNB_REPO_URL_HTTPS != '' }}
         env:
           CNB_REPO_URL_HTTPS: ${{ secrets.CNB_REPO_URL_HTTPS }}
           CNB_TOKEN: ${{ secrets.CNB_TOKEN }}
           CNB_TOKEN_USER_NAME: ${{ secrets.CNB_TOKEN_USER_NAME }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_API_BASE_URL: https://api.github.com/repos/${{ github.repository }}
+          GITHUB_RELEASE_BASE_URL: https://github.com/${{ github.repository }}/releases/download
         run: |
           set -euo pipefail
           if [[ -z "${CNB_TOKEN:-}" ]]; then

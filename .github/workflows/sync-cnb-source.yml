@@ -19,6 +19,7 @@ concurrency:
 jobs:
   sync:
     name: Sync Git ref
+    if: ${{ vars.ENABLE_CNB_SYNC == 'true' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
@@ -38,8 +39,8 @@ jobs:
           DELETED_REF_TYPE: ${{ github.event.ref_type }}
         run: |
           set -euo pipefail
-          if [[ -z "${CNB_TOKEN:-}" ]]; then
-            echo "CNB_TOKEN is not configured"
+          if [[ -z "${CNB_TOKEN:-}" || -z "${CNB_REPO_URL_HTTPS:-}" ]]; then
+            echo "CNB_TOKEN and CNB_REPO_URL_HTTPS must be configured"
             exit 1
           fi
 

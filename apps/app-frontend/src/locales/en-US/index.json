@@ -348,7 +348,7 @@
     "message": "Show more running instances"
   },
   "app.action-bar.stop-instance": {
-    "message": "Stop instance"
+    "message": "Stop window"
   },
   "app.action-bar.update": {
     "message": "Update"
@@ -2962,6 +2962,15 @@
   },
   "app.instance.launch-instance": {
     "message": "Launch instance"
+  },
+  "app.instance.launch-another": {
+    "message": "Launch another window"
+  },
+  "app.action-bar.window-started": {
+    "message": "Started {time, time, medium}"
+  },
+  "app.instance.stop-all": {
+    "message": "Stop all windows of this instance"
   },
   "app.instance.linked-to": {
     "message": "Linked to"
@@ -5889,7 +5898,7 @@
     "message": "Switch your home"
   },
   "app.onboarding.instance-actions.description": {
-    "message": "Launch or configure this instance here. Choose a player on first launch; the instance remembers your choice until you switch it in settings."
+    "message": "Launch or configure this instance here. You can launch another window while it is running; use the top bar to stop an individual window. Choose a player on first launch; the instance remembers your choice until you switch it in settings."
   },
   "app.onboarding.instance-actions.title": {
     "message": "The main controls"

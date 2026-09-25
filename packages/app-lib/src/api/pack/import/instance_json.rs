@@ -589,8 +589,8 @@ fn try_extract_version_from_needle(
 ) -> Option<String> {
     let pos = content.find(needle)?;
     let after = &content[pos + needle.len()..];
-    let end = after
-        .find(&['"', ',', '\n', '}', ']', '[', ':', ' '] as &[char])?;
+    let end =
+        after.find(&['"', ',', '\n', '}', ']', '[', ':', ' '] as &[char])?;
     let ver = &after[..end];
     if let Some(ch) = split_at
         && let Some(pos) = ver.rfind(ch)
@@ -609,7 +609,11 @@ fn sanitize_loader_version(raw: &str) -> String {
     // Cut at the first character that cannot appear in a loader version id.
     let end = trimmed
         .find(|ch: char| {
-            !(ch.is_ascii_alphanumeric() || ch == '.' || ch == '-' || ch == '_' || ch == '+')
+            !(ch.is_ascii_alphanumeric()
+                || ch == '.'
+                || ch == '-'
+                || ch == '_'
+                || ch == '+')
         })
         .unwrap_or(trimmed.len());
     trimmed[..end].trim().to_string()

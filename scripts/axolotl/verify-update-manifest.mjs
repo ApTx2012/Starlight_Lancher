@@ -2,6 +2,8 @@ import fs from 'node:fs'
 
 const [manifestPath, tag, source = 'github'] = process.argv.slice(2)
 const expectedVersion = tag?.replace(/^v/, '')
+const githubRepository = process.env.GITHUB_REPOSITORY || 'ApTx2012/Starlight_Lancher'
+const cnbRepository = process.env.CNB_REPO_SLUG || 'axlmc/Axolotl'
 
 if (!manifestPath || !expectedVersion || !['github', 'cnb'].includes(source)) {
 	throw new Error('Usage: node verify-update-manifest.mjs <latest.json> <version-tag> [github|cnb]')
@@ -34,9 +36,13 @@ for (const platform of requiredPlatforms) {
 		url.protocol === 'https:' &&
 		(source === 'github'
 			? url.hostname === 'github.com' &&
-				pathname.includes('/mystic-stars/axolotl/releases/download/')
+				pathname.startsWith(
+					`/${githubRepository.toLowerCase()}/releases/download/${tag.toLowerCase()}/`,
+				)
 			: url.hostname === 'cnb.cool' &&
-				pathname.includes(`/axlmc/axolotl/-/releases/download/${tag.toLowerCase()}/`))
+				pathname.startsWith(
+					`/${cnbRepository.toLowerCase()}/-/releases/download/${tag.toLowerCase()}/`,
+				))
 	if (!isExpectedUrl) {
 		throw new Error(`Unexpected ${source} update URL for ${platform}: ${update.url}`)
 	}

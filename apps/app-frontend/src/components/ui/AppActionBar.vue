@@ -137,6 +137,11 @@
 										<OnlineIndicatorIcon />
 										<span class="mr-auto text-contrast flex items-center gap-2">
 											{{ process.instance.name }}
+											<span class="text-xs text-secondary">{{
+												formatMessage(messages.windowStarted, {
+													time: new Date(process.start_time),
+												})
+											}}</span>
 											<StarIcon v-if="process.uuid === selectedProcess.uuid" class="text-orange" />
 										</span>
 									</button>
@@ -307,6 +312,7 @@ const notificationCenterShown = ref(false)
 
 interface RunningProcess {
 	uuid: string
+	start_time: string
 	instance_id: string
 	instance: GameInstance
 }
@@ -320,6 +326,10 @@ interface LoadingEventPayload {
 }
 
 const messages = defineMessages({
+	windowStarted: {
+		id: 'app.action-bar.window-started',
+		defaultMessage: 'Started {time, time, medium}',
+	},
 	offline: {
 		id: 'app.action-bar.offline',
 		defaultMessage: 'Offline',
@@ -346,7 +356,7 @@ const messages = defineMessages({
 	},
 	stopInstance: {
 		id: 'app.action-bar.stop-instance',
-		defaultMessage: 'Stop instance',
+		defaultMessage: 'Stop window',
 	},
 	viewLogs: {
 		id: 'app.action-bar.view-logs',
@@ -401,8 +411,9 @@ const refresh = async () => {
 	const processes = ((await getRunningProcesses().catch((error) => {
 		handleError(error)
 		return []
-	})) ?? []) as Array<{ uuid: string; instance_id: string }>
-	const instanceIds = processes.map((process) => process.instance_id)
+	})) ?? []) as Array<{ uuid: string; instance_id: string; start_time: string }>
+	processes.sort((a, b) => a.start_time.localeCompare(b.start_time))
+	const instanceIds = [...new Set(processes.map((process) => process.instance_id))]
 	const instances: GameInstance[] = await getInstances(instanceIds).catch((error) => {
 		handleError(error)
 		return []
@@ -420,9 +431,9 @@ const refresh = async () => {
 			}
 		})
 		.filter((process): process is RunningProcess => process !== null)
-	if (!selectedProcess.value || !currentProcesses.value.includes(selectedProcess.value)) {
-		selectedProcess.value = currentProcesses.value[0]
-	}
+	selectedProcess.value =
+		currentProcesses.value.find((process) => process.uuid === selectedProcess.value?.uuid) ??
+		currentProcesses.value[0]
 }
 
 await refresh()

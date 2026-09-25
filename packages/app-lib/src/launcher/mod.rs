@@ -2045,17 +2045,6 @@ pub async fn launch_minecraft(
 
     let env_args = Vec::from(env_args);
 
-    // Check if instance has a running process, and reject running the command if it does
-    // Done late so a quick double call doesn't launch two instances
-    let existing_processes = process::get_by_instance_id(&instance.id).await?;
-    if let Some(process) = existing_processes.first() {
-        return Err(crate::ErrorKind::LauncherError(format!(
-            "Instance {} is already running as process {}",
-            instance.id, process.uuid
-        ))
-        .as_error());
-    }
-
     // Ensure phase (HMCL/PCL parity): before anything reads from the linked
     // installation, complete its missing libraries, assets, and logging
     // config in the standard shared locations. Version JSONs, launcher
@@ -2076,26 +2065,15 @@ pub async fn launch_minecraft(
         .await?;
     }
 
-    let natives_dir = if let Some(direct) = &direct_launch {
-        state
-            .directories
-            .version_natives_dir(&direct.natives_cache_key())
-    } else {
-        state.directories.version_natives_dir(&version_jar)
-    };
-    // Linked native archives can change outside Axolotl, so rebuild only the
-    // Axolotl-owned linked cache on every launch. Never mutate linked folders.
-    if direct_launch.is_some() && natives_dir.exists() {
-        io::remove_dir_all(&natives_dir).await?;
-    }
-    if !natives_dir.exists() {
-        io::create_dir_all(&natives_dir).await?;
-    }
+    let (main_class_keep_alive, main_class_path) =
+        get_resource_file!(env "JAVA_JARS_DIR" / "theseus.jar")?;
+    let natives_dir = main_class_keep_alive.path().join("natives");
+    io::create_dir_all(&natives_dir).await?;
     if let (Some(direct), Some(libraries)) =
         (direct_launch.clone(), linked_libraries.clone())
     {
-        // Linked instances rebuild the Axolotl-owned natives cache on every
-        // launch; the managed restore path below must never touch them.
+        // Each process owns its native DLLs until it exits. Rebuilding a
+        // shared directory fails on Windows while another JVM holds a DLL.
         let target = natives_dir.clone();
         let java_arch = java_version.architecture.clone();
         tokio::task::spawn_blocking(move || {
@@ -2109,18 +2087,7 @@ pub async fn launch_minecraft(
         })
         .await??;
     } else if direct_launch.is_none() {
-        if offline_mode {
-            natives::prepare_native_libraries(
-                &state.directories.natives_dir(),
-                &state.directories.libraries_dir(),
-                &state.directories.caches_dir(),
-                version_info.libraries.as_slice(),
-                &version_jar,
-                &java_version.architecture,
-                minecraft_updated,
-            )
-            .await?;
-        } else {
+        if !offline_mode {
             download::download_libraries(
                 &state,
                 None,
@@ -2135,6 +2102,16 @@ pub async fn launch_minecraft(
             )
             .await?;
         }
+        natives::prepare_native_libraries(
+            main_class_keep_alive.path(),
+            &state.directories.libraries_dir(),
+            &state.directories.caches_dir(),
+            version_info.libraries.as_slice(),
+            "natives",
+            &java_version.architecture,
+            minecraft_updated,
+        )
+        .await?;
     }
 
     tracing::debug!(
@@ -2172,8 +2149,6 @@ pub async fn launch_minecraft(
         address.resolve().await?;
     }
 
-    let (main_class_keep_alive, main_class_path) =
-        get_resource_file!(env "JAVA_JARS_DIR" / "theseus.jar")?;
     let yggdrasil_agent = if credentials.is_yggdrasil() {
         let account = credentials.yggdrasil.as_ref().ok_or_else(|| {
             crate::ErrorKind::LauncherError(
@@ -2323,6 +2298,7 @@ pub async fn launch_minecraft(
     let options_existed = options_path.exists();
 
     if direct_launch.is_none()
+        && process::get_by_instance_id(&instance.id).await?.is_empty()
         && (!mc_set_options.is_empty()
             || offline_skin_pack.enabled_pack_id.is_some()
             || options_existed

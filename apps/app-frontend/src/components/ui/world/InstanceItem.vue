@@ -30,6 +30,7 @@ import { get_project } from '@/helpers/cache'
 import { process_listener } from '@/helpers/events'
 import { kill, run } from '@/helpers/instance'
 import { get_by_instance_id } from '@/helpers/process'
+import { isInstanceLaunching } from '@/helpers/instance-launch-state'
 import type { GameInstance } from '@/helpers/types'
 import { showInstanceInFolder } from '@/helpers/utils'
 import { handleSevereError } from '@/store/error'
@@ -46,10 +47,8 @@ const messages = defineMessages({
 		defaultMessage: 'Loading modpack...',
 	},
 	viewInstance: { id: 'app.instance-item.view-instance', defaultMessage: 'View instance' },
-	alreadyOpen: {
-		id: 'app.instance-item.already-open',
-		defaultMessage: 'Instance is already open',
-	},
+	launchAnother: { id: 'app.instance.launch-another', defaultMessage: 'Launch another window' },
+	stopAll: { id: 'app.instance.stop-all', defaultMessage: 'Stop all windows of this instance' },
 })
 const formatDateTime = useFormatDateTime({
 	timeStyle: 'short',
@@ -91,33 +90,32 @@ const loader = computed(() => {
 	}
 })
 
-const loading = ref(false)
+const stopping = ref(false)
+const loading = computed(() => stopping.value || isInstanceLaunching(props.instance.id))
 const internalPlaying = ref(false)
 const isPlaying = computed(() => props.playing ?? internalPlaying.value)
 
 const play = async (event: MouseEvent) => {
 	event?.stopPropagation()
-	loading.value = true
-	await run(props.instance.id)
-		.catch(async (err) => {
-			const handled = await handleMinecraftLaunchError(err, {
-				instance_id: props.instance.id,
-				instance_name: props.instance.name,
-			})
-			if (!handled) handleSevereError(err, { instanceId: props.instance.id })
+	if (loading.value) return
+	await run(props.instance.id).catch(async (err) => {
+		const handled = await handleMinecraftLaunchError(err, {
+			instance_id: props.instance.id,
+			instance_name: props.instance.name,
 		})
-		.finally(() => {
-		})
+		if (!handled) handleSevereError(err, { instanceId: props.instance.id })
+	})
 	emit('play')
-	loading.value = false
+	await checkProcess()
 }
 
 const stop = async (event: MouseEvent) => {
 	event?.stopPropagation()
-	loading.value = true
+	stopping.value = true
 	await kill(props.instance.id).catch(handleError)
 	emit('stop')
-	loading.value = false
+	stopping.value = false
+	await checkProcess()
 }
 
 const unlistenProcesses =
@@ -131,7 +129,7 @@ const checkProcess = async () => {
 	if (props.playing !== undefined) return
 	const runningProcesses = await get_by_instance_id(props.instance.id).catch(handleError)
 
-	internalPlaying.value = runningProcesses.length > 0
+	if (Array.isArray(runningProcesses)) internalPlaying.value = runningProcesses.length > 0
 }
 
 onMounted(() => {
@@ -155,7 +153,8 @@ onUnmounted(() => {
 			:class="[
 				flat ? 'px-2 py-2 hover:bg-button-bg' : 'card-shadow bg-bg-raised p-3',
 				{
-					'instance-item-dashboard-compact grid grid-cols-[auto_minmax(0,1fr)_auto] gap-2 p-1.5': dashboardDensity === 'compact',
+					'instance-item-dashboard-compact grid grid-cols-[auto_minmax(0,1fr)_auto] gap-2 p-1.5':
+						dashboardDensity === 'compact',
 					'instance-item-dashboard-comfortable p-2': dashboardDensity === 'comfortable',
 				},
 			]"
@@ -214,23 +213,25 @@ onUnmounted(() => {
 					color="red"
 					:circular="dashboardDensity === 'compact'"
 				>
-					<button @click="stop">
+					<button v-tooltip="formatMessage(messages.stopAll)" @click="stop">
 						<StopCircleIcon aria-hidden="true" />
 						<span v-if="dashboardDensity !== 'compact'">
-							{{ formatMessage(commonMessages.stopButton) }}
+							{{ formatMessage(messages.stopAll) }}
 						</span>
 					</button>
 				</ButtonStyled>
-				<ButtonStyled v-else :circular="dashboardDensity === 'compact'">
+				<ButtonStyled :circular="dashboardDensity === 'compact'">
 					<button
-						v-tooltip="isPlaying ? formatMessage(messages.alreadyOpen) : null"
-						:disabled="isPlaying || loading"
+						v-tooltip="
+							formatMessage(isPlaying ? messages.launchAnother : commonMessages.playButton)
+						"
+						:disabled="loading"
 						@click="play"
 					>
 						<SpinnerIcon v-if="loading" class="animate-spin" />
 						<PlayIcon v-else aria-hidden="true" />
 						<span v-if="dashboardDensity !== 'compact'">
-							{{ formatMessage(commonMessages.playButton) }}
+							{{ formatMessage(isPlaying ? messages.launchAnother : commonMessages.playButton) }}
 						</span>
 					</button>
 				</ButtonStyled>
@@ -280,5 +281,4 @@ onUnmounted(() => {
 .instance-item-dashboard-compact > :last-child {
 	gap: 0.125rem;
 }
-
 </style>

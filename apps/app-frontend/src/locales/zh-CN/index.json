@@ -380,7 +380,7 @@
     "message": "显示更多运行中的实例"
   },
   "app.action-bar.stop-instance": {
-    "message": "停止实例"
+    "message": "停止当前窗口"
   },
   "app.action-bar.update": {
     "message": "更新"
@@ -3048,6 +3048,15 @@
   },
   "app.instance.launch-instance": {
     "message": "启动实例"
+  },
+  "app.instance.launch-another": {
+    "message": "再开一个窗口"
+  },
+  "app.action-bar.window-started": {
+    "message": "{time, time, medium} 启动"
+  },
+  "app.instance.stop-all": {
+    "message": "停止此实例全部窗口"
   },
   "app.instance.linked-to": {
     "message": "关联到"
@@ -5975,7 +5984,7 @@
     "message": "切换主页样式"
   },
   "app.onboarding.instance-actions.description": {
-    "message": "从这里启动或配置实例。首次启动选择玩家后会自动记住，之后可在实例设置中切换。"
+    "message": "从这里启动或配置实例。运行中可再开一个窗口，顶部运行列表可单独停止某个窗口。首次启动选择玩家后会自动记住，之后可在实例设置中切换。"
   },
   "app.onboarding.instance-actions.title": {
     "message": "主操作台"
@@ -10287,6 +10296,9 @@
   },
   "minecraft-account.third-party-modal.description": {
     "message": "使用 StarLight 皮肤站账号登录。"
+  },
+  "minecraft-account.third-party-modal.littleskin": {
+    "message": "使用 LittleSkin"
   },
   "minecraft-account.third-party-modal.password": {
     "message": "密码"

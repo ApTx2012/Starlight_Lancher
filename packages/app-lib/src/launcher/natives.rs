@@ -487,6 +487,47 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn concurrent_launch_native_directories_do_not_replace_each_other() {
+        let archives = tempfile::tempdir().unwrap();
+        let first = tempfile::tempdir().unwrap();
+        let second = tempfile::tempdir().unwrap();
+        let source = archives.path().join("natives.jar");
+        write_archive(&source, &[("lwjgl.dll", b"first runtime")]);
+        materialize_native_directory(
+            &[archive(source.clone())],
+            first.path(),
+            "natives",
+        )
+        .await
+        .unwrap();
+        let first_dll = first.path().join("natives/lwjgl.dll");
+        #[cfg(windows)]
+        let _running_dll = {
+            use std::os::windows::fs::OpenOptionsExt;
+            std::fs::OpenOptions::new()
+                .read(true)
+                .share_mode(1)
+                .open(&first_dll)
+                .unwrap()
+        };
+        write_archive(&source, &[("lwjgl.dll", b"second runtime")]);
+        materialize_native_directory(
+            &[archive(source)],
+            second.path(),
+            "natives",
+        )
+        .await
+        .unwrap();
+        assert_eq!(std::fs::read(&first_dll).unwrap(), b"first runtime");
+        assert_eq!(
+            std::fs::read(second.path().join("natives/lwjgl.dll")).unwrap(),
+            b"second runtime"
+        );
+        drop(second);
+        assert!(first_dll.exists());
+    }
+
+    #[tokio::test]
     async fn repairs_missing_truncated_same_size_and_directory_entries() {
         let root = tempfile::tempdir().unwrap();
         let archive_path = root.path().join("natives.jar");

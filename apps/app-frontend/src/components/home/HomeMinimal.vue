@@ -29,6 +29,7 @@ import { process_listener } from '@/helpers/events'
 import { install_existing_instance, install_pack_to_existing_instance } from '@/helpers/install'
 import { kill, run } from '@/helpers/instance'
 import { get_by_instance_id } from '@/helpers/process'
+import { isInstanceLaunching } from '@/helpers/instance-launch-state'
 import type { GameInstance } from '@/helpers/types'
 import { handleSevereError } from '@/store/error'
 
@@ -50,6 +51,8 @@ const handleMinecraftLaunchError = useMinecraftLaunchError()
 const { offline } = useNetworkStatus()
 
 const messages = defineMessages({
+	launchAnother: { id: 'app.instance.launch-another', defaultMessage: 'Launch another window' },
+	stopAll: { id: 'app.instance.stop-all', defaultMessage: 'Stop all windows of this instance' },
 	chooseInstance: {
 		id: 'app.home.minimal.choose-instance',
 		defaultMessage: 'Choose instance',
@@ -88,14 +91,17 @@ const selectedInstance = computed(() =>
 	props.instances.find((instance) => instance.id === props.selectedInstanceId),
 )
 const running = ref(false)
-const loading = ref(false)
-const currentEvent = ref<string | null>(null)
+const installingId = ref<string>()
 const installed = computed(() => selectedInstance.value?.install_stage === 'installed')
 const installing = computed(
 	() => selectedInstance.value?.install_stage.includes('installing') ?? false,
 )
 const busy = computed(
-	() => loading.value || installing.value || (currentEvent.value === 'launched' && !running.value),
+	() =>
+		!!selectedInstance.value &&
+		(isInstanceLaunching(selectedInstance.value.id) ||
+			installingId.value === selectedInstance.value.id ||
+			installing.value),
 )
 
 const lastPlayed = computed(() => {
@@ -111,18 +117,17 @@ async function refreshProcessState() {
 		return
 	}
 
-	const processes = await get_by_instance_id(selectedInstance.value.id).catch((error) => {
+	const id = selectedInstance.value.id
+	const processes = await get_by_instance_id(id).catch((error) => {
 		handleError(error)
 		return []
 	})
-	running.value = processes.length > 0
+	if (selectedInstance.value?.id === id) running.value = processes.length > 0
 }
 
 async function playInstance() {
 	const instance = selectedInstance.value
-	if (!instance) return
-
-	loading.value = true
+	if (!instance || busy.value) return
 	try {
 		await run(instance.id)
 	} catch (error) {
@@ -132,7 +137,6 @@ async function playInstance() {
 		})
 		if (!handled) handleSevereError(error, { instanceId: instance.id })
 	} finally {
-		loading.value = false
 		await refreshProcessState()
 	}
 }
@@ -142,14 +146,14 @@ async function stopInstance() {
 	if (!instance) return
 
 	await kill(instance.id).catch(handleError)
-	running.value = false
+	await refreshProcessState()
 }
 
 async function installInstance() {
 	const instance = selectedInstance.value
 	if (!instance) return
 
-	loading.value = true
+	installingId.value = instance.id
 	try {
 		if (
 			instance.install_stage !== 'pack_installed' &&
@@ -168,14 +172,14 @@ async function installInstance() {
 	} catch (error) {
 		handleError(error)
 	} finally {
-		loading.value = false
+		if (installingId.value === instance.id) installingId.value = undefined
 	}
 }
 
 watch(
 	() => props.selectedInstanceId,
 	() => {
-		currentEvent.value = null
+		running.value = false
 		void refreshProcessState()
 	},
 )
@@ -184,9 +188,7 @@ await refreshProcessState()
 
 const unlistenProcess = await process_listener((event: { instance_id: string; event: string }) => {
 	if (event.instance_id !== selectedInstance.value?.id) return
-	currentEvent.value = event.event
-	if (event.event === 'finished') running.value = false
-	else void refreshProcessState()
+	void refreshProcessState()
 })
 
 onUnmounted(() => {
@@ -237,13 +239,17 @@ onUnmounted(() => {
 						</router-link>
 
 						<div class="flex min-h-11 shrink-0 items-center justify-end gap-2">
-							<ButtonStyled v-if="running" color="red" size="large">
-								<button class="w-36 justify-center" @click="stopInstance">
+							<ButtonStyled v-if="running" color="red" size="large" circular>
+								<button
+									v-tooltip="formatMessage(messages.stopAll)"
+									:aria-label="formatMessage(messages.stopAll)"
+									:disabled="busy"
+									@click="stopInstance"
+								>
 									<StopCircleIcon aria-hidden="true" />
-									<span class="truncate">{{ formatMessage(commonMessages.stopButton) }}</span>
 								</button>
 							</ButtonStyled>
-							<ButtonStyled v-else-if="busy" size="large">
+							<ButtonStyled v-if="busy" size="large">
 								<button class="w-36 justify-center" disabled>
 									<SpinnerIcon class="animate-spin" aria-hidden="true" />
 									<span class="truncate">
@@ -256,7 +262,9 @@ onUnmounted(() => {
 							<ButtonStyled v-else-if="installed" color="brand" size="large">
 								<button class="w-36 justify-center" @click="playInstance">
 									<PlayIcon class="translate-x-px" aria-hidden="true" />
-									<span class="truncate">{{ formatMessage(commonMessages.playButton) }}</span>
+									<span class="truncate">{{
+										formatMessage(running ? messages.launchAnother : commonMessages.playButton)
+									}}</span>
 								</button>
 							</ButtonStyled>
 							<ButtonStyled v-else color="brand" size="large">

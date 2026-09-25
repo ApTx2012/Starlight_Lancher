@@ -426,9 +426,7 @@ pub async fn default_publication() -> crate::Result<Publication> {
         })
 }
 
-pub async fn create(
-    game_dir_root: Option<String>,
-) -> crate::Result<String> {
+pub async fn create(game_dir_root: Option<String>) -> crate::Result<String> {
     let publication = default_publication().await?;
     let runtime = &publication.manifest.runtime;
     let state = State::get().await?;
@@ -812,9 +810,83 @@ pub async fn prepare_launch(
                 "StarLight 实例必须登录并联网检查更新后才能启动；离线游玩请使用本地实例",
             ));
         }
-        synchronize_locked(instance_id).await?;
+        if crate::process::get_by_instance_id(instance_id)
+            .await?
+            .is_empty()
+        {
+            synchronize_locked(instance_id).await?;
+        } else {
+            check_running_pack(instance_id).await?;
+        }
     }
     Ok(guard)
+}
+
+async fn check_running_pack(instance_id: &str) -> crate::Result<()> {
+    let auth = authorization().await?;
+    let root = crate::instance::get_full_path(instance_id).await?;
+    let previous: Binding = read_json(&root, BINDING)
+        .await?
+        .ok_or_else(|| invalid("请先关闭该实例的所有游戏窗口，再同步整合包"))?;
+    let remote = request_authorized::<Option<SyncState>>("/sync-state", &auth)
+        .await?
+        .ok_or_else(|| {
+            invalid("管理员尚未指定已发布的默认整合包，请联系服务器管理员")
+        })?;
+    if !marker_matches(&previous, &remote) {
+        return Err(invalid(
+            "整合包有更新，请先关闭该实例的所有游戏窗口，更新完成后再多开",
+        ));
+    }
+    let tagged = request_authorized::<tagged::TaggedManifest>(
+        &format!("/tagged-mods/{}", previous.publication.release_id),
+        &auth,
+    )
+    .await?;
+    tagged.validate()?;
+    if !running_pack_matches(&root, &previous, &tagged).await? {
+        return Err(invalid(
+            "整合包 Mod 有变更，请先关闭该实例的所有游戏窗口，更新完成后再多开",
+        ));
+    }
+    ensure_session(&auth).await
+}
+
+async fn running_pack_matches(
+    root: &Path,
+    previous: &Binding,
+    tagged: &tagged::TaggedManifest,
+) -> crate::Result<bool> {
+    let mut desired = previous.publication.manifest.files.clone();
+    desired.extend(previous.resolved_external.iter().cloned());
+    let duplicates = tagged::merge(
+        root,
+        &target(root, ".starlight-pack-cache")?,
+        &mut desired,
+        &mut BTreeMap::new(),
+        tagged,
+    )
+    .await?;
+    validate(&desired)?;
+    let inventory = |files: &[PackFile]| {
+        files
+            .iter()
+            .map(|file| (file.path.clone(), file.sha256.clone()))
+            .collect::<BTreeMap<_, _>>()
+    };
+    if !duplicates.is_empty()
+        || inventory(&desired) != inventory(&previous.files)
+    {
+        return Ok(false);
+    }
+    for file in desired.iter().filter(|file| tagged.includes_content(file)) {
+        if hash(&target(root, &file.path)?).await?.as_deref()
+            != Some(&file.sha256)
+        {
+            return Ok(false);
+        }
+    }
+    Ok(true)
 }
 
 async fn synchronize_locked(instance_id: &str) -> crate::Result<SyncResult> {
@@ -1417,6 +1489,62 @@ async fn synchronize_with_progress(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[tokio::test]
+    async fn running_pack_checks_tag_changes_without_writing_live_files() {
+        let root = tempfile::tempdir().unwrap();
+        tokio::fs::create_dir(root.path().join("mods"))
+            .await
+            .unwrap();
+        let path = root.path().join("mods/example.starlight.jar");
+        tokio::fs::write(&path, b"installed").await.unwrap();
+        let sha = hash(&path).await.unwrap().unwrap();
+        let file = serde_json::json!({"path":"mods/example.starlight.jar", "sha256":sha, "size":9,
+            "modIds":["example"], "force":true});
+        let previous: Binding = serde_json::from_value(serde_json::json!({
+            "publication":{"packId":"pack", "releaseId":1, "manifest":{
+                "schemaVersion":1, "name":"Pack", "version":"1", "format":"multimc",
+                "runtime":{"gameVersion":"1.21.1", "loader":"vanilla"}, "files":[]
+            }}, "files":[file], "syncMarker":"pack:1"
+        })).unwrap();
+        let manifest = |sha: &str| {
+            serde_json::from_value::<tagged::TaggedManifest>(serde_json::json!({
+            "files":[{"modId":"example", "modIds":["example"], "path":"mods/example.starlight.jar", "sha256":sha, "size":9}],
+            "replaces":[]
+        })).unwrap()
+        };
+        assert!(
+            running_pack_matches(root.path(), &previous, &manifest(&sha))
+                .await
+                .unwrap()
+        );
+        assert!(
+            !running_pack_matches(
+                root.path(),
+                &previous,
+                &manifest(&"a".repeat(64))
+            )
+            .await
+            .unwrap()
+        );
+        let empty = serde_json::from_value(
+            serde_json::json!({"files":[], "replaces":[]}),
+        )
+        .unwrap();
+        assert!(
+            !running_pack_matches(root.path(), &previous, &empty)
+                .await
+                .unwrap()
+        );
+        assert_eq!(tokio::fs::read(&path).await.unwrap(), b"installed");
+        assert!(!root.path().join(JOURNAL).exists());
+        tokio::fs::write(&path, b"modified").await.unwrap();
+        assert!(
+            !running_pack_matches(root.path(), &previous, &manifest(&sha))
+                .await
+                .unwrap()
+        );
+    }
+
     #[test]
     fn sync_marker_requires_an_installed_publication_and_changes_on_default_or_release()
      {

@@ -2,11 +2,11 @@ import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 
 const migrationsDirectory = 'packages/app-lib/migrations'
-const repository = process.env.GITHUB_REPOSITORY ?? 'Mystic-Stars/Axolotl'
-// v1.7.5 is the canonical snapshot immediately before the v1.7.6 incident.
+const repository = process.env.GITHUB_REPOSITORY ?? 'ApTx2012/Starlight_Lancher'
+// Starlight's first release anchors the immutable migration history in this fork.
 const canonicalBootstrap = {
-	ref: '7ddbfb8e57db4b0044a04cf28f25fb29e08c3279',
-	tag: 'v1.7.5',
+	ref: '71a8e65085c60eeb4154dd3fc39c0d84ed6fd18c',
+	tag: 'v1.0.0-beta1',
 }
 // Published divergences remain evidence of an incident and never replace the canonical bytes.
 const knownPublishedDivergences = new Set([
