@@ -1,6 +1,15 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
+// Build a stable release download URL from the tag and asset name instead of
+// relying on `browser_download_url`. While the release is still a draft GitHub
+// reports the asset URL as `.../releases/download/untagged-<hash>/...`, which
+// would make the updater manifest point at a path that disappears once the
+// release is published.
+function buildDownloadUrl(assetName, versionTag) {
+	const repository = process.env.GITHUB_REPOSITORY || 'ApTx2012/Starlight_Lancher'
+	return `https://github.com/${repository}/releases/download/${versionTag}/${encodeURIComponent(assetName)}`
+}
 const [releasePath, signaturesPath, tag, outputPath] = process.argv.slice(2)
 
 if (!releasePath || !signaturesPath || !tag || !outputPath) {
@@ -52,10 +61,7 @@ for (const target of targets) {
 	}
 
 	const signature = fs.readFileSync(signaturePath, 'utf8')
-	const url = asset.browser_download_url ?? asset.url
-	if (!url) {
-		throw new Error(`Release asset ${asset.name} does not contain a download URL`)
-	}
+	const url = buildDownloadUrl(asset.name, tag)
 
 	for (const platform of target.platforms) {
 		platforms[platform] = { signature, url }
@@ -81,8 +87,8 @@ for (const target of [
 		)
 	}
 	const asset = matches[0]
-	const url = asset.browser_download_url ?? asset.url
-	if (!url || !Number.isSafeInteger(asset.size) || asset.size <= 0) {
+	const url = buildDownloadUrl(asset.name, tag)
+	if (!Number.isSafeInteger(asset.size) || asset.size <= 0) {
 		throw new Error(`Release asset ${asset.name} has invalid download metadata`)
 	}
 	apt[target.platform] = {
