@@ -33,6 +33,74 @@ export const ANNOUNCEMENT_CHANGE_TYPES: readonly AnnouncementChangeType[] = [
 
 export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 	{
+		id: 'launcher-1.0.1-beta1',
+		version: '1.0.1-beta1',
+		publishedAt: '2026-09-25',
+		title: {
+			'en-US': 'Starlight Launcher 1.0.1-beta1',
+			'zh-CN': 'Starlight Launcher 1.0.1-beta1',
+		},
+		changes: {
+			added: [
+				{
+					'en-US':
+						'Installing a modpack now lets you choose the game directory.',
+					'zh-CN': '一键安装整合包时现在可以选择游戏目录。',
+				},
+				{
+					'en-US':
+						'Approved (hosted) modpack sync and StarLight instance mode were added.',
+					'zh-CN': '新增获批整合包同步与 StarLight 实例模式。',
+				},
+				{
+					'en-US':
+						'Added the skin editor, improved font settings, and polished the about page (including an easter egg).',
+					'zh-CN': '新增皮肤编辑器、改进字体设置，并完善关于页（含彩蛋）。',
+				},
+			],
+			changed: [
+				{
+					'en-US':
+						'The about page now plays a looping wither victory animation.',
+					'zh-CN': '关于页现在会播放循环的凋灵胜利动画。',
+				},
+			],
+			fixed: [
+				{
+					'en-US':
+						'Fixed several issues when importing an instance from a .minecraft folder (content copy, version isolation, symlinks, loader version detection).',
+					'zh-CN':
+						'修复从 .minecraft 文件夹导入实例的多项问题（内容复制、版本隔离、符号链接、加载器版本识别等）。',
+				},
+				{
+					'en-US':
+						'Fixed the instance log view stopping updates and overlapping log lines.',
+					'zh-CN': '修复实例日志窗口停更与日志行重叠的问题。',
+				},
+				{
+					'en-US':
+						'Fixed hosted (SLS) instances leaving external data behind on delete and reusing the same folder on reinstall.',
+					'zh-CN': '修复 SLS 实例删除残留外部数据、重装共用同一文件夹的问题。',
+				},
+				{
+					'en-US':
+						'Fixed the sidebar player picker not appearing right after signing in to the skin site.',
+					'zh-CN': '修复登录皮肤站后侧栏玩家选择器未立即显示的问题。',
+				},
+				{
+					'en-US':
+						'Fixed launches getting stuck and the player picker not reappearing when not signed in to the skin site.',
+					'zh-CN': '修复未登录皮肤站时启动卡住且不再弹出玩家选择的问题。',
+				},
+				{
+					'en-US':
+						'Fixed various skin site login, player list sync, and display issues.',
+					'zh-CN': '修复皮肤站登录、玩家列表同步及若干显示问题。',
+				},
+			],
+		},
+	},
+	{
 		id: 'launcher-1.0.0-beta1',
 		version: '1.0.0-beta1',
 		publishedAt: '2026-09-13',

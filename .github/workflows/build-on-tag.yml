@@ -16,8 +16,63 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # 先生成该版本的更新说明（来自 announcement catalog）并创建带说明的 draft
+  # release；随后各平台 build 只负责上传产物，最后由 publish 转正。
+  preflight:
+    name: Prepare release
+    runs-on: ubuntu-24.04
+    env:
+      SQLX_OFFLINE: true
+    steps:
+      - name: Check out source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@008330803749db0355799c700092d9a85fd074e9 # v6.0.9
+
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate release notes
+        run: node scripts/axolotl/create-release-notes.mjs "${GITHUB_REF_NAME}" "${RUNNER_TEMP}/release-notes.md"
+
+      - name: Create draft release with notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          release_notes="${RUNNER_TEMP}/release-notes.md"
+          existing_release="$(
+            gh release list --limit 100 --json tagName \
+              --jq ".[] | select(.tagName == \"${GITHUB_REF_NAME}\") | .tagName"
+          )"
+          if [[ -n "$existing_release" ]]; then
+            echo "Release ${GITHUB_REF_NAME} already exists"
+            gh release edit "${GITHUB_REF_NAME}" --notes-file "$release_notes"
+            exit 0
+          fi
+
+          release_args=(
+            --draft
+            --notes-file "$release_notes"
+            --title "Starlight Launcher ${GITHUB_REF_NAME}"
+          )
+          if [[ "${GITHUB_REF_NAME}" == *-* ]]; then
+            release_args+=(--prerelease)
+          fi
+          gh release create "${GITHUB_REF_NAME}" "${release_args[@]}"
+
   build:
     name: Build (${{ matrix.name }})
+    needs: preflight
     strategy:
       fail-fast: false
       max-parallel: 4
@@ -111,8 +166,7 @@ jobs:
           tauriScript: pnpm tauri
           args: ${{ matrix.args }}
           tagName: ${{ github.ref_name }}
-          releaseName: Starlight Launcher ${{ github.ref_name }}
-          releaseDraft: false
+          releaseDraft: true
           prerelease: ${{ contains(github.ref_name, '-') }}
           generateReleaseNotes: false
           includeUpdaterJson: false
@@ -204,3 +258,18 @@ jobs:
           } else {
             throw "Binary not found at $appExe"
           }
+  # 所有平台构建完成后，把 preflight 创建的 draft release 转为正式发布。
+  publish:
+    name: Publish release
+    needs: build
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [[ "${GITHUB_REF_NAME}" == *-* ]]; then
+            gh release edit "${GITHUB_REF_NAME}" --draft=false --prerelease
+          else
+            gh release edit "${GITHUB_REF_NAME}" --draft=false --latest
+          fi
