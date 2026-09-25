@@ -97,6 +97,214 @@ mod tests {
         }
     }
 
+    fn write_mod(root: &Path, name: &str, id: &str) -> PathBuf {
+        let path = root.join("mods").join(name);
+        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+        let mut zip =
+            zip::ZipWriter::new(std::fs::File::create(&path).unwrap());
+        zip.set_comment(name.to_owned());
+        zip.start_file(
+            "fabric.mod.json",
+            zip::write::SimpleFileOptions::default(),
+        )
+        .unwrap();
+        zip.write_all(
+            format!(r#"{{"schemaVersion":1,"id":"{id}","version":"1"}}"#)
+                .as_bytes(),
+        )
+        .unwrap();
+        zip.finish().unwrap();
+        path
+    }
+
+    #[tokio::test]
+    async fn removes_orphaned_managed_mods_even_when_no_tags_are_selected() {
+        let root = tempfile::tempdir().unwrap();
+        let stale = write_mod(root.path(), "example.starlight.jar", "example");
+        let personal = write_mod(root.path(), "personal.jar", "personal");
+        let actions = merge(
+            root.path(),
+            &root.path().join("cache"),
+            &mut vec![],
+            &mut BTreeMap::new(),
+            &TaggedManifest {
+                files: vec![],
+                replaces: vec![],
+            },
+        )
+        .await
+        .unwrap();
+        assert_eq!(actions.len(), 1);
+        assert_eq!(actions[0].path, "mods/example.starlight.jar");
+        assert!(actions[0].next_hash.is_none());
+        // Planning must not touch the files; application uses the normal backup transaction.
+        assert!(stale.is_file());
+        assert!(personal.is_file());
+        let backup = ".starlight-pack-backup-orphan-test";
+        apply_files(root.path(), &root.path().join("cache"), backup, &actions)
+            .await
+            .unwrap();
+        assert!(!stale.exists());
+        assert!(
+            root.path()
+                .join(backup)
+                .join("mods/example.starlight.jar")
+                .is_file()
+        );
+        assert!(personal.is_file());
+        restore_files(root.path(), backup, &actions).await.unwrap();
+        assert!(stale.is_file());
+    }
+
+    #[tokio::test]
+    async fn replaces_installed_pack_mod_when_identity_and_cache_are_missing() {
+        let root = tempfile::tempdir().unwrap();
+        let local = write_mod(root.path(), "example-old.jar", "example");
+        let mut files = vec![PackFile {
+            mod_ids: vec![],
+            external: None,
+            path: "mods/example-old.jar".into(),
+            sha256: hash(&local).await.unwrap().unwrap(),
+            size: std::fs::metadata(&local).unwrap().len(),
+            force: true,
+            preserve: false,
+        }];
+        let actions = merge(
+            root.path(),
+            &root.path().join("cache"),
+            &mut files,
+            &mut BTreeMap::new(),
+            &manifest(),
+        )
+        .await
+        .unwrap();
+        assert_eq!(files.len(), 1);
+        assert_eq!(files[0].path, "mods/example.starlight.jar");
+        assert_eq!(actions.len(), 1);
+        assert_eq!(actions[0].path, "mods/example-old.jar");
+    }
+
+    #[tokio::test]
+    async fn fresh_install_reconciles_newly_downloaded_jars_before_applying() {
+        let root = tempfile::tempdir().unwrap();
+        let fixture = tempfile::tempdir().unwrap();
+        let cache = root.path().join("cache");
+        std::fs::create_dir(&cache).unwrap();
+        let old_jar = write_mod(fixture.path(), "old.jar", "example");
+        let old = PackFile {
+            mod_ids: vec![],
+            external: None,
+            path: "mods/old.jar".into(),
+            sha256: hash(&old_jar).await.unwrap().unwrap(),
+            size: std::fs::metadata(&old_jar).unwrap().len(),
+            force: true,
+            preserve: false,
+        };
+        let mut files = vec![old.clone()];
+        let mut sources = BTreeMap::new();
+        let replacement = write_mod(fixture.path(), "new.jar", "example");
+        let mut tagged = manifest();
+        tagged.files[0].sha256 = hash(&replacement).await.unwrap().unwrap();
+        tagged.files[0].size = std::fs::metadata(&replacement).unwrap().len();
+        merge(root.path(), &cache, &mut files, &mut sources, &tagged)
+            .await
+            .unwrap();
+        assert_eq!(files.len(), 2, "uncached legacy manifests have no IDs yet");
+        let mut actions: Vec<_> = files
+            .iter()
+            .map(|file| Action {
+                path: file.path.clone(),
+                old_hash: None,
+                next_hash: Some(file.sha256.clone()),
+            })
+            .collect();
+        // Downloads complete in the cache, not the live mods directory.
+        std::fs::copy(&old_jar, cache.join(&old.sha256)).unwrap();
+        std::fs::copy(&replacement, cache.join(&tagged.files[0].sha256))
+            .unwrap();
+        let duplicates = reconcile_staged(
+            root.path(),
+            &cache,
+            &mut files,
+            &mut sources,
+            &tagged,
+            &mut actions,
+        )
+        .await
+        .unwrap();
+        assert!(duplicates.is_empty());
+        assert_eq!(files.len(), 1);
+        assert_eq!(actions.len(), 1);
+        assert_eq!(actions[0].path, "mods/example.starlight.jar");
+        apply_files(
+            root.path(),
+            &cache,
+            ".starlight-pack-backup-fresh-test",
+            &actions,
+        )
+        .await
+        .unwrap();
+        assert!(root.path().join("mods/example.starlight.jar").is_file());
+        assert!(!root.path().join("mods/old.jar").exists());
+    }
+
+    #[tokio::test]
+    async fn desired_managed_file_is_kept_without_selected_tags() {
+        let root = tempfile::tempdir().unwrap();
+        let local = write_mod(root.path(), "example.starlight.jar", "example");
+        let mut files = vec![PackFile {
+            mod_ids: vec!["example".into()],
+            external: None,
+            path: "mods/example.starlight.jar".into(),
+            sha256: hash(&local).await.unwrap().unwrap(),
+            size: std::fs::metadata(&local).unwrap().len(),
+            force: true,
+            preserve: false,
+        }];
+        let actions = merge(
+            root.path(),
+            &root.path().join("cache"),
+            &mut files,
+            &mut BTreeMap::new(),
+            &TaggedManifest {
+                files: vec![],
+                replaces: vec![],
+            },
+        )
+        .await
+        .unwrap();
+        assert!(actions.is_empty());
+        assert_eq!(files.len(), 1);
+        assert!(local.is_file());
+    }
+
+    #[tokio::test]
+    async fn modified_local_file_is_not_used_as_the_pack_identity() {
+        let root = tempfile::tempdir().unwrap();
+        let local = write_mod(root.path(), "personal.jar", "example");
+        let mut files = vec![PackFile {
+            mod_ids: vec![],
+            external: None,
+            path: "mods/personal.jar".into(),
+            sha256: "b".repeat(64),
+            size: 10,
+            force: true,
+            preserve: false,
+        }];
+        let actions = merge(
+            root.path(),
+            &root.path().join("cache"),
+            &mut files,
+            &mut BTreeMap::new(),
+            &manifest(),
+        )
+        .await
+        .unwrap();
+        assert!(actions.is_empty());
+        assert_eq!(files.len(), 2);
+        assert!(local.is_file());
+    }
+
     #[tokio::test]
     async fn replaces_external_mod_using_saved_identity_when_cache_is_missing()
     {
@@ -298,9 +506,6 @@ pub(super) async fn merge(
         .iter()
         .flat_map(|file| file.mod_ids.iter().map(String::as_str))
         .collect();
-    if ids.is_empty() {
-        return Ok(Vec::new());
-    }
 
     // The modpack is the installation baseline. A tagged snapshot with the
     // same content already passes verification, even when the skin site uses
@@ -321,10 +526,13 @@ pub(super) async fn merge(
     let mut replaced: HashSet<String> = manifest
         .replaces
         .iter()
-        .filter(|path| !satisfied_pack_paths.contains(*path))
+        .filter(|path| !ids.is_empty() && !satisfied_pack_paths.contains(*path))
         .cloned()
         .collect();
-    for file in files.iter().filter(|file| is_mod_path(&file.path)) {
+    for file in files
+        .iter()
+        .filter(|file| !ids.is_empty() && is_mod_path(&file.path))
+    {
         if satisfied_pack_paths.contains(&file.path)
             || replaced.contains(&file.path)
         {
@@ -334,7 +542,19 @@ pub(super) async fn merge(
         let declared = if !file.mod_ids.is_empty() {
             file.mod_ids.clone()
         } else {
-            mod_ids(object).await?
+            let cached = mod_ids(object).await?;
+            if cached.is_empty() {
+                let local = target(root, &file.path)?;
+                // An installed pack is still identifiable after its cache was
+                // cleared. Do not use a user-modified JAR as the pack identity.
+                if hash(&local).await?.as_deref() == Some(&file.sha256) {
+                    mod_ids(local).await?
+                } else {
+                    cached
+                }
+            } else {
+                cached
+            }
         };
         if replaces_ids(&declared, &ids)? {
             replaced.insert(file.path.clone());
@@ -383,7 +603,14 @@ pub(super) async fn merge(
                 continue;
             }
             let local = target(root, &path)?;
-            if replaces_ids(&mod_ids(local.clone()).await?, &ids)? {
+            // This suffix is the launcher's managed namespace. Clean orphaned
+            // tagged JARs even if the user no longer has any selected tags or
+            // the old binding did not record them. Ordinary user JARs require
+            // a confirmed identity overlap and retain the multi-Mod guard.
+            if path.to_ascii_lowercase().ends_with(".starlight.jar")
+                || (!ids.is_empty()
+                    && replaces_ids(&mod_ids(local.clone()).await?, &ids)?)
+            {
                 duplicate_actions.push(Action {
                     path,
                     old_hash: hash(&local).await?,
@@ -393,6 +620,26 @@ pub(super) async fn merge(
         }
     }
     Ok(duplicate_actions)
+}
+
+/// The first pass may not know IDs of uncached pack JARs. Reconcile once they
+/// are staged, before journaling or modifying the instance, and drop installs
+/// of pack files now superseded by a tagged Mod.
+pub(super) async fn reconcile_staged(
+    root: &Path,
+    cache: &Path,
+    files: &mut Vec<PackFile>,
+    sources: &mut BTreeMap<String, String>,
+    manifest: &TaggedManifest,
+    actions: &mut Vec<Action>,
+) -> crate::Result<Vec<Action>> {
+    let duplicates = merge(root, cache, files, sources, manifest).await?;
+    let desired: HashSet<_> =
+        files.iter().map(|file| file.path.as_str()).collect();
+    actions.retain(|action| {
+        action.next_hash.is_none() || desired.contains(action.path.as_str())
+    });
+    Ok(duplicates)
 }
 
 pub(super) async fn download(

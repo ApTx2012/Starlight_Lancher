@@ -19,21 +19,15 @@
 			/>
 		</div>
 
-		<!--
-			Native virtualization: every line is rendered, but `content-visibility:
-			auto` lets the browser skip layout/paint for off-screen lines, while
-			`contain-intrinsic-size` gives the skipped elements a placeholder size
-			so the scrollbar stays stable. This avoids the manual height estimation
-			that used to make tall (wrapped / highlighted) lines overlap.
-		-->
+		<!-- Keep rows in normal flow, without cached off-screen sizes. Font size,
+			wrapping and container width can all change while a row is off screen. -->
 		<div v-else class="log-viewport-spacer relative w-full min-w-max">
 			<div
 				v-for="item in lines"
 				:key="item.originalIndex"
 				:data-line="item.originalIndex + 1"
-				class="log-line log-line-cv flex items-stretch whitespace-pre"
+				class="log-line flex items-stretch whitespace-pre"
 				:class="entryClass(item.line)"
-				:style="lineStyle"
 			>
 				<span
 					class="flex shrink-0 w-[52px] items-center justify-end leading-none text-right text-secondary bg-surface-3 border-r border-solid border-surface-3 select-none overflow-hidden"
@@ -63,7 +57,7 @@
 // 逐行正则高亮来自 ./composables/log-highlight.ts（移植自 logParser.worker.ts）。
 // LogShare-Web-UI 为 MIT License, Copyright (c) 2024 LogShare.CN Team，详见 packages/ui/COPYING.md。
 import { ChevronDownIcon } from '@modrinth/assets'
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import ButtonStyled from '#ui/components/base/ButtonStyled.vue'
 import EmptyState from '#ui/components/base/EmptyState.vue'
@@ -98,20 +92,6 @@ const props = withDefaults(
 
 const viewportRef = ref<HTMLElement | null>(null)
 const stickToBottom = ref(true)
-
-// Placeholder row height for `contain-intrinsic-size`. Native
-// `content-visibility: auto` replaces this with the real measured height once a
-// line enters the viewport, so it only needs to be a reasonable estimate to
-// keep the scrollbar from jumping. Wrapped lines can be taller, so bias higher.
-const intrinsicLineHeight = computed(() => {
-	const single = Math.round(props.fontSize * 1.4)
-	return props.wrap ? single * 2 : single
-})
-
-const lineStyle = computed(() => ({
-	'content-visibility': 'auto',
-	'contain-intrinsic-size': `auto ${intrinsicLineHeight.value}px`,
-}))
 
 function entryClass(line: LogLine): string {
 	if (line.level === 'error') return 'entry-error'
@@ -214,7 +194,7 @@ defineExpose({
 }
 
 .log-viewport-wrap .log-line {
-	white-space: normal;
+	white-space: pre-wrap;
 }
 
 .log-viewport-wrap .log-line-content {
@@ -247,8 +227,8 @@ defineExpose({
 
 /* ===== LogShare token 高亮（LogsAnalysis.css 移植，前景色用主题变量） ===== */
 
-.level {
-	white-space: pre-wrap;
+.log-viewport .level {
+	white-space: inherit;
 	word-break: break-all;
 	overflow-wrap: anywhere;
 }

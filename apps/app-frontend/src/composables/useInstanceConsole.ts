@@ -7,7 +7,7 @@ import {
 	get_minecraft_latest_log_cursor,
 } from '@/helpers/logs'
 
-import { mergeLiveLogHistory } from './console-history'
+import { createLatestLogReader } from './latest-log-reader'
 
 type ConsoleState = ReturnType<typeof createConsoleState>
 
@@ -26,6 +26,7 @@ interface InstanceConsoleEntry {
 	historicalCache: Map<string, string>
 	logList: LogEntry[] | null
 	liveHistoryHydration: Promise<void> | null
+	latestLog: ReturnType<typeof createLatestLogReader>
 }
 
 const instances = new Map<string, InstanceConsoleEntry>()
@@ -34,12 +35,20 @@ function getOrCreate(instanceId: string): InstanceConsoleEntry {
 	let entry = instances.get(instanceId)
 	if (entry) return entry
 
+	const liveConsole = createConsoleState()
 	entry = {
-		liveConsole: createConsoleState(),
+		liveConsole,
 		historicalConsole: createConsoleState(),
 		historicalCache: new Map(),
 		logList: null,
 		liveHistoryHydration: null,
+		latestLog: createLatestLogReader(
+			(cursor) => get_minecraft_latest_log_cursor(instanceId, cursor),
+			(output, replace) => {
+				if (replace) liveConsole.clear()
+				void liveConsole.addLegacyLog(output)
+			},
+		),
 	}
 	instances.set(instanceId, entry)
 	return entry
@@ -47,25 +56,17 @@ function getOrCreate(instanceId: string): InstanceConsoleEntry {
 
 async function hydrate(instanceId: string): Promise<void> {
 	const entry = getOrCreate(instanceId)
-	if (entry.liveConsole.output.value.length > 0) return
-
 	if (entry.liveHistoryHydration) {
 		return entry.liveHistoryHydration
 	}
 
 	const hydration = (async () => {
-		const [latestLog, buffer] = await Promise.all([
-			get_minecraft_latest_log_cursor(instanceId, 0)
-				.then((result) => result.output)
-				.catch(() => ''),
-			get_live_log_buffer(instanceId),
-		])
-
-		if (entry.liveConsole.output.value.length > 0) return
-
-		const history = mergeLiveLogHistory(latestLog, buffer)
-		if (history) {
-			await entry.liveConsole.addLegacyLog(history)
+		await entry.latestLog.refresh().catch(console.warn)
+		if (!entry.latestLog.active && entry.liveConsole.output.value.length === 0) {
+			const buffer = await get_live_log_buffer(instanceId)
+			if (!entry.latestLog.active && entry.liveConsole.output.value.length === 0) {
+				await entry.liveConsole.addLegacyLog(buffer)
+			}
 		}
 	})()
 
@@ -108,11 +109,13 @@ function invalidate(instanceId: string): void {
 
 async function clearLive(instanceId: string): Promise<void> {
 	const entry = getOrCreate(instanceId)
+	entry.latestLog.clear()
 	entry.liveConsole.clear()
 	await clear_log_buffer(instanceId).catch(() => {})
 }
 
 async function destroy(instanceId: string): Promise<void> {
+	instances.get(instanceId)?.latestLog.reset()
 	instances.delete(instanceId)
 	await clear_log_buffer(instanceId).catch(() => {})
 }
@@ -127,6 +130,13 @@ export function useInstanceConsole(instanceId: string) {
 		getHistoricalContent: (filename: string) => getHistoricalContent(instanceId, filename),
 		invalidate: () => invalidate(instanceId),
 		clearLive: () => clearLive(instanceId),
+		refreshLive: () => entry.latestLog.refresh(),
+		flushLive: () => entry.latestLog.flush(),
+		acceptsProcessLogs: () => !entry.latestLog.active,
+		resetLive: () => {
+			entry.latestLog.reset()
+			entry.liveConsole.clear()
+		},
 		destroy: () => destroy(instanceId),
 	}
 }
