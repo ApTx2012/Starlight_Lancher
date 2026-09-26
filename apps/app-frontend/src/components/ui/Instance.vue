@@ -20,8 +20,8 @@ import { process_listener } from '@/helpers/events'
 import { install_existing_instance, install_pack_to_existing_instance } from '@/helpers/install'
 import { kill, run } from '@/helpers/instance'
 import { getDisplayInstanceIcon } from '@/helpers/instance-icons'
-import { get_by_instance_id } from '@/helpers/process'
 import { isInstanceLaunching } from '@/helpers/instance-launch-state'
+import { get_by_instance_id } from '@/helpers/process'
 import { showInstanceInFolder } from '@/helpers/utils.js'
 import { handleSevereError } from '@/store/error.js'
 
@@ -98,7 +98,7 @@ const checkProcess = async () => {
 	if (Array.isArray(runningProcesses)) internalPlaying.value = runningProcesses.length > 0
 }
 
-const play = async (e, context) => {
+const play = async (e) => {
 	e?.stopPropagation()
 	if (loading.value) return
 	await run(props.instance.id).catch(async (err) => {
@@ -111,7 +111,7 @@ const play = async (e, context) => {
 	await checkProcess()
 }
 
-const stop = async (e, context) => {
+const stop = async (e) => {
 	e?.stopPropagation()
 	await kill(props.instance.id).catch(handleError)
 	await checkProcess()
@@ -205,7 +205,7 @@ onUnmounted(() => unlisten())
 								: formatMessage(isPlaying ? messages.launchAnother : commonMessages.playButton)
 						"
 						:disabled="offline && !installed"
-						@click="(e) => play(e, 'InstanceCard')"
+						@click="play"
 						@mousehover="checkProcess"
 					>
 						<!-- Translate for optical centering -->
@@ -295,7 +295,7 @@ onUnmounted(() => unlisten())
 								'scale-75 opacity-0 transition-all group-hover:scale-100 group-hover:opacity-100':
 									!disabled,
 							}"
-							@click="(e) => play(e, 'InstanceCard')"
+							@click="play"
 							@mousehover="checkProcess"
 						>
 							<PlayIcon class="translate-x-[1px]" />

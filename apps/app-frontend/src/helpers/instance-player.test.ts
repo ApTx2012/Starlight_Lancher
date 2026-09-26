@@ -1,18 +1,19 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { useNetworkStatus } from '../composables/useNetworkStatus.ts'
+
 import {
-	setSkinSiteFrame,
-	resetSkinSiteSession,
 	receiveSkinSiteMessage,
+	resetSkinSiteSession,
+	setSkinSiteFrame,
 	SKIN_SITE_ORIGIN,
 } from '../composables/skin-site-session.ts'
+import { useNetworkStatus } from '../composables/useNetworkStatus.ts'
 import {
+	type InstancePlayer,
+	onInstancePlayerChanged,
 	prepareInstancePlayer,
 	registerInstancePlayerPicker,
 	saveInstancePlayer,
-	onInstancePlayerChanged,
-	type InstancePlayer,
 } from './instance-player.ts'
 
 test('instance player selection persists independently from the globally selected account', async () => {

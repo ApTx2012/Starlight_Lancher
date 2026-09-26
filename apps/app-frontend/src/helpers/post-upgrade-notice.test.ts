@@ -82,20 +82,20 @@ test('notice query uses the target instance value and registered Tauri command',
 	assert.match(tauriSource, /tauri::generate_handler!\[[\s\S]*instance_get_post_upgrade_notice/)
 })
 
-test('result uses Modrinth Card and Accordion for collapsed compatibility warnings', () => {
+test('result collections use Modrinth Card and Accordion for collapsed compatibility warnings', () => {
 	const source = readFileSync(
-		new URL('../pages/instance/upgrade/UpgradeResultDetails.vue', import.meta.url),
+		new URL('../pages/instance/upgrade/UpgradeResultCollections.vue', import.meta.url),
 		'utf8',
 	)
-	assert.match(source, /<Card v-if="warningRows\.length"/)
-	assert.match(source, /<Accordion[\s\S]*:open-by-default="warningsExpandedByDefault"/)
+	assert.match(source, /<Card v-if="warnings\.length"/)
+	assert.match(source, /<Accordion[\s\S]*:open-by-default="warningsDefaultOpen"/)
 	assert.match(source, /<TriangleAlertIcon/)
 })
 
 test('runtime icon references use names exported by the assets package', () => {
 	const downloadsSource = readFileSync(new URL('../pages/Downloads.vue', import.meta.url), 'utf8')
 	const resultSource = readFileSync(
-		new URL('../pages/instance/upgrade/UpgradeResultDetails.vue', import.meta.url),
+		new URL('../pages/instance/upgrade/UpgradeResultCollections.vue', import.meta.url),
 		'utf8',
 	)
 	const assetsSource = readFileSync(

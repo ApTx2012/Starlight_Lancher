@@ -63,9 +63,11 @@ import { openUrl } from '@tauri-apps/plugin-opener'
 import { type as getOsType } from '@tauri-apps/plugin-os'
 import { saveWindowState, StateFlags } from '@tauri-apps/plugin-window-state'
 import { hideAllPoppers } from 'floating-vue'
-import { computed, nextTick, onMounted, onUnmounted, provide, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, provide, ref, watch } from 'vue'
 import { type RouteLocationNormalizedLoaded, RouterView, useRoute, useRouter } from 'vue-router'
 
+import InstancePlayerModal from '@/components/instance/InstancePlayerModal.vue'
+import TaggedModDownloadsModal from '@/components/instance/TaggedModDownloadsModal.vue'
 import InstanceExportModal from '@/components/lab/recipe-generator/InstanceExportModal.vue'
 import AccountsCard from '@/components/ui/AccountsCard.vue'
 import AppActionBar from '@/components/ui/AppActionBar.vue'
@@ -79,7 +81,6 @@ import MinecraftAuthErrorModal from '@/components/ui/minecraft-auth-error-modal/
 import MinecraftCrashModal from '@/components/ui/MinecraftCrashModal.vue'
 import AuthGrantFlowWaitModal from '@/components/ui/modal/AuthGrantFlowWaitModal.vue'
 import CurseForgeManualDownloadsModal from '@/components/ui/modal/CurseForgeManualDownloadsModal.vue'
-import TaggedModDownloadsModal from '@/components/instance/TaggedModDownloadsModal.vue'
 import InstallToPlayModal from '@/components/ui/modal/InstallToPlayModal.vue'
 import InstanceIconPickerModal from '@/components/ui/modal/InstanceIconPickerModal.vue'
 import JavaDownloadConfirmationModal from '@/components/ui/modal/JavaDownloadConfirmationModal.vue'
@@ -90,9 +91,8 @@ import NavButton from '@/components/ui/NavButton.vue'
 import NavRail from '@/components/ui/NavRail.vue'
 import OnboardingOverlay from '@/components/ui/onboarding/OnboardingOverlay.vue'
 import QuickInstanceSwitcher from '@/components/ui/QuickInstanceSwitcher.vue'
-import SplashScreen from '@/components/ui/SplashScreen.vue'
 import SkinSiteSessionFrame from '@/components/ui/SkinSiteSessionFrame.vue'
-import InstancePlayerModal from '@/components/instance/InstancePlayerModal.vue'
+import SplashScreen from '@/components/ui/SplashScreen.vue'
 import WindowControls from '@/components/ui/WindowControls.vue'
 import { useCheckDisableMouseover } from '@/composables/macCssFix.js'
 import { useDropImport } from '@/composables/useDropImport'
@@ -138,7 +138,6 @@ import {
 	isDev,
 	isElevated,
 	isNetworkMetered,
-	restartApp,
 	setRestartAfterPendingUpdate,
 } from '@/helpers/utils.js'
 import { start_join_server, start_join_singleplayer_world } from '@/helpers/worlds.ts'
@@ -489,6 +488,12 @@ onMounted(async () => {
 	document.querySelector('body').addEventListener('click', handleClick)
 	document.querySelector('body').addEventListener('auxclick', handleAuxClick)
 	window.addEventListener(DIRECT_LINKS_SYNCED_EVENT, handleDirectLinkSyncReport)
+
+	try {
+		await stateInitialization
+	} catch {
+		return
+	}
 
 	checkUpdates()
 	void warnIfRunningElevated()
@@ -1701,6 +1706,7 @@ onMounted(() => {
 	setServerUpdateToPlayModal(updateToPlayModal.value)
 	void (async () => {
 		try {
+			await stateInitialization
 			const ready = await invoke<{
 				pending_crashes: { instance_id: string; uuid: string }[]
 				pending_commands: Parameters<typeof handleCommand>[0][]
@@ -2423,9 +2429,13 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 				{{ formatMessage(messages.authUnreachableBody) }}
 			</Admonition>
 			<div class="page-transition-grid grid min-h-full">
-				<RouterView v-slot="{ Component, route }">
+				<RouterView v-slot="{ Component, route: currentRoute }">
 					<Transition name="page-slide" :css="themeStore.getFeatureFlag('page_transitions')">
-						<div v-if="Component" :key="getPageTransitionKey(route)" class="page-transition-layer">
+						<div
+							v-if="Component"
+							:key="getPageTransitionKey(currentRoute)"
+							class="page-transition-layer"
+						>
 							<Suspense @pending="onSuspensePending" @resolve="onSuspenseResolve">
 								<component :is="Component"></component>
 							</Suspense>
@@ -2489,7 +2499,7 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 		:on-error-action="exportNotificationErrorLogs"
 		:error-action-label="formatMessage(messages.exportErrorLogs)"
 	/>
-	<MinecraftCrashModal ref="minecraftCrashModal" @error="handleError" />
+	<MinecraftCrashModal v-if="stateInitialized" ref="minecraftCrashModal" @error="handleError" />
 	<JavaDownloadConfirmationModal ref="javaDownloadConfirmationModal" />
 	<NewModal
 		ref="closeChoiceModal"
@@ -2577,7 +2587,7 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 		@install="handleContentInstallModpackInstall"
 		@cancel="handleContentInstallModpackInstallCancel"
 	/>
-	<TaggedModDownloadsModal />
+	<TaggedModDownloadsModal v-if="stateInitialized" />
 	<CurseForgeManualDownloadsModal
 		ref="contentInstallCurseForgeManualDownloadsModal"
 		@view-instance="handleContentInstallModpackDuplicateGoToInstance"

@@ -522,7 +522,7 @@ async function copyShareUrl(): Promise<void> {
 	}
 }
 
-function _openAIAnalysis(): void {
+function openAIAnalysis(): void {
 	if (!lastAnalysis?.combined_log) {
 		notifyNoLogContent()
 		return
@@ -603,7 +603,7 @@ onUnmounted(() => {
 	unlistenProcess?.()
 })
 
-defineExpose({ handleLaunchError, handleWarning, isLaunchFailure, showPreview, openAIAnalysis: _openAIAnalysis })
+defineExpose({ handleLaunchError, handleWarning, isLaunchFailure, showPreview, openAIAnalysis })
 </script>
 
 <template>

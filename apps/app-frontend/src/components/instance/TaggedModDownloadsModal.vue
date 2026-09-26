@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { NewModal, ProgressBar, ButtonStyled, defineMessages, useVIntl } from '@modrinth/ui'
-import { onMounted, onUnmounted, nextTick, ref, shallowRef } from 'vue'
+import { ButtonStyled, defineMessages, NewModal, ProgressBar, useVIntl } from '@modrinth/ui'
+import { nextTick, onMounted, onUnmounted, ref, shallowRef } from 'vue'
 import { useRouter } from 'vue-router'
+
 import { loading_listener } from '@/helpers/events'
-import { progress_bars_list } from '@/helpers/state'
 import { onHostedPackAttemptStarted } from '@/helpers/hosted-packs'
+import { progress_bars_list } from '@/helpers/state'
 import {
 	createTaggedModProgress,
 	type TaggedProgressEvent,

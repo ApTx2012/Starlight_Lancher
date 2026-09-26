@@ -33,11 +33,11 @@ import {
 	defineMessages,
 	DropdownSelect,
 	injectNotificationManager,
+	type MessageDescriptor,
 	PopoutMenu,
 	Slider,
 	StyledInput,
 	Toggle,
-	type MessageDescriptor,
 	useRelativeTime,
 	useVIntl,
 } from '@modrinth/ui'

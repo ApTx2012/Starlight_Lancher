@@ -517,7 +517,6 @@ export interface ContentInstallContext {
 		projectId: string | number,
 		fileId?: string | number | null,
 		instanceId?: string | null,
-		source?: string,
 		callback?: ContentInstallCallback,
 	) => Promise<void>
 	installingItems: Ref<Map<string, ContentItem[]>>
@@ -1884,7 +1883,6 @@ export function createContentInstall(opts: {
 		markInstanceContentChanged(instance.id)
 		incompatibilityWarningModalRef?.hide()
 		removeInstallingItems(instance.id, [project.id])
-
 	}
 
 	function handleIncompatibilityWarningCancel() {
@@ -2056,7 +2054,6 @@ export function createContentInstall(opts: {
 					: `/instance/${encodeURIComponent(id)}`,
 			)
 
-
 			settleCurrentCallback(version.id, installedProjectIds)
 			modalRef?.hide()
 		} catch (err) {
@@ -2116,10 +2113,14 @@ export function createContentInstall(opts: {
 		if (project.project_type === 'modpack') {
 			if (shouldShowInstallTargetModal) hideContentInstallModal()
 			const [versions, packs] = await Promise.all([
-				get_version_many(project.versions, 'must_revalidate') as Promise<Labrinth.Versions.v2.Version[]>,
+				get_version_many(project.versions, 'must_revalidate') as Promise<
+					Labrinth.Versions.v2.Version[]
+				>,
 				list(),
 			])
-			const sortedVersions = versions.sort((a, b) => dayjs(b.date_published).valueOf() - dayjs(a.date_published).valueOf())
+			const sortedVersions = versions.sort(
+				(a, b) => dayjs(b.date_published).valueOf() - dayjs(a.date_published).valueOf(),
+			)
 			pendingModpackInstall = {
 				project,
 				version: versionId ?? sortedVersions[0]?.id ?? '',
@@ -2132,7 +2133,10 @@ export function createContentInstall(opts: {
 				sortedVersions.map((version) => [
 					version.id,
 					packs
-						.filter((pack) => pack.link?.project_id === project.id && pack.link?.version_id === version.id)
+						.filter(
+							(pack) =>
+								pack.link?.project_id === project.id && pack.link?.version_id === version.id,
+						)
 						.map((pack) => ({ id: pack.id, name: pack.name })),
 				]),
 			)
@@ -2391,7 +2395,6 @@ export function createContentInstall(opts: {
 		projectId: string | number,
 		fileId?: string | number | null,
 		instanceId?: string | null,
-		source: string = 'unknown',
 		callback: ContentInstallCallback = () => {},
 	) {
 		const modalSessionId = instanceId ? null : beginInstallSession(callback)
@@ -2486,11 +2489,10 @@ export function createContentInstall(opts: {
 		projectId: string | number,
 		fileId?: string | number | null,
 		instanceId?: string | null,
-		source: string = 'unknown',
 		callback: ContentInstallCallback = () => {},
 	) {
 		return guardInstallRequest(
-			() => installCurseForgeWorldInternal(projectId, fileId, instanceId, source, callback),
+			() => installCurseForgeWorldInternal(projectId, fileId, instanceId, callback),
 			callback,
 		)
 	}
@@ -2532,8 +2534,7 @@ export function createContentInstall(opts: {
 		handleCurseForgeManualDownloadsImported,
 		async handleModpackInstall(versionId: string, name: string) {
 			if (!pendingModpackInstall) return
-			const { project, source, callback, createInstanceCallback, provider } =
-				pendingModpackInstall
+			const { project, source, callback, createInstanceCallback, provider } = pendingModpackInstall
 			pendingModpackInstall = null
 			if (provider === 'curseforge') {
 				const numericProjectId = Number(project.id.replace(/^curseforge:/, ''))

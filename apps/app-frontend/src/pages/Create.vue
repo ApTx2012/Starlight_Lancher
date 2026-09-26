@@ -3,11 +3,12 @@ import { FolderOpenIcon, LeftArrowIcon, SparklesIcon } from '@modrinth/assets'
 import { BigOptionButton, Button, defineMessages, useVIntl } from '@modrinth/ui'
 import { inject, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import InstanceModeOptions from '@/components/instance/InstanceModeOptions.vue'
+
 import HostedGameDirModal from '@/components/instance/HostedGameDirModal.vue'
 import HostedPackProgress from '@/components/instance/HostedPackProgress.vue'
-import type { InstanceMode } from '@/helpers/hosted-packs'
+import InstanceModeOptions from '@/components/instance/InstanceModeOptions.vue'
 import { useHostedCreation } from '@/composables/useHostedCreation'
+import type { InstanceMode } from '@/helpers/hosted-packs'
 
 const { formatMessage } = useVIntl()
 const router = useRouter()
@@ -187,8 +188,8 @@ function handleImportExisting() {
 				/>
 
 				<BigOptionButton
-					data-onboarding-id="creation-method-import"
 					v-if="instanceMode === 'local'"
+					data-onboarding-id="creation-method-import"
 					:icon="FolderOpenIcon"
 					:title="formatMessage(messages.importTitle)"
 					:description="formatMessage(messages.importDescription)"
@@ -197,10 +198,7 @@ function handleImportExisting() {
 				/>
 			</div>
 
-			<HostedGameDirModal
-				ref="hostedGameDirModal"
-				@confirm="installHostedWithGameDir"
-			/>
+			<HostedGameDirModal ref="hostedGameDirModal" @confirm="installHostedWithGameDir" />
 			<HostedPackProgress :instance-id="createdInstance" :active="installing" />
 			<p v-if="installError" class="m-0 text-red" role="alert">{{ installError }}</p>
 			<p v-if="instanceMode === 'local'" class="m-0 text-sm text-secondary">

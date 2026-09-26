@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+
 import { createTaggedModProgress } from './tagged-mod-progress.ts'
 
 const parent = (id = 'parent', fraction: number | null = 0, error = '') => ({

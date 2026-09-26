@@ -315,6 +315,8 @@ async fn initialize_state(app: tauri::AppHandle) -> api::Result<()> {
     app.fs_scope()
         .allow_directory(state.directories.servers_dir(), true)?;
 
+    lightweight_mode::state_initialized(&app);
+
     Ok(())
 }
 
@@ -569,10 +571,9 @@ fn is_dev() -> bool {
 
 #[tauri::command]
 fn are_updates_enabled() -> bool {
-    // Temporarily disabled: enabling the built-in updater causes an immediate
-    // crash on Windows (c0000409) at startup, pending a fix.
-    // StarLight launcher ships without the built-in update checker.
-    false
+    // The frontend waits for launcher state initialization before starting
+    // the built-in updater.
+    true
 }
 
 #[cfg(feature = "updater")]
@@ -909,6 +910,11 @@ fn main() {
 
             Ok(())
         });
+
+    #[cfg(feature = "updater")]
+    {
+        builder = builder.plugin(tauri_plugin_updater::Builder::new().build());
+    }
 
     builder = builder
         .plugin(api::ai::init())

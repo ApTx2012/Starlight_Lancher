@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+
 import { isInstanceLaunching, launchOnce } from './instance-launch-state.ts'
 
 test('launches different instances concurrently and coalesces repeated pending clicks', async () => {

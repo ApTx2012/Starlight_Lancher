@@ -14,13 +14,14 @@ import {
 import { users } from '@/helpers/auth'
 import { getInstanceMode } from '@/helpers/hosted-packs'
 import {
+	type InstancePlayer,
+	type PlayerChoice,
 	PlayerSelectionNavigatedAwayError,
 	registerInstancePlayerPicker,
 	saveInstancePlayer,
 	waitForSkinSiteSession,
-	type InstancePlayer,
-	type PlayerChoice,
 } from '@/helpers/instance-player'
+
 import { playerMessages as messages } from './instance-player-messages'
 
 const { formatMessage } = useVIntl()

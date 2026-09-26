@@ -12,13 +12,13 @@ import {
 import { getVersion } from '@tauri-apps/api/app'
 import { invoke } from '@tauri-apps/api/core'
 import { fetch as tauriFetch } from '@tauri-apps/plugin-http'
-import { inject, nextTick, ref, watch } from 'vue'
+import { nextTick, ref, watch } from 'vue'
 
 import UpdateAnnouncementHistory from '@/components/ui/announcement/UpdateAnnouncementHistory.vue'
 import {
 	betaDatabaseExists,
-	copyReleaseDatabaseToBeta,
 	copyDatabaseBetweenChannels,
+	copyReleaseDatabaseToBeta,
 	getCurrentAppDatabasePath,
 	getUpdateChannel,
 	getUpdatePreferences,
@@ -446,11 +446,14 @@ async function confirmDatabaseOperation() {
 			}),
 		})
 	} catch (error) {
+		const detail = error instanceof Error ? error.message : String(error)
 		handleError(
 			new Error(
-				targetChannel === activeChannel
-					? formatMessage(messages.databaseOperationActiveTarget)
-					: formatMessage(messages.databaseOperationFailed),
+				`${
+					targetChannel === activeChannel
+						? formatMessage(messages.databaseOperationActiveTarget)
+						: formatMessage(messages.databaseOperationFailed)
+				}: ${detail}`,
 			),
 		)
 	} finally {
@@ -468,7 +471,7 @@ function cancelDatabaseOperation() {
 	<div class="flex flex-col gap-6">
 		<SettingsSection :title="formatMessage(messages.title)">
 			<div class="update-channel-panel">
-				<p id="settings-target-updates-channel" class="m-0 text-sm leading-[1.45] text-secondary">
+				<p id="settings-target-updates-source" class="m-0 text-sm leading-[1.45] text-secondary">
 					{{ formatMessage(messages.description) }}
 				</p>
 				<div

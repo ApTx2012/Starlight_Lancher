@@ -71,6 +71,13 @@
         "schemes": ["starlight"]
       },
       "mobile": []
+    },
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEQ0NDhERTUxN0E3MERBNDYKUldSRzJuQjZVZDVJMUpKSUJ6blVpVzJQSTgvSjlyeVRGK0ozRzcwVWtpbTJjbUl0V0NRcC9OQVoK",
+      "endpoints": ["https://skin.starlight.cool/starlight/launcher/latest"],
+      "windows": {
+        "installMode": "quiet"
+      }
     }
   },
   "app": {

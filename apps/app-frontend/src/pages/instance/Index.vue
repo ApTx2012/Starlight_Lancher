@@ -163,7 +163,7 @@
 							</button>
 						</ButtonStyled>
 						<ButtonStyled v-else-if="!isServerInstance" color="brand" size="large">
-							<button @click="startInstance('InstancePage')">
+							<button @click="startInstance">
 								<PlayIcon />
 								{{ formatMessage(playing ? messages.launchAnother : commonMessages.playButton) }}
 							</button>
@@ -184,7 +184,7 @@
 										},
 										{
 											id: 'launch_instance',
-											action: () => startInstance('InstancePage'),
+											action: startInstance,
 										},
 									]"
 								>
@@ -204,7 +204,7 @@
 							</ButtonStyled>
 						</div>
 						<ButtonStyled v-if="playing" color="red" size="large">
-							<button :disabled="stopping || loading" @click="stopInstance('InstancePage')">
+							<button :disabled="stopping || loading" @click="stopInstance">
 								<StopCircleIcon />
 								{{ formatMessage(stopping ? messages.stopping : messages.stopAll) }}
 							</button>
@@ -294,7 +294,7 @@
 							:is-server-instance="isServerInstance"
 							:open-settings="() => settingsModal?.show(1)"
 							@play="updatePlayState"
-							@stop="() => stopInstance('InstanceSubpage')"
+							@stop="stopInstance"
 						></component>
 					</Suspense>
 				</template>
@@ -400,9 +400,9 @@ import {
 	getFreshCachedServerStatus,
 } from '@/composables/instances/use-server-status-query'
 import { useInstanceConsole } from '@/composables/useInstanceConsole'
+import { useInstanceMode } from '@/composables/useInstanceMode'
 import { useMinecraftLaunchError } from '@/composables/useMinecraftLaunchError'
 import { useNetworkStatus } from '@/composables/useNetworkStatus'
-import { useInstanceMode } from '@/composables/useInstanceMode'
 import { postUpgradeNoticeQueryKey, usePostUpgradeNotice } from '@/composables/usePostUpgradeNotice'
 import { useSymlinkWarningDismiss } from '@/composables/useSymlinkWarningDismiss'
 import { get_project_v3 } from '@/helpers/cache.js'
@@ -421,8 +421,8 @@ import {
 	run,
 } from '@/helpers/instance'
 import { getDisplayInstanceIcon } from '@/helpers/instance-icons'
-import { get_by_instance_id } from '@/helpers/process'
 import { isInstanceLaunching } from '@/helpers/instance-launch-state'
+import { get_by_instance_id } from '@/helpers/process'
 import type { GameInstance } from '@/helpers/types'
 import { createInstanceShortcut, showInstanceInFolder } from '@/helpers/utils.js'
 import { refreshWorlds, type ServerStatus } from '@/helpers/worlds'
@@ -733,7 +733,7 @@ watch(
 
 const options = ref<InstanceType<typeof ContextMenu> | null>(null)
 
-const startInstance = async (context: string) => {
+const startInstance = async () => {
 	if (!instance.value || loading.value) return
 	const id = props.id
 	const name = instance.value.name
@@ -780,7 +780,7 @@ watch(
 	{ immediate: true },
 )
 
-const stopInstance = async (context: string) => {
+const stopInstance = async () => {
 	stopping.value = true
 	await kill(props.id).catch(handleError)
 	stopping.value = false
@@ -882,10 +882,10 @@ const handleRightClick = (event: MouseEvent) => {
 const handleOptionsClick = async (args: { option: string; item: unknown }) => {
 	switch (args.option) {
 		case 'play':
-			await startInstance('InstancePageContextMenu')
+			await startInstance()
 			break
 		case 'stop':
-			await stopInstance('InstancePageContextMenu')
+			await stopInstance()
 			break
 		case 'add_content':
 			await router.push({

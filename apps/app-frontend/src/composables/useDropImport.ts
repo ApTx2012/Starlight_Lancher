@@ -13,9 +13,9 @@ import type {
 	SymlinkMethodChoice,
 } from '@modrinth/ui'
 import { useDebugLogger, useGlobalDrop, useInstanceContext, useVIntl } from '@modrinth/ui'
+import { join } from '@tauri-apps/api/path'
 import { computed, type ComputedRef, nextTick, ref } from 'vue'
 import type { Router } from 'vue-router'
-import { join } from '@tauri-apps/api/path'
 
 import {
 	classifyDroppedItem,
@@ -1412,10 +1412,7 @@ export function useDropImport(options: DropImportOptions) {
 		cleanupLauncherZipTemp()
 	}
 
-	function resolvedInstancePath(
-		inst: SelectedInstance,
-		ctx: ImportContext | null,
-	): string | undefined {
+	function resolvedInstancePath(inst: SelectedInstance): string | undefined {
 		if (inst.compatibleMode) return inst.versionPath
 		return inst.path
 	}

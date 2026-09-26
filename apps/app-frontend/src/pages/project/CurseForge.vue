@@ -845,7 +845,7 @@ async function installSelected(fileId: string | null) {
 	}
 	if (isWorldMap.value) {
 		installing.value = true
-		await installCurseForgeWorld(project.value.id, fileId, instanceId.value, 'ProjectPage', () => {
+		await installCurseForgeWorld(project.value.id, fileId, instanceId.value, () => {
 			installing.value = false
 		}).catch((error) => {
 			installing.value = false

@@ -547,6 +547,7 @@ fn keyring_error(
     .into()
 }
 
+#[cfg(test)]
 fn parse_custom_uuid(uuid: Option<String>) -> Result<Option<uuid::Uuid>> {
     let Some(uuid) = uuid else {
         return Ok(None);

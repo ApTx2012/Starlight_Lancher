@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ProgressBar, defineMessages, useVIntl } from '@modrinth/ui'
+import { defineMessages, ProgressBar, useVIntl } from '@modrinth/ui'
 import { computed } from 'vue'
+
 import { injectDownloadManager } from '@/providers/download-manager'
 
 const props = defineProps<{ instanceId?: string; active?: boolean }>()

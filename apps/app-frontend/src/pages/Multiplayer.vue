@@ -2,10 +2,9 @@
 import { UsersIcon } from '@modrinth/assets'
 import { defineMessages, NavTabs, useVIntl } from '@modrinth/ui'
 import { computed } from 'vue'
-import { RouterView, useRoute, useRouter } from 'vue-router'
+import { RouterView, useRouter } from 'vue-router'
 
 const { formatMessage } = useVIntl()
-const route = useRoute()
 const router = useRouter()
 
 const messages = defineMessages({
@@ -13,7 +12,6 @@ const messages = defineMessages({
 	roomsTab: { id: 'app.multiplayer.tab.rooms', defaultMessage: 'Rooms' },
 })
 
-const activeTab = computed(() => (route.path.startsWith('/multiplayer/rooms') ? 'rooms' : 'rooms'))
 const tabLinks = computed(() => [
 	{ label: formatMessage(messages.roomsTab), href: '/multiplayer/rooms', icon: UsersIcon },
 ])

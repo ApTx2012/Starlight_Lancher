@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { ButtonStyled, useVIntl } from '@modrinth/ui'
 import { onUnmounted, ref, watch } from 'vue'
+
 import {
 	chooseInstancePlayer,
 	getInstancePlayer,
-	onInstancePlayerChanged,
 	type InstancePlayer,
+	onInstancePlayerChanged,
 } from '@/helpers/instance-player'
+
 import { playerMessages as messages } from './instance-player-messages'
 
 const { formatMessage } = useVIntl()

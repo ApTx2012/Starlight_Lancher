@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch } from 'vue'
-import { clearHostedSession } from '@/helpers/hosted-packs'
 
 import {
 	receiveSkinSiteMessage,
@@ -10,6 +9,7 @@ import {
 	skinSiteStatus,
 	skinSiteUser,
 } from '@/composables/skin-site-session'
+import { clearHostedSession } from '@/helpers/hosted-packs'
 
 const frame = ref<HTMLIFrameElement>()
 let lastMessage = 0

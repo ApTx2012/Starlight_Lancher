@@ -414,8 +414,8 @@ import {
 	ProjectSidebarServerInfo,
 	ProjectSidebarTags,
 	requestInstall,
-	SelectedProjectsFloatingBar,
 	ScrollToTopButton,
+	SelectedProjectsFloatingBar,
 	usesTargetGameVersion,
 	useVIntl,
 } from '@modrinth/ui'
@@ -567,7 +567,7 @@ const messages = defineMessages({
 	favoritesLoading: {
 		id: 'app.content-favorites.loading',
 		defaultMessage: 'Updating favorites…',
-},
+	},
 	viewDependents: {
 		id: 'project.actions.view-dependents',
 		defaultMessage: 'View dependents',

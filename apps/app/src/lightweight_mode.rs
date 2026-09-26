@@ -548,6 +548,10 @@ fn schedule_tray_menu_update(app: &AppHandle) {
     });
 }
 
+pub fn state_initialized(app: &AppHandle) {
+    schedule_tray_menu_update(app);
+}
+
 async fn rebuild_tray_menu(
     app: &AppHandle,
     active: bool,
@@ -708,7 +712,6 @@ pub fn init(app: &AppHandle) {
         .build(app)
         .expect("failed to create system tray");
     let _tray = tray;
-    schedule_tray_menu_update(app);
     let app_handle = app.clone();
     app.listen("process", move |event| {
         let Ok(payload) =

@@ -5855,7 +5855,7 @@ async fn download_to_path_inner(
                 can_switch_route,
                 retry_with_single_thread,
             );
-            while attempts < file_attempt_budget {
+            if attempts < file_attempt_budget {
                 attempts += 1;
                 tracing::debug!(
                     path = %destination.display(),

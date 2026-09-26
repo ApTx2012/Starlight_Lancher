@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { useHostedSync } from './useHostedSync.ts'
-import { useHostedCreation, forgetHostedCreation } from './useHostedCreation.ts'
+
 import {
 	clearHostedSession,
 	hostedCreate,
@@ -10,12 +9,11 @@ import {
 	onHostedPackAttemptStarted,
 	setInstanceMode,
 } from '../helpers/hosted-packs.ts'
-
 import {
 	openSkinSiteLogin,
 	receiveSkinSiteMessage,
-	requestSkinSiteLuck,
 	requestSkinSiteDownloadToken,
+	requestSkinSiteLuck,
 	requestSkinSitePlayers,
 	requestSkinSiteSkinUpdate,
 	resetSkinSiteSession,
@@ -27,6 +25,8 @@ import {
 	skinSiteStatus,
 	skinSiteUser,
 } from './skin-site-session.ts'
+import { forgetHostedCreation, useHostedCreation } from './useHostedCreation.ts'
+import { useHostedSync } from './useHostedSync.ts'
 
 test('reconnecting the same skin site frame waits for verification instead of reporting signed out', () => {
 	const frame = { postMessage() {} } as unknown as Window

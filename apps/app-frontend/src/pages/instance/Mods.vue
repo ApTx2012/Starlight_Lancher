@@ -1408,7 +1408,8 @@ async function getUpdaterProjectVersions(
 
 	if (!versions) {
 		versions = (await get_project_versions(projectId).catch(() => null)) as
-			Labrinth.Versions.v2.Version[] | null
+			| Labrinth.Versions.v2.Version[]
+			| null
 	}
 
 	if (!versions && fetchError) {
@@ -1719,9 +1720,6 @@ async function applyToggleDisableBatch(items: ContentItem[], enabled: boolean) {
 			resultById,
 			false,
 		)
-
-		for (const operation of operations) {
-		}
 	} catch (error) {
 		for (const operation of operations) {
 			operation.optimisticPath = operation.originalFilePath

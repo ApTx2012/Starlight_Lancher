@@ -72,12 +72,7 @@
 </template>
 
 <script setup>
-import {
-	CheckIcon,
-	DownloadIcon,
-	ExternalIcon,
-	MoreVerticalIcon,
-} from '@modrinth/assets'
+import { CheckIcon, DownloadIcon, ExternalIcon, MoreVerticalIcon } from '@modrinth/assets'
 import {
 	ButtonStyled,
 	commonMessages,
@@ -108,7 +103,7 @@ const messages = defineMessages({
 	},
 })
 
-const props = defineProps({
+defineProps({
 	project: {
 		type: Object,
 		default: () => {},

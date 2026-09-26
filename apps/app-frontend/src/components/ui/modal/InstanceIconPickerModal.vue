@@ -127,7 +127,7 @@ interface IconBackground {
 	style: Record<string, string>
 }
 
-function background(
+function makeBackground(
 	id: string,
 	name: MessageDescriptor,
 	top: string,
@@ -171,16 +171,16 @@ const backgrounds = [
 			backgroundSize: '16px 16px',
 		},
 	} satisfies IconBackground,
-	background('grass', backgroundNames.grass, '#7fc95b', '#2f7d32'),
-	background('ocean', backgroundNames.ocean, '#55b7ff', '#3157c8'),
-	background('amethyst', backgroundNames.amethyst, '#c084fc', '#6d28d9'),
-	background('sunset', backgroundNames.sunset, '#ffba52', '#e94b64'),
-	background('cherry', backgroundNames.cherry, '#ff9ec4', '#b93670'),
-	background('nether', backgroundNames.nether, '#ef5a46', '#6d1717'),
-	background('slime', backgroundNames.slime, '#b6ee55', '#44972f'),
-	background('deep-dark', backgroundNames.deepDark, '#245369', '#0c1f2b'),
-	background('stone', backgroundNames.stone, '#aeb5bd', '#525b66'),
-	background('midnight', backgroundNames.midnight, '#4d5f8f', '#171b2d'),
+	makeBackground('grass', backgroundNames.grass, '#7fc95b', '#2f7d32'),
+	makeBackground('ocean', backgroundNames.ocean, '#55b7ff', '#3157c8'),
+	makeBackground('amethyst', backgroundNames.amethyst, '#c084fc', '#6d28d9'),
+	makeBackground('sunset', backgroundNames.sunset, '#ffba52', '#e94b64'),
+	makeBackground('cherry', backgroundNames.cherry, '#ff9ec4', '#b93670'),
+	makeBackground('nether', backgroundNames.nether, '#ef5a46', '#6d1717'),
+	makeBackground('slime', backgroundNames.slime, '#b6ee55', '#44972f'),
+	makeBackground('deep-dark', backgroundNames.deepDark, '#245369', '#0c1f2b'),
+	makeBackground('stone', backgroundNames.stone, '#aeb5bd', '#525b66'),
+	makeBackground('midnight', backgroundNames.midnight, '#4d5f8f', '#171b2d'),
 ]
 
 const { formatMessage } = useVIntl()

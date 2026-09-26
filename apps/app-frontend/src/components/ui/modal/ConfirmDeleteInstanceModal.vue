@@ -67,6 +67,7 @@ withDefaults(
 	}>(),
 	{
 		count: 1,
+		symlinkTarget: null,
 	},
 )
 

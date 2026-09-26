@@ -15,7 +15,8 @@ import {
 	UsersIcon,
 } from '@modrinth/assets'
 import { commonMessages, defineMessages, type MessageDescriptor } from '@modrinth/ui'
-import { defineAsyncComponent, type Component } from 'vue'
+import { type Component, defineAsyncComponent } from 'vue'
+
 import {
 	getVisibleSettingsCategoryDefinitions,
 	type SettingsCategoryDefinition,

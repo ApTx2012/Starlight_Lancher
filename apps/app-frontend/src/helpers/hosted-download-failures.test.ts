@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+
 import { createHostedDownloadFailures } from './hosted-download-failures.ts'
 
 test('retry clears only its own failure before progress arrives and ignores late old events', () => {
