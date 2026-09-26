@@ -33,6 +33,31 @@ export const ANNOUNCEMENT_CHANGE_TYPES: readonly AnnouncementChangeType[] = [
 
 export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 	{
+		id: 'launcher-1.0.0',
+		version: '1.0.0',
+		publishedAt: '2026-09-26',
+		title: {
+			'en-US': 'Starlight Launcher 1.0.0',
+			'zh-CN': 'Starlight Launcher 1.0.0',
+		},
+		changes: {
+			added: [
+				{
+					'en-US':
+						'Enabled the built-in automatic updater. The launcher can now check for and install new versions from the update channel.',
+					'zh-CN': '启用内置自动更新，启动器现在可以从更新通道检查并安装新版本。',
+				},
+			],
+			fixed: [
+				{
+					'en-US':
+						'Fixed a crash on startup caused by the updater running before launcher state finished initializing.',
+					'zh-CN': '修复了更新器在启动器状态初始化完成前运行导致的启动崩溃。',
+				},
+			],
+		},
+	},
+	{
 		id: 'launcher-1.0.0-beta15',
 		version: '1.0.0-beta15',
 		publishedAt: '2026-09-26',
