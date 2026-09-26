@@ -33,6 +33,25 @@ export const ANNOUNCEMENT_CHANGE_TYPES: readonly AnnouncementChangeType[] = [
 
 export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 	{
+		id: 'launcher-1.0.0-beta15',
+		version: '1.0.0-beta15',
+		publishedAt: '2026-09-26',
+		title: {
+			'en-US': 'Starlight Launcher 1.0.0-beta15',
+			'zh-CN': 'Starlight Launcher 1.0.0-beta15',
+		},
+		changes: {
+			fixed: [
+				{
+					'en-US':
+						'Fixed the launcher crashing on startup in 1.0.0-beta14 by temporarily reverting the built-in updater. The updater will be re-enabled after the crash is resolved.',
+					'zh-CN':
+						'修复 1.0.0-beta14 中启动器一打开就崩溃的问题：暂时回退了内置自动更新。待崩溃问题解决后会重新启用。',
+				},
+			],
+		},
+	},
+	{
 		id: 'launcher-1.0.0-beta14',
 		version: '1.0.0-beta14',
 		publishedAt: '2026-09-26',

@@ -569,9 +569,10 @@ fn is_dev() -> bool {
 
 #[tauri::command]
 fn are_updates_enabled() -> bool {
-    // StarLight launcher enables the built-in updater; the endpoint and
-    // signing public key are configured in tauri-release.conf.json.
-    true
+    // Temporarily disabled: enabling the built-in updater causes an immediate
+    // crash on Windows (c0000409) at startup, pending a fix.
+    // StarLight launcher ships without the built-in update checker.
+    false
 }
 
 #[cfg(feature = "updater")]
