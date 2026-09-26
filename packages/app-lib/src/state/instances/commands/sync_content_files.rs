@@ -87,11 +87,6 @@ pub(crate) async fn sync_instance_content_files(
             .as_deref()
             .map(str::trim)
             .is_some_and(|linked| !linked.is_empty());
-    let instance_files_root = if is_direct_linked {
-        content_root.clone()
-    } else {
-        state.directories.instances_dir().join(&instance.path)
-    };
     let cache_key_path = if is_direct_linked {
         content_root.to_string_lossy().into_owned()
     } else {
@@ -168,8 +163,9 @@ pub(crate) async fn sync_instance_content_files(
         let hash_key = file.hash_cache_key.trim_end_matches(".disabled");
         let existing_file = existing_files_by_path.get(&file.relative_path);
         let (scanned_sha1, scanned_size) = if existing_file.is_some() {
-            let path =
-                join_content_path(&instance_files_root, &file.relative_path);
+            // Read from the resolved game directory. Managed StarLight
+            // instances may keep their files outside the launcher data root.
+            let path = join_content_path(&content_root, &file.relative_path);
             let (_, sha1) = fetch::sha1_file_async(&path).await?;
             (sha1, file.size)
         } else {
@@ -748,7 +744,9 @@ mod tests {
                 base_path: minecraft.path().to_path_buf(),
                 instance_folder: "versions/1.12.2-linked".to_string(),
                 instance_path: None,
-                game_dir_mode: None,
+                game_dir_mode: Some(
+                    crate::launcher::ExternalGameDirMode::Shared,
+                ),
             },
             &state,
         )
@@ -875,6 +873,59 @@ mod tests {
         );
     }
 
+    #[tokio::test]
+    async fn refresh_reconciles_externally_replaced_profile_mods() {
+        let state = global_state().await;
+        let metadata = crate::api::instance::create(
+            format!("sync-external {}", uuid::Uuid::new_v4()),
+            "1.20.1".to_string(),
+            crate::state::ModLoader::Vanilla,
+            None,
+            None,
+            crate::state::InstanceLink::Unmanaged,
+            None,
+            None,
+        )
+        .await
+        .unwrap();
+        let instance = &metadata.instance;
+        let mods = state.directories.instance_game_dir(instance).join("mods");
+        fs::create_dir_all(&mods).unwrap();
+        fs::write(mods.join("old-version.jar"), "old").unwrap();
+        fs::write(mods.join("same-name.jar"), "old").unwrap();
+        let initial =
+            sync_instance_content_files(instance, &state).await.unwrap();
+        assert_eq!(initial.len(), 2);
+
+        fs::remove_file(mods.join("old-version.jar")).unwrap();
+        fs::write(mods.join("new-version.jar"), "new version").unwrap();
+        fs::write(mods.join("same-name.jar"), "new").unwrap();
+        let refreshed =
+            sync_instance_content_files(instance, &state).await.unwrap();
+        assert_eq!(refreshed.len(), 2);
+        assert!(
+            refreshed
+                .iter()
+                .any(|file| file.relative_path == "mods/new-version.jar")
+        );
+        assert!(
+            !refreshed
+                .iter()
+                .any(|file| file.relative_path == "mods/old-version.jar")
+        );
+        let before = initial
+            .iter()
+            .find(|file| file.relative_path == "mods/same-name.jar")
+            .unwrap();
+        let after = refreshed
+            .iter()
+            .find(|file| file.relative_path == "mods/same-name.jar")
+            .unwrap();
+        assert_eq!(before.id, after.id);
+        assert_ne!(before.sha1, after.sha1);
+        assert_eq!(before.size, after.size);
+    }
+
     /// Regression probe: an instance whose `game_dir_override` points to an
     /// external `.minecraft` root must have its content scanned from that root,
     /// not from the (empty) managed instance folder. This is the split-brain
@@ -947,6 +998,48 @@ mod tests {
             "expected the override-root mod to be scanned"
         );
         assert!(files[0].relative_path.ends_with("mods/my-mod.jar"));
+
+        let refreshed =
+            sync_instance_content_files(&instance, &state).await.expect(
+                "repeat refresh must hash files in the actual game directory",
+            );
+        assert_eq!(refreshed[0].sha1, files[0].sha1);
+
+        fs::write(mods_dir.join("my-mod.jar"), "new").unwrap();
+        fs::write(mods_dir.join("added.jar"), "added mod").unwrap();
+        let replaced = sync_instance_content_files(&instance, &state)
+            .await
+            .unwrap();
+        assert_eq!(replaced.len(), 2);
+        let updated = replaced
+            .iter()
+            .find(|file| file.relative_path == "mods/my-mod.jar")
+            .unwrap();
+        assert_eq!(updated.id, files[0].id);
+        assert_ne!(updated.sha1, files[0].sha1);
+        assert_eq!(updated.size, files[0].size);
+
+        fs::remove_file(mods_dir.join("my-mod.jar")).unwrap();
+        fs::rename(
+            mods_dir.join("added.jar"),
+            mods_dir.join("added.jar.disabled"),
+        )
+        .unwrap();
+        let removed = sync_instance_content_files(&instance, &state)
+            .await
+            .unwrap();
+        assert_eq!(removed.len(), 1);
+        assert_eq!(removed[0].relative_path, "mods/added.jar.disabled");
+        assert!(!removed[0].enabled);
+        let stored =
+            sqlite::content_rows::get_instance_files(&instance.id, &state.pool)
+                .await
+                .unwrap();
+        assert!(
+            stored
+                .iter()
+                .any(|file| file.id == files[0].id && file.missing)
+        );
     }
 
     #[test]
