@@ -33,6 +33,25 @@ export const ANNOUNCEMENT_CHANGE_TYPES: readonly AnnouncementChangeType[] = [
 
 export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 	{
+		id: 'launcher-1.0.1-beta1',
+		version: '1.0.1-beta1',
+		publishedAt: '2026-09-27',
+		title: {
+			'en-US': 'Starlight Launcher 1.0.1-beta1',
+			'zh-CN': 'Starlight Launcher 1.0.1-beta1',
+		},
+		changes: {
+			added: [
+				{
+					'en-US':
+						'Added a one-time welcome announcement on first launch, covering the development team, the StarLight-only note, the rulebook update, and server connection addresses.',
+					'zh-CN':
+						'新增首次启动时的欢迎公告弹窗，包含开发团队、StarLight 专用说明、服规更新与服务器连接地址。',
+				},
+			],
+		},
+	},
+	{
 		id: 'launcher-1.0.0',
 		version: '1.0.0',
 		publishedAt: '2026-09-26',
