@@ -92,6 +92,7 @@ import NavRail from '@/components/ui/NavRail.vue'
 import OnboardingOverlay from '@/components/ui/onboarding/OnboardingOverlay.vue'
 import QuickInstanceSwitcher from '@/components/ui/QuickInstanceSwitcher.vue'
 import SkinSiteSessionFrame from '@/components/ui/SkinSiteSessionFrame.vue'
+import StartupAnnouncementModal from '@/components/ui/StartupAnnouncementModal.vue'
 import SplashScreen from '@/components/ui/SplashScreen.vue'
 import WindowControls from '@/components/ui/WindowControls.vue'
 import { useCheckDisableMouseover } from '@/composables/macCssFix.js'
@@ -498,6 +499,7 @@ onMounted(async () => {
 	checkUpdates()
 	void warnIfRunningElevated()
 	startDirectLinkSync()
+	maybeShowStartupAnnouncement()
 })
 
 let directLinkSync: (() => Promise<void>) | undefined
@@ -1538,6 +1540,19 @@ const updateToPlayModal = ref()
 
 const modrinthLoginFlowWaitModal = ref()
 
+const startupAnnouncementModal = ref<InstanceType<typeof StartupAnnouncementModal> | null>(null)
+const STARTUP_ANNOUNCEMENT_KEY = 'starlight-startup-announcement-seen-v1'
+
+function maybeShowStartupAnnouncement() {
+	try {
+		if (localStorage.getItem(STARTUP_ANNOUNCEMENT_KEY)) return
+		localStorage.setItem(STARTUP_ANNOUNCEMENT_KEY, '1')
+	} catch (error) {
+		console.warn('Failed to read/write startup announcement flag', error)
+	}
+	startupAnnouncementModal.value?.show()
+}
+
 // ── Drop import system ──────────────────────────────────────────────────
 const dropImport = useDropImport({
 	notificationManager,
@@ -2167,6 +2182,7 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 	<SplashScreen v-if="!stateFailed" ref="splashScreen" data-tauri-drag-region />
 	<SkinSiteSessionFrame v-if="stateInitialized" />
 	<InstancePlayerModal v-if="stateInitialized" />
+	<StartupAnnouncementModal ref="startupAnnouncementModal" />
 	<div id="teleports"></div>
 	<div
 		v-if="stateInitialized && themeStore.customBackgroundPath && !themeStore.transparentBackground"
