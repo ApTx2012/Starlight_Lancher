@@ -64,14 +64,9 @@ export async function get_latest_log_cursor(instanceId, cursor) {
 	return await invoke('plugin:logs|logs_get_latest_log_cursor', { instanceId, cursor })
 }
 
-/// Read Minecraft's logs/latest.log from a cursor.
-export async function get_minecraft_latest_log_cursor(instanceId, cursor) {
-	return await invoke('plugin:logs|logs_get_minecraft_latest_log_cursor', { instanceId, cursor })
-}
-
-/// Get all buffered live log lines for an instance from the Rust ring buffer
-export async function get_live_log_buffer(instanceId) {
-	return await invoke('plugin:logs|logs_get_live_log_buffer', { instanceId })
+/// Get the authoritative sequenced live-log snapshot from the Rust ring buffer.
+export async function get_live_log_snapshot(instanceId) {
+	return await invoke('plugin:logs|logs_get_live_log_snapshot', { instanceId })
 }
 
 /// Clear the live log buffer for an instance on the Rust side

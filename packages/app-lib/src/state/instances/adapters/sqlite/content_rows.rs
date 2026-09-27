@@ -16,6 +16,12 @@ use chrono::{DateTime, TimeZone, Utc};
 use sqlx::{Executor, Row, Sqlite, SqlitePool, Transaction};
 use uuid::Uuid;
 
+async fn begin_content_write(
+    pool: &SqlitePool,
+) -> crate::Result<Transaction<'static, Sqlite>> {
+    Ok(pool.begin_with("BEGIN IMMEDIATE").await?)
+}
+
 /// Ensures the instance a content write is about to reference still exists.
 ///
 /// Runs inside the write transaction so a concurrent instance deletion that
@@ -662,7 +668,7 @@ pub(crate) async fn upsert_instance_file_from_parts(
     input: UpsertInstanceFile<'_>,
     pool: &SqlitePool,
 ) -> crate::Result<InstanceFile> {
-    let mut tx = pool.begin().await?;
+    let mut tx = begin_content_write(pool).await?;
     let file =
         upsert_instance_file_from_parts_in_transaction(input, &mut tx).await?;
     tx.commit().await?;
@@ -726,7 +732,7 @@ pub(crate) async fn rename_instance_file(
     enabled: bool,
     pool: &SqlitePool,
 ) -> crate::Result<Option<InstanceFile>> {
-    let mut tx = pool.begin().await?;
+    let mut tx = begin_content_write(pool).await?;
 
     let file = rename_instance_file_in_transaction(
         instance_id,
@@ -1106,7 +1112,7 @@ pub(crate) async fn upsert_content_entry_from_parts(
     input: UpsertContentEntry<'_>,
     pool: &SqlitePool,
 ) -> crate::Result<ContentEntry> {
-    let mut tx = pool.begin().await?;
+    let mut tx = begin_content_write(pool).await?;
     let entry =
         upsert_content_entry_from_parts_in_transaction(input, &mut tx).await?;
     tx.commit().await?;
@@ -1230,7 +1236,7 @@ pub(crate) async fn upsert_content_provider_ref(
     origin: bool,
     pool: &SqlitePool,
 ) -> crate::Result<()> {
-    let mut tx = pool.begin().await?;
+    let mut tx = begin_content_write(pool).await?;
     upsert_content_provider_ref_in_transaction(
         content_entry_id,
         provider_ref,
@@ -2583,6 +2589,7 @@ mod tests {
 				provider TEXT NOT NULL,
 				provider_project_id TEXT NOT NULL,
 				provider_release_id TEXT NULL,
+				provider_file_id TEXT NULL,
 				is_origin INTEGER NOT NULL DEFAULT 0
 			);
 			CREATE UNIQUE INDEX instance_content_provider_refs_identity

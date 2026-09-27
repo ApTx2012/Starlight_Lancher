@@ -2,12 +2,14 @@ import { createConsoleState } from '@modrinth/ui'
 
 import {
 	clear_log_buffer,
-	get_live_log_buffer,
+	get_live_log_snapshot,
 	get_logs,
-	get_minecraft_latest_log_cursor,
 } from '@/helpers/logs'
 
-import { createLatestLogReader } from './latest-log-reader'
+import {
+	createLiveLogReconciler,
+	type SequencedLogEvent,
+} from './live-log-reconciler'
 
 type ConsoleState = ReturnType<typeof createConsoleState>
 
@@ -25,8 +27,17 @@ interface InstanceConsoleEntry {
 	historicalConsole: ConsoleState
 	historicalCache: Map<string, string>
 	logList: LogEntry[] | null
-	liveHistoryHydration: Promise<void> | null
-	latestLog: ReturnType<typeof createLatestLogReader>
+	liveLog: ReturnType<typeof createLiveLogReconciler<ProcessLogPayload>>
+}
+
+interface ProcessLogPayload extends SequencedLogEvent {
+	type: 'log4j' | 'legacy'
+	message?: string
+	logger_name?: string
+	level?: string
+	thread_name?: string
+	timestamp_millis?: number
+	throwable?: string
 }
 
 const instances = new Map<string, InstanceConsoleEntry>()
@@ -36,19 +47,28 @@ function getOrCreate(instanceId: string): InstanceConsoleEntry {
 	if (entry) return entry
 
 	const liveConsole = createConsoleState()
+	const liveLog = createLiveLogReconciler<ProcessLogPayload>(
+		() => get_live_log_snapshot(instanceId),
+		(snapshot) => {
+			liveConsole.clear()
+			void liveConsole.addLegacyLog(
+				snapshot.lines.map((line) => line.message).join('\n'),
+			)
+		},
+		(payload) => {
+			if (payload.type === 'log4j') {
+				liveConsole.addLog4jEvent(payload)
+			} else if (payload.message !== undefined) {
+				void liveConsole.addLegacyLog(payload.message)
+			}
+		},
+	)
 	entry = {
 		liveConsole,
 		historicalConsole: createConsoleState(),
 		historicalCache: new Map(),
 		logList: null,
-		liveHistoryHydration: null,
-		latestLog: createLatestLogReader(
-			(cursor) => get_minecraft_latest_log_cursor(instanceId, cursor),
-			(output, replace) => {
-				if (replace) liveConsole.clear()
-				void liveConsole.addLegacyLog(output)
-			},
-		),
+		liveLog,
 	}
 	instances.set(instanceId, entry)
 	return entry
@@ -56,28 +76,7 @@ function getOrCreate(instanceId: string): InstanceConsoleEntry {
 
 async function hydrate(instanceId: string): Promise<void> {
 	const entry = getOrCreate(instanceId)
-	if (entry.liveHistoryHydration) {
-		return entry.liveHistoryHydration
-	}
-
-	const hydration = (async () => {
-		await entry.latestLog.refresh().catch(console.warn)
-		if (!entry.latestLog.active && entry.liveConsole.output.value.length === 0) {
-			const buffer = await get_live_log_buffer(instanceId)
-			if (!entry.latestLog.active && entry.liveConsole.output.value.length === 0) {
-				await entry.liveConsole.addLegacyLog(buffer)
-			}
-		}
-	})()
-
-	entry.liveHistoryHydration = hydration
-	try {
-		await hydration
-	} finally {
-		if (entry.liveHistoryHydration === hydration) {
-			entry.liveHistoryHydration = null
-		}
-	}
+	await entry.liveLog.sync()
 }
 
 async function getHistoricalLogs(instanceId: string): Promise<LogEntry[]> {
@@ -109,15 +108,13 @@ function invalidate(instanceId: string): void {
 
 async function clearLive(instanceId: string): Promise<void> {
 	const entry = getOrCreate(instanceId)
-	entry.latestLog.clear()
-	entry.liveConsole.clear()
-	await clear_log_buffer(instanceId).catch(() => {})
+	await clear_log_buffer(instanceId)
+	await entry.liveLog.resync()
 }
 
-async function destroy(instanceId: string): Promise<void> {
-	instances.get(instanceId)?.latestLog.reset()
+function destroy(instanceId: string): void {
+	instances.get(instanceId)?.liveLog.dispose()
 	instances.delete(instanceId)
-	await clear_log_buffer(instanceId).catch(() => {})
 }
 
 export function useInstanceConsole(instanceId: string) {
@@ -130,13 +127,8 @@ export function useInstanceConsole(instanceId: string) {
 		getHistoricalContent: (filename: string) => getHistoricalContent(instanceId, filename),
 		invalidate: () => invalidate(instanceId),
 		clearLive: () => clearLive(instanceId),
-		refreshLive: () => entry.latestLog.refresh(),
-		flushLive: () => entry.latestLog.flush(),
-		acceptsProcessLogs: () => !entry.latestLog.active,
-		resetLive: () => {
-			entry.latestLog.reset()
-			entry.liveConsole.clear()
-		},
+		appendLive: (payload: ProcessLogPayload) => entry.liveLog.accept(payload),
+		resyncLive: () => entry.liveLog.resync(),
 		destroy: () => destroy(instanceId),
 	}
 }

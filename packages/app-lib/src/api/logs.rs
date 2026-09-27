@@ -54,6 +54,18 @@ pub struct LatestLogCursor {
     pub new_file: bool,
 }
 
+#[derive(Serialize, Debug)]
+pub struct LiveLogLine {
+    pub sequence: u64,
+    pub message: CensoredString,
+}
+
+#[derive(Serialize, Debug)]
+pub struct LiveLogSnapshot {
+    pub lines: Vec<LiveLogLine>,
+    pub last_sequence: u64,
+}
+
 #[derive(Serialize, Debug)] // Not deserialize
 #[serde(transparent)]
 pub struct CensoredString(String);
@@ -651,31 +663,31 @@ pub async fn delete_logs_by_filename(
 }
 
 #[tracing::instrument]
-pub async fn get_live_log_buffer(
+pub async fn get_live_log_snapshot(
     instance_id: &str,
-) -> crate::Result<CensoredString> {
+) -> crate::Result<LiveLogSnapshot> {
     let state = State::get().await?;
-    let lines = crate::state::get_log_buffer(instance_id);
-    let joined = lines.join("\n");
-    let compacted =
-        cap_log_for_display(compact_duplicate_lines(&joined), false);
-
     let credentials = Credentials::get_all(&state.pool)
         .await?
         .into_iter()
         .map(|x| x.1)
         .collect::<Vec<_>>();
-    maybe_emit_log_compaction_warning("live log", compacted.stats).await;
-    maybe_emit_log_display_truncation_warning(
-        "live log",
-        compacted.display_truncated,
-    )
-    .await;
-    Ok(CensoredString::censor(compacted.output, &credentials))
+    let snapshot = crate::state::get_live_log_snapshot(instance_id);
+    Ok(LiveLogSnapshot {
+        lines: snapshot
+            .lines
+            .into_iter()
+            .map(|line| LiveLogLine {
+                sequence: line.sequence,
+                message: CensoredString::censor(line.message, &credentials),
+            })
+            .collect(),
+        last_sequence: snapshot.last_sequence,
+    })
 }
 
 pub fn clear_live_log_buffer(instance_id: &str) {
-    crate::state::remove_log_buffer(instance_id);
+    crate::state::clear_log_buffer(instance_id);
 }
 
 #[tracing::instrument]

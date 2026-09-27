@@ -13,7 +13,10 @@ use crate::state::{
 use chrono::{DateTime, Utc};
 use modrinth_content_management::{ContentType, ResolutionPreferences};
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, path::PathBuf};
+use std::{
+    collections::{HashMap, HashSet},
+    path::PathBuf,
+};
 use uuid::Uuid;
 
 pub type InstallModpackPreview = CreatePackInstance;
@@ -483,7 +486,7 @@ mod tests {
         assert_eq!(summary.bytes_total, Some(300));
         let items = job.download_items();
         assert_eq!(items.len(), 3);
-        assert_eq!(items[0].status, DownloadItemStatus::Verifying);
+        assert_eq!(items[0].status, DownloadItemStatus::Completed);
         assert_eq!(items[0].attempt, Some(1));
         assert_eq!(items[0].max_attempts, Some(4));
         assert_eq!(
@@ -2395,6 +2398,7 @@ impl InstallJobState {
     fn download_items_from_events(&self) -> Vec<DownloadItemSnapshot> {
         let mut items = Vec::<DownloadItemSnapshot>::new();
         let mut indices = HashMap::<String, usize>::new();
+        let mut content_items = HashSet::<String>::new();
         for event in &self.events {
             match &event.kind {
                 InstallJobEventKind::ContentFileQueued {
@@ -2402,6 +2406,7 @@ impl InstallJobState {
                     bytes_total,
                     max_attempts,
                 } => {
+                    content_items.insert(path.clone());
                     if let Some(item) = indices
                         .get(path)
                         .and_then(|&index| items.get_mut(index))
@@ -2482,6 +2487,7 @@ impl InstallJobState {
                     attempt,
                     max_attempts,
                 } => {
+                    content_items.insert(path.clone());
                     if let Some(item) = indices
                         .get(path)
                         .and_then(|&index| items.get_mut(index))
@@ -2562,10 +2568,14 @@ impl InstallJobState {
                         .get(path)
                         .and_then(|&index| items.get_mut(index))
                     {
-                        // Network transfer completion is not content
-                        // finalization. `ContentFileCompleted` is the event
-                        // that confirms verification and DB registration.
-                        item.status = DownloadItemStatus::Verifying;
+                        // Content downloads still need verification and DB
+                        // registration. Standalone Java/Minecraft requests
+                        // are final once the request itself finishes.
+                        item.status = if content_items.contains(path) {
+                            DownloadItemStatus::Verifying
+                        } else {
+                            DownloadItemStatus::Completed
+                        };
                         item.bytes_downloaded = *bytes;
                         item.bytes_total = item.bytes_total.or(Some(*bytes));
                     }

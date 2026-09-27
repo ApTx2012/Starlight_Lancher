@@ -539,7 +539,7 @@ pub(crate) async fn persist_resolved_plan_dependency_edges(
         .chain(plan.dependencies.iter())
         .collect::<Vec<_>>();
 
-    let mut tx = state.pool.begin().await?;
+    let mut tx = begin_content_write(&state.pool).await?;
     for (index, dependency) in plan.dependencies.iter().enumerate() {
         let Some(parent) = dependency
             .dependent_on_version_id

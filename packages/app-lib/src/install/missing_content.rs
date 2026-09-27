@@ -1591,6 +1591,15 @@ mod tests {
     #[tokio::test]
     async fn import_api_trusts_persisted_job_context_and_keeps_other_missing_files_waiting()
      {
+        Box::pin(
+            run_import_api_trusts_persisted_job_context_and_keeps_other_missing_files_waiting(),
+        )
+        .await;
+    }
+
+    #[cfg(not(feature = "tauri"))]
+    async fn run_import_api_trusts_persisted_job_context_and_keeps_other_missing_files_waiting()
+     {
         crate::event::EventState::init().await.unwrap();
         let root = tempfile::tempdir().unwrap().keep();
         let state = State::init_for_test(root.to_string_lossy().to_string())
@@ -1788,18 +1797,17 @@ mod tests {
         .await
         .unwrap();
         assert_eq!(observed.pending, 1);
-        let (scan_result, manual_result) = tokio::join!(
-            scan_missing_modpack_files_in_at(
-                job_id,
-                &race_downloads,
-                first_seen + DOWNLOAD_STABILITY_WINDOW,
-            ),
-            import_missing_modpack_file(
-                job_id,
-                first.item_id.clone(),
-                selected,
-            )
-        );
+        let scan = Box::pin(scan_missing_modpack_files_in_at(
+            job_id,
+            &race_downloads,
+            first_seen + DOWNLOAD_STABILITY_WINDOW,
+        ));
+        let manual = Box::pin(import_missing_modpack_file(
+            job_id,
+            first.item_id.clone(),
+            selected,
+        ));
+        let (scan_result, manual_result) = tokio::join!(scan, manual);
         let scan_result = scan_result.unwrap();
         assert!(manual_result.is_ok());
         assert!(

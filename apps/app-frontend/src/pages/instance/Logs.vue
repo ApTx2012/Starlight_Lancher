@@ -86,13 +86,16 @@ const {
 	getHistoricalContent,
 	invalidate,
 	clearLive,
-	refreshLive,
-	flushLive,
-	acceptsProcessLogs,
-	resetLive,
+	appendLive,
+	resyncLive,
 } = useInstanceConsole(instanceId.value)
 
-await hydrate()
+const unlistenLog = await log_listener((payload) => {
+	if (payload.instance_id !== instanceId.value) return
+	void appendLive(payload)?.catch(console.warn)
+})
+
+await hydrate().catch(handleError)
 
 function buildLogList(rawLogs) {
 	return [
@@ -219,28 +222,16 @@ if (!props.playing) {
 	void analyseForCrash()
 }
 
-const unlistenLog = await log_listener((payload) => {
-	if (payload.instance_id !== instanceId.value) return
-	if (!acceptsProcessLogs()) return
-
-	if (payload.type === 'log4j') {
-		liveConsole.addLog4jEvent(payload)
-	} else if (payload.type === 'legacy') {
-		void liveConsole.addLegacyLog(payload.message)
-	}
-})
-
 const unlistenProcesses = await process_listener(async (e) => {
 	if (e.instance_id !== instanceId.value) return
 	if (e.event === 'launched') {
-		resetLive()
+		await resyncLive().catch(console.warn)
 		clearCrashAnalysis()
 		invalidate()
 		selectedLogIndex.value = 0
 	}
 	if (e.event === 'finished') {
-		await refreshLive().catch(console.warn)
-		flushLive()
+		await resyncLive().catch(console.warn)
 		invalidate()
 		const freshLogs = await getHistoricalLogs()
 		logs.value = buildLogList(freshLogs)
@@ -248,20 +239,7 @@ const unlistenProcesses = await process_listener(async (e) => {
 	}
 })
 
-// Keep following the file even when a mod stops writing to stdout after startup.
-// Schedule after each read so slow disk/IPC cannot pile up concurrent requests.
-let disposed = false
-let refreshTimer
-async function followLatestLog() {
-	await refreshLive().catch(console.warn)
-	if (!props.playing) flushLive()
-	if (!disposed) refreshTimer = setTimeout(followLatestLog, 1000)
-}
-void followLatestLog()
-
 onUnmounted(() => {
-	disposed = true
-	clearTimeout(refreshTimer)
 	unlistenLog()
 	unlistenProcesses()
 })

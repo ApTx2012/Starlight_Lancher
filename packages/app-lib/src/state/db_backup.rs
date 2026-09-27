@@ -39,6 +39,10 @@ async fn restore_corrupt_app_db_from(
         "App database integrity check failed"
     );
 
+    if restore_app_db_without_corrupt_sidecars(db_path, backup_dir).await? {
+        return Ok(());
+    }
+
     let Some(backup_path) = latest_healthy_app_db_backup(backup_dir).await?
     else {
         return Err(crate::ErrorKind::FSError(format!(
@@ -96,6 +100,49 @@ async fn restore_corrupt_app_db_from(
     );
 
     Ok(())
+}
+
+async fn restore_app_db_without_corrupt_sidecars(
+    db_path: &Path,
+    backup_dir: &Path,
+) -> crate::Result<bool> {
+    let mut has_sidecars = false;
+    for suffix in ["-wal", "-shm"] {
+        has_sidecars |= sqlite_sidecar_path(db_path, suffix).try_exists()?;
+    }
+    if !has_sidecars {
+        return Ok(false);
+    }
+
+    let staging_path = next_restore_staging_path(db_path).await?;
+    tokio::fs::copy(db_path, &staging_path).await?;
+    let healthy_main = matches!(
+        check_database_integrity(&staging_path).await?,
+        IntegrityStatus::Healthy
+    ) && is_app_database(&staging_path).await?;
+    if !healthy_main {
+        cleanup_staged_database(&staging_path).await;
+        return Ok(false);
+    }
+
+    crate::util::io::create_dir_all(backup_dir).await?;
+    let corrupt_path = next_corrupt_database_path(backup_dir).await?;
+    if let Err(error) = archive_database_files(db_path, &corrupt_path).await {
+        cleanup_staged_database(&staging_path).await;
+        return Err(error);
+    }
+    if let Err(error) = tokio::fs::rename(&staging_path, db_path).await {
+        restore_archived_database_files(&corrupt_path, db_path).await?;
+        cleanup_staged_database(&staging_path).await;
+        return Err(error.into());
+    }
+
+    tracing::warn!(
+        database = %db_path.display(),
+        corrupt_archive = %corrupt_path.display(),
+        "Recovered app database by removing corrupt SQLite sidecars"
+    );
+    Ok(true)
 }
 
 async fn check_database_integrity(
@@ -200,7 +247,7 @@ async fn is_app_database(db_path: &Path) -> crate::Result<bool> {
     Ok(table_count == REQUIRED_APP_DB_TABLES.len() as i64)
 }
 
-async fn archive_database_files(
+pub(crate) async fn archive_database_files(
     db_path: &Path,
     archive_path: &Path,
 ) -> crate::Result<()> {
@@ -226,7 +273,7 @@ async fn archive_database_files(
     Ok(())
 }
 
-async fn restore_archived_database_files(
+pub(crate) async fn restore_archived_database_files(
     archive_path: &Path,
     db_path: &Path,
 ) -> crate::Result<()> {
@@ -285,7 +332,9 @@ fn sqlite_sidecar_path(db_path: &Path, suffix: &str) -> PathBuf {
     PathBuf::from(path)
 }
 
-async fn remove_database_sidecars(db_path: &Path) -> crate::Result<()> {
+pub(crate) async fn remove_database_sidecars(
+    db_path: &Path,
+) -> crate::Result<()> {
     for suffix in ["-wal", "-shm"] {
         let path = sqlite_sidecar_path(db_path, suffix);
         match tokio::fs::remove_file(path).await {
@@ -764,6 +813,45 @@ mod tests {
 
         assert!(error.to_string().contains("no healthy backup"));
         assert_eq!(tokio::fs::read(&db_path).await.unwrap(), corrupt_bytes);
+    }
+
+    #[tokio::test]
+    async fn corrupt_sidecars_recover_from_the_healthy_main_database() {
+        let temp = tempfile::tempdir().unwrap();
+        let db_path = temp.path().join("release").join("app.db");
+        let backup_dir =
+            temp.path().join("Backups").join("app-db").join("release");
+        tokio::fs::create_dir_all(db_path.parent().unwrap())
+            .await
+            .unwrap();
+        create_test_app_db(&db_path, "release").await;
+        tokio::fs::write(sqlite_sidecar_path(&db_path, "-wal"), b"bad wal")
+            .await
+            .unwrap();
+        tokio::fs::write(sqlite_sidecar_path(&db_path, "-shm"), b"bad shm")
+            .await
+            .unwrap();
+
+        assert!(
+            restore_app_db_without_corrupt_sidecars(&db_path, &backup_dir)
+                .await
+                .unwrap()
+        );
+
+        assert_eq!(read_marker(&db_path).await, "release");
+        assert!(!sqlite_sidecar_path(&db_path, "-wal").exists());
+        assert!(!sqlite_sidecar_path(&db_path, "-shm").exists());
+        let mut entries = tokio::fs::read_dir(&backup_dir).await.unwrap();
+        let mut archived_database = false;
+        let mut archived_wal = false;
+        let mut archived_shm = false;
+        while let Some(entry) = entries.next_entry().await.unwrap() {
+            let name = entry.file_name().to_string_lossy().into_owned();
+            archived_database |= name.ends_with(".db");
+            archived_wal |= name.ends_with(".db-wal");
+            archived_shm |= name.ends_with(".db-shm");
+        }
+        assert!(archived_database && archived_wal && archived_shm);
     }
 
     #[tokio::test]

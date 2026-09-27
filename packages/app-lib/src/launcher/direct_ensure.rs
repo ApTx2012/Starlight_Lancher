@@ -1107,12 +1107,17 @@ mod tests {
                 "org.lwjgl.lwjgl:lwjgl-platform:2.9.4-nightly-20150209:{classifier}"
             )
         );
-        assert!(
-            plan.destination
-                .to_string_lossy()
-                .ends_with(format!("{classifier}.jar").as_str())
-        );
-        assert_eq!(plan.sha1.as_deref(), Some("aaa"));
+        let (declared_path, declared_sha1) = match classifier.as_str() {
+            "natives-linux" => (
+                "org/lwjgl/lwjgl/lwjgl-platform/2.9.4-nightly-20150209/lwjgl-platform-2.9.4-nightly-20150209-natives-linux.jar",
+                "aaa",
+            ),
+            "natives-osx" => ("x-osx.jar", "bbb"),
+            "natives-windows" => ("x-win.jar", "ccc"),
+            other => panic!("unexpected native classifier {other}"),
+        };
+        assert!(plan.destination.to_string_lossy().ends_with(declared_path));
+        assert_eq!(plan.sha1.as_deref(), Some(declared_sha1));
     }
 
     #[test]

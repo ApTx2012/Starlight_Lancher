@@ -4,7 +4,7 @@ use std::path::PathBuf;
 use theseus::logs::LogType;
 use theseus::logs::{
     self, CensoredString, CrashAnalysis, CrashAnalysisAiExplanation,
-    CrashAnalysisAiSettings, LatestLogCursor, Logs,
+    CrashAnalysisAiSettings, LatestLogCursor, LiveLogSnapshot, Logs,
 };
 
 /*
@@ -26,8 +26,7 @@ pub fn init<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
             logs_delete_logs,
             logs_delete_logs_by_filename,
             logs_get_latest_log_cursor,
-            logs_get_minecraft_latest_log_cursor,
-            logs_get_live_log_buffer,
+            logs_get_live_log_snapshot,
             logs_clear_live_log_buffer,
             logs_analyze_crash,
             logs_get_crash_analysis_ai_settings,
@@ -95,24 +94,12 @@ pub async fn logs_get_latest_log_cursor(
     Ok(logs::get_latest_log_cursor(instance_id, cursor).await?)
 }
 
-/// Get Minecraft's logs/latest.log from a cursor.
-#[tauri::command]
-pub async fn logs_get_minecraft_latest_log_cursor(
-    instance_id: &str,
-    cursor: u64, // 0 to start at beginning of file
-) -> Result<LatestLogCursor> {
-    Ok(
-        logs::get_generic_live_log_cursor(instance_id, "latest.log", cursor)
-            .await?,
-    )
-}
-
 /// Get all buffered live log lines for an instance.
 #[tauri::command]
-pub async fn logs_get_live_log_buffer(
+pub async fn logs_get_live_log_snapshot(
     instance_id: &str,
-) -> Result<CensoredString> {
-    Ok(logs::get_live_log_buffer(instance_id).await?)
+) -> Result<LiveLogSnapshot> {
+    Ok(logs::get_live_log_snapshot(instance_id).await?)
 }
 
 /// Clear the live log buffer for an instance.

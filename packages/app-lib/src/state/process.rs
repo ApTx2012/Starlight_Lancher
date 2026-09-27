@@ -117,8 +117,21 @@ async fn record_post_upgrade_launch_best_effort(
 }
 
 struct LogRingBuffer {
-    lines: VecDeque<String>,
+    lines: VecDeque<SequencedLogLine>,
     byte_len: usize,
+    last_sequence: u64,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct SequencedLogLine {
+    pub sequence: u64,
+    pub message: String,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct LiveLogSnapshot {
+    pub lines: Vec<SequencedLogLine>,
+    pub last_sequence: u64,
 }
 
 impl LogRingBuffer {
@@ -126,25 +139,37 @@ impl LogRingBuffer {
         Self {
             lines: VecDeque::new(),
             byte_len: 0,
+            last_sequence: 0,
         }
     }
 
-    fn push(&mut self, line: String) {
-        let line_len = line.len();
+    fn push(&mut self, message: String) -> u64 {
+        self.last_sequence = self.last_sequence.saturating_add(1);
+        let sequence = self.last_sequence;
+        let line = SequencedLogLine { sequence, message };
+        let line_len = line.message.len();
         while self.lines.len() >= LOG_BUFFER_CAPACITY
             || self.byte_len.saturating_add(line_len) > LOG_BUFFER_BYTE_CAPACITY
         {
             let Some(removed) = self.lines.pop_front() else {
                 break;
             };
-            self.byte_len = self.byte_len.saturating_sub(removed.len());
+            self.byte_len = self.byte_len.saturating_sub(removed.message.len());
         }
         self.byte_len += line_len;
         self.lines.push_back(line);
+        sequence
     }
 
     fn get_all(&self) -> Vec<String> {
-        self.lines.iter().cloned().collect()
+        self.lines.iter().map(|line| line.message.clone()).collect()
+    }
+
+    fn snapshot(&self) -> LiveLogSnapshot {
+        LiveLogSnapshot {
+            lines: self.lines.iter().cloned().collect(),
+            last_sequence: self.last_sequence,
+        }
     }
 
     fn clear(&mut self) {
@@ -157,11 +182,24 @@ static LOG_BUFFERS: LazyLock<DashMap<String, LogRingBuffer>> =
     LazyLock::new(DashMap::new);
 
 pub fn push_log_line(instance_id: &str, line: String) {
-    let line = truncate_live_log_text(&line);
-    LOG_BUFFERS
+    push_log_lines(instance_id, std::iter::once(line));
+}
+
+fn push_log_lines(
+    instance_id: &str,
+    lines: impl IntoIterator<Item = String>,
+) -> Option<(u64, u64)> {
+    let mut buffer = LOG_BUFFERS
         .entry(instance_id.to_string())
-        .or_insert_with(LogRingBuffer::new)
-        .push(line);
+        .or_insert_with(LogRingBuffer::new);
+    let mut first_sequence = None;
+    let mut last_sequence = 0;
+    for line in lines {
+        let sequence = buffer.push(truncate_live_log_text(&line));
+        first_sequence.get_or_insert(sequence);
+        last_sequence = sequence;
+    }
+    first_sequence.map(|first| (first, last_sequence))
 }
 
 fn truncate_live_log_text(value: &str) -> String {
@@ -226,6 +264,16 @@ pub fn get_log_buffer(instance_id: &str) -> Vec<String> {
         .get(instance_id)
         .map(|buf| buf.get_all())
         .unwrap_or_default()
+}
+
+pub fn get_live_log_snapshot(instance_id: &str) -> LiveLogSnapshot {
+    LOG_BUFFERS
+        .get(instance_id)
+        .map(|buffer| buffer.snapshot())
+        .unwrap_or(LiveLogSnapshot {
+            lines: Vec::new(),
+            last_sequence: 0,
+        })
 }
 
 pub fn clear_log_buffer(instance_id: &str) {
@@ -920,14 +968,20 @@ impl Process {
         event.throwable =
             event.throwable.as_deref().map(truncate_live_log_text);
 
+        let mut lines = Vec::new();
         if let Some(formatted) = Self::format_log4j_entry(&event) {
-            push_log_line(instance_id, formatted.trim_end().to_string());
+            lines.push(formatted.trim_end().to_string());
         }
         if let Some(ref throwable) = event.throwable {
             for line in throwable.lines().filter(|l| !l.is_empty()) {
-                push_log_line(instance_id, line.to_string());
+                lines.push(line.to_string());
             }
         }
+        let Some((first_sequence, last_sequence)) =
+            push_log_lines(instance_id, lines)
+        else {
+            return;
+        };
 
         #[cfg(feature = "tauri")]
         {
@@ -936,6 +990,8 @@ impl Process {
                     "log",
                     LogPayload {
                         instance_id: instance_id.to_string(),
+                        first_sequence,
+                        last_sequence,
                         event: LogEvent::Log4j(event),
                     },
                 );
@@ -943,13 +999,17 @@ impl Process {
         }
         #[cfg(not(feature = "tauri"))]
         {
-            let _ = (instance_id, event);
+            let _ = (instance_id, event, first_sequence, last_sequence);
         }
     }
 
     fn emit_legacy_log(instance_id: &str, message: &str) {
         let message = truncate_live_log_text(message);
-        push_log_line(instance_id, message.clone());
+        let Some((first_sequence, last_sequence)) =
+            push_log_lines(instance_id, std::iter::once(message.clone()))
+        else {
+            return;
+        };
 
         #[cfg(feature = "tauri")]
         {
@@ -958,6 +1018,8 @@ impl Process {
                     "log",
                     LogPayload {
                         instance_id: instance_id.to_string(),
+                        first_sequence,
+                        last_sequence,
                         event: LogEvent::Legacy { message },
                     },
                 );
@@ -965,7 +1027,7 @@ impl Process {
         }
         #[cfg(not(feature = "tauri"))]
         {
-            let _ = (instance_id, message);
+            let _ = (instance_id, message, first_sequence, last_sequence);
         }
     }
 
@@ -1311,6 +1373,49 @@ fn take_next_log4j_frame(buffer: &mut String) -> Option<String> {
 #[cfg(test)]
 mod post_upgrade_tests {
     use super::*;
+
+    #[test]
+    fn live_log_snapshot_sequences_batches_and_preserves_position_after_clear()
+    {
+        let instance_id = Uuid::new_v4().to_string();
+        assert_eq!(
+            push_log_lines(
+                &instance_id,
+                ["first".to_string(), "second".to_string()]
+            ),
+            Some((1, 2))
+        );
+        assert_eq!(
+            get_live_log_snapshot(&instance_id),
+            LiveLogSnapshot {
+                lines: vec![
+                    SequencedLogLine {
+                        sequence: 1,
+                        message: "first".to_string(),
+                    },
+                    SequencedLogLine {
+                        sequence: 2,
+                        message: "second".to_string(),
+                    },
+                ],
+                last_sequence: 2,
+            }
+        );
+
+        clear_log_buffer(&instance_id);
+        push_log_line(&instance_id, "third".to_string());
+        assert_eq!(
+            get_live_log_snapshot(&instance_id),
+            LiveLogSnapshot {
+                lines: vec![SequencedLogLine {
+                    sequence: 3,
+                    message: "third".to_string(),
+                }],
+                last_sequence: 3,
+            }
+        );
+        remove_log_buffer(&instance_id);
+    }
 
     #[cfg(windows)]
     #[tokio::test]

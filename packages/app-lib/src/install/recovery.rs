@@ -1361,12 +1361,11 @@ mod tests {
         assert_eq!(persisted.status, InstallJobStatus::Canceled);
         assert!(persisted.state.rollback.as_ref().unwrap().content.is_none());
         assert!(persisted.state.rollback_error.is_none());
-        assert_eq!(
-            crate::state::list_instances(&state.pool)
+        assert!(
+            crate::state::get_instance(&instance_id, &state.pool)
                 .await
                 .unwrap()
-                .len(),
-            1
+                .is_some()
         );
 
         let new_instance = crate::api::instance::create(

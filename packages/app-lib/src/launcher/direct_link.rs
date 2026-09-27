@@ -1940,13 +1940,16 @@ mod tests {
         assert_eq!(
             direct.version_json,
             Some(
-                version_dir
-                    .join("1.20.1-fabric.json")
-                    .canonicalize()
-                    .unwrap()
+                crate::util::io::canonicalize(
+                    version_dir.join("1.20.1-fabric.json"),
+                )
+                .unwrap(),
             )
         );
-        assert_eq!(direct.dot_minecraft, root.path().canonicalize().unwrap());
+        assert_eq!(
+            direct.dot_minecraft,
+            crate::util::io::canonicalize(root.path()).unwrap()
+        );
     }
 
     #[test]
@@ -2002,6 +2005,15 @@ mod tests {
         let root = tempfile::tempdir().unwrap();
         let version = root.path().join("versions/demo");
         std::fs::create_dir_all(&version).unwrap();
+        std::fs::write(
+            version.join("demo.json"),
+            serde_json::to_vec(&json!({
+                "id": "demo",
+                "mainClass": "net.minecraft.client.main.Main"
+            }))
+            .unwrap(),
+        )
+        .unwrap();
 
         assert_eq!(
             resolve_content_game_dir(root.path(), &version).unwrap(),
@@ -2469,7 +2481,13 @@ mod tests {
         );
         assert_eq!(
             candidates,
-            vec![launcher.path().join("runtime/jdk17/bin/java")]
+            vec![
+                launcher
+                    .path()
+                    .join("runtime/jdk17")
+                    .join("bin")
+                    .join(PCL_JAVA_BIN)
+            ]
         );
 
         // A relative path escaping the launcher directory degrades to the

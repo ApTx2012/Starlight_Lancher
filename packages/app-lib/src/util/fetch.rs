@@ -958,6 +958,34 @@ fn official_fallback_route(routes: &[DownloadRoute]) -> Option<DownloadRoute> {
         .cloned()
 }
 
+fn integrity_fallback_route(
+    routes: &[DownloadRoute],
+    current_index: usize,
+    terminal_routes: &HashSet<String>,
+) -> Option<DownloadRoute> {
+    let current = routes.get(current_index)?;
+    if !is_official_route(current)
+        && let Some(official) = routes.iter().enumerate().find_map(
+            |(candidate_index, candidate)| {
+                (candidate_index != current_index
+                    && is_official_route(candidate)
+                    && !terminal_routes.contains(&candidate.url))
+                .then(|| candidate.clone())
+            },
+        )
+    {
+        return Some(official);
+    }
+
+    ((current_index + 1)..routes.len())
+        .chain(0..current_index)
+        .find_map(|candidate_index| {
+            let candidate = &routes[candidate_index];
+            (!terminal_routes.contains(&candidate.url))
+                .then(|| candidate.clone())
+        })
+}
+
 fn url_with_base(original: &Url, base: &str, path: &str) -> Option<String> {
     let mut target = Url::parse(base).ok()?;
     target.set_path(path);
@@ -6048,13 +6076,15 @@ async fn download_to_path_inner(
                             );
                             last_error = Some(error);
                             terminal_routes.insert(route.url.clone());
-                            if !is_official_route(route)
-                                && let Some(official) =
-                                    official_fallback_route(&routes)
-                            {
+                            if let Some(fallback) = integrity_fallback_route(
+                                &routes,
+                                route_index,
+                                &terminal_routes,
+                            ) {
                                 remove_if_exists(&part_path).await?;
-                                official_integrity_retry = true;
-                                preferred_route = Some(official);
+                                official_integrity_retry =
+                                    is_official_route(&fallback);
+                                preferred_route = Some(fallback);
                                 break;
                             }
                             if official_integrity_retry {
@@ -6210,6 +6240,9 @@ async fn download_to_path_inner(
                             "File download request failed; trying the next source or retry"
                         );
                         last_error = Some(error);
+                        if can_switch_route {
+                            continue;
+                        }
                         break;
                     }
                     Err(_) => {
@@ -6244,6 +6277,9 @@ async fn download_to_path_inner(
                             "File download stalled before receiving a response"
                         );
                         last_error = Some(error);
+                        if can_switch_route {
+                            continue;
+                        }
                         break;
                     }
                 };
@@ -6346,6 +6382,11 @@ async fn download_to_path_inner(
                         Some(http_version),
                     );
                     last_error = Some(error);
+                    if (terminal_status || cooldown_and_switch)
+                        && can_switch_route
+                    {
+                        continue;
+                    }
                     break;
                 }
 
@@ -6773,19 +6814,24 @@ async fn download_to_path_inner(
                     } else {
                         remove_if_exists(&part_path).await?;
                     }
-                    let official = (!is_official_route(route))
-                        .then(|| official_fallback_route(&routes))
-                        .flatten();
-                    let decision = if official.is_some() {
-                        "fallback_official"
-                    } else if attempts >= 2
-                        || (is_official_route(route)
-                            && official_integrity_retry)
-                    {
-                        "drop_route_after_clean_retry"
-                    } else {
-                        "clear_partial_and_retry"
-                    };
+                    let fallback = integrity_fallback_route(
+                        &routes,
+                        route_index,
+                        &terminal_routes,
+                    );
+                    let decision =
+                        if fallback.as_ref().is_some_and(is_official_route) {
+                            "fallback_official"
+                        } else if fallback.is_some() {
+                            "switch_route"
+                        } else if attempts >= 2
+                            || (is_official_route(route)
+                                && official_integrity_retry)
+                        {
+                            "drop_route_after_clean_retry"
+                        } else {
+                            "clear_partial_and_retry"
+                        };
                     record_download_attempt_failure(
                         &mut attempt_history,
                         route,
@@ -6803,10 +6849,10 @@ async fn download_to_path_inner(
                         ));
                     }
                     last_error = Some(error);
-                    if let Some(official) = official {
+                    if let Some(fallback) = fallback {
                         terminal_routes.insert(route.url.clone());
-                        official_integrity_retry = true;
-                        preferred_route = Some(official);
+                        official_integrity_retry = is_official_route(&fallback);
+                        preferred_route = Some(fallback);
                     } else if (is_official_route(route)
                         && official_integrity_retry)
                         || attempts >= 2
@@ -8121,7 +8167,7 @@ mod tests {
     }
 
     #[test]
-    fn h2_fallback_is_limited_to_one_second() {
+    fn h2_fallback_uses_the_configured_ttl() {
         let _guard = H2_FALLBACK_TEST_LOCK.lock();
         let authority = "h2-cooldown.example:443";
         record_authority_h2_failure(authority);
@@ -8131,7 +8177,8 @@ mod tests {
             .get(authority)
             .map(|until| until.saturating_duration_since(Instant::now()))
             .unwrap();
-        assert!(remaining <= MAX_FAILURE_COOLDOWN);
+        assert!(remaining <= H2_FALLBACK_TTL);
+        assert!(remaining > H2_FALLBACK_TTL - Duration::from_secs(1));
         H2_FALLBACK_AUTHORITIES.lock().remove(authority);
     }
 

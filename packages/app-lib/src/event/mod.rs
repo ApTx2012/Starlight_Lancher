@@ -409,6 +409,8 @@ mod log_types {
     #[derive(Serialize, Clone)]
     pub struct LogPayload {
         pub instance_id: String,
+        pub first_sequence: u64,
+        pub last_sequence: u64,
         #[serde(flatten)]
         pub event: LogEvent,
     }

@@ -441,13 +441,14 @@ impl ZipEntrySet {
         let mut seen: std::collections::HashSet<&str> =
             std::collections::HashSet::new();
         for dir in &self.dirs {
-            if let Some(rest) = dir.strip_prefix(base)
-                && let Some((first, _)) = rest.split_once('/')
-                && !first.is_empty()
-                && !is_noise_entry(first)
-                && seen.insert(first)
-            {
-                children.push(first.to_string());
+            if let Some(rest) = dir.strip_prefix(base) {
+                let first = rest.split('/').next().unwrap_or_default();
+                if !first.is_empty()
+                    && !is_noise_entry(first)
+                    && seen.insert(first)
+                {
+                    children.push(first.to_string());
+                }
             }
         }
         for path in &self.files {

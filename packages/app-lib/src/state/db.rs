@@ -4,7 +4,7 @@ use sqlx::migrate::{Migration, Migrator};
 use sqlx::sqlite::{
     SqliteConnectOptions, SqliteJournalMode, SqlitePoolOptions,
 };
-use sqlx::{Pool, Sqlite};
+use sqlx::{ConnectOptions, Connection, Pool, Sqlite};
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
@@ -126,17 +126,7 @@ pub async fn copy_release_database_to_beta(
         .into());
     }
 
-    let release_pool = open_app_db_pool(&release_path).await?;
-    let escaped_path = beta_path.to_string_lossy().replace('\'', "''");
-    sqlx::query(&format!("VACUUM INTO '{escaped_path}'"))
-        .execute(&release_pool)
-        .await?;
-    release_pool.close().await;
-
-    if let Err(error) = open_app_db_pool(&beta_path).await {
-        let _ = tokio::fs::remove_file(&beta_path).await;
-        return Err(error);
-    }
+    copy_app_database(&release_path, &beta_path).await?;
 
     tracing::info!(
         source = %release_path.display(),
@@ -207,22 +197,94 @@ pub async fn copy_database_between_channels(
     }
 
     crate::util::io::create_dir_all(&target_dir).await?;
-    let temporary_path = target_dir.join(format!("{LEGACY_APP_DB_FILE}.tmp"));
-    let source_pool = open_app_db_pool(&source_path).await?;
-    let escaped_path = temporary_path.to_string_lossy().replace('\'', "''");
-    let result = sqlx::query(&format!("VACUUM INTO '{escaped_path}'"))
-        .execute(&source_pool)
-        .await;
-    source_pool.close().await;
-    result?;
-
-    tokio::fs::rename(&temporary_path, &target_path).await?;
+    copy_app_database(&source_path, &target_path).await?;
     tracing::info!(
         source = %source_path.display(),
         destination = %target_path.display(),
         "Overwrote the inactive update channel database"
     );
     Ok(())
+}
+
+async fn copy_app_database(source: &Path, target: &Path) -> crate::Result<()> {
+    let temporary = sidecar_path(target, ".copying");
+    remove_database_files(&temporary).await?;
+
+    let source_pool = open_app_db_pool(source).await?;
+    let escaped_path = temporary.to_string_lossy().replace('\'', "''");
+    let snapshot_result = sqlx::query(&format!("VACUUM INTO '{escaped_path}'"))
+        .execute(&source_pool)
+        .await;
+    source_pool.close().await;
+    if let Err(error) = snapshot_result {
+        let _ = remove_database_files(&temporary).await;
+        return Err(error.into());
+    }
+
+    if let Err(error) = verify_database_file(&temporary).await {
+        let _ = remove_database_files(&temporary).await;
+        return Err(error);
+    }
+
+    let previous = sidecar_path(target, ".replacing");
+    remove_database_files(&previous).await?;
+    let had_target = target.try_exists()?;
+    if had_target {
+        super::db_backup::archive_database_files(target, &previous).await?;
+    } else {
+        super::db_backup::remove_database_sidecars(target).await?;
+    }
+
+    if let Err(error) = tokio::fs::rename(&temporary, target).await {
+        if had_target {
+            super::db_backup::restore_archived_database_files(
+                &previous, target,
+            )
+            .await?;
+        }
+        let _ = remove_database_files(&temporary).await;
+        return Err(error.into());
+    }
+
+    if let Err(error) = remove_database_files(&previous).await {
+        tracing::warn!(
+            database = %previous.display(),
+            error = %error,
+            "Copied channel database but could not remove the previous snapshot"
+        );
+    }
+    Ok(())
+}
+
+async fn verify_database_file(path: &Path) -> crate::Result<()> {
+    let options = SqliteConnectOptions::new()
+        .filename(path)
+        .busy_timeout(Duration::from_secs(30))
+        .read_only(true)
+        .create_if_missing(false);
+    let mut connection = options.connect().await?;
+    let rows = sqlx::query_scalar::<_, String>("PRAGMA quick_check(1)")
+        .fetch_all(&mut connection)
+        .await?;
+    connection.close().await?;
+    if rows.as_slice() != ["ok"] {
+        return Err(crate::ErrorKind::FSError(format!(
+            "Database snapshot {} failed its integrity check: {}",
+            path.display(),
+            rows.join("; ")
+        ))
+        .into());
+    }
+    Ok(())
+}
+
+async fn remove_database_files(database: &Path) -> crate::Result<()> {
+    match tokio::fs::remove_file(database).await {
+        Ok(()) => {}
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+        Err(error) => return Err(error.into()),
+    }
+    super::db_backup::remove_database_sidecars(database).await
 }
 
 pub async fn backup_current_app_db_for_update(
@@ -1460,6 +1522,53 @@ mod tests {
     const INSTANCE_LOADER_COMPONENTS_MIGRATION_VERSION: i64 = 20260819120000;
     const INSTANCE_POST_UPGRADE_NOTICES_MIGRATION_VERSION: i64 = 20260824000000;
     const MCARCHIVE_PROVIDER_FILE_ID_MIGRATION_VERSION: i64 = 20260823020000;
+
+    #[tokio::test]
+    async fn channel_copy_replaces_database_and_removes_stale_sidecars() {
+        let temp = tempfile::tempdir().unwrap();
+        let source = temp.path().join("beta").join(LEGACY_APP_DB_FILE);
+        let target = temp.path().join("release").join(LEGACY_APP_DB_FILE);
+        tokio::fs::create_dir_all(source.parent().unwrap())
+            .await
+            .unwrap();
+        tokio::fs::create_dir_all(target.parent().unwrap())
+            .await
+            .unwrap();
+
+        for (path, marker) in [(&source, "beta"), (&target, "release")] {
+            let pool = open_app_db_pool(path).await.unwrap();
+            sqlx::query("CREATE TABLE marker (value TEXT NOT NULL)")
+                .execute(&pool)
+                .await
+                .unwrap();
+            sqlx::query("INSERT INTO marker (value) VALUES (?)")
+                .bind(marker)
+                .execute(&pool)
+                .await
+                .unwrap();
+            pool.close().await;
+        }
+        tokio::fs::write(sidecar_path(&target, "-wal"), b"stale wal")
+            .await
+            .unwrap();
+        tokio::fs::write(sidecar_path(&target, "-shm"), b"stale shm")
+            .await
+            .unwrap();
+
+        copy_app_database(&source, &target).await.unwrap();
+
+        assert!(!sidecar_path(&target, "-wal").exists());
+        assert!(!sidecar_path(&target, "-shm").exists());
+        let pool = open_app_db_pool(&target).await.unwrap();
+        let marker: String = sqlx::query_scalar("SELECT value FROM marker")
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+        pool.close().await;
+        assert_eq!(marker, "beta");
+        assert!(!sidecar_path(&target, ".copying").exists());
+        assert!(!sidecar_path(&target, ".replacing").exists());
+    }
 
     #[tokio::test]
     async fn post_upgrade_notices_migrate_fresh_and_existing_databases() {
@@ -3956,7 +4065,7 @@ mod tests {
         assert_eq!(
             translation,
             (
-                "microsoft".to_string(),
+                "google".to_string(),
                 String::new(),
                 String::new(),
                 String::new(),
@@ -4065,7 +4174,7 @@ mod tests {
         assert_eq!(
             translation,
             (
-                "microsoft".to_string(),
+                "google".to_string(),
                 String::new(),
                 String::new(),
                 "https://api.openai.com/v1".to_string(),

@@ -6,7 +6,10 @@
 		:style="{ fontSize: fontSize + 'px' }"
 		@scroll="handleScroll"
 	>
-		<div v-if="lines.length === 0" class="flex items-center justify-center h-full">
+		<div
+			v-if="lines.length === 0"
+			class="flex items-center justify-center h-full"
+		>
 			<EmptyState
 				v-if="emptyStateType === 'instance'"
 				:heading="formatMessage(consoleMessages.emptyInstanceTitle)"
@@ -26,22 +29,19 @@
 				v-for="item in lines"
 				:key="item.originalIndex"
 				:data-line="item.originalIndex + 1"
-				class="log-line flex items-stretch whitespace-pre"
+				class="log-line"
 				:class="entryClass(item.line)"
 			>
-				<span
-					class="flex shrink-0 w-[52px] items-center justify-end leading-none text-right text-secondary bg-surface-3 border-r border-solid border-surface-3 select-none overflow-hidden"
-					>{{ item.originalIndex + 1 }}</span
-				>
-				<span
-					class="log-line-content flex-1 px-2 break-all [overflow-wrap:anywhere]"
-					v-html="renderLine(item)"
-				></span>
+				<span class="log-line-number">{{ item.originalIndex + 1 }}</span>
+				<span class="log-line-content" v-html="renderLine(item)"></span>
 			</div>
 		</div>
 
 		<Transition name="scroll-to-bottom-fade">
-			<div v-if="lines.length > 0 && !stickToBottom" class="absolute bottom-4 right-4 z-10">
+			<div
+				v-if="lines.length > 0 && !stickToBottom"
+				class="absolute bottom-4 right-4 z-10"
+			>
 				<ButtonStyled circular type="highlight" size="large">
 					<button aria-label="Scroll to bottom" @click="scrollToBottom">
 						<ChevronDownIcon />
@@ -197,8 +197,35 @@ defineExpose({
 	white-space: pre-wrap;
 }
 
-.log-viewport-wrap .log-line-content {
+.log-line {
+	display: grid;
+	grid-template-columns: 52px minmax(0, 1fr);
+	align-items: stretch;
+	min-height: 1.4em;
+	white-space: pre;
+}
+
+.log-line-number {
+	display: flex;
+	align-items: flex-start;
+	justify-content: flex-end;
+	overflow: hidden;
+	border-right: 1px solid var(--surface-3);
+	background: var(--surface-3);
+	color: var(--color-text-secondary);
+	line-height: inherit;
+	text-align: right;
+	user-select: none;
+}
+
+.log-line-content {
+	display: block;
 	min-width: 0;
+	padding: 0 0.5rem;
+	line-height: inherit;
+	white-space: inherit;
+	word-break: break-all;
+	overflow-wrap: anywhere;
 }
 
 .log-line.entry-error {
