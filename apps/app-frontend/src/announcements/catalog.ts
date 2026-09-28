@@ -33,6 +33,31 @@ export const ANNOUNCEMENT_CHANGE_TYPES: readonly AnnouncementChangeType[] = [
 
 export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 	{
+		id: 'launcher-1.0.1-beta2',
+		version: '1.0.1-beta2',
+		publishedAt: '2026-09-28',
+		title: {
+			'en-US': 'Starlight Launcher 1.0.1-beta2',
+			'zh-CN': 'Starlight Launcher 1.0.1-beta2',
+		},
+		changes: {
+			added: [
+				{
+					'en-US':
+						'GitHub releases now include one complete update package for publishing to the StarLight skin site.',
+					'zh-CN': 'GitHub 发布现会生成一个可直接发布到 StarLight 皮肤站的完整更新包。',
+				},
+			],
+			fixed: [
+				{
+					'en-US':
+						'Improved the reliability of live logs and database switching.',
+					'zh-CN': '提高实时日志与数据库切换的可靠性。',
+				},
+			],
+		},
+	},
+	{
 		id: 'launcher-1.0.1-beta1',
 		version: '1.0.1-beta1',
 		publishedAt: '2026-09-27',

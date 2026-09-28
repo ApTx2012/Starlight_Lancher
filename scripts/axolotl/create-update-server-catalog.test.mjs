@@ -37,6 +37,7 @@ const files = [
 	'Axolotl_Launcher_1.9.5-beta.1_x64_nsis-setup.exe',
 	'Axolotl_Launcher_1.9.5-beta.1_x64_nsis-setup.exe.sig',
 	'Axolotl_Launcher_1.9.5-beta.1_x64_portable.zip',
+	'Starlight_Launcher_1.9.5-beta.1_skin-site-update.zip',
 ]
 
 try {
@@ -59,7 +60,11 @@ try {
 	assert.equal(result.status, 0, result.stderr)
 	const catalog = JSON.parse(fs.readFileSync(output, 'utf8'))
 	assert.equal(catalog.version, '1.9.5-beta.1')
-	assert.equal(catalog.files.length, files.length)
+	assert.equal(catalog.files.length, files.length - 1)
+	assert.equal(
+		catalog.files.some((artifact) => artifact.filename.endsWith('_skin-site-update.zip')),
+		false,
+	)
 	assert.deepEqual(
 		catalog.artifacts.find((artifact) => artifact.filename.endsWith('_amd64.AppImage.tar.gz'))
 			.targetPlatforms,

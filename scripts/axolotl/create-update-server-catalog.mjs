@@ -21,6 +21,10 @@ function updaterTargets(filename) {
 	return null
 }
 
+function isSkinSiteUpdateBundle(filename) {
+	return filename.endsWith('_skin-site-update.zip')
+}
+
 function describe(filename) {
 	const targets = updaterTargets(filename)
 	if (targets) {
@@ -69,7 +73,7 @@ function digest(asset) {
 }
 
 const assets = release.assets
-	.filter((asset) => asset.name !== 'latest.json')
+	.filter((asset) => asset.name !== 'latest.json' && !isSkinSiteUpdateBundle(asset.name))
 	.map((asset) => ({
 		filename: asset.name,
 		size: asset.size,

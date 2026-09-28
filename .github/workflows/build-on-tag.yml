@@ -351,6 +351,29 @@ jobs:
             release-check/update-server-catalog.json
           node scripts/axolotl/create-update-server-catalog.test.mjs
 
+      - name: Build complete skin-site update package
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          bundle_root="release-check/skin-site-update"
+          bundle_name="Starlight_Launcher_${version}_skin-site-update.zip"
+
+          mkdir -p "${bundle_root}/files"
+          gh release download "${GITHUB_REF_NAME}" --dir "${bundle_root}/files"
+          find "${bundle_root}/files" -maxdepth 1 -type f \
+            \( -name 'latest.json' -o -name '*_skin-site-update.zip' \) -delete
+
+          cp release-check/latest.json "${bundle_root}/latest.json"
+          cp release-check/update-server-catalog.json "${bundle_root}/update-server-catalog.json"
+          cp release-check/release.json "${bundle_root}/release.json"
+
+          (
+            cd "${bundle_root}"
+            zip -r -9 "../${bundle_name}" latest.json update-server-catalog.json release.json files
+          )
+          gh release upload "${GITHUB_REF_NAME}" "release-check/${bundle_name}" --clobber
+
       - name: Notify Update Server to publish release assets
         if: ${{ env.UPDATE_SERVER_URL != '' && env.UPDATE_SERVER_WEBHOOK_SECRET != '' }}
         env:
