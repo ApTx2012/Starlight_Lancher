@@ -5,8 +5,9 @@ mod transport;
 use crate::{
     State,
     state::{
-        AppliedContentSetPatch, EditInstance, InstanceInstallStage,
-        InstanceLaunchOverridesPatch, InstanceMode, ModLoader,
+        AppliedContentSetPatch, Credentials, EditInstance,
+        InstanceInstallStage, InstanceLaunchOverridesPatch, InstanceMode,
+        MinecraftAccountType, ModLoader,
     },
     util::fetch::{
         DownloadRequest, Integrity, ResourceClass, configured_client,
@@ -31,6 +32,9 @@ use tokio::{
 };
 
 const API: &str = "https://skin.starlight.cool/starlight/mod/packs";
+const STARLIGHT_YGGDRASIL_API_ROOT: &str =
+    "https://skin.starlight.cool/yggdrasil";
+const ACCOUNT_REQUIRED_MESSAGE: &str = "您需要登录正版或皮肤站账号后才能操作";
 const BINDING: &str = ".starlight-pack.json";
 const JOURNAL: &str = ".starlight-pack-pending.json";
 const MAX_HOSTED_CONCURRENT_FILES: usize = 8;
@@ -426,10 +430,46 @@ pub async fn default_publication() -> crate::Result<Publication> {
         })
 }
 
+fn is_supported_game_account(
+    account_type: MinecraftAccountType,
+    yggdrasil_api_root: Option<&str>,
+) -> bool {
+    account_type == MinecraftAccountType::Microsoft
+        || (account_type == MinecraftAccountType::Yggdrasil
+            && yggdrasil_api_root.map(|value| value.trim_end_matches('/'))
+                == Some(STARLIGHT_YGGDRASIL_API_ROOT))
+}
+
+async fn has_game_account_in(state: &State) -> crate::Result<bool> {
+    let accounts = Credentials::get_all_without_refresh(&state.pool).await?;
+    Ok(accounts.values().any(|account| {
+        is_supported_game_account(
+            account.account_type,
+            account
+                .yggdrasil
+                .as_ref()
+                .map(|value| value.api_root.as_str()),
+        )
+    }))
+}
+
+pub async fn has_game_account() -> crate::Result<bool> {
+    let state = State::get().await?;
+    has_game_account_in(&state).await
+}
+
+async fn require_game_account(state: &State) -> crate::Result<()> {
+    if !has_game_account_in(state).await? {
+        return Err(invalid(ACCOUNT_REQUIRED_MESSAGE));
+    }
+    Ok(())
+}
+
 pub async fn create(game_dir_root: Option<String>) -> crate::Result<String> {
+    let state = State::get().await?;
+    require_game_account(&state).await?;
     let publication = default_publication().await?;
     let runtime = &publication.manifest.runtime;
-    let state = State::get().await?;
     // The pack's game files live in their own folder under the chosen root,
     // e.g. `<root>/<pack name>`. Avoid a `versions/<name>` layout: that shape
     // is reserved for externally linked launcher instances and would make the
@@ -728,6 +768,8 @@ async fn recover(instance_id: &str) -> crate::Result<()> {
 }
 
 pub async fn synchronize(instance_id: &str) -> crate::Result<SyncResult> {
+    let state = State::get().await?;
+    require_game_account(&state).await?;
     let _guard = instance_gate(instance_id).lock_owned().await;
     if instance_mode(instance_id).await? != InstanceMode::StarLight {
         return Err(invalid(
@@ -1492,6 +1534,27 @@ async fn synchronize_with_progress(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn hosted_operations_accept_only_microsoft_or_starlight_accounts() {
+        assert!(is_supported_game_account(
+            MinecraftAccountType::Microsoft,
+            None
+        ));
+        assert!(is_supported_game_account(
+            MinecraftAccountType::Yggdrasil,
+            Some("https://skin.starlight.cool/yggdrasil/")
+        ));
+        assert!(!is_supported_game_account(
+            MinecraftAccountType::Yggdrasil,
+            Some("https://auth.example.com/yggdrasil")
+        ));
+        assert!(!is_supported_game_account(
+            MinecraftAccountType::Offline,
+            None
+        ));
+    }
+
     #[tokio::test]
     async fn running_pack_checks_tag_changes_without_writing_live_files() {
         let root = tempfile::tempdir().unwrap();

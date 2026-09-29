@@ -3,6 +3,7 @@ import test from 'node:test'
 
 import {
 	clearHostedSession,
+	HOSTED_ACCOUNT_REQUIRED_MESSAGE,
 	hostedCreate,
 	hostedDefault,
 	hostedSync,
@@ -46,6 +47,10 @@ test('hosted installation sends the JWT to native commands while Local needs no 
 	let createdId = 'instance'
 	let instanceExists = false
 	let tokenRequests = 0
+	let accounts: Array<{
+		account_type: string
+		yggdrasil?: { api_root: string }
+	}> = [{ account_type: 'microsoft' }]
 	const frame = {
 		postMessage(data: { type: string; requestId: string }) {
 			if (data.type !== 'starlight-pack-token-request') return
@@ -70,6 +75,14 @@ test('hosted installation sends the JWT to native commands while Local needs no 
 			__TAURI_INTERNALS__: {
 				async invoke(command: string, args: Record<string, unknown>) {
 					calls.push({ command, args })
+					if (command === 'plugin:install|hosted_has_game_account')
+						return accounts.some(
+							(account) =>
+								account.account_type === 'microsoft' ||
+								(account.account_type === 'yggdrasil' &&
+									account.yggdrasil?.api_root.replace(/\/+$/, '') ===
+										'https://skin.starlight.cool/yggdrasil'),
+						)
 					if (command === 'plugin:install|hosted_sync' && syncResponse) return syncResponse()
 					if (command === 'plugin:instance|instance_get')
 						return instanceExists ? { id: args.instanceId } : null
@@ -99,7 +112,13 @@ test('hosted installation sends the JWT to native commands while Local needs no 
 		await setInstanceMode('instance', 'starlight')
 		assert.equal(tokenRequests, 4)
 		assert.deepEqual(
-			calls.map(({ command }) => command),
+			calls
+				.map(({ command }) => command)
+				.filter(
+					(command) =>
+						command.startsWith('plugin:install|') &&
+						command !== 'plugin:install|hosted_has_game_account',
+				),
 			[
 				'hosted_set_session',
 				'hosted_default',
@@ -210,9 +229,35 @@ test('hosted installation sends the JWT to native commands while Local needs no 
 		assert.equal(tokenRequests, requestsBeforeLogout)
 		const attempts: string[] = []
 		const stopListening = onHostedPackAttemptStarted((id) => attempts.push(id))
+		accounts = []
+		const installCallsBeforeAccountFailure = calls.filter(
+			({ command }) =>
+				command.startsWith('plugin:install|') &&
+				command !== 'plugin:install|hosted_has_game_account',
+		).length
+		await assert.rejects(hostedSync('failed-instance'), {
+			message: HOSTED_ACCOUNT_REQUIRED_MESSAGE,
+		})
+		await assert.rejects(hostedCreate(), {
+			message: HOSTED_ACCOUNT_REQUIRED_MESSAGE,
+		})
+		assert.deepEqual(attempts, [])
+		assert.equal(
+			calls.filter(
+				({ command }) =>
+					command.startsWith('plugin:install|') &&
+					command !== 'plugin:install|hosted_has_game_account',
+			).length,
+			installCallsBeforeAccountFailure,
+		)
+		const unauthenticatedCreation = useHostedCreation()
+		await unauthenticatedCreation.install()
+		assert.equal(unauthenticatedCreation.installError.value, HOSTED_ACCOUNT_REQUIRED_MESSAGE)
+		assert.equal(unauthenticatedCreation.createdInstance.value, undefined)
+		accounts = [{ account_type: 'microsoft' }]
 		const unauthenticatedRetry = hostedSync('failed-instance')
-		assert.deepEqual(attempts, ['failed-instance'])
 		await assert.rejects(unauthenticatedRetry)
+		assert.deepEqual(attempts, ['failed-instance'])
 		stopListening()
 		await assert.rejects(hostedSync('failed-instance'))
 		assert.equal(attempts.length, 1)

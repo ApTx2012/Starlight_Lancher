@@ -7,6 +7,8 @@ import {
 	waitForSkinSiteSession,
 } from '../composables/skin-site-session.ts'
 
+export const HOSTED_ACCOUNT_REQUIRED_MESSAGE = '您需要登录正版或皮肤站账号后才能操作'
+
 let sessionUpdate: Promise<void> = Promise.resolve()
 const attemptListeners = new Set<(instanceId: string) => void>()
 
@@ -19,6 +21,13 @@ export function onHostedPackAttemptStarted(listener: (instanceId: string) => voi
 
 function startHostedPackAttempt(instanceId: string) {
 	for (const listener of attemptListeners) listener(instanceId)
+}
+
+export async function requireHostedGameAccount(): Promise<void> {
+	const available = await invokeHosted<boolean>('plugin:install|hosted_has_game_account')
+	if (!available) {
+		throw new Error(HOSTED_ACCOUNT_REQUIRED_MESSAGE)
+	}
 }
 
 export function clearHostedSession(): Promise<void> {
@@ -100,13 +109,16 @@ export interface HostedSyncResult {
 }
 export const hostedDefault = () =>
 	invokeWithSession<HostedPublication>('plugin:install|hosted_default')
-export const hostedCreate = (gameDirRoot?: string | null) =>
-	invokeWithSession<string>('plugin:install|hosted_create', {
+export const hostedCreate = async (gameDirRoot?: string | null) => {
+	await requireHostedGameAccount()
+	return invokeWithSession<string>('plugin:install|hosted_create', {
 		gameDirRoot: gameDirRoot ?? null,
 	})
+}
 export const hostedBinding = (instanceId: string) =>
 	invokeHosted<HostedBinding | null>('plugin:install|hosted_binding', { instanceId })
-export const hostedSync = (instanceId: string) => {
+export const hostedSync = async (instanceId: string) => {
+	await requireHostedGameAccount()
 	startHostedPackAttempt(instanceId)
 	return invokeWithSession<HostedSyncResult>('plugin:install|hosted_sync', { instanceId })
 }

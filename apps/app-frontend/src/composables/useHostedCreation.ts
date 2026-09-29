@@ -10,6 +10,10 @@ const createdInstance = ref<string>()
 const completed = ref(false)
 let generation = 0
 
+function errorMessage(cause: unknown) {
+	return cause instanceof Error ? cause.message : String(cause)
+}
+
 export function forgetHostedCreation(instanceId: string) {
 	if (createdInstance.value !== instanceId) return
 	generation++
@@ -27,7 +31,7 @@ export function markHostedCreationCompleted(instanceId: string) {
 export function markHostedCreationFailed(instanceId: string, cause: unknown) {
 	if (createdInstance.value !== instanceId) return
 	completed.value = false
-	installError.value = String(cause)
+	installError.value = errorMessage(cause)
 }
 
 export function useHostedCreation() {
@@ -63,7 +67,7 @@ export function useHostedCreation() {
 		} catch (cause) {
 			if (attempt === generation) {
 				if (createdInstance.value) markHostedCreationFailed(createdInstance.value, cause)
-				else installError.value = String(cause)
+				else installError.value = errorMessage(cause)
 			}
 		} finally {
 			installing.value = false

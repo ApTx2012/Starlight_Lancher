@@ -16,6 +16,7 @@ pub fn init<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
         .invoke_handler(tauri::generate_handler![
             hosted_default,
             hosted_set_session,
+            hosted_has_game_account,
             hosted_create,
             hosted_binding,
             hosted_sync,
@@ -63,6 +64,11 @@ pub async fn hosted_set_session(token: Option<String>) -> Result<()> {
 #[tauri::command]
 pub async fn hosted_default() -> Result<theseus::pack::hosted::Publication> {
     Ok(theseus::pack::hosted::default_publication().await?)
+}
+
+#[tauri::command]
+pub async fn hosted_has_game_account() -> Result<bool> {
+    Ok(theseus::pack::hosted::has_game_account().await?)
 }
 
 #[tauri::command]
