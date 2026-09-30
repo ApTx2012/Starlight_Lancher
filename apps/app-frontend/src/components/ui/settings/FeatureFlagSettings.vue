@@ -7,7 +7,7 @@ import {
 	Toggle,
 	useVIntl,
 } from '@modrinth/ui'
-import { inject, watch } from 'vue'
+import { inject, ref, watch } from 'vue'
 
 import { get as getSettings, set as setSettings } from '@/helpers/settings.ts'
 import { isDev } from '@/helpers/utils'
