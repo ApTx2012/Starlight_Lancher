@@ -805,6 +805,12 @@
   "app.appearance-settings.transparent-background.title": {
     "message": "透明背景"
   },
+  "app.appearance-settings.ui-scale.title": {
+    "message": "启动器缩放"
+  },
+  "app.appearance-settings.ui-scale.description": {
+    "message": "缩放整个启动器界面。缩小后能显示更多内容，适合内嵌网页被裁切的情况。"
+  },
   "app.appearance-settings.unknown-pack-warning.description": {
     "message": "如果你尝试安装一个未托管在 Modrinth 上的 Modrinth 整合包文件（.mrpack），我们会确保你在安装之前了解相关风险。"
   },

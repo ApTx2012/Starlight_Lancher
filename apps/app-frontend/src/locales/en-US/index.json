@@ -773,6 +773,12 @@
   "app.appearance-settings.transparent-background.title": {
     "message": "Transparent background"
   },
+  "app.appearance-settings.ui-scale.title": {
+    "message": "Launcher scale"
+  },
+  "app.appearance-settings.ui-scale.description": {
+    "message": "Scale the whole launcher interface. A smaller scale fits more content, which helps when embedded pages are cut off."
+  },
   "app.appearance-settings.unknown-pack-warning.description": {
     "message": "If you attempt to install a Modrinth Pack file (.mrpack) that isn't hosted on Modrinth, we'll make sure you understand the risks before installing it."
   },

@@ -219,14 +219,6 @@ const messages = defineMessages({
 		defaultMessage:
 			'Scale the whole launcher interface. A smaller scale fits more content, which helps when embedded pages are cut off.',
 	},
-	uiScaleCustom: {
-		id: 'app.appearance-settings.ui-scale.custom',
-		defaultMessage: 'Custom',
-	},
-	uiScalePercent: {
-		id: 'app.appearance-settings.ui-scale.percent',
-		defaultMessage: '{value}%',
-	},
 	pageTransitionsTitle: {
 		id: 'app.appearance-settings.page-transitions.title',
 		defaultMessage: 'Page transition animations',
