@@ -3093,7 +3093,7 @@ provideBrowseManager({
 
 <template>
 	<div data-onboarding-id="browse-content" class="flex flex-col gap-3 p-6">
-		<BrowsePageLayout v-if="!isWorldMapBrowse || curseForgeCapability.configured">
+		<BrowsePageLayout>
 			<template #nav-tabs-actions>
 				<ButtonStyled size="large" type="transparent">
 					<button :disabled="translationLoading" @click="toggleTranslation">
@@ -3193,14 +3193,14 @@ provideBrowseManager({
 						{{ formatMessage(messages.fuzzySearchSuffix) }}
 					</p>
 				</div>
+				<EmptyState
+					v-if="isWorldMapBrowse && !curseForgeCapability.configured"
+					type="empty-inbox"
+					:heading="formatMessage(messages.mapsUnavailable)"
+					:description="formatMessage(messages.mapsUnavailableDescription)"
+				/>
 			</template>
 		</BrowsePageLayout>
-		<EmptyState
-			v-else
-			type="empty-inbox"
-			:heading="formatMessage(messages.mapsUnavailable)"
-			:description="formatMessage(messages.mapsUnavailableDescription)"
-		/>
 		<CreationFlowModal
 			v-if="isServerContext && projectType === 'modpack'"
 			ref="serverSetupModalRef"
