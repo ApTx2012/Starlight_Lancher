@@ -33,6 +33,41 @@ export const ANNOUNCEMENT_CHANGE_TYPES: readonly AnnouncementChangeType[] = [
 
 export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 	{
+		id: 'launcher-1.0.1-beta3',
+		version: '1.0.1-beta3',
+		publishedAt: '2026-09-30',
+		title: {
+			'en-US': 'Starlight Launcher 1.0.1-beta3',
+			'zh-CN': 'Starlight Launcher 1.0.1-beta3',
+		},
+		changes: {
+			added: [
+				{
+					'en-US':
+						'Added a launcher UI scale setting under Appearance, which also helps when embedded pages are cut off.',
+					'zh-CN': '在“界面与外观”中新增启动器缩放设置，同时可缓解内嵌网页被裁切的问题。',
+				},
+				{
+					'en-US':
+						'Added a one-time welcome announcement on first launch, with an entry in the home sidebar.',
+					'zh-CN': '新增首次启动时的欢迎公告弹窗，并在主页侧栏提供入口。',
+				},
+			],
+			fixed: [
+				{
+					'en-US':
+						'Fixed the browse page going blank without a CurseForge API key; the navigation tabs now stay visible.',
+					'zh-CN': '修复未配置 CurseForge API Key 时浏览页整页空白的问题，导航栏现在保持可见。',
+				},
+				{
+					'en-US':
+						'Fixed the about page license links and the update changelog link to point at the correct repository.',
+					'zh-CN': '修复关于页许可证链接与更新日志链接，改为指向正确的仓库。',
+				},
+			],
+		},
+	},
+	{
 		id: 'launcher-1.0.1-beta2',
 		version: '1.0.1-beta2',
 		publishedAt: '2026-09-28',
