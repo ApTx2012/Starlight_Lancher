@@ -61,7 +61,7 @@ const historyAnnouncements = computed(() =>
 			<UpdateAnnouncementContent
 				:announcement="currentAnnouncement"
 				:version="currentVersion"
-				:external-url="currentAnnouncement?.externalUrl ?? AxolotlBrandConfig.website"
+				:external-url="currentAnnouncement?.externalUrl ?? AxolotlBrandConfig.releasesUrl"
 			/>
 		</div>
 
@@ -102,7 +102,7 @@ const historyAnnouncements = computed(() =>
 						<UpdateAnnouncementContent
 							:announcement="announcement"
 							:show-header="false"
-							:external-url="announcement.externalUrl"
+							:external-url="announcement.externalUrl ?? `${AxolotlBrandConfig.releasesUrl}/tag/v${announcement.version}`"
 						/>
 					</div>
 				</Accordion>
