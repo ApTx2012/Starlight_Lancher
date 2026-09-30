@@ -26,6 +26,7 @@ import { computed, ref, watch } from 'vue'
 
 import { get, set } from '@/helpers/settings.ts'
 import { getOS } from '@/helpers/utils'
+import { setUiScale, uiScale } from '@/helpers/ui-scale'
 import { useTheming } from '@/store/state'
 import {
 	type AccentColor,
@@ -208,6 +209,23 @@ const messages = defineMessages({
 		id: 'app.appearance-settings.advanced-rendering.description',
 		defaultMessage:
 			'Enables advanced rendering such as blur effects that may cause performance issues without hardware-accelerated rendering.',
+	},
+	uiScaleTitle: {
+		id: 'app.appearance-settings.ui-scale.title',
+		defaultMessage: 'Launcher scale',
+	},
+	uiScaleDescription: {
+		id: 'app.appearance-settings.ui-scale.description',
+		defaultMessage:
+			'Scale the whole launcher interface. A smaller scale fits more content, which helps when embedded pages are cut off.',
+	},
+	uiScaleCustom: {
+		id: 'app.appearance-settings.ui-scale.custom',
+		defaultMessage: 'Custom',
+	},
+	uiScalePercent: {
+		id: 'app.appearance-settings.ui-scale.percent',
+		defaultMessage: '{value}%',
 	},
 	pageTransitionsTitle: {
 		id: 'app.appearance-settings.page-transitions.title',
@@ -1018,6 +1036,43 @@ watch(
 							}
 						"
 					/>
+				</template>
+			</SettingsRow>
+			<SettingsRow stacked>
+				<template #label>
+					<span id="settings-target-appearance-ui-scale" tabindex="-1">
+						{{ formatMessage(messages.uiScaleTitle) }}
+					</span>
+				</template>
+				<template #description>{{ formatMessage(messages.uiScaleDescription) }}</template>
+				<template #control>
+					<div class="flex w-full flex-col gap-3">
+						<div class="flex flex-wrap gap-2">
+							<button
+								v-for="preset in [100, 110, 125, 150]"
+								:key="preset"
+								type="button"
+								class="min-w-16 rounded-lg border border-solid px-3 py-1.5 text-sm font-semibold transition-colors"
+								:class="
+									uiScale === preset
+										? 'border-brand bg-brand-highlight text-brand'
+										: 'border-surface-4 bg-surface-3 text-secondary hover:border-surface-5 hover:text-contrast'
+								"
+								@click="setUiScale(preset)"
+							>
+								{{ preset }}%
+							</button>
+						</div>
+						<Slider
+							id="ui-scale"
+							:model-value="uiScale"
+							:min="50"
+							:max="200"
+							:step="5"
+							unit="%"
+							@update:model-value="(value) => setUiScale(Number(value))"
+						/>
+					</div>
 				</template>
 			</SettingsRow>
 			<SettingsRow>

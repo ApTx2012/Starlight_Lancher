@@ -141,6 +141,7 @@ import {
 	isNetworkMetered,
 	setRestartAfterPendingUpdate,
 } from '@/helpers/utils.js'
+import { installUiScale } from '@/helpers/ui-scale'
 import { start_join_server, start_join_singleplayer_world } from '@/helpers/worlds.ts'
 import i18n, { resolveInitialLocale } from '@/i18n.config'
 import {
@@ -1272,6 +1273,8 @@ provide(
 provide('previewMinecraftCrashModal', () => minecraftCrashModal.value?.showPreview())
 provide('showLauncherPopup', (_request: unknown) => {})
 provide('showStartupAnnouncement', () => startupAnnouncementModal.value?.show())
+
+installUiScale()
 
 const stateFailed = ref(false)
 stateInitialization
