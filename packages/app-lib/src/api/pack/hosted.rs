@@ -442,7 +442,8 @@ fn is_supported_game_account(
 
 async fn has_game_account_in(state: &State) -> crate::Result<bool> {
     let accounts = Credentials::get_all_without_refresh(&state.pool).await?;
-    Ok(accounts.values().any(|account| {
+    Ok(accounts.iter().any(|account| {
+        let account = account.value();
         is_supported_game_account(
             account.account_type,
             account
