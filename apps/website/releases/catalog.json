@@ -1,6 +1,23 @@
 {
-  "updated_at": "2026-09-30T15:12:17.359Z",
+  "updated_at": "2026-09-30T15:46:48.315Z",
   "announcements": [
+    {
+      "id": "launcher-1.0.1-beta4",
+      "version": "1.0.1-beta4",
+      "publishedAt": "2026-09-30",
+      "title": {
+        "en-US": "Starlight Launcher 1.0.1-beta4",
+        "zh-CN": "Starlight Launcher 1.0.1-beta4"
+      },
+      "changes": {
+        "fixed": [
+          {
+            "en-US": "Fixed a build error in 1.0.1-beta3 that prevented the launcher from compiling.",
+            "zh-CN": "修复 1.0.1-beta3 中导致启动器无法编译的构建错误。"
+          }
+        ]
+      }
+    },
     {
       "id": "launcher-1.0.1-beta3",
       "version": "1.0.1-beta3",

@@ -33,6 +33,24 @@ export const ANNOUNCEMENT_CHANGE_TYPES: readonly AnnouncementChangeType[] = [
 
 export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 	{
+		id: 'launcher-1.0.1-beta4',
+		version: '1.0.1-beta4',
+		publishedAt: '2026-09-30',
+		title: {
+			'en-US': 'Starlight Launcher 1.0.1-beta4',
+			'zh-CN': 'Starlight Launcher 1.0.1-beta4',
+		},
+		changes: {
+			fixed: [
+				{
+					'en-US':
+						'Fixed a build error in 1.0.1-beta3 that prevented the launcher from compiling.',
+					'zh-CN': '修复 1.0.1-beta3 中导致启动器无法编译的构建错误。',
+				},
+			],
+		},
+	},
+	{
 		id: 'launcher-1.0.1-beta3',
 		version: '1.0.1-beta3',
 		publishedAt: '2026-09-30',
