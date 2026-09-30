@@ -10,7 +10,7 @@ import { computed, onUnmounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { getActivePlayerName } from '@/components/home/home-utils'
-import HomeDailyChallenge from '@/components/home/HomeDailyChallenge.vue'
+import HomeAnnouncementEntry from '@/components/home/HomeAnnouncementEntry.vue'
 import HomeInstancePickerModal from '@/components/home/HomeInstancePickerModal.vue'
 import HomeLaunchProgress from '@/components/home/HomeLaunchProgress.vue'
 import HomeMinecraftNews from '@/components/home/HomeMinecraftNews.vue'
@@ -202,7 +202,7 @@ onUnmounted(() => {
 		>
 			<HomeLaunchProgress />
 			<HomePlayInsights />
-			<HomeDailyChallenge />
+			<HomeAnnouncementEntry />
 			<HomeMinecraftNews />
 		</div>
 	</Teleport>

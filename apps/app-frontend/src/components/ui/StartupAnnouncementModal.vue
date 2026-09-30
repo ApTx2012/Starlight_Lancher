@@ -30,6 +30,8 @@ function hide() {
 function openLink(url: string) {
 	void openUrl(url)
 }
+
+defineExpose({ show })
 </script>
 
 <template>

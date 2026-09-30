@@ -63,7 +63,7 @@ import { openUrl } from '@tauri-apps/plugin-opener'
 import { type as getOsType } from '@tauri-apps/plugin-os'
 import { saveWindowState, StateFlags } from '@tauri-apps/plugin-window-state'
 import { hideAllPoppers } from 'floating-vue'
-import { computed, onMounted, onUnmounted, provide, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, provide, ref, watch } from 'vue'
 import { type RouteLocationNormalizedLoaded, RouterView, useRoute, useRouter } from 'vue-router'
 
 import InstancePlayerModal from '@/components/instance/InstancePlayerModal.vue'
@@ -1271,6 +1271,7 @@ provide(
 )
 provide('previewMinecraftCrashModal', () => minecraftCrashModal.value?.showPreview())
 provide('showLauncherPopup', (_request: unknown) => {})
+provide('showStartupAnnouncement', () => startupAnnouncementModal.value?.show())
 
 const stateFailed = ref(false)
 stateInitialization
@@ -1544,13 +1545,27 @@ const startupAnnouncementModal = ref<InstanceType<typeof StartupAnnouncementModa
 const STARTUP_ANNOUNCEMENT_KEY = 'starlight-startup-announcement-seen-v1'
 
 function maybeShowStartupAnnouncement() {
+	let alreadySeen = false
 	try {
-		if (localStorage.getItem(STARTUP_ANNOUNCEMENT_KEY)) return
+		alreadySeen = localStorage.getItem(STARTUP_ANNOUNCEMENT_KEY) !== null
+	} catch (error) {
+		console.warn('Failed to read startup announcement flag', error)
+	}
+	if (alreadySeen) return
+
+	const modal = startupAnnouncementModal.value
+	if (!modal) {
+		// The modal component has not mounted yet; try again on the next tick.
+		void nextTick(maybeShowStartupAnnouncement)
+		return
+	}
+
+	modal.show()
+	try {
 		localStorage.setItem(STARTUP_ANNOUNCEMENT_KEY, '1')
 	} catch (error) {
-		console.warn('Failed to read/write startup announcement flag', error)
+		console.warn('Failed to write startup announcement flag', error)
 	}
-	startupAnnouncementModal.value?.show()
 }
 
 // ── Drop import system ──────────────────────────────────────────────────
