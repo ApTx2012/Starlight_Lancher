@@ -78,6 +78,7 @@ pub use self::screenshot_groups::{
     list_screenshot_groups, rename_screenshot_group,
     set_screenshot_group_memberships,
 };
+#[allow(unused_imports)]
 pub(crate) use self::screenshots::reconcile_screenshots;
 pub use self::screenshots::{
     InstanceScreenshot, ScreenshotEditSaveMode, ScreenshotKey,
