@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use tauri::Manager;
+use tauri_plugin_fs::FsExt;
 use tauri_plugin_opener::OpenerExt;
 use theseus::data::{
     AppliedContentSetPatch, ContentItem, Dependency,
