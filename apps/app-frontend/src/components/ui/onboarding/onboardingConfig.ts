@@ -381,7 +381,7 @@ export const onboardingTours: Record<OnboardingMode, OnboardingStep[]> = {
 		),
 		inspect(
 			'account-login',
-			'account-entry',
+			'sidebar-accounts',
 			onboardingMessages.accountLoginTitle,
 			onboardingMessages.accountLoginDescription,
 		),
@@ -391,11 +391,15 @@ export const onboardingTours: Record<OnboardingMode, OnboardingStep[]> = {
 			onboardingMessages.announcementTitle,
 			onboardingMessages.announcementDescription,
 		),
-		inspect(
+		step(
 			'create-starlight',
-			'create-instance',
-			onboardingMessages.createStarlightTitle,
-			onboardingMessages.createStarlightDescription,
+			'navigate',
+			copy(
+				onboardingMessages.createStarlightTitle,
+				onboardingMessages.createStarlightDescription,
+				onboardingMessages.clickCreate,
+			),
+			control('create-instance', '/create'),
 		),
 		step(
 			'discover-navigation',
@@ -405,7 +409,7 @@ export const onboardingTours: Record<OnboardingMode, OnboardingStep[]> = {
 				onboardingMessages.discoverDescription,
 				onboardingMessages.clickDiscover,
 			),
-			control('nav-discover', '/browse/modpack'),
+			control('nav-discover', '/browse'),
 		),
 		inspect(
 			'discover-content',

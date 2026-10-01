@@ -313,6 +313,22 @@ const showOnboarding = ref(false)
 const onboardingMode = ref('main')
 const onboardingSettings = ref(null)
 const onboardingReplay = ref(false)
+
+// Expand the sidebar while the onboarding tour is visible so steps that point
+// at sidebar entries (account card, announcement, create instance) can find
+// their targets. The previous state is restored when the tour ends.
+let sidebarStateBeforeOnboarding: boolean | undefined
+watch(showOnboarding, (visible) => {
+	if (visible) {
+		sidebarStateBeforeOnboarding = sidebarToggled.value
+		sidebarToggled.value = true
+		setSidebarExpanded(true)
+	} else if (sidebarStateBeforeOnboarding !== undefined) {
+		sidebarToggled.value = sidebarStateBeforeOnboarding
+		setSidebarExpanded(sidebarStateBeforeOnboarding)
+		sidebarStateBeforeOnboarding = undefined
+	}
+})
 const nativeDecorations = ref(false)
 
 const os = ref('')
@@ -2509,7 +2525,10 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 			>
 				<div id="sidebar-teleport-target" class="sidebar-teleport-content contents"></div>
 				<div class="sidebar-default-content hidden" :class="{ 'sidebar-enabled': sidebarVisible }">
-					<div class="p-4 border-0 border-b-[1px] border-[--brand-gradient-border] border-solid">
+					<div
+						data-onboarding-id="sidebar-accounts"
+						class="p-4 border-0 border-b-[1px] border-[--brand-gradient-border] border-solid"
+					>
 						<h3 class="text-base text-primary font-medium m-0">
 							{{ formatMessage(messages.userInformation) }}
 						</h3>
