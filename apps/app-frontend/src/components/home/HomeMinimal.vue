@@ -201,7 +201,7 @@ onUnmounted(() => {
 		data-onboarding-id="home-instances"
 		class="minimal-home-stage flex min-w-0 items-center justify-center px-6 pb-14 pt-8"
 	>
-		<div class="flex w-full max-w-3xl flex-col items-center text-center">
+		<div data-onboarding-id="home-widget-grid" class="flex w-full max-w-3xl flex-col items-center text-center">
 			<HomeGreeting :player-name="playerName" variant="minimal" />
 
 			<template v-if="selectedInstance">
