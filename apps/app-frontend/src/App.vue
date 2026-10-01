@@ -19,6 +19,7 @@ import {
 	SettingsIcon,
 	SpinnerIcon,
 	UserIcon,
+	UsersIcon,
 	WorldIcon,
 } from '@modrinth/assets'
 import {
@@ -2311,6 +2312,15 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 					"
 				>
 					<LibraryIcon />
+				</NavButton>
+				<NavButton
+					v-if="themeStore.featureFlags.multiplayer_in_app"
+					v-tooltip.right="formatMessage(messages.multiplayer)"
+					data-onboarding-id="nav-multiplayer"
+					to="/multiplayer"
+					:is-primary="(r) => r.path.startsWith('/multiplayer')"
+				>
+					<UsersIcon />
 				</NavButton>
 				<NavButton
 					v-tooltip.right="formatMessage(messages.lab)"

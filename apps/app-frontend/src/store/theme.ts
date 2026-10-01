@@ -14,6 +14,7 @@ export const DEFAULT_FEATURE_FLAGS = {
 	skip_non_essential_warnings: false,
 	skip_unknown_pack_warning: false,
 	i18n_debug: false,
+	multiplayer_in_app: false,
 	show_instance_play_time: true,
 	page_transitions: true,
 	advanced_filters_collapsed: true,

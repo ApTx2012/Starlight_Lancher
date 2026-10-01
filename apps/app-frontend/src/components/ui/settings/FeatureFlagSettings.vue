@@ -69,6 +69,7 @@ const featureFlagLabels: Record<FeatureFlag, string> = {
 	show_instance_play_time: '显示实例游玩时间',
 	page_transitions: '页面切换动画',
 	advanced_filters_collapsed: '高级筛选默认折叠',
+	multiplayer_in_app: '多人联机',
 	auto_install_dependencies: '自动安装依赖',
 }
 
