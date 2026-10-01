@@ -33,6 +33,37 @@ export const ANNOUNCEMENT_CHANGE_TYPES: readonly AnnouncementChangeType[] = [
 
 export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 	{
+		id: 'launcher-1.0.1-beta5',
+		version: '1.0.1-beta5',
+		publishedAt: '2026-10-01',
+		title: {
+			'en-US': 'Starlight Launcher 1.0.1-beta5',
+			'zh-CN': 'Starlight Launcher 1.0.1-beta5',
+		},
+		changes: {
+			added: [
+				{
+					'en-US':
+						'Reworked the onboarding tour, covering the home page, StarLight login, announcements, instance creation, discovery, skins, library, lab, downloads, and update settings in order.',
+					'zh-CN':
+						'重做了新手导览，依次介绍主页、StarLight 登录、公告、创建实例、发现内容、皮肤、实例库、实验室、下载与更新设置。',
+				},
+			],
+			fixed: [
+				{
+					'en-US':
+						'Fixed the developer feature flags page rendering blank.',
+					'zh-CN': '修复开发者“功能开关”页面空白的问题。',
+				},
+				{
+					'en-US':
+						'Fixed a build error that prevented the launcher from compiling.',
+					'zh-CN': '修复导致启动器无法编译的构建错误。',
+				},
+			],
+		},
+	},
+	{
 		id: 'launcher-1.0.1-beta4',
 		version: '1.0.1-beta4',
 		publishedAt: '2026-09-30',
