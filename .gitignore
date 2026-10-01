@@ -38,6 +38,7 @@ node_modules
 npm-debug.log
 yarn-error.log
 testem.log
+replay_pid*.log
 /typings
 
 # System Files

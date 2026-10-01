@@ -56,13 +56,7 @@ zip = { workspace = true }
 
 [dependencies.tauri]
 workspace = true
-features = [
-  "devtools",
-  "macos-private-api",
-  "protocol-asset",
-  "tray-icon",
-  "unstable"
-]
+features = ["devtools", "macos-private-api", "protocol-asset", "tray-icon", "unstable"]
 
 [build-dependencies]
 cc = { workspace = true }
