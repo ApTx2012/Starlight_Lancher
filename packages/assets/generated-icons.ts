@@ -79,6 +79,7 @@ import _ChevronDownIcon from './icons/chevron-down.svg?component'
 import _ChevronLeftIcon from './icons/chevron-left.svg?component'
 import _ChevronRightIcon from './icons/chevron-right.svg?component'
 import _ChevronUpIcon from './icons/chevron-up.svg?component'
+import _CircleIcon from './icons/circle.svg?component'
 import _CircleAlertIcon from './icons/circle-alert.svg?component'
 import _CircleArrowRightIcon from './icons/circle-arrow-right.svg?component'
 import _CircleDashedIcon from './icons/circle-dashed.svg?component'
@@ -266,6 +267,7 @@ import _SortDescIcon from './icons/sort-desc.svg?component'
 import _SparklesIcon from './icons/sparkles.svg?component'
 import _SpinnerIcon from './icons/spinner.svg?component'
 import _SplitIcon from './icons/split.svg?component'
+import _SquareIcon from './icons/square.svg?component'
 import _StarIcon from './icons/star.svg?component'
 import _StopCircleIcon from './icons/stop-circle.svg?component'
 import _StoreIcon from './icons/store.svg?component'
@@ -525,6 +527,7 @@ export const ChevronDownIcon = _ChevronDownIcon
 export const ChevronLeftIcon = _ChevronLeftIcon
 export const ChevronRightIcon = _ChevronRightIcon
 export const ChevronUpIcon = _ChevronUpIcon
+export const CircleIcon = _CircleIcon
 export const CircleAlertIcon = _CircleAlertIcon
 export const CircleArrowRightIcon = _CircleArrowRightIcon
 export const CircleDashedIcon = _CircleDashedIcon
@@ -712,6 +715,7 @@ export const SortDescIcon = _SortDescIcon
 export const SparklesIcon = _SparklesIcon
 export const SpinnerIcon = _SpinnerIcon
 export const SplitIcon = _SplitIcon
+export const SquareIcon = _SquareIcon
 export const StarIcon = _StarIcon
 export const StopCircleIcon = _StopCircleIcon
 export const StoreIcon = _StoreIcon
