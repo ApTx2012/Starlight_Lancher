@@ -102,6 +102,14 @@ export default new createRouter({
 			},
 		},
 		{
+			path: '/screenshots',
+			name: 'Screenshots',
+			component: () => import('@/pages/Screenshots.vue'),
+			meta: {
+				breadcrumb: [{ name: 'Screenshots' }],
+			},
+		},
+		{
 			path: '/multiplayer',
 			name: 'Multiplayer',
 			component: () => import('@/pages/Multiplayer.vue'),

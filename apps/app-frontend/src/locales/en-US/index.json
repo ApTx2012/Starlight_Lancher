@@ -1,196 +1,4 @@
 {
-	"app.instance-player.title": { "message": "Choose an instance player" },
-	"app.instance-player.remember": { "message": "This instance will keep using your choice. Switch players in instance settings." },
-	"app.instance-player.restore": { "message": "Sign in again as {name}. To choose someone else, open instance settings." },
-	"app.instance-player.loading": { "message": "Loading signed-in players…" },
-	"app.instance-player.licensed": { "message": "Minecraft account" },
-	"app.instance-player.skin": { "message": "Skin site player" },
-	"app.instance-player.offline": { "message": "Offline player" },
-	"app.instance-player.empty": { "message": "No available skin site players. You can create a player on the skin site." },
-	"app.instance-player.sign-in": { "message": "Sign in to choose a player." },
-	"app.instance-player.retry": { "message": "Retry" },
-	"app.instance-player.skin-login": { "message": "Sign in to skin site" },
-	"app.instance-player.or": { "message": "Or" },
-	"app.instance-player.use-microsoft": { "message": "Use a Minecraft account" },
-	"app.instance-player.saving": { "message": "Saving instance player…" },
-	"app.instance-player.setting": { "message": "Instance player" },
-	"app.instance-player.first-launch": { "message": "Choose a player on first launch" },
-	"app.instance-player.change": { "message": "Switch instance player" },
-  "app.hosted-mods.title": { "message": "Updating server Mods" },
-  "app.hosted-mods.description": { "message": "The game starts after all required updates have been installed." },
-  "app.hosted-mods.complete": { "message": "Downloaded" },
-  "app.hosted-mods.downloads": { "message": "View downloads" },
-  "app.hosted-mods.close": { "message": "Close" },
-  "app.hosted-packs.progress.retry": { "message": "Return to the instance to retry" },
-  "app.hosted-packs.progress.preparing": { "message": "Preparing modpack installation…" },
-  "app.hosted-packs.progress.downloads": { "message": "View downloads" },
-  "app.hosted-packs.open-instance": { "message": "Open installed instance" },
-  "app.hosted-packs.retry-install": { "message": "Retry installation" },
-  "app.hosted-packs.auto-installing": { "message": "Downloading and installing the server modpack…" },
-  "app.hosted-packs.auto-description": { "message": "Download and automatically install the modpack from StarLight to play on the StarLight server with one click." },
-  "app.hosted-packs.auto-install": { "message": "Install the StarLight modpack" },
-  "app.hosted-install.game-dir.header": { "message": "Choose game directory" },
-  "app.hosted-install.game-dir.description": { "message": "StarLight instance data (mods, saves, configs, resource packs) is stored in an external game directory. Pick a root folder — the modpack gets its own subfolder inside it." },
-  "app.hosted-install.game-dir.label": { "message": "Game directory root" },
-  "app.hosted-install.game-dir.browse": { "message": "Browse" },
-  "app.hosted-install.game-dir.no-selection": { "message": "No folder selected" },
-  "app.hosted-install.game-dir.reset-default": { "message": "Use default location" },
-  "app.hosted-install.game-dir.preview": { "message": "Game files will be installed to: {path}" },
-  "app.hosted-install.game-dir.confirm": { "message": "Install" },
-  "app.onboarding.instance-mode.title": { "message": "Choose your instance type" },
-  "app.onboarding.instance-mode.description": { "message": "StarLight automatically installs the administrator-selected modpack and versions, then checks and completes updates before every launch. A StarLight login is required. Choose Local to select your own versions and modpacks for other servers or single-player." },
-  "app.instance-mode.title": { "message": "Instance type" },
-  "app.instance-mode.starlight": { "message": "StarLight instance" },
-  "app.instance-mode.local": { "message": "Local instance" },
-  "app.instance-mode.starlight-description": { "message": "Required for playing on StarLight. Automatically installs the server-selected modpack, Minecraft version, and loader. Every launch requires a StarLight login and checks for updates before starting." },
-  "app.instance-mode.local-description": { "message": "Does not sync StarLight server changes. Skips sync checks for faster startup and lets you choose your own modpacks. Best for third-party servers and personal single-player worlds." },
-  "app.instance-mode.saving": { "message": "Applying instance type and installing the server modpack when needed…" },
-  "app.instance-mode.loading": { "message": "Loading instance type…" },
-  "app.instance-mode.retry": { "message": "Retry" },
-  "app.instance-mode.local-packs-title": { "message": "Local modpacks" },
-  "app.instance-mode.local-packs": { "message": "Choose any modpack to install as a local instance. Existing files and worlds are kept when you switch to Local; StarLight changes will no longer be synchronized." },
-  "app.instance-mode.browse": { "message": "Browse modpacks" },
-  "app.instance-mode.import": { "message": "Import as a local instance" },
-  "app.hosted-packs.title": { "message": "Server-managed modpack" },
-  "app.hosted-packs.description": { "message": "The administrator selects this modpack and its versions. Every launch checks for updates and downloads changes before starting. A valid StarLight login and network connection are required." },
-  "app.hosted-packs.refresh": {"message": "Refresh"},
-  "app.hosted-packs.loading": {"message": "Loading published modpacks…"},
-  "app.hosted-packs.bound": {"message": "Installed: {name} · {version}"},
-  "app.hosted-packs.syncing": {"message": "Comparing files and synchronizing changes…"},
-  "app.hosted-packs.complete": {"message": "Synced to {version}. Changed {count} files; downloaded {size} MiB."},
-  "app.hosted-packs.preserved": {"message": "Preserved {count} locally modified or personal files"},
-  "app.hosted-packs.empty": {"message": "No modpacks have been approved for publication yet."},
-  "app.hosted-packs.update": {"message": "Synchronize now"},
-  "app.hosted-packs.install": { "message": "Retry automatic installation" },
-  "app.hosted-packs.management": {"message": "Content management"},
-  "app.hosted-packs.mods": {"message": "Manage mods"},
-  "app.hosted-packs.packs": {"message": "Manage modpacks"},
-  "app.home.luck.title": { "message": "Daily luck index" },
-  "app.home.luck.get": { "message": "Get with one click" },
-  "app.home.luck.login-to-get": { "message": "Sign in to get it" },
-  "app.home.luck.loading": { "message": "Asking the little sprite..." },
-  "app.home.luck.error": {
-    "message": "The little sprite did not answer. Please try again later."
-  },
-  "app.home.luck.out-of": { "message": "out of 100" },
-  "minecraft-account.skin-site.signed-in": { "message": "Signed in to StarLight Skin Site" },
-  "minecraft-account.skin-site.checking": { "message": "Checking skin site session…" },
-  "minecraft-account.skin-site.sync-error": {
-    "message": "Could not verify the skin site session. Retrying automatically."
-  },
-  "minecraft-account.skin-site.players": { "message": "Skin site players ({count})" },
-  "minecraft-account.skin-site.players.retry": { "message": "Retry" },
-  "minecraft-account.skin-site.players.empty": {
-    "message": "No player profiles are attached to this skin site account."
-  },
-  "minecraft-account.skin-site.players.error": {
-    "message": "Could not refresh the player list. Previously loaded players are kept."
-  },
-  "app.easteregg.color-mine.title": {
-    "message": "Starlight Mine: Chromatic Realms"
-  },
-  "app.easteregg.color-mine.easy": {
-    "message": "Easy"
-  },
-  "app.easteregg.color-mine.normal": {
-    "message": "Normal"
-  },
-  "app.easteregg.color-mine.hard": {
-    "message": "Hard"
-  },
-  "app.easteregg.color-mine.newGame": {
-    "message": "New board"
-  },
-  "app.easteregg.color-mine.close": {
-    "message": "Close"
-  },
-  "app.easteregg.color-mine.choose": {
-    "message": "Click a revealed tile to sample its color, then paint a gray tile."
-  },
-  "app.easteregg.color-mine.selected": {
-    "message": "Color {color} selected · Click a colored tile to change your brush."
-  },
-  "app.easteregg.color-mine.rulesTitle": {
-    "message": "How to play"
-  },
-  "app.easteregg.color-mine.rules": {
-    "message": "Numbers count same-color tiles in the eight surrounding spaces, excluding the tile itself. Each color forms one connected region using only horizontal and vertical edges. Sample a revealed tile to select a brush; a correct paint reveals a new number, but one wrong paint ends the game. Every board has a step-by-step deduction path without guessing."
-  },
-  "app.easteregg.color-mine.loading": {
-    "message": "Generating regions and checking the deduction path…"
-  },
-  "app.easteregg.color-mine.generateError": {
-    "message": "Could not generate this board. Try again."
-  },
-  "app.easteregg.color-mine.retry": {
-    "message": "Try again"
-  },
-  "app.easteregg.color-mine.progress": {
-    "message": "{count} / {total} revealed"
-  },
-  "app.easteregg.color-mine.best": {
-    "message": "Best · {time}"
-  },
-  "app.easteregg.color-mine.won": {
-    "message": "All colors restored!"
-  },
-  "app.easteregg.color-mine.lost": {
-    "message": "Wrong color at row {row}, column {column}: selected {selected}, correct {correct}. Game over."
-  },
-  "app.easteregg.color-mine.review": {
-    "message": "Unrevealed answers are now shown faded for review."
-  },
-  "app.easteregg.color-mine.leaveTitle": {
-    "message": "Leave this board?"
-  },
-  "app.easteregg.color-mine.leaveText": {
-    "message": "Save to continue later, or discard this unfinished board."
-  },
-  "app.easteregg.color-mine.saveLeave": {
-    "message": "Save and leave"
-  },
-  "app.easteregg.color-mine.discard": {
-    "message": "Discard"
-  },
-  "app.easteregg.color-mine.continue": {
-    "message": "Keep playing"
-  },
-  "app.easteregg.color-mine.replaceTitle": {
-    "message": "Start a new board?"
-  },
-  "app.easteregg.color-mine.replaceText": {
-    "message": "The current board will be discarded."
-  },
-  "app.easteregg.color-mine.savedTitle": {
-    "message": "An unfinished board is saved"
-  },
-  "app.easteregg.color-mine.resume": {
-    "message": "Resume saved game"
-  },
-  "app.easteregg.color-mine.storageError": {
-    "message": "Could not read or write the saved game. Your current board has been kept. Retry or explicitly discard it."
-  },
-  "app.easteregg.color-mine.recordError": {
-    "message": "Finished, but the best time could not be saved."
-  },
-  "app.easteregg.color-mine.zoomIn": {
-    "message": "Zoom in"
-  },
-  "app.easteregg.color-mine.zoomOut": {
-    "message": "Zoom out"
-  },
-  "app.easteregg.color-mine.map": {
-    "message": "Board overview. Click to navigate."
-  },
-  "app.easteregg.color-mine.board": {
-    "message": "{size} by {size} color deduction board"
-  },
-  "app.easteregg.color-mine.hidden": {
-    "message": "Row {row}, column {column}, unrevealed"
-  },
-  "app.easteregg.color-mine.revealed": {
-    "message": "Row {row}, column {column}, color {color}, {number} same-color neighbors"
-  },
   "app.account.signed-in-as": {
     "message": "Signed in as"
   },
@@ -361,6 +169,9 @@
   },
   "app.action-bar.view-logs": {
     "message": "View logs"
+  },
+  "app.action-bar.window-started": {
+    "message": "Started {time, time, medium}"
   },
   "app.ai-settings.add-model": {
     "message": "Add model"
@@ -773,11 +584,11 @@
   "app.appearance-settings.transparent-background.title": {
     "message": "Transparent background"
   },
-  "app.appearance-settings.ui-scale.title": {
-    "message": "Launcher scale"
-  },
   "app.appearance-settings.ui-scale.description": {
     "message": "Scale the whole launcher interface. A smaller scale fits more content, which helps when embedded pages are cut off."
+  },
+  "app.appearance-settings.ui-scale.title": {
+    "message": "Launcher scale"
   },
   "app.appearance-settings.unknown-pack-warning.description": {
     "message": "If you attempt to install a Modrinth Pack file (.mrpack) that isn't hosted on Modrinth, we'll make sure you understand the risks before installing it."
@@ -973,24 +784,6 @@
   },
   "app.close-launcher.tray": {
     "message": "Hide to tray"
-  },
-  "app.community-announcement.feedback-middle": {
-    "message": ", or share them with us through "
-  },
-  "app.community-announcement.feedback-prefix": {
-    "message": "If you have more ideas or suggestions, please join the player QQ group: "
-  },
-  "app.community-announcement.feedback-suffix": {
-    "message": ". We look forward to improving Starlight Launcher together!"
-  },
-  "app.community-announcement.response": {
-    "message": "Since Starlight Launcher was promoted on video platforms, we have received far more love and attention than we expected, along with many thoughtful suggestions and high-quality reports."
-  },
-  "app.community-announcement.thanks": {
-    "message": "I have done my best to personally reply to every comment on the videos. Thank you sincerely for all your support!"
-  },
-  "app.community-announcement.title": {
-    "message": "To all our users"
   },
   "app.content-favorites.add": {
     "message": "Add to favorites"
@@ -1865,6 +1658,111 @@
   "app.drop.world-imported-title": {
     "message": "World imported"
   },
+  "app.easteregg.color-mine.best": {
+    "message": "Best · {time}"
+  },
+  "app.easteregg.color-mine.board": {
+    "message": "{size} by {size} color deduction board"
+  },
+  "app.easteregg.color-mine.choose": {
+    "message": "Click a revealed tile to sample its color, then paint a gray tile."
+  },
+  "app.easteregg.color-mine.close": {
+    "message": "Close"
+  },
+  "app.easteregg.color-mine.continue": {
+    "message": "Keep playing"
+  },
+  "app.easteregg.color-mine.discard": {
+    "message": "Discard"
+  },
+  "app.easteregg.color-mine.easy": {
+    "message": "Easy"
+  },
+  "app.easteregg.color-mine.generateError": {
+    "message": "Could not generate this board. Try again."
+  },
+  "app.easteregg.color-mine.hard": {
+    "message": "Hard"
+  },
+  "app.easteregg.color-mine.hidden": {
+    "message": "Row {row}, column {column}, unrevealed"
+  },
+  "app.easteregg.color-mine.leaveText": {
+    "message": "Save to continue later, or discard this unfinished board."
+  },
+  "app.easteregg.color-mine.leaveTitle": {
+    "message": "Leave this board?"
+  },
+  "app.easteregg.color-mine.loading": {
+    "message": "Generating regions and checking the deduction path…"
+  },
+  "app.easteregg.color-mine.lost": {
+    "message": "Wrong color at row {row}, column {column}: selected {selected}, correct {correct}. Game over."
+  },
+  "app.easteregg.color-mine.map": {
+    "message": "Board overview. Click to navigate."
+  },
+  "app.easteregg.color-mine.newGame": {
+    "message": "New board"
+  },
+  "app.easteregg.color-mine.normal": {
+    "message": "Normal"
+  },
+  "app.easteregg.color-mine.progress": {
+    "message": "{count} / {total} revealed"
+  },
+  "app.easteregg.color-mine.recordError": {
+    "message": "Finished, but the best time could not be saved."
+  },
+  "app.easteregg.color-mine.replaceText": {
+    "message": "The current board will be discarded."
+  },
+  "app.easteregg.color-mine.replaceTitle": {
+    "message": "Start a new board?"
+  },
+  "app.easteregg.color-mine.resume": {
+    "message": "Resume saved game"
+  },
+  "app.easteregg.color-mine.retry": {
+    "message": "Try again"
+  },
+  "app.easteregg.color-mine.revealed": {
+    "message": "Row {row}, column {column}, color {color}, {number} same-color neighbors"
+  },
+  "app.easteregg.color-mine.review": {
+    "message": "Unrevealed answers are now shown faded for review."
+  },
+  "app.easteregg.color-mine.rules": {
+    "message": "Numbers count same-color tiles in the eight surrounding spaces, excluding the tile itself. Each color forms one connected region using only horizontal and vertical edges. Sample a revealed tile to select a brush; a correct paint reveals a new number, but one wrong paint ends the game. Every board has a step-by-step deduction path without guessing."
+  },
+  "app.easteregg.color-mine.rulesTitle": {
+    "message": "How to play"
+  },
+  "app.easteregg.color-mine.saveLeave": {
+    "message": "Save and leave"
+  },
+  "app.easteregg.color-mine.savedTitle": {
+    "message": "An unfinished board is saved"
+  },
+  "app.easteregg.color-mine.selected": {
+    "message": "Color {color} selected · Click a colored tile to change your brush."
+  },
+  "app.easteregg.color-mine.storageError": {
+    "message": "Could not read or write the saved game. Your current board has been kept. Retry or explicitly discard it."
+  },
+  "app.easteregg.color-mine.title": {
+    "message": "Starlight Mine: Chromatic Realms"
+  },
+  "app.easteregg.color-mine.won": {
+    "message": "All colors restored!"
+  },
+  "app.easteregg.color-mine.zoomIn": {
+    "message": "Zoom in"
+  },
+  "app.easteregg.color-mine.zoomOut": {
+    "message": "Zoom out"
+  },
   "app.error.account-description": {
     "message": "Check that you signed in with the correct account. You may own Minecraft on another Microsoft account."
   },
@@ -2204,6 +2102,12 @@
   "app.home.instances.view-all": {
     "message": "View all instances"
   },
+  "app.home.launch-progress.empty": {
+    "message": "启动游戏后，这里会显示进度。"
+  },
+  "app.home.launch-progress.title": {
+    "message": "启动进度"
+  },
   "app.home.layout.switch-to-information": {
     "message": "Switch to Information Home"
   },
@@ -2212,6 +2116,24 @@
   },
   "app.home.layout.toggle": {
     "message": "Minimal Home"
+  },
+  "app.home.luck.error": {
+    "message": "The little sprite did not answer. Please try again later."
+  },
+  "app.home.luck.get": {
+    "message": "Get with one click"
+  },
+  "app.home.luck.loading": {
+    "message": "Asking the little sprite..."
+  },
+  "app.home.luck.login-to-get": {
+    "message": "Sign in to get it"
+  },
+  "app.home.luck.out-of": {
+    "message": "out of 100"
+  },
+  "app.home.luck.title": {
+    "message": "Daily luck index"
   },
   "app.home.minimal.change-instance": {
     "message": "Change Home instance"
@@ -2233,12 +2155,6 @@
   },
   "app.home.minimal.picker.title": {
     "message": "Choose a Home instance"
-  },
-  "app.home.news.open-article": {
-    "message": "Read on minecraft.net"
-  },
-  "app.home.news.title": {
-    "message": "Minecraft news"
   },
   "app.home.playtime.hours-minutes": {
     "message": "{hours}h {minutes}m"
@@ -2324,12 +2240,6 @@
   "app.home.widgets.choose-world": {
     "message": "Choose a world"
   },
-  "app.home.widgets.customize": {
-    "message": "Customize widgets"
-  },
-  "app.home.widgets.done": {
-    "message": "Finish editing"
-  },
   "app.home.widgets.drag": {
     "message": "Drag to move widget"
   },
@@ -2356,15 +2266,6 @@
   },
   "app.home.widgets.instance-description": {
     "message": "Choose one instance for a dedicated launch shortcut."
-  },
-  "app.home.widgets.layout.switch-to-free": {
-    "message": "Switch to free widget layout"
-  },
-  "app.home.widgets.layout.switch-to-grid": {
-    "message": "Switch to grid widget layout"
-  },
-  "app.home.widgets.layout.toggle": {
-    "message": "Widget layout mode"
   },
   "app.home.widgets.loading": {
     "message": "Loading..."
@@ -2414,12 +2315,6 @@
   "app.home.widgets.replace": {
     "message": "Replace target"
   },
-  "app.home.widgets.reset": {
-    "message": "Restore default widgets"
-  },
-  "app.home.widgets.reset-confirm": {
-    "message": "Restore the default widget layout?"
-  },
   "app.home.widgets.search": {
     "message": "Search"
   },
@@ -2446,6 +2341,111 @@
   },
   "app.home.worlds.pinned": {
     "message": "Pinned worlds"
+  },
+  "app.hosted-install.game-dir.browse": {
+    "message": "Browse"
+  },
+  "app.hosted-install.game-dir.confirm": {
+    "message": "Install"
+  },
+  "app.hosted-install.game-dir.description": {
+    "message": "StarLight instance data (mods, saves, configs, resource packs) is stored in an external game directory. Pick a root folder — the modpack gets its own subfolder inside it."
+  },
+  "app.hosted-install.game-dir.header": {
+    "message": "Choose game directory"
+  },
+  "app.hosted-install.game-dir.label": {
+    "message": "Game directory root"
+  },
+  "app.hosted-install.game-dir.no-selection": {
+    "message": "No folder selected"
+  },
+  "app.hosted-install.game-dir.preview": {
+    "message": "Game files will be installed to: {path}"
+  },
+  "app.hosted-install.game-dir.reset-default": {
+    "message": "Use default location"
+  },
+  "app.hosted-mods.close": {
+    "message": "Close"
+  },
+  "app.hosted-mods.complete": {
+    "message": "Downloaded"
+  },
+  "app.hosted-mods.description": {
+    "message": "The game starts after all required updates have been installed."
+  },
+  "app.hosted-mods.downloads": {
+    "message": "View downloads"
+  },
+  "app.hosted-mods.title": {
+    "message": "Updating server Mods"
+  },
+  "app.hosted-packs.auto-description": {
+    "message": "Download and automatically install the modpack from StarLight to play on the StarLight server with one click."
+  },
+  "app.hosted-packs.auto-install": {
+    "message": "Install the StarLight modpack"
+  },
+  "app.hosted-packs.auto-installing": {
+    "message": "Downloading and installing the server modpack…"
+  },
+  "app.hosted-packs.bound": {
+    "message": "Installed: {name} · {version}"
+  },
+  "app.hosted-packs.complete": {
+    "message": "Synced to {version}. Changed {count} files; downloaded {size} MiB."
+  },
+  "app.hosted-packs.description": {
+    "message": "The administrator selects this modpack and its versions. Every launch checks for updates and downloads changes before starting. A valid StarLight login and network connection are required."
+  },
+  "app.hosted-packs.empty": {
+    "message": "No modpacks have been approved for publication yet."
+  },
+  "app.hosted-packs.install": {
+    "message": "Retry automatic installation"
+  },
+  "app.hosted-packs.loading": {
+    "message": "Loading published modpacks…"
+  },
+  "app.hosted-packs.management": {
+    "message": "Content management"
+  },
+  "app.hosted-packs.mods": {
+    "message": "Manage mods"
+  },
+  "app.hosted-packs.open-instance": {
+    "message": "Open installed instance"
+  },
+  "app.hosted-packs.packs": {
+    "message": "Manage modpacks"
+  },
+  "app.hosted-packs.preserved": {
+    "message": "Preserved {count} locally modified or personal files"
+  },
+  "app.hosted-packs.progress.downloads": {
+    "message": "View downloads"
+  },
+  "app.hosted-packs.progress.preparing": {
+    "message": "Preparing modpack installation…"
+  },
+  "app.hosted-packs.progress.retry": {
+    "message": "Return to the instance to retry"
+  },
+  "app.hosted-packs.refresh": {
+    "message": "Refresh"
+  },
+  "app.hosted-packs.retry-install": {
+    "message": "Retry installation"
+  },
+  "app.hosted-packs.syncing": {
+    "message": "Comparing files and synchronizing changes…"
+  },
+  "app.hosted-packs.title": {
+    "message": "Server-managed modpack"
+  },
+  "app.hosted-packs.update": {
+    "message": "Synchronize now"
   },
   "app.install.phase.downloading_content": {
     "message": "Downloading content"
@@ -2501,9 +2501,6 @@
   "app.install.phase.running_loader_processors": {
     "message": "Running loader processors"
   },
-  "app.instance-item.already-open": {
-    "message": "Instance is already open"
-  },
   "app.instance-item.loading-modpack": {
     "message": "Loading modpack..."
   },
@@ -2512,6 +2509,93 @@
   },
   "app.instance-item.view-instance": {
     "message": "View instance"
+  },
+  "app.instance-mode.browse": {
+    "message": "Browse modpacks"
+  },
+  "app.instance-mode.import": {
+    "message": "Import as a local instance"
+  },
+  "app.instance-mode.loading": {
+    "message": "Loading instance type…"
+  },
+  "app.instance-mode.local": {
+    "message": "Local instance"
+  },
+  "app.instance-mode.local-description": {
+    "message": "Does not sync StarLight server changes. Skips sync checks for faster startup and lets you choose your own modpacks. Best for third-party servers and personal single-player worlds."
+  },
+  "app.instance-mode.local-packs": {
+    "message": "Choose any modpack to install as a local instance. Existing files and worlds are kept when you switch to Local; StarLight changes will no longer be synchronized."
+  },
+  "app.instance-mode.local-packs-title": {
+    "message": "Local modpacks"
+  },
+  "app.instance-mode.retry": {
+    "message": "Retry"
+  },
+  "app.instance-mode.saving": {
+    "message": "Applying instance type and installing the server modpack when needed…"
+  },
+  "app.instance-mode.starlight": {
+    "message": "StarLight instance"
+  },
+  "app.instance-mode.starlight-description": {
+    "message": "Required for playing on StarLight. Automatically installs the server-selected modpack, Minecraft version, and loader. Every launch requires a StarLight login and checks for updates before starting."
+  },
+  "app.instance-mode.title": {
+    "message": "Instance type"
+  },
+  "app.instance-player.change": {
+    "message": "Switch instance player"
+  },
+  "app.instance-player.empty": {
+    "message": "No available skin site players. You can create a player on the skin site."
+  },
+  "app.instance-player.first-launch": {
+    "message": "Choose a player on first launch"
+  },
+  "app.instance-player.licensed": {
+    "message": "Minecraft account"
+  },
+  "app.instance-player.loading": {
+    "message": "Loading signed-in players…"
+  },
+  "app.instance-player.offline": {
+    "message": "Offline player"
+  },
+  "app.instance-player.or": {
+    "message": "Or"
+  },
+  "app.instance-player.remember": {
+    "message": "This instance will keep using your choice. Switch players in instance settings."
+  },
+  "app.instance-player.restore": {
+    "message": "Sign in again as {name}. To choose someone else, open instance settings."
+  },
+  "app.instance-player.retry": {
+    "message": "Retry"
+  },
+  "app.instance-player.saving": {
+    "message": "Saving instance player…"
+  },
+  "app.instance-player.setting": {
+    "message": "Instance player"
+  },
+  "app.instance-player.sign-in": {
+    "message": "Sign in to choose a player."
+  },
+  "app.instance-player.skin": {
+    "message": "Skin site player"
+  },
+  "app.instance-player.skin-login": {
+    "message": "Sign in to skin site"
+  },
+  "app.instance-player.title": {
+    "message": "Choose an instance player"
+  },
+  "app.instance-player.use-microsoft": {
+    "message": "Use a Minecraft account"
   },
   "app.instance.back": {
     "message": "Back to instance"
@@ -2966,17 +3050,11 @@
   "app.instance.join-server": {
     "message": "Join server"
   },
-  "app.instance.launch-instance": {
-    "message": "Launch instance"
-  },
   "app.instance.launch-another": {
     "message": "Launch another window"
   },
-  "app.action-bar.window-started": {
-    "message": "Started {time, time, medium}"
-  },
-  "app.instance.stop-all": {
-    "message": "Stop all windows of this instance"
+  "app.instance.launch-instance": {
+    "message": "Launch instance"
   },
   "app.instance.linked-to": {
     "message": "Linked to"
@@ -3199,6 +3277,9 @@
   },
   "app.instance.starting": {
     "message": "Starting... {seconds, number}s"
+  },
+  "app.instance.stop-all": {
+    "message": "Stop all windows of this instance"
   },
   "app.instance.stopping": {
     "message": "Stopping..."
@@ -5078,11 +5159,11 @@
   "app.lab.skin-editor.loading": {
     "message": "Loading skin editor"
   },
-  "app.lab.skin-editor.retry": {
-    "message": "Try again"
-  },
   "app.lab.skin-editor.resource-error": {
     "message": "Skin editor files are missing or damaged. Reinstall the launcher or extract the complete portable archive."
+  },
+  "app.lab.skin-editor.retry": {
+    "message": "Try again"
   },
   "app.lab.skin-editor.title": {
     "message": "Skin editor"
@@ -5113,9 +5194,6 @@
   },
   "app.library.tabs.saved": {
     "message": "Saved"
-  },
-  "app.library.tabs.servers": {
-    "message": "Servers"
   },
   "app.library.tabs.shared": {
     "message": "Shared with me"
@@ -5705,9 +5783,6 @@
   "app.multiplayer.tab.rooms": {
     "message": "Rooms"
   },
-  "app.multiplayer.tab.servers": {
-    "message": "Servers"
-  },
   "app.multiplayer.terracotta.public-node-invalid": {
     "message": "Invalid node URI: {node}. Use http, https, tcp, tls, udp, ws, or wss."
   },
@@ -5777,6 +5852,12 @@
   "app.notification.warning": {
     "message": "Warning"
   },
+  "app.onboarding.account-login.description": {
+    "message": "Sign in to the StarLight skin site here to use your StarLight players, install hosted modpacks, and sync your account."
+  },
+  "app.onboarding.account-login.title": {
+    "message": "Sign in to StarLight"
+  },
   "app.onboarding.action.click-create": {
     "message": "Click Create new instance to continue"
   },
@@ -5819,6 +5900,12 @@
   "app.onboarding.action.start": {
     "message": "Take the tour"
   },
+  "app.onboarding.announcement.description": {
+    "message": "Open the announcement entry in the sidebar to read the latest news, rules, and server notices."
+  },
+  "app.onboarding.announcement.title": {
+    "message": "Latest announcements"
+  },
   "app.onboarding.appearance.description": {
     "message": "Theme, accent, backgrounds, and window effects all live here. Make the launcher feel familiar."
   },
@@ -5830,6 +5917,12 @@
   },
   "app.onboarding.browse.title": {
     "message": "Search with receipts"
+  },
+  "app.onboarding.create-starlight.description": {
+    "message": "Use Create new instance here. A StarLight instance installs the server-selected modpack and versions, then keeps them updated before each launch."
+  },
+  "app.onboarding.create-starlight.title": {
+    "message": "Create a StarLight instance"
   },
   "app.onboarding.create.description": {
     "message": "Start from scratch or bring in an existing instance or modpack. Your call."
@@ -5897,6 +5990,12 @@
   "app.onboarding.favorites.title": {
     "message": "Keep a short list"
   },
+  "app.onboarding.home-intro.description": {
+    "message": "This is your home page. It shows your instances, recent activity, and quick shortcuts to get playing."
+  },
+  "app.onboarding.home-intro.title": {
+    "message": "Welcome home"
+  },
   "app.onboarding.home-layout.description": {
     "message": "Use the bottom-right control to switch between the StarLight skin site home and the focused instance launcher."
   },
@@ -5908,6 +6007,12 @@
   },
   "app.onboarding.instance-actions.title": {
     "message": "The main controls"
+  },
+  "app.onboarding.instance-mode.description": {
+    "message": "StarLight automatically installs the administrator-selected modpack and versions, then checks and completes updates before every launch. A StarLight login is required. Choose Local to select your own versions and modpacks for other servers or single-player."
+  },
+  "app.onboarding.instance-mode.title": {
+    "message": "Choose your instance type"
   },
   "app.onboarding.instance-tabs.description": {
     "message": "Use these tabs for content, files, screenshots, worlds, and logs. Tidy chaos."
@@ -5948,6 +6053,12 @@
   "app.onboarding.resources.title": {
     "message": "Do not cook the computer"
   },
+  "app.onboarding.settings-updates.description": {
+    "message": "The Updates tab controls the update channel, checks for new launcher versions, and shows the changelog."
+  },
+  "app.onboarding.settings-updates.title": {
+    "message": "Stay up to date"
+  },
   "app.onboarding.settings.description": {
     "message": "The useful controls live here: launcher preferences, game launch behavior, content downloads, and privacy."
   },
@@ -5974,36 +6085,6 @@
   },
   "app.onboarding.welcome.title": {
     "message": "Everything is ready"
-  },
-  "app.onboarding.home-intro.title": {
-    "message": "Welcome home"
-  },
-  "app.onboarding.home-intro.description": {
-    "message": "This is your home page. It shows your instances, recent activity, and quick shortcuts to get playing."
-  },
-  "app.onboarding.account-login.title": {
-    "message": "Sign in to StarLight"
-  },
-  "app.onboarding.account-login.description": {
-    "message": "Sign in to the StarLight skin site here to use your StarLight players, install hosted modpacks, and sync your account."
-  },
-  "app.onboarding.announcement.title": {
-    "message": "Latest announcements"
-  },
-  "app.onboarding.announcement.description": {
-    "message": "Open the announcement entry in the sidebar to read the latest news, rules, and server notices."
-  },
-  "app.onboarding.create-starlight.title": {
-    "message": "Create a StarLight instance"
-  },
-  "app.onboarding.create-starlight.description": {
-    "message": "Use Create new instance here. A StarLight instance installs the server-selected modpack and versions, then keeps them updated before each launch."
-  },
-  "app.onboarding.settings-updates.title": {
-    "message": "Stay up to date"
-  },
-  "app.onboarding.settings-updates.description": {
-    "message": "The Updates tab controls the update channel, checks for new launcher versions, and shows the changelog."
   },
   "app.project.curseforge.loading": {
     "message": "Loading CurseForge project…"
@@ -6071,18 +6152,6 @@
   "app.project.mcarchive.versions": {
     "message": "Versions"
   },
-  "app.project.modpack-server.created-description": {
-    "message": "{name} is ready. Configure and start it in Multiplayer."
-  },
-  "app.project.modpack-server.created-title": {
-    "message": "Server created"
-  },
-  "app.project.modpack-server.open": {
-    "message": "Open server"
-  },
-  "app.project.modpack-server.start": {
-    "message": "Start server"
-  },
   "app.project.open-in-mcmod": {
     "message": "Open in MC Mod"
   },
@@ -6149,32 +6218,161 @@
   "app.project.versions.already-installed": {
     "message": "Already installed"
   },
-  "app.project.versions.start-server": {
-    "message": "Create server"
-  },
-  "app.remote-announcements.preview-action": {
-    "message": "Visit website"
-  },
-  "app.remote-announcements.preview-content": {
-    "message": "## Announcement preview\n\nThis is **sample content**, not a published announcement.\n\n- Supports headings, lists, and links\n- Close buttons are always available\n\n> Previewing does not change real announcement read status.\n\n| Type | Display |\n| --- | --- |\n| Modal | Full Markdown content |\n| Popup | Summary, then full content |\n\n[Visit the website](https://axlmc.org)"
-  },
-  "app.remote-announcements.preview-summary": {
-    "message": "This is a local preview. Select View announcement to preview the full Markdown content."
-  },
-  "app.remote-announcements.preview-title": {
-    "message": "Announcement style preview"
-  },
-  "app.remote-announcements.read-all": {
-    "message": "Mark all announcements as read"
-  },
-  "app.remote-announcements.unread": {
-    "message": "Unread"
-  },
-  "app.remote-announcements.view": {
-    "message": "View announcement"
-  },
   "app.restarting": {
     "message": "Restarting..."
+  },
+  "app.screenshots.copied": {
+    "message": "Copied"
+  },
+  "app.screenshots.copy": {
+    "message": "Copy image"
+  },
+  "app.screenshots.delete-description": {
+    "message": "Permanently delete {name}? This action cannot be undone."
+  },
+  "app.screenshots.delete-success": {
+    "message": "Screenshot deleted"
+  },
+  "app.screenshots.delete-title": {
+    "message": "Delete screenshot"
+  },
+  "app.screenshots.deselect": {
+    "message": "Deselect {name}"
+  },
+  "app.screenshots.edit": {
+    "message": "Edit screenshot"
+  },
+  "app.screenshots.empty-description": {
+    "message": "Screenshots you take in-game will appear here."
+  },
+  "app.screenshots.empty-heading": {
+    "message": "No screenshots yet"
+  },
+  "app.screenshots.error-heading": {
+    "message": "Failed to load screenshots"
+  },
+  "app.screenshots.go-to-instance": {
+    "message": "Go to instance"
+  },
+  "app.screenshots.group-by": {
+    "message": "Group by"
+  },
+  "app.screenshots.group.all-screenshots": {
+    "message": "All screenshots"
+  },
+  "app.screenshots.group.collapse": {
+    "message": "Collapse group"
+  },
+  "app.screenshots.group.custom": {
+    "message": "Custom group"
+  },
+  "app.screenshots.group.date": {
+    "message": "Date"
+  },
+  "app.screenshots.group.delete": {
+    "message": "Delete group"
+  },
+  "app.screenshots.group.delete-description": {
+    "message": "Screenshots in this group will become ungrouped."
+  },
+  "app.screenshots.group.edit": {
+    "message": "Edit group name"
+  },
+  "app.screenshots.group.empty": {
+    "message": "Drag and drop to add screenshots."
+  },
+  "app.screenshots.group.expand": {
+    "message": "Expand group"
+  },
+  "app.screenshots.group.instance": {
+    "message": "Instance"
+  },
+  "app.screenshots.group.new": {
+    "message": "New group"
+  },
+  "app.screenshots.group.none": {
+    "message": "No grouping"
+  },
+  "app.screenshots.group.this-month": {
+    "message": "This month"
+  },
+  "app.screenshots.group.this-week": {
+    "message": "This week"
+  },
+  "app.screenshots.group.today": {
+    "message": "Today"
+  },
+  "app.screenshots.group.ungrouped": {
+    "message": "Ungrouped"
+  },
+  "app.screenshots.group.yesterday": {
+    "message": "Yesterday"
+  },
+  "app.screenshots.heading": {
+    "message": "Screenshots"
+  },
+  "app.screenshots.more-actions": {
+    "message": "More actions"
+  },
+  "app.screenshots.no-results-description": {
+    "message": "Try a different search or filter."
+  },
+  "app.screenshots.no-results-heading": {
+    "message": "No matching screenshots"
+  },
+  "app.screenshots.preview.instance-and-date": {
+    "message": "{instance} · {date}"
+  },
+  "app.screenshots.search": {
+    "message": "Search"
+  },
+  "app.screenshots.select": {
+    "message": "Select {name}"
+  },
+  "app.screenshots.selection.aria-label": {
+    "message": "Selected screenshots"
+  },
+  "app.screenshots.selection.delete-description": {
+    "message": "Delete {count, plural, one {# screenshot} other {# screenshots}}? This action cannot be undone."
+  },
+  "app.screenshots.selection.delete-success": {
+    "message": "{count, plural, one {# screenshot deleted} other {# screenshots deleted}}"
+  },
+  "app.screenshots.selection.delete-title": {
+    "message": "Delete selected screenshots"
+  },
+  "app.screenshots.selection.export-zip": {
+    "message": "Export ZIP"
+  },
+  "app.screenshots.selection.global-export-filename": {
+    "message": "Modrinth screenshots.zip"
+  },
+  "app.screenshots.selection.instance-export-filename": {
+    "message": "{instance} screenshots.zip"
+  },
+  "app.screenshots.selection.remove-from-group": {
+    "message": "Remove from group"
+  },
+  "app.screenshots.selection.selected-count": {
+    "message": "{count} selected"
+  },
+  "app.screenshots.selection.zip-archive": {
+    "message": "ZIP archive"
+  },
+  "app.screenshots.show-in-folder": {
+    "message": "Show in folder"
+  },
+  "app.screenshots.sort-by": {
+    "message": "Sort by"
+  },
+  "app.screenshots.sort.name": {
+    "message": "Name"
+  },
+  "app.screenshots.sort.newest": {
+    "message": "Newest"
+  },
+  "app.screenshots.sort.oldest": {
+    "message": "Oldest"
   },
   "app.server.add": {
     "message": "Add"
@@ -6194,593 +6392,8 @@
   "app.server.search-instance": {
     "message": "Search for an instance"
   },
-  "app.servers.action.continue-download": {
-    "message": "Continue download"
-  },
-  "app.servers.action.open-folder": {
-    "message": "Open folder"
-  },
-  "app.servers.action.retry-download": {
-    "message": "Retry download"
-  },
-  "app.servers.action.share": {
-    "message": "Share online"
-  },
-  "app.servers.action.start": {
-    "message": "Start"
-  },
-  "app.servers.action.stop": {
-    "message": "Stop"
-  },
-  "app.servers.card.port": {
-    "message": "Port {port}"
-  },
-  "app.servers.card.type": {
-    "message": "{type} · {version}"
-  },
-  "app.servers.console.forge-command-placeholder": {
-    "message": "Send a command - Tab completion supported"
-  },
-  "app.servers.console.not-running": {
-    "message": "The server is not running"
-  },
-  "app.servers.count": {
-    "message": "{count, plural, =0 {No servers yet} one {# server} other {# servers}}"
-  },
-  "app.servers.create.title": {
-    "message": "Create server"
-  },
-  "app.servers.detail.back": {
-    "message": "Servers"
-  },
-  "app.servers.detail.console": {
-    "message": "Console"
-  },
-  "app.servers.detail.files": {
-    "message": "Files"
-  },
-  "app.servers.detail.not-found": {
-    "message": "This server no longer exists."
-  },
-  "app.servers.detail.settings": {
-    "message": "Settings"
-  },
-  "app.servers.empty.description": {
-    "message": "Create a server to play with friends, right from the launcher."
-  },
-  "app.servers.empty.heading": {
-    "message": "No servers yet"
-  },
-  "app.servers.eula.continue": {
-    "message": "Continue"
-  },
-  "app.servers.eula.decline": {
-    "message": "Cancel"
-  },
-  "app.servers.eula.description": {
-    "message": "By continuing, you agree to the Minecraft End User License Agreement (EULA). Please review the agreement below before proceeding."
-  },
-  "app.servers.eula.title": {
-    "message": "Minecraft EULA"
-  },
-  "app.servers.files.busy-tooltip": {
-    "message": "Stop the server to modify files"
-  },
-  "app.servers.files.open-studio": {
-    "message": "Open Studio"
-  },
-  "app.servers.files.save-as": {
-    "message": "Save as..."
-  },
-  "app.servers.files.studio-running-title": {
-    "message": "Stop the server before opening Studio"
-  },
-  "app.servers.icon.change": {
-    "message": "Change icon"
-  },
-  "app.servers.icon.edit": {
-    "message": "Edit icon"
-  },
-  "app.servers.icon.remove": {
-    "message": "Remove icon"
-  },
-  "app.servers.icon.select": {
-    "message": "Select icon"
-  },
-  "app.servers.loading": {
-    "message": "Loading servers..."
-  },
-  "app.servers.modpack.background-hint": {
-    "message": "You can close this window — the download continues in the background."
-  },
-  "app.servers.modpack.current-file": {
-    "message": "Now installing {file}"
-  },
-  "app.servers.modpack.done": {
-    "message": "Installation complete"
-  },
-  "app.servers.modpack.download-in-background": {
-    "message": "Download in background"
-  },
-  "app.servers.modpack.downloading": {
-    "message": "Downloading modpack files..."
-  },
-  "app.servers.modpack.first-run-crashed": {
-    "message": "The server crashed during its first start. Check that your selected Java version is compatible, then try again."
-  },
-  "app.servers.modpack.preparing": {
-    "message": "Preparing server..."
-  },
-  "app.servers.modpack.unsupported-loader-description": {
-    "message": "This modpack uses {loader}, but Starlight can only start modpack servers with vanilla, Fabric, or Quilt. Support for {loader} is coming soon."
-  },
-  "app.servers.modpack.unsupported-loader-title": {
-    "message": "{loader} servers are not supported yet"
-  },
-  "app.servers.port.change": {
-    "message": "Change port"
-  },
-  "app.servers.port.conflict-description": {
-    "message": "{process} is currently occupying this port, so the server cannot start. Change the server port, or force quit the process below."
-  },
-  "app.servers.port.conflict-title": {
-    "message": "Port {port} is already in use"
-  },
-  "app.servers.port.force-quit": {
-    "message": "Force quit process"
-  },
-  "app.servers.port.force-quit-failed": {
-    "message": "Failed to quit the process occupying the port"
-  },
-  "app.servers.port.recheck": {
-    "message": "Recheck"
-  },
-  "app.servers.port.unknown-process": {
-    "message": "Unknown process (PID {pid})"
-  },
-  "app.servers.properties.field.accepts-transfers": {
-    "message": "Accept player transfers"
-  },
-  "app.servers.properties.field.allow-end": {
-    "message": "Allow the End"
-  },
-  "app.servers.properties.field.allow-flight": {
-    "message": "Allow flight"
-  },
-  "app.servers.properties.field.allow-nether": {
-    "message": "Allow the Nether"
-  },
-  "app.servers.properties.field.announce-player-achievements": {
-    "message": "Announce player achievements"
-  },
-  "app.servers.properties.field.broadcast-console-to-ops": {
-    "message": "Broadcast console to operators"
-  },
-  "app.servers.properties.field.broadcast-rcon-to-ops": {
-    "message": "Broadcast RCON to operators"
-  },
-  "app.servers.properties.field.bug-report-link": {
-    "message": "Bug report link"
-  },
-  "app.servers.properties.field.chat-spam-threshold-seconds": {
-    "message": "Chat spam threshold (seconds)"
-  },
-  "app.servers.properties.field.command-spam-threshold-seconds": {
-    "message": "Command spam threshold (seconds)"
-  },
-  "app.servers.properties.field.difficulty": {
-    "message": "Difficulty"
-  },
-  "app.servers.properties.field.enable-code-of-conduct": {
-    "message": "Enable code of conduct"
-  },
-  "app.servers.properties.field.enable-command-block": {
-    "message": "Enable command blocks"
-  },
-  "app.servers.properties.field.enable-jmx-monitoring": {
-    "message": "Enable JMX monitoring"
-  },
-  "app.servers.properties.field.enable-lan": {
-    "message": "Enable LAN"
-  },
-  "app.servers.properties.field.enable-query": {
-    "message": "Enable query"
-  },
-  "app.servers.properties.field.enable-rcon": {
-    "message": "Enable RCON"
-  },
-  "app.servers.properties.field.enable-status": {
-    "message": "Enable status"
-  },
-  "app.servers.properties.field.enforce-secure-profile": {
-    "message": "Enforce secure profile"
-  },
-  "app.servers.properties.field.enforce-whitelist": {
-    "message": "Enforce whitelist"
-  },
-  "app.servers.properties.field.entity-broadcast-range-percentage": {
-    "message": "Entity broadcast range percentage"
-  },
-  "app.servers.properties.field.force-gamemode": {
-    "message": "Force game mode"
-  },
-  "app.servers.properties.field.function-permission-level": {
-    "message": "Function permission level"
-  },
-  "app.servers.properties.field.gamemode": {
-    "message": "Game mode"
-  },
-  "app.servers.properties.field.generate-structures": {
-    "message": "Generate structures"
-  },
-  "app.servers.properties.field.generator-settings": {
-    "message": "Generator settings"
-  },
-  "app.servers.properties.field.hardcore": {
-    "message": "Hardcore"
-  },
-  "app.servers.properties.field.hide-online-players": {
-    "message": "Hide online players"
-  },
-  "app.servers.properties.field.initial-disabled-packs": {
-    "message": "Initial disabled packs"
-  },
-  "app.servers.properties.field.initial-enabled-packs": {
-    "message": "Initial enabled packs"
-  },
-  "app.servers.properties.field.level-name": {
-    "message": "Level name"
-  },
-  "app.servers.properties.field.level-seed": {
-    "message": "Level seed"
-  },
-  "app.servers.properties.field.level-type": {
-    "message": "Level type"
-  },
-  "app.servers.properties.field.log-ips": {
-    "message": "Log IP addresses"
-  },
-  "app.servers.properties.field.management-server-allowed-origins": {
-    "message": "Management server allowed origins"
-  },
-  "app.servers.properties.field.management-server-enabled": {
-    "message": "Enable management server"
-  },
-  "app.servers.properties.field.management-server-host": {
-    "message": "Management server host"
-  },
-  "app.servers.properties.field.management-server-port": {
-    "message": "Management server port"
-  },
-  "app.servers.properties.field.management-server-secret": {
-    "message": "Management server secret"
-  },
-  "app.servers.properties.field.management-server-tls-enabled": {
-    "message": "Enable management server TLS"
-  },
-  "app.servers.properties.field.management-server-tls-keystore": {
-    "message": "Management server TLS keystore"
-  },
-  "app.servers.properties.field.management-server-tls-keystore-password": {
-    "message": "Management server TLS keystore password"
-  },
-  "app.servers.properties.field.max-chained-neighbor-updates": {
-    "message": "Max chained neighbor updates"
-  },
-  "app.servers.properties.field.max-players": {
-    "message": "Max players"
-  },
-  "app.servers.properties.field.max-tick-time": {
-    "message": "Max tick time"
-  },
-  "app.servers.properties.field.max-world-size": {
-    "message": "Max world size"
-  },
-  "app.servers.properties.field.motd": {
-    "message": "Message of the day (MOTD)"
-  },
-  "app.servers.properties.field.network-compression-threshold": {
-    "message": "Network compression threshold"
-  },
-  "app.servers.properties.field.online-mode": {
-    "message": "Online mode"
-  },
-  "app.servers.properties.field.op-permission-level": {
-    "message": "OP permission level"
-  },
-  "app.servers.properties.field.pause-when-empty-seconds": {
-    "message": "Pause when empty (seconds)"
-  },
-  "app.servers.properties.field.player-idle-timeout": {
-    "message": "Player idle timeout"
-  },
-  "app.servers.properties.field.prevent-proxy-connections": {
-    "message": "Prevent proxy connections"
-  },
-  "app.servers.properties.field.pvp": {
-    "message": "Player versus player (PvP)"
-  },
-  "app.servers.properties.field.query.port": {
-    "message": "Query port"
-  },
-  "app.servers.properties.field.rate-limit": {
-    "message": "Rate limit"
-  },
-  "app.servers.properties.field.rcon.password": {
-    "message": "RCON password"
-  },
-  "app.servers.properties.field.rcon.port": {
-    "message": "RCON port"
-  },
-  "app.servers.properties.field.region-file-compression": {
-    "message": "Region file compression"
-  },
-  "app.servers.properties.field.require-resource-pack": {
-    "message": "Require resource pack"
-  },
-  "app.servers.properties.field.resource-pack": {
-    "message": "Resource pack"
-  },
-  "app.servers.properties.field.resource-pack-id": {
-    "message": "Resource pack ID"
-  },
-  "app.servers.properties.field.resource-pack-prompt": {
-    "message": "Resource pack prompt"
-  },
-  "app.servers.properties.field.resource-pack-sha1": {
-    "message": "Resource pack SHA-1"
-  },
-  "app.servers.properties.field.server-ip": {
-    "message": "Server IP"
-  },
-  "app.servers.properties.field.server-port": {
-    "message": "Server port"
-  },
-  "app.servers.properties.field.simulation-distance": {
-    "message": "Simulation distance"
-  },
-  "app.servers.properties.field.spawn-animals": {
-    "message": "Spawn animals"
-  },
-  "app.servers.properties.field.spawn-monsters": {
-    "message": "Spawn monsters"
-  },
-  "app.servers.properties.field.spawn-npcs": {
-    "message": "Spawn NPCs"
-  },
-  "app.servers.properties.field.spawn-protection": {
-    "message": "Spawn protection"
-  },
-  "app.servers.properties.field.status-heartbeat-interval": {
-    "message": "Status heartbeat interval"
-  },
-  "app.servers.properties.field.sync-chunk-writes": {
-    "message": "Sync chunk writes"
-  },
-  "app.servers.properties.field.text-filtering-config": {
-    "message": "Text filtering config"
-  },
-  "app.servers.properties.field.text-filtering-version": {
-    "message": "Text filtering version"
-  },
-  "app.servers.properties.field.use-native-transport": {
-    "message": "Use native transport"
-  },
-  "app.servers.properties.field.view-distance": {
-    "message": "View distance"
-  },
-  "app.servers.properties.field.white-list": {
-    "message": "Whitelist"
-  },
-  "app.servers.properties.load-failed": {
-    "message": "Failed to load the server configuration."
-  },
-  "app.servers.properties.missing": {
-    "message": "Start the server once to generate this file."
-  },
-  "app.servers.properties.mode.form": {
-    "message": "Form"
-  },
-  "app.servers.properties.mode.text": {
-    "message": "Text"
-  },
-  "app.servers.properties.section.advanced": {
-    "message": "Advanced"
-  },
-  "app.servers.properties.section.content": {
-    "message": "Content"
-  },
-  "app.servers.properties.section.gameplay": {
-    "message": "Gameplay"
-  },
-  "app.servers.properties.section.network": {
-    "message": "Network & Security"
-  },
-  "app.servers.properties.section.others": {
-    "message": "Other"
-  },
-  "app.servers.properties.section.world": {
-    "message": "World"
-  },
-  "app.servers.properties.title": {
-    "message": "Server properties"
-  },
-  "app.servers.refresh": {
-    "message": "Refresh"
-  },
-  "app.servers.settings.cancel": {
-    "message": "Cancel"
-  },
-  "app.servers.settings.config": {
-    "message": "Configuration"
-  },
-  "app.servers.settings.delete": {
-    "message": "Delete server"
-  },
-  "app.servers.settings.delete-confirm": {
-    "message": "Delete {name} and all of its files? This cannot be undone."
-  },
-  "app.servers.settings.delete-hint": {
-    "message": "Permanently remove this server and all of its files."
-  },
-  "app.servers.settings.delete-proceed": {
-    "message": "Delete"
-  },
-  "app.servers.settings.general": {
-    "message": "General"
-  },
-  "app.servers.settings.icon": {
-    "message": "Icon"
-  },
-  "app.servers.settings.java": {
-    "message": "Java"
-  },
-  "app.servers.settings.jvm-args": {
-    "message": "JVM arguments"
-  },
-  "app.servers.settings.jvm-args-hint": {
-    "message": "Space-separated arguments, e.g. -XX:+UseG1GC"
-  },
-  "app.servers.settings.memory": {
-    "message": "Memory"
-  },
-  "app.servers.settings.name": {
-    "message": "Server name"
-  },
-  "app.servers.settings.running-hint": {
-    "message": "Your changes will take effect the next time the server starts."
-  },
-  "app.servers.settings.running-title": {
-    "message": "Server is running"
-  },
-  "app.servers.settings.save": {
-    "message": "Save changes"
-  },
-  "app.servers.settings.saved": {
-    "message": "Server settings saved"
-  },
-  "app.servers.status.crashed": {
-    "message": "Crashed"
-  },
-  "app.servers.status.created": {
-    "message": "Not set up"
-  },
-  "app.servers.status.download-failed": {
-    "message": "Download failed"
-  },
-  "app.servers.status.download-interrupted": {
-    "message": "Download interrupted"
-  },
-  "app.servers.status.downloading": {
-    "message": "Downloading"
-  },
-  "app.servers.status.eula-pending": {
-    "message": "EULA pending"
-  },
-  "app.servers.status.ready": {
-    "message": "Ready"
-  },
-  "app.servers.status.running": {
-    "message": "Running"
-  },
-  "app.servers.status.starting": {
-    "message": "Starting"
-  },
-  "app.servers.type.fabric": {
-    "message": "Fabric"
-  },
-  "app.servers.type.forge": {
-    "message": "Forge"
-  },
-  "app.servers.type.paper": {
-    "message": "Paper"
-  },
-  "app.servers.type.vanilla": {
-    "message": "Vanilla"
-  },
-  "app.servers.wizard.background-hint": {
-    "message": "You can close this window — the download continues in the background."
-  },
-  "app.servers.wizard.configure-heading": {
-    "message": "Adjust the server settings, or finish to edit them later."
-  },
-  "app.servers.wizard.configure-title": {
-    "message": "Configure"
-  },
-  "app.servers.wizard.done": {
-    "message": "Server ready"
-  },
-  "app.servers.wizard.download-in-background": {
-    "message": "Download in background"
-  },
-  "app.servers.wizard.downloading": {
-    "message": "Downloading server files..."
-  },
-  "app.servers.wizard.eula-wait": {
-    "message": "Waiting for EULA confirmation"
-  },
-  "app.servers.wizard.failed": {
-    "message": "Setup failed"
-  },
-  "app.servers.wizard.finish": {
-    "message": "Finish"
-  },
-  "app.servers.wizard.first-run": {
-    "message": "Running first start..."
-  },
-  "app.servers.wizard.game-version": {
-    "message": "Game version"
-  },
-  "app.servers.wizard.install-title": {
-    "message": "Install"
-  },
-  "app.servers.wizard.java-too-old": {
-    "message": "Java {selected} cannot run this game version; Java {required} or newer is required."
-  },
-  "app.servers.wizard.loader-version": {
-    "message": "Loader version"
-  },
-  "app.servers.wizard.log": {
-    "message": "Output"
-  },
-  "app.servers.wizard.memory-value": {
-    "message": "{value} MB"
-  },
-  "app.servers.wizard.name": {
-    "message": "Server name"
-  },
-  "app.servers.wizard.name-placeholder": {
-    "message": "Survival server"
-  },
-  "app.servers.wizard.next": {
-    "message": "Next"
-  },
-  "app.servers.wizard.retry": {
-    "message": "Retry"
-  },
-  "app.servers.wizard.setup-title": {
-    "message": "Setup"
-  },
-  "app.servers.wizard.show-snapshots": {
-    "message": "Show snapshots"
-  },
-  "app.servers.wizard.type-heading": {
-    "message": "Choose a server core"
-  },
-  "app.servers.wizard.type-title": {
-    "message": "Server type"
-  },
-  "app.settings.about.afdian": {
-    "message": "Support on Afdian"
-  },
-  "app.settings.about.afdian-description": {
-    "message": "Help support continued development"
-  },
   "app.settings.about.attribution": {
     "message": "Starlight Launcher is a modified version of the Axolotl Launcher, which is based on the open-source Modrinth codebase."
-  },
-  "app.settings.about.community-support": {
-    "message": "Project & community"
   },
   "app.settings.about.contributors": {
     "message": "Contributors"
@@ -6788,14 +6401,11 @@
   "app.settings.about.contributors-count": {
     "message": "{count, plural, one {# contributor} other {# contributors}}"
   },
-  "app.settings.about.copied-qq-group": {
-    "message": "Group number copied"
-  },
-  "app.settings.about.copy-qq-group": {
-    "message": "Copy group number"
+  "app.settings.about.copyright": {
+    "message": "Copyright © Axolotl All Rights Reserved."
   },
   "app.settings.about.description": {
-    "message": "Your last launcher."
+    "message": "Starlight Launcher"
   },
   "app.settings.about.developer-tools": {
     "message": "Developer tools"
@@ -6804,13 +6414,70 @@
     "message": "Development team"
   },
   "app.settings.about.easteregg.click-hint": {
-    "message": "Click to open a hidden Mini Game"
+    "message": "Click to open a hidden Easter egg"
   },
   "app.settings.about.easteregg.contributors-title": {
     "message": "贡献者彩蛋"
   },
   "app.settings.about.easteregg.game-title": {
     "message": "Mini Game"
+  },
+  "app.settings.about.game.best": {
+    "message": "Best: {score}"
+  },
+  "app.settings.about.game.best-label": {
+    "message": "Best"
+  },
+  "app.settings.about.game.completed": {
+    "message": "Nether star!"
+  },
+  "app.settings.about.game.exit": {
+    "message": "Exit game"
+  },
+  "app.settings.about.game.game-over": {
+    "message": "The stars fell down!"
+  },
+  "app.settings.about.game.highest-level": {
+    "message": "Highest: level {level}"
+  },
+  "app.settings.about.game.level-label": {
+    "message": "Highest level"
+  },
+  "app.settings.about.game.new-record": {
+    "message": "New record!"
+  },
+  "app.settings.about.game.overtime": {
+    "message": "Tide surge!"
+  },
+  "app.settings.about.game.overtime-detail": {
+    "message": "The water rushes back — keep merging!"
+  },
+  "app.settings.about.game.overtimes-label": {
+    "message": "Overtimes"
+  },
+  "app.settings.about.game.restart": {
+    "message": "Restart"
+  },
+  "app.settings.about.game.score": {
+    "message": "Score: {score}"
+  },
+  "app.settings.about.game.score-label": {
+    "message": "Score"
+  },
+  "app.settings.about.game.settle": {
+    "message": "Settle"
+  },
+  "app.settings.about.game.settle-title": {
+    "message": "Run settled!"
+  },
+  "app.settings.about.game.tap-to-drop": {
+    "message": "Click to drop a star"
+  },
+  "app.settings.about.game.tide-hint": {
+    "message": "The sky is falling — keep merging!"
+  },
+  "app.settings.about.game.title": {
+    "message": "Starlight merge"
   },
   "app.settings.about.license-attribution": {
     "message": "License & attribution"
@@ -6830,29 +6497,8 @@
   "app.settings.about.project-license": {
     "message": "Project license (GPL-3.0)"
   },
-  "app.settings.about.project-website": {
-    "message": "Project website"
-  },
-  "app.settings.about.qq-channel": {
-    "message": "QQ channel"
-  },
-  "app.settings.about.qq-group": {
-    "message": "Player QQ group"
-  },
   "app.settings.about.replay-onboarding": {
     "message": "Replay tour"
-  },
-  "app.settings.about.report-issue": {
-    "message": "Issues & feedback"
-  },
-  "app.settings.about.repository": {
-    "message": "Source code"
-  },
-  "app.settings.about.survey": {
-    "message": "Community survey"
-  },
-  "app.settings.about.survey-description": {
-    "message": "Help us improve Starlight Launcher"
   },
   "app.settings.about.test-error": {
     "message": "Trigger test error"
@@ -6970,21 +6616,6 @@
   },
   "app.settings.developer-mode-enabled": {
     "message": "Developer mode enabled."
-  },
-  "app.settings.developer.announcement-preview": {
-    "message": "Announcement preview"
-  },
-  "app.settings.developer.announcement-preview-description": {
-    "message": "Preview the real announcement components using local sample content, without fetching or marking real announcements as read."
-  },
-  "app.settings.developer.preview-announcement-modal": {
-    "message": "Preview startup modal"
-  },
-  "app.settings.developer.preview-announcement-popup": {
-    "message": "Preview Popup notification"
-  },
-  "app.settings.developer.preview-with-action": {
-    "message": "Include an optional external-link button"
   },
   "app.settings.downloading": {
     "message": "Downloading v{version}"
@@ -7445,41 +7076,8 @@
   "app.settings.storage.world": {
     "message": "World"
   },
-  "app.settings.tabs.about": {
-    "message": "About"
-  },
-  "app.settings.tabs.ai": {
-    "message": "AI"
-  },
-  "app.settings.tabs.content-downloads": {
-    "message": "Content & downloads"
-  },
-  "app.settings.tabs.home-navigation": {
-    "message": "Home & navigation"
-  },
-  "app.settings.tabs.interface": {
-    "message": "Interface & appearance"
-  },
-  "app.settings.tabs.java-performance": {
-    "message": "Java & performance"
-  },
-  "app.settings.tabs.language-translation": {
-    "message": "Language & translation"
-  },
-  "app.settings.tabs.launch-defaults": {
-    "message": "Launch & instance defaults"
-  },
-  "app.settings.tabs.network-multiplayer": {
-    "message": "Network & multiplayer"
-  },
   "app.settings.tabs.storage": {
     "message": "Storage"
-  },
-  "app.settings.tabs.storage-backups": {
-    "message": "Storage & backups"
-  },
-  "app.settings.tabs.updates": {
-    "message": "Updates"
   },
   "app.settings.updates.announcements.description": {
     "message": "See what changed in this version and browse previous releases."
@@ -7646,9 +7244,6 @@
   "app.settings.updates.preferences.title": {
     "message": "Update behavior"
   },
-  "app.settings.updates.preview-announcement": {
-    "message": "Preview update announcement"
-  },
   "app.settings.updates.security": {
     "message": "Updates are installed only when their cryptographic signature is valid."
   },
@@ -7799,6 +7394,18 @@
   "app.skins.section.tiny-takeover": {
     "message": "Tiny Takeover"
   },
+  "app.skins.sign-in.axolotl-alt": {
+    "message": "Starlight Launcher"
+  },
+  "app.skins.sign-in.button": {
+    "message": "Sign In"
+  },
+  "app.skins.sign-in.description": {
+    "message": "Please sign into your Minecraft account to use the skin management features of Starlight Launcher."
+  },
+  "app.skins.sign-in.title": {
+    "message": "Please sign in"
+  },
   "app.skins.skin-site-account.description": {
     "message": "Select a skin below and apply it directly to {player}."
   },
@@ -7819,18 +7426,6 @@
   },
   "app.skins.skin-site-account.title": {
     "message": "StarLight skin site player"
-  },
-  "app.skins.sign-in.axolotl-alt": {
-    "message": "Starlight Launcher"
-  },
-  "app.skins.sign-in.button": {
-    "message": "Sign In"
-  },
-  "app.skins.sign-in.description": {
-    "message": "Please sign into your Minecraft account to use the skin management features of Starlight Launcher."
-  },
-  "app.skins.sign-in.title": {
-    "message": "Please sign in"
   },
   "app.skins.tabs.default": {
     "message": "Official skins"
@@ -7853,20 +7448,8 @@
   "app.splash.updating-app-directory": {
     "message": "Updating app directory..."
   },
-  "app.survey-promotion.defer-hint": {
-    "message": "If you close this dialog, you can still find the survey later in Settings > About."
-  },
-  "app.survey-promotion.fill-survey": {
-    "message": "Fill out the survey"
-  },
-  "app.survey-promotion.intro": {
-    "message": "To help us improve Starlight Launcher, we have prepared a short survey and would love to hear your feedback."
-  },
-  "app.survey-promotion.reward": {
-    "message": "Lucky participants will be drawn to win a genuine Minecraft account (redeemable for cash)."
-  },
-  "app.survey-promotion.title": {
-    "message": "Community survey"
+  "app.starlight-skin.frame-title": {
+    "message": "StarLight Skin Site"
   },
   "app.symlink-capability.unsupported": {
     "message": "This system does not support creating symbolic links."
@@ -8050,9 +7633,6 @@
   },
   "app.update-announcement.category.security": {
     "message": "Security"
-  },
-  "app.update-announcement.modal.header": {
-    "message": "What's new"
   },
   "app.update-announcement.notes": {
     "message": "Notes"
@@ -10151,12 +9731,6 @@
   "minecraft-account.add-microsoft-account": {
     "message": "Add your own Minecraft account"
   },
-  "minecraft-account.add-offline-account": {
-    "message": "Add offline account"
-  },
-  "minecraft-account.sign-in-starlight": {
-    "message": "Sign in to StarLight Skin Site"
-  },
   "minecraft-account.copy-uuid": {
     "message": "Copy UUID"
   },
@@ -10232,56 +9806,35 @@
   "minecraft-account.select-account": {
     "message": "Select account"
   },
-  "minecraft-account.sign-in": {
-    "message": "Sign in to Minecraft"
+  "minecraft-account.sign-in-starlight": {
+    "message": "Sign in to StarLight Skin Site"
+  },
+  "minecraft-account.skin-site.checking": {
+    "message": "Checking skin site session…"
+  },
+  "minecraft-account.skin-site.players": {
+    "message": "Skin site players ({count})"
+  },
+  "minecraft-account.skin-site.players.empty": {
+    "message": "No player profiles are attached to this skin site account."
+  },
+  "minecraft-account.skin-site.players.error": {
+    "message": "Could not refresh the player list. Previously loaded players are kept."
+  },
+  "minecraft-account.skin-site.players.retry": {
+    "message": "Retry"
+  },
+  "minecraft-account.skin-site.signed-in": {
+    "message": "Signed in to StarLight Skin Site"
+  },
+  "minecraft-account.skin-site.sync-error": {
+    "message": "Could not verify the skin site session. Retrying automatically."
   },
   "minecraft-account.third-party-account": {
-    "message": "Third-party Minecraft account"
+    "message": "StarLight skin account"
   },
   "minecraft-account.third-party-badge": {
-    "message": "Third-party"
-  },
-  "minecraft-account.third-party-modal.account": {
-    "message": "Account or email"
-  },
-  "minecraft-account.third-party-modal.account-placeholder": {
-    "message": "Enter your account or email"
-  },
-  "minecraft-account.third-party-modal.api-root": {
-    "message": "Yggdrasil API address"
-  },
-  "minecraft-account.third-party-modal.api-root-placeholder": {
-    "message": "https://example.com/api/yggdrasil"
-  },
-  "minecraft-account.third-party-modal.description": {
-    "message": "Use LittleSkin or another compatible Yggdrasil authentication service."
-  },
-  "minecraft-account.third-party-modal.littleskin": {
-    "message": "Use LittleSkin"
-  },
-  "minecraft-account.third-party-modal.password": {
-    "message": "Password"
-  },
-  "minecraft-account.third-party-modal.remember-password": {
-    "message": "Save this login on this device"
-  },
-  "minecraft-account.third-party-modal.remove-saved-login": {
-    "message": "Remove saved login"
-  },
-  "minecraft-account.third-party-modal.saved-logins": {
-    "message": "Saved logins"
-  },
-  "minecraft-account.third-party-modal.sign-in": {
-    "message": "Sign in"
-  },
-  "minecraft-account.third-party-modal.title": {
-    "message": "Sign in with a third-party service"
-  },
-  "minecraft-account.third-party-profile.description": {
-    "message": "Choose the Minecraft profile to use with this account."
-  },
-  "minecraft-account.third-party-profile.title": {
-    "message": "Select a profile"
+    "message": "StarLight skin"
   },
   "minecraft-login.browser": {
     "message": "Use browser login"
@@ -10348,9 +9901,6 @@
   },
   "search.filter.locked.server-loader.title": {
     "message": "Loader is provided by the server"
-  },
-  "settings.feature-flags.title": {
-    "message": "Feature flags"
   },
   "unknown-pack-warning-modal.body": {
     "message": "A file is only reviewed if it’s uploaded to Modrinth, regardless of its file format (including .mrpack)."

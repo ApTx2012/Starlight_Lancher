@@ -8,6 +8,7 @@ import {
 	FlaskConicalIcon,
 	FolderOpenIcon,
 	HomeIcon,
+	ImagesIcon,
 	LeftArrowIcon,
 	LibraryIcon,
 	LogInIcon,
@@ -763,6 +764,10 @@ const messages = defineMessages({
 		defaultMessage: 'Library',
 	},
 	multiplayer: {
+		screenshots: {
+			id: 'app.navigation.screenshots',
+			defaultMessage: 'Screenshots',
+		},
 		id: 'app.navigation.multiplayer',
 		defaultMessage: 'Multiplayer',
 	},
@@ -2323,6 +2328,14 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 					:is-primary="(r) => r.path.startsWith('/multiplayer')"
 				>
 					<UsersIcon />
+				</NavButton>
+				<NavButton
+					v-tooltip.right="formatMessage(messages.screenshots)"
+					data-onboarding-id="nav-screenshots"
+					to="/screenshots"
+					:is-primary="(r) => r.path.startsWith('/screenshots')"
+				>
+					<ImagesIcon />
 				</NavButton>
 				<NavButton
 					v-tooltip.right="formatMessage(messages.lab)"
