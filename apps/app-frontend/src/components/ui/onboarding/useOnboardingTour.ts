@@ -146,6 +146,14 @@ export function useOnboardingTour(
 
 	function scheduleMissingTargetRetry(stepId: string) {
 		if (targetRetryCount >= missingTargetRetryLimit) {
+			// 超过重试上限：inspect 步（介绍性步骤）不自动跳过，
+			// 保持无锚点状态，让气泡停靠底部等用户手动继续。
+			if (step.value.interaction === 'inspect') {
+				targetElement.value = undefined
+				targetRect.value = null
+				clearModalReservation()
+				return
+			}
 			void advance()
 			return
 		}
