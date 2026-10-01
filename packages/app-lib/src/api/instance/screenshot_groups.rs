@@ -270,7 +270,8 @@ fn normalize_membership_updates(
         return Ok(updates);
     }
     Err(crate::ErrorKind::InputError(
-        "Screenshot membership update contains duplicate screenshots".to_string(),
+        "Screenshot membership update contains duplicate screenshots"
+            .to_string(),
     )
     .into())
 }

@@ -4,10 +4,10 @@ use chrono::NaiveDate;
 use dashmap::DashMap;
 use path_util::SafeRelativeUtf8UnixPathBuf;
 use serde::{Deserialize, Serialize};
-use tauri::Manager;
-use tauri_plugin_opener::OpenerExt;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use tauri::Manager;
+use tauri_plugin_opener::OpenerExt;
 use theseus::data::{
     AppliedContentSetPatch, ContentItem, Dependency,
     EditInstance as CoreEditInstance, InstanceInstallCandidate,

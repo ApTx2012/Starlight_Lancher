@@ -72,13 +72,6 @@ pub use self::run::{
     GcLaunchIntent, GcLaunchReport, QuickPlayType, kill, run,
     run_with_extra_launch_args, run_with_extra_launch_args_with_gc,
 };
-pub use self::upgrade::{
-    dismiss_instance_post_upgrade_notice, execute_instance_upgrade,
-    get_instance_post_upgrade_notice, get_instance_upgrade_plan,
-    plan_instance_upgrade, reset_instance_upgrade_resolution,
-    resolve_custom_instance_upgrade_solution, select_instance_upgrade_solution,
-    update_instance_upgrade_resolution, update_instance_upgrade_resolutions,
-};
 pub use self::screenshot_groups::{
     ScreenshotGroup, ScreenshotGroupImport, ScreenshotGroupMembershipUpdate,
     create_screenshot_group, delete_screenshot_group, import_screenshot_groups,
@@ -91,5 +84,12 @@ pub use self::screenshots::{
     delete_screenshots, export_screenshots, get_screenshot_path,
     list_all_screenshots, list_screenshots, list_synced_screenshots,
     move_screenshots, save_edited_screenshot,
+};
+pub use self::upgrade::{
+    dismiss_instance_post_upgrade_notice, execute_instance_upgrade,
+    get_instance_post_upgrade_notice, get_instance_upgrade_plan,
+    plan_instance_upgrade, reset_instance_upgrade_resolution,
+    resolve_custom_instance_upgrade_solution, select_instance_upgrade_solution,
+    update_instance_upgrade_resolution, update_instance_upgrade_resolutions,
 };
 pub use crate::state::{DailyPlaytime, DailyPlaytimeEntry};
