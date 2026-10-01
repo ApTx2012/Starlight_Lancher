@@ -170,7 +170,7 @@ const {
 	top: auto !important;
 	right: 0;
 	bottom: 0;
-	left: 0 !important;
+	left: var(--left-bar-width, 4rem) !important;
 	z-index: 2;
 	width: auto;
 	min-height: 0;
