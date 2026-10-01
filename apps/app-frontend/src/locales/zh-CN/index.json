@@ -6061,6 +6061,36 @@
   "app.onboarding.welcome.title": {
     "message": "一切就绪"
   },
+  "app.onboarding.home-intro.title": {
+    "message": "欢迎回家"
+  },
+  "app.onboarding.home-intro.description": {
+    "message": "这里是你的主页，展示你的实例、最近活动和快速开始游戏的入口。"
+  },
+  "app.onboarding.account-login.title": {
+    "message": "登录 StarLight"
+  },
+  "app.onboarding.account-login.description": {
+    "message": "在这里登录 StarLight 皮肤站，即可使用皮肤站玩家、安装托管整合包并同步你的账号。"
+  },
+  "app.onboarding.announcement.title": {
+    "message": "最新公告"
+  },
+  "app.onboarding.announcement.description": {
+    "message": "打开侧栏的公告入口，查看最新消息、服规与服务器通知。"
+  },
+  "app.onboarding.create-starlight.title": {
+    "message": "创建 StarLight 实例"
+  },
+  "app.onboarding.create-starlight.description": {
+    "message": "点击这里的“创建新实例”。StarLight 实例会安装服务器指定的整合包与版本，并在每次启动前保持更新。"
+  },
+  "app.onboarding.settings-updates.title": {
+    "message": "保持最新"
+  },
+  "app.onboarding.settings-updates.description": {
+    "message": "“更新”页用于设置更新通道、检查启动器新版本并查看更新日志。"
+  },
   "app.project.curseforge.loading": {
     "message": "正在加载 CurseForge 项目…"
   },

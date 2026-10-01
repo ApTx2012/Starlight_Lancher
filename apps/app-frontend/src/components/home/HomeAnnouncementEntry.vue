@@ -11,6 +11,7 @@ function open() {
 
 <template>
 	<section
+		data-onboarding-id="home-announcement"
 		class="flex min-w-0 flex-col gap-3 border-0 border-b-[1px] border-solid border-[--brand-gradient-border] p-4"
 	>
 		<button

@@ -5975,6 +5975,36 @@
   "app.onboarding.welcome.title": {
     "message": "Everything is ready"
   },
+  "app.onboarding.home-intro.title": {
+    "message": "Welcome home"
+  },
+  "app.onboarding.home-intro.description": {
+    "message": "This is your home page. It shows your instances, recent activity, and quick shortcuts to get playing."
+  },
+  "app.onboarding.account-login.title": {
+    "message": "Sign in to StarLight"
+  },
+  "app.onboarding.account-login.description": {
+    "message": "Sign in to the StarLight skin site here to use your StarLight players, install hosted modpacks, and sync your account."
+  },
+  "app.onboarding.announcement.title": {
+    "message": "Latest announcements"
+  },
+  "app.onboarding.announcement.description": {
+    "message": "Open the announcement entry in the sidebar to read the latest news, rules, and server notices."
+  },
+  "app.onboarding.create-starlight.title": {
+    "message": "Create a StarLight instance"
+  },
+  "app.onboarding.create-starlight.description": {
+    "message": "Use Create new instance here. A StarLight instance installs the server-selected modpack and versions, then keeps them updated before each launch."
+  },
+  "app.onboarding.settings-updates.title": {
+    "message": "Stay up to date"
+  },
+  "app.onboarding.settings-updates.description": {
+    "message": "The Updates tab controls the update channel, checks for new launcher versions, and shows the changelog."
+  },
   "app.project.curseforge.loading": {
     "message": "Loading CurseForge project…"
   },

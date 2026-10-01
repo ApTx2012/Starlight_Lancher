@@ -276,6 +276,48 @@ export const onboardingMessages = defineMessages({
 	},
 	skip: { id: 'app.onboarding.action.skip', defaultMessage: 'Leave the tour' },
 	mascotAlt: { id: 'app.onboarding.mascot-alt', defaultMessage: 'Starlight guide' },
+	homeIntroTitle: { id: 'app.onboarding.home-intro.title', defaultMessage: 'Welcome home' },
+	homeIntroDescription: {
+		id: 'app.onboarding.home-intro.description',
+		defaultMessage:
+			'This is your home page. It shows your instances, recent activity, and quick shortcuts to get playing.',
+	},
+	accountLoginTitle: {
+		id: 'app.onboarding.account-login.title',
+		defaultMessage: 'Sign in to StarLight',
+	},
+	accountLoginDescription: {
+		id: 'app.onboarding.account-login.description',
+		defaultMessage:
+			'Sign in to the StarLight skin site here to use your StarLight players, install hosted modpacks, and sync your account.',
+	},
+	announcementTitle: {
+		id: 'app.onboarding.announcement.title',
+		defaultMessage: 'Latest announcements',
+	},
+	announcementDescription: {
+		id: 'app.onboarding.announcement.description',
+		defaultMessage:
+			'Open the announcement entry in the sidebar to read the latest news, rules, and server notices.',
+	},
+	createStarlightTitle: {
+		id: 'app.onboarding.create-starlight.title',
+		defaultMessage: 'Create a StarLight instance',
+	},
+	createStarlightDescription: {
+		id: 'app.onboarding.create-starlight.description',
+		defaultMessage:
+			'Use Create new instance here. A StarLight instance installs the server-selected modpack and versions, then keeps them updated before each launch.',
+	},
+	settingsUpdatesTitle: {
+		id: 'app.onboarding.settings-updates.title',
+		defaultMessage: 'Stay up to date',
+	},
+	settingsUpdatesDescription: {
+		id: 'app.onboarding.settings-updates.description',
+		defaultMessage:
+			'The Updates tab controls the update channel, checks for new launcher versions, and shows the changelog.',
+	},
 })
 
 const step = (
@@ -331,20 +373,29 @@ const settingsTourSteps: Array<[string, string, MessageDescriptor, MessageDescri
 
 export const onboardingTours: Record<OnboardingMode, OnboardingStep[]> = {
 	main: [
-		step(
-			'welcome',
-			'manual',
-			copy(
-				onboardingMessages.welcomeTitle,
-				onboardingMessages.welcomeDescription,
-				onboardingMessages.start,
-			),
+		inspect(
+			'home-intro',
+			'home-widget-grid',
+			onboardingMessages.homeIntroTitle,
+			onboardingMessages.homeIntroDescription,
 		),
 		inspect(
-			'home-layout-switch',
-			'home-layout-switch',
-			onboardingMessages.homeLayoutTitle,
-			onboardingMessages.homeLayoutDescription,
+			'account-login',
+			'account-entry',
+			onboardingMessages.accountLoginTitle,
+			onboardingMessages.accountLoginDescription,
+		),
+		inspect(
+			'announcement',
+			'home-announcement',
+			onboardingMessages.announcementTitle,
+			onboardingMessages.announcementDescription,
+		),
+		inspect(
+			'create-starlight',
+			'create-instance',
+			onboardingMessages.createStarlightTitle,
+			onboardingMessages.createStarlightDescription,
 		),
 		step(
 			'discover-navigation',
@@ -363,22 +414,6 @@ export const onboardingTours: Record<OnboardingMode, OnboardingStep[]> = {
 			onboardingMessages.browseDescription,
 		),
 		step(
-			'discover-favorites-navigation',
-			'navigate',
-			copy(
-				onboardingMessages.favoritesTitle,
-				onboardingMessages.favoritesDescription,
-				onboardingMessages.clickFavorites,
-			),
-			control('browse-favorites-tab', '/browse/favorites'),
-		),
-		inspect(
-			'discover-favorites-content',
-			'browse-favorites-content',
-			onboardingMessages.favoritesTitle,
-			onboardingMessages.favoritesDescription,
-		),
-		step(
 			'skins-navigation',
 			'navigate',
 			copy(
@@ -393,6 +428,22 @@ export const onboardingTours: Record<OnboardingMode, OnboardingStep[]> = {
 			'skins-page',
 			onboardingMessages.skinsPageTitle,
 			onboardingMessages.skinsPageDescription,
+		),
+		step(
+			'library-navigation',
+			'navigate',
+			copy(
+				onboardingMessages.libraryTitle,
+				onboardingMessages.libraryDescription,
+				onboardingMessages.clickLibrary,
+			),
+			control('nav-library', '/library'),
+		),
+		inspect(
+			'library-content',
+			'library-content',
+			onboardingMessages.libraryPageTitle,
+			onboardingMessages.libraryPageDescription,
 		),
 		step(
 			'lab-navigation',
@@ -428,7 +479,7 @@ export const onboardingTours: Record<OnboardingMode, OnboardingStep[]> = {
 		),
 		step(
 			'settings-navigation',
-			'activate',
+			'navigate',
 			copy(
 				onboardingMessages.settingsTitle,
 				onboardingMessages.settingsDescription,
@@ -436,95 +487,15 @@ export const onboardingTours: Record<OnboardingMode, OnboardingStep[]> = {
 			),
 			control('nav-settings', '/settings'),
 		),
-		...settingsTourSteps.map(([id, targetId, title, description], index) =>
-			step(id, 'activate', copy(title, description, onboardingMessages.clickTab), {
-				...control(targetId),
-				closeSettingsAfter: index === settingsTourSteps.length - 1,
-			}),
-		),
 		step(
-			'library-navigation',
-			'navigate',
-			copy(
-				onboardingMessages.libraryTitle,
-				onboardingMessages.libraryDescription,
-				onboardingMessages.clickLibrary,
-			),
-			control('nav-library', '/library'),
-		),
-		inspect(
-			'library-content',
-			'library-content',
-			onboardingMessages.libraryPageTitle,
-			onboardingMessages.libraryPageDescription,
-		),
-		step(
-			'create-instance',
-			'navigate',
-			copy(
-				onboardingMessages.createTitle,
-				onboardingMessages.createDescription,
-				onboardingMessages.clickCreate,
-			),
-			control('create-instance', '/create'),
-		),
-		inspect(
-			'creation-instance-mode',
-			'creation-instance-mode',
-			onboardingMessages.instanceModeTitle,
-			onboardingMessages.instanceModeDescription,
-		),
-		step(
-			'creation-flow',
+			'settings-updates',
 			'activate',
 			copy(
-				onboardingMessages.creationTitle,
-				onboardingMessages.creationDescription,
-				onboardingMessages.clickCreationMethod,
+				onboardingMessages.settingsUpdatesTitle,
+				onboardingMessages.settingsUpdatesDescription,
+				onboardingMessages.clickTab,
 			),
-			{
-				targetId: 'creation-methods',
-				branchByTarget: {
-					'creation-method-starlight': { next: 'complete' },
-					'creation-method-custom': { creationPath: 'custom', next: 'creation-name' },
-					'creation-method-import': { next: 'complete' },
-				},
-			},
-		),
-		inspect(
-			'creation-name',
-			'creation-name',
-			onboardingMessages.creationNameTitle,
-			onboardingMessages.creationNameDescription,
-		),
-		inspect(
-			'creation-loader',
-			'creation-loader',
-			onboardingMessages.creationLoaderTitle,
-			onboardingMessages.creationLoaderDescription,
-		),
-		step(
-			'creation-version',
-			'inspect',
-			copy(
-				onboardingMessages.creationVersionTitle,
-				onboardingMessages.creationVersionDescription,
-				onboardingMessages.continueArea,
-			),
-			{
-				targetId: 'creation-game-version',
-				nextByCreationPath: { custom: 'creation-confirm' },
-			},
-		),
-		step(
-			'creation-confirm',
-			'inspect',
-			copy(
-				onboardingMessages.creationConfirmTitle,
-				onboardingMessages.creationConfirmDescription,
-				onboardingMessages.finishArea,
-			),
-			{ targetId: 'creation-confirm' },
+			control('settings-tab-updates'),
 		),
 	],
 	instance: [
