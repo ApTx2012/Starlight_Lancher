@@ -54,6 +54,24 @@ const messages = defineMessages({
 	},
 })
 
+const featureFlagLabels: Record<FeatureFlag, string> = {
+	project_background: '项目背景',
+	page_path: '页面路径',
+	worlds_tab: '世界标签页',
+	worlds_in_home: '主页显示世界',
+	server_project_qa: '服务器项目问答',
+	show_version_environment_column: '显示版本环境列',
+	server_ram_as_bytes_always_on: '服务器内存始终按字节显示',
+	always_show_app_controls: '始终显示窗口控件',
+	skip_non_essential_warnings: '跳过非必要警告',
+	skip_unknown_pack_warning: '跳过未知整合包警告',
+	i18n_debug: '国际化调试',
+	show_instance_play_time: '显示实例游玩时间',
+	page_transitions: '页面切换动画',
+	advanced_filters_collapsed: '高级筛选默认折叠',
+	auto_install_dependencies: '自动安装依赖',
+}
+
 const settings = ref(await getSettings())
 const options = ref<FeatureFlag[]>(Object.keys(DEFAULT_FEATURE_FLAGS))
 
@@ -85,7 +103,7 @@ watch(
 <template>
 	<SettingsSection>
 		<SettingsRow v-for="option in options" :key="option">
-			<template #label>{{ option.replaceAll('_', ' ') }}</template>
+			<template #label>{{ featureFlagLabels[option] ?? option }}</template>
 			<template #control>
 				<div class="flex items-center gap-2">
 					<Button
