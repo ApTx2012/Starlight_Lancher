@@ -4,6 +4,8 @@ use chrono::NaiveDate;
 use dashmap::DashMap;
 use path_util::SafeRelativeUtf8UnixPathBuf;
 use serde::{Deserialize, Serialize};
+use tauri::Manager;
+use tauri_plugin_opener::OpenerExt;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use theseus::data::{
@@ -103,6 +105,20 @@ pub fn init<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
             instance_edit_icon,
             instance_export_mrpack,
             instance_get_pack_export_candidates,
+            instance_list_screenshots,
+            instance_list_all_screenshots,
+            instance_list_synced_screenshots,
+            instance_save_edited_screenshot,
+            instance_list_screenshot_groups,
+            instance_create_screenshot_group,
+            instance_rename_screenshot_group,
+            instance_delete_screenshot_group,
+            instance_set_screenshot_group_memberships,
+            instance_import_screenshot_groups,
+            instance_delete_screenshots,
+            instance_export_screenshots,
+            instance_move_screenshots,
+            instance_open_screenshot,
         ])
         .build()
 }
@@ -1488,5 +1504,173 @@ pub async fn instance_edit_icon(
     icon_path: Option<&Path>,
 ) -> Result<()> {
     theseus::instance::edit_icon(instance_id, icon_path).await?;
+    Ok(())
+}
+
+#[derive(Serialize, Debug, Clone)]
+pub struct InstanceScreenshot {
+    pub id: String,
+    pub instance_id: String,
+    pub instance_name: String,
+    pub file_name: String,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub modified_at: i64,
+    pub group_id: Option<String>,
+    pub path: PathBuf,
+    pub url: String,
+}
+
+fn serialize_screenshot<R: tauri::Runtime>(
+    app: &tauri::AppHandle<R>,
+    s: theseus::instance::InstanceScreenshot,
+) -> Result<InstanceScreenshot> {
+    if let Some(parent) = s.path.parent() {
+        crate::api::files::ensure_browsable(app, parent);
+    }
+    let mut url = super::utils::tauri_convert_file_src(&s.path)?;
+    app.asset_protocol_scope().allow_file(&s.path)?;
+    app.fs_scope().allow_file(&s.path)?;
+    url.query_pairs_mut()
+        .append_pair("revision", &s.modified_at.to_string());
+    Ok(InstanceScreenshot {
+        id: s.id,
+        instance_id: s.instance_id,
+        instance_name: s.instance_name,
+        file_name: s.file_name,
+        created_at: s.created_at,
+        modified_at: s.modified_at,
+        group_id: s.group_id,
+        path: s.path,
+        url: url.to_string(),
+    })
+}
+
+fn serialize_screenshots<R: tauri::Runtime>(
+    app: &tauri::AppHandle<R>,
+    items: Vec<theseus::instance::InstanceScreenshot>,
+) -> Result<Vec<InstanceScreenshot>> {
+    items
+        .into_iter()
+        .map(|s| serialize_screenshot(app, s))
+        .collect()
+}
+
+#[tauri::command]
+pub async fn instance_list_screenshots<R: tauri::Runtime>(
+    app: tauri::AppHandle<R>,
+    instance_id: &str,
+) -> Result<Vec<InstanceScreenshot>> {
+    serialize_screenshots(
+        &app,
+        theseus::instance::list_screenshots(instance_id).await?,
+    )
+}
+
+#[tauri::command]
+pub async fn instance_list_all_screenshots<R: tauri::Runtime>(
+    app: tauri::AppHandle<R>,
+) -> Result<Vec<InstanceScreenshot>> {
+    serialize_screenshots(
+        &app,
+        theseus::instance::list_all_screenshots().await?,
+    )
+}
+
+#[tauri::command]
+pub async fn instance_list_synced_screenshots<R: tauri::Runtime>(
+    app: tauri::AppHandle<R>,
+) -> Result<Vec<InstanceScreenshot>> {
+    serialize_screenshots(
+        &app,
+        theseus::instance::list_synced_screenshots().await?,
+    )
+}
+
+#[tauri::command]
+pub async fn instance_save_edited_screenshot<R: tauri::Runtime>(
+    app: tauri::AppHandle<R>,
+    key: theseus::instance::ScreenshotKey,
+    bytes: Vec<u8>,
+    mode: theseus::instance::ScreenshotEditSaveMode,
+) -> Result<InstanceScreenshot> {
+    serialize_screenshot(
+        &app,
+        theseus::instance::save_edited_screenshot(key, bytes, mode).await?,
+    )
+}
+
+#[tauri::command]
+pub async fn instance_list_screenshot_groups()
+-> Result<Vec<theseus::instance::ScreenshotGroup>> {
+    Ok(theseus::instance::list_screenshot_groups().await?)
+}
+
+#[tauri::command]
+pub async fn instance_create_screenshot_group(
+    name: String,
+    ids: Vec<String>,
+) -> Result<theseus::instance::ScreenshotGroup> {
+    Ok(theseus::instance::create_screenshot_group(name, ids).await?)
+}
+
+#[tauri::command]
+pub async fn instance_rename_screenshot_group(
+    id: String,
+    new_name: String,
+) -> Result<theseus::instance::ScreenshotGroup> {
+    Ok(theseus::instance::rename_screenshot_group(id, new_name).await?)
+}
+
+#[tauri::command]
+pub async fn instance_delete_screenshot_group(id: String) -> Result<()> {
+    Ok(theseus::instance::delete_screenshot_group(id).await?)
+}
+
+#[tauri::command]
+pub async fn instance_set_screenshot_group_memberships(
+    updates: Vec<theseus::instance::ScreenshotGroupMembershipUpdate>,
+) -> Result<()> {
+    Ok(theseus::instance::set_screenshot_group_memberships(updates).await?)
+}
+
+#[tauri::command]
+pub async fn instance_import_screenshot_groups(
+    groups: Vec<theseus::instance::ScreenshotGroupImport>,
+) -> Result<()> {
+    Ok(theseus::instance::import_screenshot_groups(groups).await?)
+}
+
+#[tauri::command]
+pub async fn instance_delete_screenshots(
+    keys: Vec<theseus::instance::ScreenshotKey>,
+) -> Result<()> {
+    Ok(theseus::instance::delete_screenshots(&keys).await?)
+}
+
+#[tauri::command]
+pub async fn instance_export_screenshots(
+    keys: Vec<theseus::instance::ScreenshotKey>,
+    path: PathBuf,
+) -> Result<()> {
+    Ok(theseus::instance::export_screenshots(&keys, path).await?)
+}
+
+#[tauri::command]
+pub async fn instance_move_screenshots(
+    keys: Vec<theseus::instance::ScreenshotKey>,
+    target: &str,
+) -> Result<Vec<theseus::instance::ScreenshotKey>> {
+    Ok(theseus::instance::move_screenshots(&keys, target).await?)
+}
+
+#[tauri::command]
+pub async fn instance_open_screenshot<R: tauri::Runtime>(
+    app: tauri::AppHandle<R>,
+    key: theseus::instance::ScreenshotKey,
+) -> Result<()> {
+    let path = theseus::instance::get_screenshot_path(&key).await?;
+    app.opener()
+        .reveal_item_in_dir(path)
+        .map_err(|e| std::io::Error::other(e.to_string()))?;
     Ok(())
 }
