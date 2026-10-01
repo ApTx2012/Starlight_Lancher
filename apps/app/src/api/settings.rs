@@ -1,5 +1,5 @@
 use crate::api::Result;
-use tauri::{Emitter, Runtime};
+use tauri::{Emitter, Manager, Runtime};
 use theseus::prelude::*;
 use theseus::{ProxyConfig, ProxyTestResult};
 
@@ -12,7 +12,8 @@ pub fn init<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
             cancel_directory_change,
             proxy_get,
             proxy_set,
-            proxy_test
+            proxy_test,
+            set_ui_scale
         ])
         .build()
 }
@@ -34,6 +35,17 @@ pub async fn settings_set(
 ) -> Result<()> {
     settings::set(settings).await?;
     let _ = app.emit("settings", ());
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn set_ui_scale(
+    app: tauri::AppHandle<impl Runtime>,
+    factor: f64,
+) -> Result<()> {
+    if let Some(window) = app.get_webview_window("main") {
+        let _ = window.set_zoom(factor);
+    }
     Ok(())
 }
 

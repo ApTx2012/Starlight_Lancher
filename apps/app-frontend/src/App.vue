@@ -142,7 +142,7 @@ import {
 	isNetworkMetered,
 	setRestartAfterPendingUpdate,
 } from '@/helpers/utils.js'
-import { installUiScale } from '@/helpers/ui-scale'
+import { installUiScale, setUiScale } from '@/helpers/ui-scale'
 import { start_join_server, start_join_singleplayer_world } from '@/helpers/worlds.ts'
 import i18n, { resolveInitialLocale } from '@/i18n.config'
 import {
@@ -1091,6 +1091,7 @@ async function setupApp() {
 		close_behavior,
 		developer_mode,
 		feature_flags,
+		ui_scale,
 	} = initialSettings
 
 	// Initialize locale from saved settings
@@ -1121,6 +1122,7 @@ async function setupApp() {
 	nativeDecorations.value = native_decorations
 	if (os.value !== 'MacOS') await getCurrentWindow().setDecorations(native_decorations)
 
+	setUiScale(ui_scale)
 	themeStore.setThemeState(theme)
 	await initializeSystemAccentColor()
 	themeStore.setAccentColor(accent_color)

@@ -141,6 +141,8 @@ pub struct Settings {
     pub transparent_background_opacity: u32,
     pub transparent_background_blur: bool,
     pub sidebar_instance_count: u32,
+    #[serde(default = "default_ui_scale")]
+    pub ui_scale: f64,
     #[serde(default)]
     pub close_behavior: String,
     #[serde(default)]
@@ -190,6 +192,10 @@ pub struct Settings {
 
 fn default_true() -> bool {
     true
+}
+
+fn default_ui_scale() -> f64 {
+    100.0
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, Eq, Hash, PartialEq)]
@@ -242,6 +248,7 @@ impl Settings {
                 sidebar_instance_count, home_layout, minimal_home_instance_id,
                 json(home_widgets) as \"home_widgets?: String\", auto_hide_downloads_button,
                 json(terracotta_public_nodes) terracotta_public_nodes,
+                ui_scale,
                 version
             FROM settings
             "
@@ -308,6 +315,7 @@ impl Settings {
                 as u32,
             transparent_background_blur: res.transparent_background_blur == 1,
             sidebar_instance_count: res.sidebar_instance_count as u32,
+            ui_scale: res.ui_scale,
             close_behavior,
             auto_hide_downloads_button: res.auto_hide_downloads_button == 1,
             home_layout: HomeLayout::from_string(&res.home_layout),
@@ -603,7 +611,10 @@ impl Settings {
         .bind(self.force_unicode_font)
         .execute(exec)
         .await?;
-
+        sqlx::query("UPDATE settings SET ui_scale = ? WHERE id = 0")
+            .bind(self.ui_scale)
+            .execute(exec)
+            .await?;
         Ok(())
     }
 

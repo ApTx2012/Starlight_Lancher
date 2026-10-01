@@ -373,6 +373,12 @@ const customBackgroundPreview = computed(() =>
 		: null,
 )
 
+function updateUiScale(value: number) {
+	const clamped = Math.min(200, Math.max(50, Math.round(value)))
+	setUiScale(clamped)
+	settings.value.ui_scale = clamped
+}
+
 const accentColorOptions: Array<{
 	value: AccentColor
 	color: string
@@ -1050,7 +1056,7 @@ watch(
 										? 'border-brand bg-brand-highlight text-brand'
 										: 'border-surface-4 bg-surface-3 text-secondary hover:border-surface-5 hover:text-contrast'
 								"
-								@click="setUiScale(preset)"
+								@click="updateUiScale(preset)"
 							>
 								{{ preset }}%
 							</button>
@@ -1062,7 +1068,7 @@ watch(
 							:max="200"
 							:step="5"
 							unit="%"
-							@update:model-value="(value) => setUiScale(Number(value))"
+							@update:model-value="(value) => updateUiScale(Number(value))"
 						/>
 					</div>
 				</template>

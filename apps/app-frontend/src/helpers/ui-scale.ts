@@ -1,10 +1,11 @@
+import { invoke } from '@tauri-apps/api/core'
 import { ref, watch } from 'vue'
 
 /**
  * 启动器界面缩放（百分比）。
- * 这是纯本地的显示偏好，用 localStorage 保存即可，无需写入后端设置数据库。
+ * 通过 Tauri 原生 webview zoom（Rust 侧 set_zoom）应用，
+ * 缩放值持久化到后端设置数据库（settings.ui_scale）。
  */
-const UI_SCALE_STORAGE_KEY = 'starlight-ui-scale'
 const MIN_UI_SCALE = 50
 const MAX_UI_SCALE = 200
 const DEFAULT_UI_SCALE = 100
@@ -15,18 +16,7 @@ function clampUiScale(value: number): number {
 	return Math.min(MAX_UI_SCALE, Math.max(MIN_UI_SCALE, Math.round(value)))
 }
 
-/** 从 localStorage 读取已保存的缩放值。 */
-function readStoredUiScale(): number {
-	try {
-		const raw = localStorage.getItem(UI_SCALE_STORAGE_KEY)
-		if (raw === null) return DEFAULT_UI_SCALE
-		return clampUiScale(Number(raw))
-	} catch {
-		return DEFAULT_UI_SCALE
-	}
-}
-
-export const uiScale = ref(readStoredUiScale())
+export const uiScale = ref(DEFAULT_UI_SCALE)
 
 export function setUiScale(value: number): void {
 	uiScale.value = clampUiScale(value)
@@ -38,23 +28,27 @@ export function resetUiScale(): void {
 
 export { DEFAULT_UI_SCALE, MAX_UI_SCALE, MIN_UI_SCALE }
 
-/** 把缩放应用到文档根节点，并在变化时持久化。 */
-export function installUiScale(): void {
-	const apply = (value: number) => {
-		const factor = String(value / 100)
-		const root = document.documentElement
-		root.style.setProperty('--ui-scale', factor)
-		// 用 CSS zoom 整体缩放界面（含内嵌网页），在 WebView2/WebKit 上最可靠。
-		root.style.setProperty('zoom', factor)
+/**
+ * 把缩放值应用到原生 webview。
+ * 同时保留 --ui-scale CSS 变量，供依赖它的样式/锚点使用。
+ */
+async function applyUiScale(value: number): Promise<void> {
+	const factor = value / 100
+	document.documentElement.style.setProperty('--ui-scale', String(factor))
+	try {
+		await invoke('plugin:settings|set_ui_scale', { factor })
+	} catch (error) {
+		console.warn('应用界面缩放失败', error)
 	}
+}
 
-	apply(uiScale.value)
+/**
+ * 初始化缩放：应用当前值，并在变化时同步到原生 webview。
+ * 初值由调用方（App 初始化流程）在读取后端设置后通过 setUiScale 覆盖。
+ */
+export function installUiScale(): void {
+	void applyUiScale(uiScale.value)
 	watch(uiScale, (value) => {
-		apply(value)
-		try {
-			localStorage.setItem(UI_SCALE_STORAGE_KEY, String(value))
-		} catch (error) {
-			console.warn('保存界面缩放失败', error)
-		}
+		void applyUiScale(value)
 	})
 }
