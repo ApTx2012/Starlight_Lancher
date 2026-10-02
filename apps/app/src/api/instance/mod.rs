@@ -478,27 +478,51 @@ fn edit_to_core(edit_instance: EditInstance) -> Result<CoreEditInstance> {
                 None => Ok(CoreInstanceLink::Unmanaged),
             })
             .transpose()?,
-        launch_overrides: Some(InstanceLaunchOverridesPatch {
-            player: None,
-            instance_mode: None,
-            java_path: edit_instance.java_path,
-            extra_launch_args: edit_instance.extra_launch_args,
-            custom_env_vars: edit_instance.custom_env_vars,
-            memory: edit_instance.memory,
-            force_fullscreen: edit_instance.force_fullscreen,
-            maximize_window: edit_instance.maximize_window,
-            game_resolution: edit_instance.game_resolution,
-            launch_preparation_timeout: edit_instance
-                .launch_preparation_timeout,
-            hooks: edit_instance.hooks,
-        }),
-        content_set_patch: Some(AppliedContentSetPatch {
-            source_kind: None,
-            game_version: edit_instance.game_version,
-            protocol_version: Some(None),
-            loader: edit_instance.loader,
-            loader_version: edit_instance.loader_version,
-        }),
+        launch_overrides: {
+            let has_launch_change = edit_instance.java_path.is_some()
+                || edit_instance.extra_launch_args.is_some()
+                || edit_instance.custom_env_vars.is_some()
+                || edit_instance.memory.is_some()
+                || edit_instance.force_fullscreen.is_some()
+                || edit_instance.maximize_window.is_some()
+                || edit_instance.game_resolution.is_some()
+                || edit_instance.launch_preparation_timeout.is_some()
+                || edit_instance.hooks.is_some();
+            if has_launch_change {
+                Some(InstanceLaunchOverridesPatch {
+                    player: None,
+                    instance_mode: None,
+                    java_path: edit_instance.java_path,
+                    extra_launch_args: edit_instance.extra_launch_args,
+                    custom_env_vars: edit_instance.custom_env_vars,
+                    memory: edit_instance.memory,
+                    force_fullscreen: edit_instance.force_fullscreen,
+                    maximize_window: edit_instance.maximize_window,
+                    game_resolution: edit_instance.game_resolution,
+                    launch_preparation_timeout: edit_instance
+                        .launch_preparation_timeout,
+                    hooks: edit_instance.hooks,
+                })
+            } else {
+                None
+            }
+        },
+        content_set_patch: {
+            let has_content_change = edit_instance.game_version.is_some()
+                || edit_instance.loader.is_some()
+                || edit_instance.loader_version.is_some();
+            if has_content_change {
+                Some(AppliedContentSetPatch {
+                    source_kind: None,
+                    game_version: edit_instance.game_version,
+                    protocol_version: Some(None),
+                    loader: edit_instance.loader,
+                    loader_version: edit_instance.loader_version,
+                })
+            } else {
+                None
+            }
+        },
         last_played: None,
         submitted_time_played: None,
         recent_time_played: None,
