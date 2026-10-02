@@ -33,6 +33,44 @@ export const ANNOUNCEMENT_CHANGE_TYPES: readonly AnnouncementChangeType[] = [
 
 export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 	{
+		id: 'launcher-1.0.1-beta7',
+		version: '1.0.1-beta7',
+		publishedAt: '2026-10-02',
+		title: {
+			'en-US': 'Starlight Launcher 1.0.1-beta7',
+			'zh-CN': 'Starlight Launcher 1.0.1-beta7',
+		},
+		changes: {
+			added: [
+				{
+					'en-US':
+						'Added a screenshot center: browse screenshots across every instance, group them (custom groups, by instance, or by date), preview, edit (crop, rotate, annotate, censor), and export as ZIP.',
+					'zh-CN':
+						'新增截图中心：跨实例浏览截图，支持自定义/按实例/按日期分组，可预览、编辑（裁剪、标注、打码等）并导出为 ZIP。',
+				},
+				{
+					'en-US':
+						'Added the multiplayer (Terracotta) entry to the sidebar, behind a feature flag.',
+					'zh-CN': '侧边栏新增多人联机（陶瓦）入口，由功能开关控制。',
+				},
+			],
+			changed: [
+				{
+					'en-US':
+						'Launcher UI scaling is now persisted in the backend and applied via native webview zoom, so it scales embedded pages correctly and keeps onboarding anchors aligned.',
+					'zh-CN':
+						'启动器界面缩放改为后端持久化，并通过原生 webview 缩放应用，可正确缩放内嵌页面且导览锚点不再偏移。',
+				},
+			],
+			fixed: [
+				{
+					'en-US':
+						'Fixed the onboarding tour skipping its first step when the target anchor was missing.',
+					'zh-CN': '修复导览首步在目标锚点缺失时被自动跳过的问题。',
+				},
+			],
+		},
+	},
 		id: 'launcher-1.0.1-beta6',
 		version: '1.0.1-beta6',
 		publishedAt: '2026-10-01',
