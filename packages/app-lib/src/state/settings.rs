@@ -212,6 +212,7 @@ pub enum FeatureFlag {
     ServersInApp,
     ServerProjectQa,
     I18nDebug,
+    MultiplayerInApp,
     ShowInstancePlayTime,
     SkipNonEssentialWarnings,
     AdvancedFiltersCollapsed,
