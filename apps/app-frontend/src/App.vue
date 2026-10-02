@@ -764,12 +764,12 @@ const messages = defineMessages({
 		defaultMessage: 'Library',
 	},
 	multiplayer: {
-		screenshots: {
-			id: 'app.navigation.screenshots',
-			defaultMessage: 'Screenshots',
-		},
 		id: 'app.navigation.multiplayer',
 		defaultMessage: 'Multiplayer',
+	},
+	screenshots: {
+		id: 'app.navigation.screenshots',
+		defaultMessage: 'Screenshots',
 	},
 	downloads: {
 		id: 'app.navigation.downloads',

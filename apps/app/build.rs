@@ -365,6 +365,7 @@ fn main() {
                         "install_existing_instance",
                         "hosted_default",
                         "hosted_set_session",
+                        "hosted_has_game_account",
                         "hosted_create",
                         "hosted_binding",
                         "hosted_sync",
