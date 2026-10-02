@@ -123,6 +123,7 @@ export default new createRouter({
 					path: '',
 					redirect: { name: 'MultiplayerRooms' },
 				},
+				{
 					path: 'rooms',
 					name: 'MultiplayerRooms',
 					component: () => import('@/components/multiplayer/MultiplayerRooms.vue'),
