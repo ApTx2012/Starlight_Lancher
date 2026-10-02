@@ -16,6 +16,7 @@ const messages = defineMessages({
 <template>
 	<iframe
 		:src="skinSiteFrameUrl"
+		allow="clipboard-write; clipboard-read"
 		:title="formatMessage(messages.frameTitle)"
 		class="block h-full min-h-0 w-full border-0"
 	/>
