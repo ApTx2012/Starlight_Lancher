@@ -6008,6 +6008,30 @@
   "app.onboarding.instance-actions.title": {
     "message": "The main controls"
   },
+  "app.onboarding.instance-content-tab.title": {
+    "message": "Content"
+  },
+  "app.onboarding.instance-content-tab.description": {
+    "message": "Manage this instance’s mods, resource packs, and shaders here. Search, enable or disable entries, check for updates, and browse for more."
+  },
+  "app.onboarding.instance-files-tab.title": {
+    "message": "Files"
+  },
+  "app.onboarding.instance-files-tab.description": {
+    "message": "Browse the instance folder and open configs or logs in the built-in editor without leaving the launcher."
+  },
+  "app.onboarding.instance-worlds-tab.title": {
+    "message": "Worlds"
+  },
+  "app.onboarding.instance-worlds-tab.description": {
+    "message": "Manage saved worlds: back them up, rename, edit world settings, and open the world folder."
+  },
+  "app.onboarding.instance-logs-tab.title": {
+    "message": "Logs"
+  },
+  "app.onboarding.instance-logs-tab.description": {
+    "message": "Read the instance’s live logs to trace crashes and errors without digging through files."
+  },
   "app.onboarding.instance-mode.description": {
     "message": "StarLight automatically installs the administrator-selected modpack and versions, then checks and completes updates before every launch. A StarLight login is required. Choose Local to select your own versions and modpacks for other servers or single-player."
   },
