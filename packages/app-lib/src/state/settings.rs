@@ -251,9 +251,9 @@ fn filter_known_feature_flags(
 ) -> HashMap<FeatureFlag, bool> {
     let mut flags = HashMap::with_capacity(raw.len());
     for (key, value) in raw {
-        if let Ok(flag) =
-            serde_json::from_value::<FeatureFlag>(serde_json::Value::String(key))
-        {
+        if let Ok(flag) = serde_json::from_value::<FeatureFlag>(
+            serde_json::Value::String(key),
+        ) {
             flags.insert(flag, value);
         }
     }
