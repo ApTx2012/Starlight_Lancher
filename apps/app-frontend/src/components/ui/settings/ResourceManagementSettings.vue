@@ -253,6 +253,15 @@ const messages = defineMessages({
 		defaultMessage:
 			'When CurseForge does not provide a download address, derive its CDN address and try downloading the file automatically. Disable this to use the manual download workflow.',
 	},
+	ignoreSslErrors: {
+		id: 'app.settings.resources.ignore-ssl-errors',
+		defaultMessage: 'Ignore SSL certificate errors',
+	},
+	ignoreSslErrorsDescription: {
+		id: 'app.settings.resources.ignore-ssl-errors-description',
+		defaultMessage:
+			'Skip TLS certificate validation for launcher network requests. Only enable this if you trust your network and understand the security risk.',
+	},
 	mojangAuthService: {
 		id: 'app.settings.resources.mojang-auth-service',
 		defaultMessage: 'Mojang authentication service',
@@ -921,6 +930,15 @@ function validateMinecraftDirectory(value) {
 						id="curseforge-restriction-bypass"
 						v-model="settings.bypass_curseforge_download_restrictions"
 					/>
+				</template>
+			</SettingsRow>
+			<SettingsRow>
+				<template #label>{{ formatMessage(messages.ignoreSslErrors) }}</template>
+				<template #description>
+					{{ formatMessage(messages.ignoreSslErrorsDescription) }}
+				</template>
+				<template #control>
+					<Toggle id="ignore-ssl-errors" v-model="settings.ignore_ssl_errors" />
 				</template>
 			</SettingsRow>
 		</SettingsSection>

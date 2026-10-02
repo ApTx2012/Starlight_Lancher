@@ -6827,6 +6827,12 @@
   "app.settings.resources.curseforge-restriction-bypass-description": {
     "message": "當 CurseForge 不提供下載地址時，根據檔案資訊推導其 CDN 地址並嘗試自動下載。關閉後將使用手動下載流程。"
   },
+  "app.settings.resources.ignore-ssl-errors": {
+    "message": "忽略 SSL 憑證錯誤"
+  },
+  "app.settings.resources.ignore-ssl-errors-description": {
+    "message": "跳過啟動器網路請求的 TLS 憑證檢查。僅當你信任目前網路並了解其安全風險時才啟用。"
+  },
   "app.settings.resources.database-backups": {
     "message": "應用程式資料庫備份"
   },

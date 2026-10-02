@@ -116,8 +116,9 @@ pub struct Settings {
     pub curseforge_source: DownloadSourceMode,
     #[serde(default = "default_true")]
     pub bypass_curseforge_download_restrictions: bool,
-    #[serde(default)]
     pub mojang_auth_source: DownloadSourceMode,
+    #[serde(default)]
+    pub ignore_ssl_errors: bool,
     #[serde(default, rename = "use_minecraft_mirror", skip_serializing)]
     legacy_use_minecraft_mirror: Option<bool>,
     #[serde(default, rename = "use_modrinth_mirror", skip_serializing)]
@@ -313,6 +314,11 @@ impl Settings {
         )
         .fetch_one(exec)
         .await?;
+        let ignore_ssl_errors: bool = sqlx::query_scalar(
+            "SELECT ignore_ssl_errors FROM settings WHERE id = 0",
+        )
+        .fetch_one(exec)
+        .await?;
         let settings = Self {
             max_concurrent_downloads: res.max_concurrent_downloads as usize,
             max_concurrent_writes: res.max_concurrent_writes as usize,
@@ -331,6 +337,7 @@ impl Settings {
                 &res.curseforge_source,
             ),
             bypass_curseforge_download_restrictions,
+            ignore_ssl_errors,
             mojang_auth_source: DownloadSourceMode::from_string(
                 &res.mojang_auth_source,
             ),
@@ -640,6 +647,10 @@ impl Settings {
         .bind(self.bypass_curseforge_download_restrictions)
         .execute(exec)
         .await?;
+        sqlx::query("UPDATE settings SET ignore_ssl_errors = ? WHERE id = 0")
+            .bind(self.ignore_ssl_errors)
+            .execute(exec)
+            .await?;
         sqlx::query("UPDATE settings SET mc_memory_optimize = ? WHERE id = 0")
             .bind(self.memory.optimize_before_launch)
             .execute(exec)

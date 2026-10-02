@@ -33,7 +33,9 @@ pub async fn settings_set(
     app: tauri::AppHandle<impl Runtime>,
     settings: Settings,
 ) -> Result<()> {
-    settings::set(settings).await?;
+    settings::set(settings.clone()).await?;
+    let state = State::get().await?;
+    state.update_http_client_for_settings(&settings).await?;
     let _ = app.emit("settings", ());
     Ok(())
 }

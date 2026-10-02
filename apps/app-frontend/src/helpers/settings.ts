@@ -151,6 +151,7 @@ export type AppSettings = {
 	curseforge_source: DownloadSourceMode
 	bypass_curseforge_download_restrictions: boolean
 	mojang_auth_source: DownloadSourceMode
+	ignore_ssl_errors: boolean
 
 	theme: ColorTheme
 	accent_color: AccentColorSetting
@@ -241,6 +242,7 @@ function normalizeDownloadSettings(settings: AppSettings & LegacyMirrorSettings)
 		usesLegacyDefaults || !hasLegacySettings ? 'auto' : legacySource(settings.use_curseforge_mirror)
 	settings.bypass_curseforge_download_restrictions ??= true
 	settings.mojang_auth_source ??= 'auto'
+	settings.ignore_ssl_errors ??= false
 	settings.terracotta_public_nodes ??= ['wss://center.node.1tmc.top']
 	settings.feature_flags ??= { ...DEFAULT_FEATURE_FLAGS }
 	for (const [key, value] of Object.entries(DEFAULT_FEATURE_FLAGS)) {
