@@ -181,6 +181,7 @@ pub struct Settings {
     pub migrated: bool,
 
     pub developer_mode: bool,
+    #[serde(deserialize_with = "deserialize_feature_flags")]
     pub feature_flags: HashMap<FeatureFlag, bool>,
 
     pub skipped_update: Option<String>,
@@ -220,6 +221,43 @@ pub enum FeatureFlag {
     ShowVersionEnvironmentColumn,
     XmclDownloadEngine,
     AutoInstallDependencies,
+}
+
+/// 反序列化 feature flags，遇到未知的 flag 名称时直接忽略，而不是报错。
+///
+/// 这样即使前端（或更新的版本）写入了当前后端不认识的 flag，
+/// 旧版本也能正常读取设置，而不是整包失败导致启动器初始化崩溃。
+fn deserialize_feature_flags<'de, D>(
+    deserializer: D,
+) -> Result<HashMap<FeatureFlag, bool>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let raw = HashMap::<String, bool>::deserialize(deserializer)?;
+    Ok(filter_known_feature_flags(raw))
+}
+
+/// 从 JSON 字符串解析 feature flags，忽略未知名称。
+fn parse_feature_flags_json(value: &str) -> HashMap<FeatureFlag, bool> {
+    match serde_json::from_str::<HashMap<String, bool>>(value) {
+        Ok(raw) => filter_known_feature_flags(raw),
+        Err(_) => HashMap::new(),
+    }
+}
+
+/// 只保留能解析为 [`FeatureFlag`] 的条目，未知名称静默丢弃。
+fn filter_known_feature_flags(
+    raw: HashMap<String, bool>,
+) -> HashMap<FeatureFlag, bool> {
+    let mut flags = HashMap::with_capacity(raw.len());
+    for (key, value) in raw {
+        if let Ok(flag) =
+            serde_json::from_value::<FeatureFlag>(serde_json::Value::String(key))
+        {
+            flags.insert(flag, value);
+        }
+    }
+    flags
 }
 
 impl Settings {
@@ -384,8 +422,8 @@ impl Settings {
             migrated: res.migrated == 1,
             feature_flags: res
                 .feature_flags
-                .as_ref()
-                .and_then(|x| serde_json::from_str(x).ok())
+                .as_deref()
+                .map(parse_feature_flags_json)
                 .unwrap_or_default(),
             skipped_update: res.skipped_update,
             pending_update_toast_for_version: res
