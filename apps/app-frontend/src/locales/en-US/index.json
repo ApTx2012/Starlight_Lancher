@@ -419,6 +419,57 @@
   "app.appearance-settings.auto-hide-downloads-button.description": {
     "message": "Hide the downloads button in the sidebar when there are no active download tasks."
   },
+  "app.appearance-settings.fonts.title": {
+    "message": "Fonts"
+  },
+  "app.appearance-settings.fonts.description": {
+    "message": "Choose the fonts the launcher interface and its logs are rendered in."
+  },
+  "app.appearance-settings.fonts.ui-font": {
+    "message": "Interface font"
+  },
+  "app.appearance-settings.fonts.ui-font-description": {
+    "message": "Used across the launcher interface. Only fonts installed on this system are listed."
+  },
+  "app.appearance-settings.fonts.mono-font": {
+    "message": "Monospace font"
+  },
+  "app.appearance-settings.fonts.mono-font-description": {
+    "message": "Used for logs, the server console, and other monospace content."
+  },
+  "app.appearance-settings.fonts.default": {
+    "message": "Launcher default"
+  },
+  "app.appearance-settings.fonts.monospace": {
+    "message": "Monospace"
+  },
+  "app.appearance-settings.fonts.missing": {
+    "message": "Not installed"
+  },
+  "app.appearance-settings.fonts.search-placeholder": {
+    "message": "Search installed fonts"
+  },
+  "app.appearance-settings.fonts.no-results": {
+    "message": "No matching fonts"
+  },
+  "app.appearance-settings.fonts.load-failed": {
+    "message": "Couldn't read the list of installed fonts."
+  },
+  "app.appearance-settings.fonts.retry": {
+    "message": "Retry"
+  },
+  "app.appearance-settings.fonts.reset": {
+    "message": "Reset"
+  },
+  "app.appearance-settings.fonts.preview": {
+    "message": "Preview"
+  },
+  "app.appearance-settings.fonts.ui-preview-sample": {
+    "message": "The quick brown fox jumps over the lazy dog."
+  },
+  "app.appearance-settings.fonts.mono-preview-sample": {
+    "message": "const x = () => 0; // monospace"
+  },
   "app.appearance-settings.auto-hide-downloads-button.title": {
     "message": "Auto-hide downloads button"
   },

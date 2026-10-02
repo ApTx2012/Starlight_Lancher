@@ -572,6 +572,57 @@
   "app.appearance-settings.auto-hide-downloads-button.description": {
     "message": "沒有進行中的下載任務時隱藏側邊欄中的下載按鈕，有任務時自動顯示。"
   },
+  "app.appearance-settings.fonts.title": {
+    "message": "字型"
+  },
+  "app.appearance-settings.fonts.description": {
+    "message": "選擇啟動器介面與日誌使用的字型。"
+  },
+  "app.appearance-settings.fonts.ui-font": {
+    "message": "介面字型"
+  },
+  "app.appearance-settings.fonts.ui-font-description": {
+    "message": "套用於啟動器介面。僅列出系統已安裝的字型。"
+  },
+  "app.appearance-settings.fonts.mono-font": {
+    "message": "等寬字型"
+  },
+  "app.appearance-settings.fonts.mono-font-description": {
+    "message": "用於日誌、伺服器主控台等等寬內容。"
+  },
+  "app.appearance-settings.fonts.default": {
+    "message": "啟動器預設"
+  },
+  "app.appearance-settings.fonts.monospace": {
+    "message": "等寬"
+  },
+  "app.appearance-settings.fonts.missing": {
+    "message": "未安裝"
+  },
+  "app.appearance-settings.fonts.search-placeholder": {
+    "message": "搜尋已安裝的字型"
+  },
+  "app.appearance-settings.fonts.no-results": {
+    "message": "沒有符合的字型"
+  },
+  "app.appearance-settings.fonts.load-failed": {
+    "message": "無法讀取已安裝的字型清單。"
+  },
+  "app.appearance-settings.fonts.retry": {
+    "message": "重試"
+  },
+  "app.appearance-settings.fonts.reset": {
+    "message": "重設"
+  },
+  "app.appearance-settings.fonts.preview": {
+    "message": "預覽"
+  },
+  "app.appearance-settings.fonts.ui-preview-sample": {
+    "message": "永和九年，歲在癸丑，暮春之初。"
+  },
+  "app.appearance-settings.fonts.mono-preview-sample": {
+    "message": "const x = () => 0; // 等寬"
+  },
   "app.appearance-settings.auto-hide-downloads-button.title": {
     "message": "自動隱藏下載按鈕"
   },

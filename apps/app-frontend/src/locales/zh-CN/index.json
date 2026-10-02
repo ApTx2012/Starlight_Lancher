@@ -640,6 +640,57 @@
   "app.appearance-settings.auto-hide-downloads-button.description": {
     "message": "没有进行中的下载任务时隐藏侧边栏中的下载按钮，有任务时自动显示。"
   },
+  "app.appearance-settings.fonts.title": {
+    "message": "字体"
+  },
+  "app.appearance-settings.fonts.description": {
+    "message": "选择启动器界面与日志使用的字体。"
+  },
+  "app.appearance-settings.fonts.ui-font": {
+    "message": "界面字体"
+  },
+  "app.appearance-settings.fonts.ui-font-description": {
+    "message": "应用于启动器界面。仅列出系统已安装的字体。"
+  },
+  "app.appearance-settings.fonts.mono-font": {
+    "message": "等宽字体"
+  },
+  "app.appearance-settings.fonts.mono-font-description": {
+    "message": "用于日志、服务器控制台等等宽内容。"
+  },
+  "app.appearance-settings.fonts.default": {
+    "message": "启动器默认"
+  },
+  "app.appearance-settings.fonts.monospace": {
+    "message": "等宽"
+  },
+  "app.appearance-settings.fonts.missing": {
+    "message": "未安装"
+  },
+  "app.appearance-settings.fonts.search-placeholder": {
+    "message": "搜索已安装的字体"
+  },
+  "app.appearance-settings.fonts.no-results": {
+    "message": "没有匹配的字体"
+  },
+  "app.appearance-settings.fonts.load-failed": {
+    "message": "无法读取已安装的字体列表。"
+  },
+  "app.appearance-settings.fonts.retry": {
+    "message": "重试"
+  },
+  "app.appearance-settings.fonts.reset": {
+    "message": "重置"
+  },
+  "app.appearance-settings.fonts.preview": {
+    "message": "预览"
+  },
+  "app.appearance-settings.fonts.ui-preview-sample": {
+    "message": "永和九年，岁在癸丑，暮春之初。"
+  },
+  "app.appearance-settings.fonts.mono-preview-sample": {
+    "message": "const x = () => 0; // 等宽"
+  },
   "app.appearance-settings.auto-hide-downloads-button.title": {
     "message": "自动隐藏下载按钮"
   },
