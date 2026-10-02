@@ -279,14 +279,20 @@ export function useOnboardingTour(
 	function handleDocumentClick(event: MouseEvent) {
 		if (!visible.value) return
 		const clickedElement = event.target instanceof Element ? event.target : null
-		if (clickedElement?.closest('[data-onboarding-overlay-ui]')) return
 
+		// 跳过/关闭按钮由其自身处理，不在全局点击里推进
+		if (clickedElement?.closest('[data-onboarding-skip]')) return
+
+		// inspect 步：点击任意位置（含导览气泡本身）都继续下一步
 		if (step.value.interaction === 'inspect') {
 			event.preventDefault()
 			event.stopImmediatePropagation()
 			void advance()
 			return
 		}
+
+		// 非 inspect 步：点在导览 UI 自身时不处理
+		if (clickedElement?.closest('[data-onboarding-overlay-ui]')) return
 
 		if (!step.value.targetId || !['navigate', 'activate'].includes(step.value.interaction)) return
 		if (clickedElement && handleBranchClick(clickedElement)) return

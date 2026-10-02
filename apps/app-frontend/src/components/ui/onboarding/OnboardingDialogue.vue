@@ -35,7 +35,7 @@ const progressWidth = computed(() => `${Math.min(100, (props.current / props.tot
 					<h2 :id="`onboarding-title-${step.id}`">{{ formatMessage(step.title) }}</h2>
 				</div>
 				<ButtonStyled circular type="transparent">
-					<button :aria-label="formatMessage(onboardingMessages.skip)" @click.stop="$emit('skip')">
+					<button data-onboarding-skip :aria-label="formatMessage(onboardingMessages.skip)" @click.stop="$emit('skip')">
 						<XIcon />
 					</button>
 				</ButtonStyled>

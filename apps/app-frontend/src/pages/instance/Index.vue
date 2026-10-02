@@ -688,11 +688,13 @@ const tabs = computed(() => [
 		label: formatMessage(messages.contentTab),
 		href: `${basePath.value}`,
 		icon: BoxesIcon,
+		onboardingId: 'instance-tab-content',
 	},
 	{
 		label: formatMessage(messages.filesTab),
 		href: `${basePath.value}/files`,
 		icon: FolderOpenIcon,
+		onboardingId: 'instance-tab-files',
 	},
 	{
 		label: formatMessage(messages.screenshotsTab),
@@ -703,11 +705,13 @@ const tabs = computed(() => [
 		label: formatMessage(messages.worldsTab),
 		href: `${basePath.value}/worlds`,
 		icon: GlobeIcon,
+		onboardingId: 'instance-tab-worlds',
 	},
 	{
 		label: formatMessage(messages.logsTab),
 		href: `${basePath.value}/logs`,
 		icon: TerminalSquareIcon,
+		onboardingId: 'instance-tab-logs',
 	},
 ])
 

@@ -252,6 +252,42 @@ export const onboardingMessages = defineMessages({
 		id: 'app.onboarding.instance-tabs.description',
 		defaultMessage: 'Use these tabs for content, files, screenshots, worlds, and logs. Tidy chaos.',
 	},
+	instanceContentTabTitle: {
+		id: 'app.onboarding.instance-content-tab.title',
+		defaultMessage: 'Content',
+	},
+	instanceContentTabDescription: {
+		id: 'app.onboarding.instance-content-tab.description',
+		defaultMessage:
+			'Manage this instance’s mods, resource packs, and shaders here. Search, enable or disable entries, check for updates, and browse for more.',
+	},
+	instanceFilesTabTitle: {
+		id: 'app.onboarding.instance-files-tab.title',
+		defaultMessage: 'Files',
+	},
+	instanceFilesTabDescription: {
+		id: 'app.onboarding.instance-files-tab.description',
+		defaultMessage:
+			'Browse the instance folder and open configs or logs in the built-in editor without leaving the launcher.',
+	},
+	instanceWorldsTabTitle: {
+		id: 'app.onboarding.instance-worlds-tab.title',
+		defaultMessage: 'Worlds',
+	},
+	instanceWorldsTabDescription: {
+		id: 'app.onboarding.instance-worlds-tab.description',
+		defaultMessage:
+			'Manage saved worlds: back them up, rename, edit world settings, and open the world folder.',
+	},
+	instanceLogsTabTitle: {
+		id: 'app.onboarding.instance-logs-tab.title',
+		defaultMessage: 'Logs',
+	},
+	instanceLogsTabDescription: {
+		id: 'app.onboarding.instance-logs-tab.description',
+		defaultMessage:
+			'Read the instance’s live logs to trace crashes and errors without digging through files.',
+	},
 	labTitle: {
 		id: 'app.onboarding.lab.title',
 		defaultMessage: 'Useful tools, built in',
@@ -509,15 +545,29 @@ export const onboardingTours: Record<OnboardingMode, OnboardingStep[]> = {
 			onboardingMessages.instanceActionsTitle,
 			onboardingMessages.instanceActionsDescription,
 		),
-		step(
-			'instance-tabs',
-			'inspect',
-			copy(
-				onboardingMessages.instanceTabsTitle,
-				onboardingMessages.instanceTabsDescription,
-				onboardingMessages.finishArea,
-			),
-			{ targetId: 'instance-tabs' },
+		inspect(
+			'instance-content-tab',
+			'instance-tab-content',
+			onboardingMessages.instanceContentTabTitle,
+			onboardingMessages.instanceContentTabDescription,
+		),
+		inspect(
+			'instance-files-tab',
+			'instance-tab-files',
+			onboardingMessages.instanceFilesTabTitle,
+			onboardingMessages.instanceFilesTabDescription,
+		),
+		inspect(
+			'instance-worlds-tab',
+			'instance-tab-worlds',
+			onboardingMessages.instanceWorldsTabTitle,
+			onboardingMessages.instanceWorldsTabDescription,
+		),
+		inspect(
+			'instance-logs-tab',
+			'instance-tab-logs',
+			onboardingMessages.instanceLogsTabTitle,
+			onboardingMessages.instanceLogsTabDescription,
 		),
 	],
 }

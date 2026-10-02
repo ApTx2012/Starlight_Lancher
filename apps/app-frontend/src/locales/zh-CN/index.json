@@ -5995,6 +5995,30 @@
   "app.onboarding.instance-actions.title": {
     "message": "主操作台"
   },
+  "app.onboarding.instance-content-tab.title": {
+    "message": "内容"
+  },
+  "app.onboarding.instance-content-tab.description": {
+    "message": "在这里管理实例的 Mod、资源包与光影。可搜索、启用或禁用条目、检查更新，也能继续浏览安装新内容。"
+  },
+  "app.onboarding.instance-files-tab.title": {
+    "message": "文件"
+  },
+  "app.onboarding.instance-files-tab.description": {
+    "message": "浏览实例目录，用内置编辑器直接打开配置文件或日志，无需离开启动器。"
+  },
+  "app.onboarding.instance-worlds-tab.title": {
+    "message": "世界"
+  },
+  "app.onboarding.instance-worlds-tab.description": {
+    "message": "管理存档世界：备份、重命名、编辑世界设置，或打开世界所在文件夹。"
+  },
+  "app.onboarding.instance-logs-tab.title": {
+    "message": "日志"
+  },
+  "app.onboarding.instance-logs-tab.description": {
+    "message": "查看实例的实时日志，排查崩溃与报错，不必再翻找文件。"
+  },
   "app.onboarding.instance-tabs.description": {
     "message": "内容、文件、截图、世界和日志都在这些标签里。乱中有序。"
   },
