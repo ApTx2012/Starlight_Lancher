@@ -509,6 +509,20 @@ fn main() {
                         "instance_edit_icon",
                         "instance_export_mrpack",
                         "instance_get_pack_export_candidates",
+                        "instance_list_screenshots",
+                        "instance_list_all_screenshots",
+                        "instance_list_synced_screenshots",
+                        "instance_save_edited_screenshot",
+                        "instance_list_screenshot_groups",
+                        "instance_create_screenshot_group",
+                        "instance_rename_screenshot_group",
+                        "instance_delete_screenshot_group",
+                        "instance_set_screenshot_group_memberships",
+                        "instance_import_screenshot_groups",
+                        "instance_delete_screenshots",
+                        "instance_export_screenshots",
+                        "instance_move_screenshots",
+                        "instance_open_screenshot",
                     ])
                     .default_permission(
                         DefaultPermissionRule::AllowAllCommands,
@@ -525,6 +539,7 @@ fn main() {
                         "proxy_get",
                         "proxy_set",
                         "proxy_test",
+                        "set_ui_scale",
                     ])
                     .default_permission(
                         DefaultPermissionRule::AllowAllCommands,
@@ -670,6 +685,7 @@ fn main() {
                         "file_save_as",
                         "file_read_dragged_file",
                         "screenshot_thumbnail",
+                        "instance_icon_thumbnail",
                         "studio_read_text",
                         "studio_read_binary",
                         "studio_write_binary",
