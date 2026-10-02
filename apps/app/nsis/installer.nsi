@@ -650,6 +650,15 @@ Function PageLeaveOptions
     Abort
   ${EndIf}
 
+  ; 若安装位置被选在盘符根目录（如 E:\），自动在其下创建 Starlight 子目录，
+  ; 避免启动器文件直接散落在根目录。用户选的具体子目录不受影响。
+  ${GetRoot} "$INSTDIR" $0
+  StrCpy $1 "$0" -1
+  ${If} "$INSTDIR" == "$1"
+    StrCpy $INSTDIR "$INSTDIR\Starlight"
+    ${NSD_SetText} $InstallDirInput $INSTDIR
+  ${EndIf}
+
   ${NSD_GetState} $DesktopShortcutCheckbox $DesktopShortcutState
 
   ${If} $FreshInstall <> 1
