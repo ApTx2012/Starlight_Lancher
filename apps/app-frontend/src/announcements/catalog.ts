@@ -33,6 +33,53 @@ export const ANNOUNCEMENT_CHANGE_TYPES: readonly AnnouncementChangeType[] = [
 
 export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 	{
+		id: 'launcher-1.0.1-beta10',
+		version: '1.0.1-beta10',
+		publishedAt: '2026-10-02',
+		title: {
+			'en-US': 'Starlight Launcher 1.0.1-beta10',
+			'zh-CN': 'Starlight Launcher 1.0.1-beta10',
+		},
+		changes: {
+			added: [
+				{
+					'en-US': 'Reworked the instance-page tour into four steps covering content, files, worlds, and logs.',
+					'zh-CN': '重做实例页导览，分为内容、文件、世界、日志四步。',
+				},
+				{
+					'en-US': 'When the install location is a drive root, the installer now creates a Starlight subfolder automatically.',
+					'zh-CN': '安装位置选到盘符根目录时，安装器会自动创建 Starlight 子文件夹。',
+				},
+			],
+			fixed: [
+				{
+					'en-US': 'Fixed the launcher UI scale reverting after a restart.',
+					'zh-CN': '修复启动器界面缩放重启后恢复原状的问题。',
+				},
+				{
+					'en-US': 'Fixed developer feature flags not saving.',
+					'zh-CN': '修复开发者功能开关无法保存的问题。',
+				},
+				{
+					'en-US': 'Fixed instance group edits not saving for instances without an applied content set.',
+					'zh-CN': '修复没有应用内容集的实例无法保存分组修改的问题。',
+				},
+				{
+					'en-US': 'Fixed the launcher crashing on startup when feature flags were out of sync between the frontend and backend.',
+					'zh-CN': '修复前后端功能开关不同步导致启动器启动崩溃的问题。',
+				},
+				{
+					'en-US': 'Fixed being unable to copy text inside the embedded skin site.',
+					'zh-CN': '修复内嵌皮肤站中无法复制文本的问题。',
+				},
+				{
+					'en-US': 'Fixed the onboarding prompt not dismissing when clicking anywhere.',
+					'zh-CN': '修复导览提示点击任意位置无法关闭的问题。',
+				},
+			],
+		},
+	},
+	{
 		id: 'launcher-1.0.1-beta9',
 		version: '1.0.1-beta9',
 		publishedAt: '2026-10-02',
