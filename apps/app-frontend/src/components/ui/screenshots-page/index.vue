@@ -21,7 +21,6 @@ import {
 import {
 	Avatar,
 	Button,
-	type ButtonMenuOption,
 	type ComboboxOption,
 	commonMessages,
 	ConfirmModal,
@@ -1038,7 +1037,6 @@ function activateScreenshot(screenshot: InstanceScreenshot, event: MouseEvent | 
 		(candidate) => getSelectionKey(candidate) === getSelectionKey(screenshot),
 	)
 	if (index >= 0) {
-		screenshotOptionsMenu.value?.close()
 		imageViewer.value?.show(index)
 	}
 }
@@ -1055,44 +1053,34 @@ function requestDelete(screenshot: InstanceScreenshot, fromPreview = false) {
 
 function showScreenshotOptions(screenshot: InstanceScreenshot, event: MouseEvent) {
 	screenshotOptionsTarget.value = screenshot
-	const options: ButtonMenuOption[] = [
-		...(event.type === 'contextmenu'
-			? [
-					{
-						id: 'edit',
-						label: formatMessage(messages.edit),
-						icon: EditIcon,
-						action: () => editScreenshot(screenshot),
-					},
-					{
-						id: 'copy',
-						label: formatMessage(messages.copy),
-						icon: ClipboardCopyIcon,
-						action: () => void copyScreenshot(screenshot),
-					},
-				]
-			: []),
-		{
-			id: 'open',
-			label: formatMessage(messages.showInFolder),
-			icon: FolderOpenIcon,
-			action: () => void openScreenshot(screenshot),
-		},
-		{
-			id: 'go-to-instance',
-			label: formatMessage(messages.goToInstance),
-			action: () => void goToInstance(screenshot),
-		},
+	const options = [
+		...(event.type === 'contextmenu' ? [{ name: 'edit' }, { name: 'copy' }] : []),
+		{ name: 'open' },
+		{ name: 'go-to-instance' },
 		{ type: 'divider' },
-		{
-			id: 'delete',
-			label: formatMessage(commonMessages.deleteLabel),
-			icon: TrashIcon,
-			tone: 'red',
-			action: () => requestDelete(screenshot),
-		},
+		{ name: 'delete', color: 'danger' },
 	]
-	screenshotOptionsMenu.value?.open(event, options)
+	screenshotOptionsMenu.value?.showMenu(event, screenshot, options)
+}
+
+function handleScreenshotOptionClicked({ item, option }: { item: InstanceScreenshot; option: string }) {
+	switch (option) {
+		case 'edit':
+			editScreenshot(item)
+			break
+		case 'copy':
+			void copyScreenshot(item)
+			break
+		case 'open':
+			void openScreenshot(item)
+			break
+		case 'go-to-instance':
+			void goToInstance(item)
+			break
+		case 'delete':
+			requestDelete(item)
+			break
+	}
 }
 
 function goToInstance(screenshot: InstanceScreenshot) {
@@ -1128,7 +1116,6 @@ function editScreenshot(screenshot: InstanceScreenshot) {
 		(candidate) => getSelectionKey(candidate) === getSelectionKey(screenshot),
 	)
 	if (index >= 0) {
-		screenshotOptionsMenu.value?.close()
 		void imageViewer.value?.edit(index)
 	}
 }
@@ -1426,7 +1413,23 @@ onBeforeUnmount(() => {
 		:markdown="false"
 		@proceed="deleteCustomGroup"
 	/>
-	<ContextMenu ref="screenshotOptionsMenu" :label="formatMessage(commonMessages.actionsLabel)">
+	<ContextMenu
+		ref="screenshotOptionsMenu"
+		:label="formatMessage(commonMessages.actionsLabel)"
+		@option-clicked="handleScreenshotOptionClicked"
+	>
+		<template #edit>
+			<EditIcon />
+			{{ formatMessage(messages.edit) }}
+		</template>
+		<template #copy>
+			<ClipboardCopyIcon />
+			{{ formatMessage(messages.copy) }}
+		</template>
+		<template #open>
+			<FolderOpenIcon />
+			{{ formatMessage(messages.showInFolder) }}
+		</template>
 		<template #go-to-instance>
 			<Avatar
 				:src="getInstanceIconUrl(screenshotOptionsInstance?.icon_path)"
@@ -1436,6 +1439,10 @@ onBeforeUnmount(() => {
 				class="shrink-0"
 			/>
 			{{ formatMessage(messages.goToInstance) }}
+		</template>
+		<template #delete>
+			<TrashIcon />
+			{{ formatMessage(commonMessages.deleteLabel) }}
 		</template>
 	</ContextMenu>
 	<ImageViewerEditor

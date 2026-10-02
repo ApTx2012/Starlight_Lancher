@@ -10680,5 +10680,8 @@
   },
   "app.starlight-skin.frame-title": {
     "message": "StarLight 皮肤站"
+  },
+  "app.navigation.screenshots": {
+    "message": "截图"
   }
 }

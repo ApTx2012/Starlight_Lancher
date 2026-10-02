@@ -9922,5 +9922,8 @@
   },
   "unknown-pack-warning-modal.warning.title": {
     "message": "Unknown file warning"
+  },
+  "app.navigation.screenshots": {
+    "message": "Screenshots"
   }
 }
