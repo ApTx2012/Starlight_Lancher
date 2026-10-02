@@ -120,6 +120,7 @@ pub struct State {
     pub(crate) install_job_cancellations: DashMap<Uuid, CancellationToken>,
     pub(crate) install_job_operation_locks:
         DashMap<Uuid, Arc<AsyncMutex<InstallJobOperationState>>>,
+    pub(crate) screenshot_locks: DashMap<String, Arc<AsyncMutex<()>>>,
 
     /// Process manager
     pub process_manager: ProcessManager,
@@ -904,6 +905,7 @@ impl State {
             install_db_semaphore: Semaphore::new(1),
             install_job_cancellations: DashMap::new(),
             install_job_operation_locks: DashMap::new(),
+            screenshot_locks: DashMap::new(),
             process_manager,
             friends_socket,
             restart_after_pending_update: AtomicBool::new(false),
@@ -930,6 +932,18 @@ impl State {
         instance_id: &str,
     ) -> InstanceLockGuard {
         self.instance_locks.lock_exclusive(instance_id).await
+    }
+
+    pub(crate) async fn lock_instance_screenshots(
+        &self,
+        instance_id: &str,
+    ) -> tokio::sync::OwnedMutexGuard<()> {
+        self.screenshot_locks
+            .entry(instance_id.to_string())
+            .or_insert_with(|| Arc::new(AsyncMutex::new(())))
+            .clone()
+            .lock_owned()
+            .await
     }
 }
 
@@ -971,6 +985,7 @@ pub(crate) async fn test_state(
         install_db_semaphore: Semaphore::new(1),
         install_job_cancellations: DashMap::new(),
         install_job_operation_locks: DashMap::new(),
+        screenshot_locks: DashMap::new(),
         process_manager: ProcessManager::new(),
         friends_socket: FriendsSocket::new(),
         restart_after_pending_update: AtomicBool::new(false),

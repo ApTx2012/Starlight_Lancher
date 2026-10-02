@@ -10458,5 +10458,227 @@
   },
   "app.settings.about.easteregg.game-title": {
     "message": "彩蛋小游戏"
+  },
+  "app.home.launch-progress.empty": {
+    "message": "启动游戏后，这里会显示进度。"
+  },
+  "app.home.launch-progress.title": {
+    "message": "启动进度"
+  },
+  "app.screenshots.copied": {
+    "message": "已复制"
+  },
+  "app.screenshots.copy": {
+    "message": "复制图像"
+  },
+  "app.screenshots.delete-description": {
+    "message": "永久删除 {name}？此操作无法撤销。"
+  },
+  "app.screenshots.delete-success": {
+    "message": "截图已删除"
+  },
+  "app.screenshots.delete-title": {
+    "message": "删除截图"
+  },
+  "app.screenshots.deselect": {
+    "message": "取消选择 {name}"
+  },
+  "app.screenshots.edit": {
+    "message": "编辑截图"
+  },
+  "app.screenshots.empty-description": {
+    "message": "你在游戏中拍摄的截图会显示在这里。"
+  },
+  "app.screenshots.empty-heading": {
+    "message": "还没有截图"
+  },
+  "app.screenshots.error-heading": {
+    "message": "加载截图失败"
+  },
+  "app.screenshots.go-to-instance": {
+    "message": "前往实例"
+  },
+  "app.screenshots.group-by": {
+    "message": "分组方式"
+  },
+  "app.screenshots.group.all-screenshots": {
+    "message": "全部截图"
+  },
+  "app.screenshots.group.collapse": {
+    "message": "折叠分组"
+  },
+  "app.screenshots.group.custom": {
+    "message": "自定义分组"
+  },
+  "app.screenshots.group.date": {
+    "message": "日期"
+  },
+  "app.screenshots.group.delete": {
+    "message": "删除分组"
+  },
+  "app.screenshots.group.delete-description": {
+    "message": "此分组中的截图将变为未分组。"
+  },
+  "app.screenshots.group.edit": {
+    "message": "编辑分组名称"
+  },
+  "app.screenshots.group.empty": {
+    "message": "拖放以添加截图。"
+  },
+  "app.screenshots.group.expand": {
+    "message": "展开分组"
+  },
+  "app.screenshots.group.instance": {
+    "message": "实例"
+  },
+  "app.screenshots.group.new": {
+    "message": "新建分组"
+  },
+  "app.screenshots.group.none": {
+    "message": "不分组"
+  },
+  "app.screenshots.group.this-month": {
+    "message": "本月"
+  },
+  "app.screenshots.group.this-week": {
+    "message": "本周"
+  },
+  "app.screenshots.group.today": {
+    "message": "今天"
+  },
+  "app.screenshots.group.ungrouped": {
+    "message": "未分组"
+  },
+  "app.screenshots.group.yesterday": {
+    "message": "昨天"
+  },
+  "app.screenshots.heading": {
+    "message": "截图"
+  },
+  "app.screenshots.more-actions": {
+    "message": "更多操作"
+  },
+  "app.screenshots.no-results-description": {
+    "message": "请尝试其他搜索或筛选条件。"
+  },
+  "app.screenshots.no-results-heading": {
+    "message": "没有匹配的截图"
+  },
+  "app.screenshots.preview.instance-and-date": {
+    "message": "{instance} · {date}"
+  },
+  "app.screenshots.search": {
+    "message": "搜索"
+  },
+  "app.screenshots.select": {
+    "message": "选择 {name}"
+  },
+  "app.screenshots.selection.aria-label": {
+    "message": "已选中的截图"
+  },
+  "app.screenshots.selection.delete-description": {
+    "message": "删除 {count, plural, one {# 张截图} other {# 张截图}}？此操作无法撤销。"
+  },
+  "app.screenshots.selection.delete-success": {
+    "message": "{count, plural, one {已删除 # 张截图} other {已删除 # 张截图}}"
+  },
+  "app.screenshots.selection.delete-title": {
+    "message": "删除选中的截图"
+  },
+  "app.screenshots.selection.export-zip": {
+    "message": "导出 ZIP"
+  },
+  "app.screenshots.selection.global-export-filename": {
+    "message": "Modrinth screenshots.zip"
+  },
+  "app.screenshots.selection.instance-export-filename": {
+    "message": "{instance} screenshots.zip"
+  },
+  "app.screenshots.selection.remove-from-group": {
+    "message": "从分组中移除"
+  },
+  "app.screenshots.selection.selected-count": {
+    "message": "已选中 {count} 张"
+  },
+  "app.screenshots.selection.zip-archive": {
+    "message": "ZIP 压缩包"
+  },
+  "app.screenshots.show-in-folder": {
+    "message": "在文件夹中显示"
+  },
+  "app.screenshots.sort-by": {
+    "message": "排序方式"
+  },
+  "app.screenshots.sort.name": {
+    "message": "名称"
+  },
+  "app.screenshots.sort.newest": {
+    "message": "最新"
+  },
+  "app.screenshots.sort.oldest": {
+    "message": "最旧"
+  },
+  "app.settings.about.copyright": {
+    "message": "版权所有 © StarLight 保留所有权利。"
+  },
+  "app.settings.about.game.best": {
+    "message": "最佳：{score}"
+  },
+  "app.settings.about.game.best-label": {
+    "message": "最佳"
+  },
+  "app.settings.about.game.completed": {
+    "message": "下界之星！"
+  },
+  "app.settings.about.game.exit": {
+    "message": "退出游戏"
+  },
+  "app.settings.about.game.game-over": {
+    "message": "群星坠落！"
+  },
+  "app.settings.about.game.highest-level": {
+    "message": "最高：等级 {level}"
+  },
+  "app.settings.about.game.level-label": {
+    "message": "最高等级"
+  },
+  "app.settings.about.game.new-record": {
+    "message": "新纪录！"
+  },
+  "app.settings.about.game.overtime": {
+    "message": "涨潮！"
+  },
+  "app.settings.about.game.overtime-detail": {
+    "message": "潮水涌回——继续合成！"
+  },
+  "app.settings.about.game.overtimes-label": {
+    "message": "加时次数"
+  },
+  "app.settings.about.game.restart": {
+    "message": "重新开始"
+  },
+  "app.settings.about.game.score": {
+    "message": "得分：{score}"
+  },
+  "app.settings.about.game.score-label": {
+    "message": "得分"
+  },
+  "app.settings.about.game.settle": {
+    "message": "稳定"
+  },
+  "app.settings.about.game.settle-title": {
+    "message": "本局已稳定！"
+  },
+  "app.settings.about.game.tap-to-drop": {
+    "message": "点击投放一颗星"
+  },
+  "app.settings.about.game.tide-hint": {
+    "message": "天空正在坠落——继续合成！"
+  },
+  "app.settings.about.game.title": {
+    "message": "Starlight 合成"
+  },
+  "app.starlight-skin.frame-title": {
+    "message": "StarLight 皮肤站"
   }
 }

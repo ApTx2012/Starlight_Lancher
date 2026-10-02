@@ -4639,5 +4639,110 @@
   },
   "drop.confirm.as-data-pack-desc": {
     "defaultMessage": "将数据包安装到存档"
+  },
+  "image-viewer.close": {
+    "defaultMessage": "关闭"
+  },
+  "image-viewer.edit": {
+    "defaultMessage": "编辑"
+  },
+  "image-viewer.editor.colour": {
+    "defaultMessage": "颜色"
+  },
+  "image-viewer.editor.crop.dimensions": {
+    "defaultMessage": "{width} × {height} 像素"
+  },
+  "image-viewer.editor.crop.reset": {
+    "defaultMessage": "重置裁剪"
+  },
+  "image-viewer.editor.delete-selection": {
+    "defaultMessage": "删除选中的标注"
+  },
+  "image-viewer.editor.eraser.area": {
+    "defaultMessage": "区域"
+  },
+  "image-viewer.editor.eraser.element": {
+    "defaultMessage": "元素"
+  },
+  "image-viewer.editor.eraser.mode": {
+    "defaultMessage": "橡皮擦模式"
+  },
+  "image-viewer.editor.image-editing-tools": {
+    "defaultMessage": "图像编辑工具"
+  },
+  "image-viewer.editor.more-save-options": {
+    "defaultMessage": "更多保存选项"
+  },
+  "image-viewer.editor.overwrite": {
+    "defaultMessage": "覆盖"
+  },
+  "image-viewer.editor.redo": {
+    "defaultMessage": "重做"
+  },
+  "image-viewer.editor.save-as-new": {
+    "defaultMessage": "保存副本"
+  },
+  "image-viewer.editor.save-image": {
+    "defaultMessage": "保存图像"
+  },
+  "image-viewer.editor.size": {
+    "defaultMessage": "大小"
+  },
+  "image-viewer.editor.tool.arrow": {
+    "defaultMessage": "箭头"
+  },
+  "image-viewer.editor.tool.censor": {
+    "defaultMessage": "打码"
+  },
+  "image-viewer.editor.tool.crop": {
+    "defaultMessage": "裁剪"
+  },
+  "image-viewer.editor.tool.ellipse": {
+    "defaultMessage": "椭圆"
+  },
+  "image-viewer.editor.tool.eraser": {
+    "defaultMessage": "橡皮擦"
+  },
+  "image-viewer.editor.tool.highlight": {
+    "defaultMessage": "高亮"
+  },
+  "image-viewer.editor.tool.pen": {
+    "defaultMessage": "画笔"
+  },
+  "image-viewer.editor.tool.rectangle": {
+    "defaultMessage": "矩形"
+  },
+  "image-viewer.editor.tool.select": {
+    "defaultMessage": "选择"
+  },
+  "image-viewer.editor.tool.text": {
+    "defaultMessage": "文字"
+  },
+  "image-viewer.editor.undo": {
+    "defaultMessage": "撤销"
+  },
+  "image-viewer.editor.width": {
+    "defaultMessage": "宽度"
+  },
+  "image-viewer.editor.zoom-fit": {
+    "defaultMessage": "适应"
+  },
+  "image-viewer.editor.zoom-fit-workspace": {
+    "defaultMessage": "适应工作区"
+  },
+  "image-viewer.editor.zoom-in": {
+    "defaultMessage": "放大"
+  },
+  "image-viewer.editor.zoom-out": {
+    "defaultMessage": "缩小"
+  },
+  "image-viewer.metadata": {
+    "defaultMessage": "{size} · {width} × {height} 像素"
+  },
+  "image-viewer.next": {
+    "defaultMessage": "下一张图像"
+  },
+  "image-viewer.previous": {
+    "defaultMessage": "上一张图像"
   }
 }

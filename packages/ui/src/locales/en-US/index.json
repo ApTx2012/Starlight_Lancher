@@ -305,6 +305,12 @@
   "console.action.share": {
     "defaultMessage": "Share"
   },
+  "console.command-completions.no-results": {
+    "defaultMessage": "No matching completions"
+  },
+  "console.command-completions.search": {
+    "defaultMessage": "Search command completions"
+  },
   "console.command.disabled-placeholder": {
     "defaultMessage": "Command input disabled"
   },
@@ -313,12 +319,6 @@
   },
   "console.command.server-not-running-placeholder": {
     "defaultMessage": "Server is not running"
-  },
-  "console.command-completions.no-results": {
-    "defaultMessage": "No matching completions"
-  },
-  "console.command-completions.search": {
-    "defaultMessage": "Search command completions"
   },
   "console.crash.export-context": {
     "defaultMessage": "Export crash context"
@@ -860,6 +860,12 @@
   "content.diff-modal.updated-count": {
     "defaultMessage": "{count} updated"
   },
+  "content.filter.client-only": {
+    "defaultMessage": "Client only"
+  },
+  "content.filter.client-only-description": {
+    "defaultMessage": "Includes client-only or singleplayer-only mods and mods that depend on them. These may be incompatible with dedicated servers."
+  },
   "content.filter.disabled": {
     "defaultMessage": "Disabled"
   },
@@ -871,15 +877,6 @@
   },
   "content.filter.updates": {
     "defaultMessage": "Update available"
-  },
-  "content.filter.client-only": {
-    "defaultMessage": "Client only"
-  },
-  "content.filter.client-only-description": {
-    "defaultMessage": "Includes client-only or singleplayer-only mods and mods that depend on them. These may be incompatible with dedicated servers."
-  },
-  "content.filter.warnings": {
-    "defaultMessage": "Warnings"
   },
   "content.metadata-filter.author": {
     "defaultMessage": "Author"
@@ -968,15 +965,6 @@
   "content.metadata-filter.source.shared-instance": {
     "defaultMessage": "Shared instance"
   },
-  "content.metadata-filter.state": {
-    "defaultMessage": "Status"
-  },
-  "content.metadata-filter.state.disabled": {
-    "defaultMessage": "Disabled"
-  },
-  "content.metadata-filter.state.enabled": {
-    "defaultMessage": "Enabled"
-  },
   "content.metadata-filter.toggle": {
     "defaultMessage": "Filter"
   },
@@ -985,15 +973,6 @@
   },
   "content.metadata-filter.unknown": {
     "defaultMessage": "Unknown"
-  },
-  "content.metadata-filter.update.available": {
-    "defaultMessage": "Update available"
-  },
-  "content.metadata-filter.update.up-to-date": {
-    "defaultMessage": "Up to date"
-  },
-  "content.metadata-filter.updates": {
-    "defaultMessage": "Updates"
   },
   "content.page-layout.browse-content": {
     "defaultMessage": "Browse content"
@@ -2081,6 +2060,111 @@
   "icon-select.select": {
     "defaultMessage": "Select icon"
   },
+  "image-viewer.close": {
+    "defaultMessage": "Close"
+  },
+  "image-viewer.edit": {
+    "defaultMessage": "Edit"
+  },
+  "image-viewer.editor.colour": {
+    "defaultMessage": "Colour"
+  },
+  "image-viewer.editor.crop.dimensions": {
+    "defaultMessage": "{width} × {height} px"
+  },
+  "image-viewer.editor.crop.reset": {
+    "defaultMessage": "Reset crop"
+  },
+  "image-viewer.editor.delete-selection": {
+    "defaultMessage": "Delete selected annotation"
+  },
+  "image-viewer.editor.eraser.area": {
+    "defaultMessage": "Area"
+  },
+  "image-viewer.editor.eraser.element": {
+    "defaultMessage": "Element"
+  },
+  "image-viewer.editor.eraser.mode": {
+    "defaultMessage": "Eraser mode"
+  },
+  "image-viewer.editor.image-editing-tools": {
+    "defaultMessage": "Image editing tools"
+  },
+  "image-viewer.editor.more-save-options": {
+    "defaultMessage": "More save options"
+  },
+  "image-viewer.editor.overwrite": {
+    "defaultMessage": "Overwrite"
+  },
+  "image-viewer.editor.redo": {
+    "defaultMessage": "Redo"
+  },
+  "image-viewer.editor.save-as-new": {
+    "defaultMessage": "Save copy"
+  },
+  "image-viewer.editor.save-image": {
+    "defaultMessage": "Save image"
+  },
+  "image-viewer.editor.size": {
+    "defaultMessage": "Size"
+  },
+  "image-viewer.editor.tool.arrow": {
+    "defaultMessage": "Arrow"
+  },
+  "image-viewer.editor.tool.censor": {
+    "defaultMessage": "Censor"
+  },
+  "image-viewer.editor.tool.crop": {
+    "defaultMessage": "Crop"
+  },
+  "image-viewer.editor.tool.ellipse": {
+    "defaultMessage": "Ellipse"
+  },
+  "image-viewer.editor.tool.eraser": {
+    "defaultMessage": "Eraser"
+  },
+  "image-viewer.editor.tool.highlight": {
+    "defaultMessage": "Highlight"
+  },
+  "image-viewer.editor.tool.pen": {
+    "defaultMessage": "Pen"
+  },
+  "image-viewer.editor.tool.rectangle": {
+    "defaultMessage": "Rectangle"
+  },
+  "image-viewer.editor.tool.select": {
+    "defaultMessage": "Select"
+  },
+  "image-viewer.editor.tool.text": {
+    "defaultMessage": "Text"
+  },
+  "image-viewer.editor.undo": {
+    "defaultMessage": "Undo"
+  },
+  "image-viewer.editor.width": {
+    "defaultMessage": "Width"
+  },
+  "image-viewer.editor.zoom-fit": {
+    "defaultMessage": "Fit"
+  },
+  "image-viewer.editor.zoom-fit-workspace": {
+    "defaultMessage": "Fit to workspace"
+  },
+  "image-viewer.editor.zoom-in": {
+    "defaultMessage": "Zoom in"
+  },
+  "image-viewer.editor.zoom-out": {
+    "defaultMessage": "Zoom out"
+  },
+  "image-viewer.metadata": {
+    "defaultMessage": "{size} · {width} × {height} px"
+  },
+  "image-viewer.next": {
+    "defaultMessage": "Next image"
+  },
+  "image-viewer.previous": {
+    "defaultMessage": "Previous image"
+  },
   "input.search-version.placeholder": {
     "defaultMessage": "Search version..."
   },
@@ -2537,18 +2621,6 @@
   "label.no-items": {
     "defaultMessage": "No items"
   },
-  "notification.panel.copy": {
-    "defaultMessage": "Copy to clipboard"
-  },
-  "notification.panel.copy-support": {
-    "defaultMessage": "Copy error details for support"
-  },
-  "notification.panel.dismiss": {
-    "defaultMessage": "Dismiss"
-  },
-  "notification.panel.export-error-logs": {
-    "defaultMessage": "Export error logs"
-  },
   "label.notifications": {
     "defaultMessage": "Notifications"
   },
@@ -2938,6 +3010,18 @@
   },
   "notification.error.title": {
     "defaultMessage": "An error occurred"
+  },
+  "notification.panel.copy": {
+    "defaultMessage": "Copy to clipboard"
+  },
+  "notification.panel.copy-support": {
+    "defaultMessage": "Copy error details for support"
+  },
+  "notification.panel.dismiss": {
+    "defaultMessage": "Dismiss"
+  },
+  "notification.panel.export-error-logs": {
+    "defaultMessage": "Export error logs"
   },
   "omorphia.component.badge.label.accepted": {
     "defaultMessage": "Accepted"

@@ -63,6 +63,9 @@ const allowedUntranslatedMessages = new Set([
 	'> {command}',
 	'Beta',
 	'Release',
+	'{instance} · {date}',
+	'Modrinth screenshots.zip',
+	'{instance} screenshots.zip',
 ])
 
 function messageText(value) {
