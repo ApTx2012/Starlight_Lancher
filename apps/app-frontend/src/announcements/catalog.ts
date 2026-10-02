@@ -71,6 +71,7 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 			],
 		},
 	},
+	{
 		id: 'launcher-1.0.1-beta6',
 		version: '1.0.1-beta6',
 		publishedAt: '2026-10-01',
