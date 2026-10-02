@@ -145,6 +145,10 @@ pub struct Settings {
     #[serde(default = "default_ui_scale")]
     pub ui_scale: f64,
     #[serde(default)]
+    pub ui_font: Option<String>,
+    #[serde(default)]
+    pub mono_font: Option<String>,
+    #[serde(default)]
     pub close_behavior: String,
     #[serde(default)]
     pub auto_hide_downloads_button: bool,
@@ -289,6 +293,8 @@ impl Settings {
                 json(home_widgets) as \"home_widgets?: String\", auto_hide_downloads_button,
                 json(terracotta_public_nodes) terracotta_public_nodes,
                 ui_scale,
+                ui_font,
+                mono_font,
                 version
             FROM settings
             "
@@ -362,6 +368,8 @@ impl Settings {
             transparent_background_blur: res.transparent_background_blur == 1,
             sidebar_instance_count: res.sidebar_instance_count as u32,
             ui_scale: res.ui_scale,
+            ui_font: res.ui_font,
+            mono_font: res.mono_font,
             close_behavior,
             auto_hide_downloads_button: res.auto_hide_downloads_button == 1,
             home_layout: HomeLayout::from_string(&res.home_layout),
@@ -663,6 +671,14 @@ impl Settings {
         .await?;
         sqlx::query("UPDATE settings SET ui_scale = ? WHERE id = 0")
             .bind(self.ui_scale)
+            .execute(exec)
+            .await?;
+        sqlx::query("UPDATE settings SET ui_font = ? WHERE id = 0")
+            .bind(&self.ui_font)
+            .execute(exec)
+            .await?;
+        sqlx::query("UPDATE settings SET mono_font = ? WHERE id = 0")
+            .bind(&self.mono_font)
             .execute(exec)
             .await?;
         Ok(())
