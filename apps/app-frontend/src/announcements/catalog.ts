@@ -33,6 +33,39 @@ export const ANNOUNCEMENT_CHANGE_TYPES: readonly AnnouncementChangeType[] = [
 
 export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 	{
+		id: 'launcher-1.0.1-beta8',
+		version: '1.0.1-beta8',
+		publishedAt: '2026-10-02',
+		title: {
+			'en-US': 'Starlight Launcher 1.0.1-beta8',
+			'zh-CN': 'Starlight Launcher 1.0.1-beta8',
+		},
+		changes: {
+			fixed: [
+				{
+					'en-US':
+						'Fixed the sidebar navigation entries breaking after the screenshot center was added.',
+					'zh-CN': '修复添加截图中心后侧边栏导航项损坏的问题。',
+				},
+				{
+					'en-US':
+						'Fixed being unable to install the StarLight hosted pack even after signing in (missing command permission).',
+					'zh-CN': '修复登录后仍无法安装 StarLight 实例的问题（命令权限缺失）。',
+				},
+				{
+					'en-US':
+						'Fixed the launcher UI scaling not applying when changed (missing command permission).',
+					'zh-CN': '修复修改启动器界面缩放后不生效的问题（命令权限缺失）。',
+				},
+				{
+					'en-US':
+						'Fixed several screenshot center actions failing due to missing command permissions.',
+					'zh-CN': '修复截图中心部分操作因命令权限缺失而失败的问题。',
+				},
+			],
+		},
+	},
+	{
 		id: 'launcher-1.0.1-beta7',
 		version: '1.0.1-beta7',
 		publishedAt: '2026-10-02',
