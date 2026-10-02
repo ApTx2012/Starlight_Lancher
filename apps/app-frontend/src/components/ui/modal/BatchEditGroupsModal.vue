@@ -61,6 +61,7 @@ import {
 	ButtonStyled,
 	commonMessages,
 	defineMessages,
+	injectNotificationManager,
 	NewModal,
 	RadioButtons,
 	StyledInput,
@@ -72,6 +73,7 @@ import { edit, list } from '@/helpers/instance'
 import type { GameInstance } from '@/helpers/types'
 
 const { formatMessage } = useVIntl()
+const { handleError } = injectNotificationManager()
 
 const props = defineProps<{
 	instanceIds: string[]
@@ -148,7 +150,7 @@ async function deleteGroup(group: string) {
 	for (const instance of allInstances.value) {
 		if (instance.groups.includes(group)) {
 			const newGroups = instance.groups.filter((g) => g !== group)
-			await edit(instance.id, { groups: newGroups }).catch(() => {})
+			await edit(instance.id, { groups: newGroups }).catch(handleError)
 			instance.groups = newGroups
 		}
 	}
@@ -167,7 +169,7 @@ async function confirm() {
 	const groups = selectedGroup.value ? [selectedGroup.value.trim().substring(0, 32)] : []
 
 	for (const instanceId of props.instanceIds) {
-		await edit(instanceId, { groups }).catch(() => {})
+		await edit(instanceId, { groups }).catch(handleError)
 	}
 
 	emit('applied')
