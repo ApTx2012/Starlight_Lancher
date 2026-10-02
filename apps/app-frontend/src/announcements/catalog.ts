@@ -33,6 +33,24 @@ export const ANNOUNCEMENT_CHANGE_TYPES: readonly AnnouncementChangeType[] = [
 
 export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 	{
+		id: 'launcher-1.0.1-beta9',
+		version: '1.0.1-beta9',
+		publishedAt: '2026-10-02',
+		title: {
+			'en-US': 'Starlight Launcher 1.0.1-beta9',
+			'zh-CN': 'Starlight Launcher 1.0.1-beta9',
+		},
+		changes: {
+			fixed: [
+				{
+					'en-US':
+						'Fixed a crash on the minimal home layout caused by an unrecognized multiplayer feature flag (missing backend enum variant).',
+					'zh-CN': '修复多人联机功能开关缺少后端枚举变体、导致精简主页报错的问题。',
+				},
+			],
+		},
+	},
+	{
 		id: 'launcher-1.0.1-beta8',
 		version: '1.0.1-beta8',
 		publishedAt: '2026-10-02',
