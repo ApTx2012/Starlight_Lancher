@@ -143,7 +143,7 @@ import {
 	isNetworkMetered,
 	setRestartAfterPendingUpdate,
 } from '@/helpers/utils.js'
-import { installUiScale, setUiScale, uiScale } from '@/helpers/ui-scale'
+import { installUiScale, setUiScale } from '@/helpers/ui-scale'
 import { start_join_server, start_join_singleplayer_world } from '@/helpers/worlds.ts'
 import i18n, { resolveInitialLocale } from '@/i18n.config'
 import {
@@ -1106,8 +1106,6 @@ async function setupApp() {
 		const resolvedLocale = resolveInitialLocale(navigator.languages)
 		i18n.global.locale.value = resolvedLocale
 		initialSettings.locale = resolvedLocale
-		initialSettings.ui_scale = uiScale.value
-		initialSettings.feature_flags = { ...themeStore.featureFlags }
 		await setSettings(initialSettings)
 	}
 
@@ -1262,9 +1260,7 @@ async function replayOnboarding(mode) {
 
 async function finishOnboarding() {
 	const wasReplay = onboardingReplay.value
-	const settings = onboardingSettings.value ?? (await getSettings())
-	settings.ui_scale = uiScale.value
-	settings.feature_flags = { ...themeStore.featureFlags }
+	const settings = await getSettings()
 	if (!onboardingReplay.value) {
 		if (onboardingMode.value === 'instance') {
 			settings.onboarding_instance_tour_completed = true
