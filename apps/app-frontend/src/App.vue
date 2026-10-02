@@ -1107,6 +1107,7 @@ async function setupApp() {
 		i18n.global.locale.value = resolvedLocale
 		initialSettings.locale = resolvedLocale
 		initialSettings.ui_scale = uiScale.value
+		initialSettings.feature_flags = { ...themeStore.featureFlags }
 		await setSettings(initialSettings)
 	}
 
@@ -1263,6 +1264,7 @@ async function finishOnboarding() {
 	const wasReplay = onboardingReplay.value
 	const settings = onboardingSettings.value ?? (await getSettings())
 	settings.ui_scale = uiScale.value
+	settings.feature_flags = { ...themeStore.featureFlags }
 	if (!onboardingReplay.value) {
 		if (onboardingMode.value === 'instance') {
 			settings.onboarding_instance_tour_completed = true
