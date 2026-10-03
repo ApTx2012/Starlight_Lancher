@@ -3632,6 +3632,7 @@ async fn verify_object(
     Ok(())
 }
 
+#[cfg_attr(not(windows), allow(unused_variables))]
 async fn create_recorded_symlink(
     target: PathBuf,
     link: PathBuf,

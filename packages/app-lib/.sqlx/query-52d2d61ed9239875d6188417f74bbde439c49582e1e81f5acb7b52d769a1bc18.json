@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "\n            SELECT\n                max_concurrent_writes, max_concurrent_downloads,\n                auto_concurrent_downloads, minecraft_metadata_source,\n                minecraft_file_source, modrinth_source, curseforge_source, mojang_auth_source,\n                theme, locale, default_page, collapsed_navigation, hide_nametag_skins_page, advanced_rendering, native_decorations,\n\t\t\t\tdiscord_rpc, developer_mode, telemetry, telemetry_consent_version, personalized_ads,\n                onboarded, onboarding_version, onboarding_instance_tour_completed,\n                json(extra_launch_args) extra_launch_args, json(custom_env_vars) custom_env_vars,\n                mc_memory_max, mc_memory_auto, mc_force_fullscreen, mc_maximize_window, mc_game_resolution_x, mc_game_resolution_y, hide_on_process_start, enter_lightweight_mode_on_game_launch,\n                auto_set_java_high_performance_mode,\n                hook_pre_launch, hook_wrapper, hook_post_exit,\n                custom_dir, prev_custom_dir, migrated, json(feature_flags) feature_flags, toggle_sidebar,\n                skipped_update, pending_update_toast_for_version, auto_download_updates, accent_color,\n                custom_background_path, custom_background_blur, custom_background_opacity,\n                transparent_background, transparent_background_opacity, transparent_background_blur,\n                sidebar_instance_count, home_layout, minimal_home_instance_id,\n                json(home_widgets) as \"home_widgets?: String\", auto_hide_downloads_button,\n                json(terracotta_public_nodes) terracotta_public_nodes,\n                ui_scale,\n                version\n            FROM settings\n            ",
+  "query": "\n            SELECT\n                max_concurrent_writes, max_concurrent_downloads,\n                auto_concurrent_downloads, minecraft_metadata_source,\n                minecraft_file_source, modrinth_source, curseforge_source, mojang_auth_source,\n                theme, locale, default_page, collapsed_navigation, hide_nametag_skins_page, advanced_rendering, native_decorations,\n\t\t\t\tdiscord_rpc, developer_mode, telemetry, telemetry_consent_version, personalized_ads,\n                onboarded, onboarding_version, onboarding_instance_tour_completed,\n                json(extra_launch_args) extra_launch_args, json(custom_env_vars) custom_env_vars,\n                mc_memory_max, mc_memory_auto, mc_force_fullscreen, mc_maximize_window, mc_game_resolution_x, mc_game_resolution_y, hide_on_process_start, enter_lightweight_mode_on_game_launch,\n                auto_set_java_high_performance_mode,\n                hook_pre_launch, hook_wrapper, hook_post_exit,\n                custom_dir, prev_custom_dir, migrated, json(feature_flags) feature_flags, toggle_sidebar,\n                skipped_update, pending_update_toast_for_version, auto_download_updates, accent_color,\n                custom_background_path, custom_background_blur, custom_background_opacity,\n                transparent_background, transparent_background_opacity, transparent_background_blur,\n                sidebar_instance_count, home_layout, minimal_home_instance_id,\n                json(home_widgets) as \"home_widgets?: String\", auto_hide_downloads_button,\n                json(terracotta_public_nodes) terracotta_public_nodes,\n                ui_scale,\n                ui_font,\n                backup_repository_path,\n                mono_font,\n                version\n            FROM settings\n            ",
   "describe": {
     "columns": [
       {
@@ -299,8 +299,23 @@
         "type_info": "Float"
       },
       {
-        "name": "version",
+        "name": "ui_font",
         "ordinal": 59,
+        "type_info": "Text"
+      },
+      {
+        "name": "backup_repository_path",
+        "ordinal": 60,
+        "type_info": "Text"
+      },
+      {
+        "name": "mono_font",
+        "ordinal": 61,
+        "type_info": "Text"
+      },
+      {
+        "name": "version",
+        "ordinal": 62,
         "type_info": "Integer"
       }
     ],
@@ -367,8 +382,11 @@
       false,
       null,
       false,
+      null,
+      null,
+      null,
       false
     ]
   },
-  "hash": "a00177609aec1a056ec47d46d4acd6d1a6244434991d3624b70c7734a2ab85c3"
+  "hash": "52d2d61ed9239875d6188417f74bbde439c49582e1e81f5acb7b52d769a1bc18"
 }

@@ -9,7 +9,36 @@ pub(crate) async fn remove_instance(
     state: &State,
 ) -> crate::Result<()> {
     let _instance_lock = state.lock_instance_content(instance_id).await;
+    let _maintenance_guard =
+        crate::api::instance::lock_instance_maintenance(instance_id).await;
+    crate::api::instance::begin_instance_deletion(instance_id).await?;
 
+    let result = remove_instance_files_and_state(instance_id, state).await;
+
+    match result {
+        Ok(()) => {
+            crate::api::instance::delete_instance_backups(instance_id).await
+        }
+        Err(error) => {
+            if let Err(cancel_error) =
+                crate::api::instance::cancel_instance_deletion(instance_id)
+                    .await
+            {
+                tracing::warn!(
+                    instance_id,
+                    %cancel_error,
+                    "Failed to clear pending backup deletion marker"
+                );
+            }
+            Err(error)
+        }
+    }
+}
+
+async fn remove_instance_files_and_state(
+    instance_id: &str,
+    state: &State,
+) -> crate::Result<()> {
     let instance = instance_rows::get_instance_by_id(instance_id, &state.pool)
         .await?
         .ok_or_else(|| {

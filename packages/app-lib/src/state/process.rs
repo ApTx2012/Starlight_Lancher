@@ -533,6 +533,13 @@ impl ProcessManager {
             .collect()
     }
 
+    /// Whether any tracked process belongs to the given instance.
+    pub fn has_instance_process(&self, instance_id: &str) -> bool {
+        self.processes
+            .iter()
+            .any(|entry| entry.value().metadata.instance_id == instance_id)
+    }
+
     pub fn try_wait(
         &self,
         id: Uuid,
