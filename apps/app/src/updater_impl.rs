@@ -8,7 +8,7 @@ use tauri::http::header::ACCEPT;
 use tauri::{Manager, ResourceId, Runtime, Webview};
 use tauri_plugin_http::reqwest;
 use tauri_plugin_http::reqwest::ClientBuilder;
-use tauri_plugin_updater::{Error, Update, UpdaterExt};
+use tauri_plugin_updater::{Error, Update, UpdaterExt, Version};
 use theseus::{
     LoadingBarType, emit_loading, init_loading, launcher_user_agent,
 };
@@ -25,6 +25,81 @@ const STARLIGHT_UPDATE_BASE_URL: &str = "https://skin.starlight.cool/";
 // connection would hang the download forever. Bound the whole download.
 const UPDATE_DOWNLOAD_TIMEOUT: std::time::Duration =
     std::time::Duration::from_secs(15 * 60);
+
+// semver compares prerelease identifiers lexically, so "beta10" < "beta9"
+// (because the character '1' sorts before '9'). Our release names use a
+// "betaN" scheme where N is a decimal counter, so a strict lexical compare
+// would wrongly report an older beta as the latest. Use a comparator that
+// treats the trailing digits of a prerelease identifier numerically.
+fn is_remote_newer(current: &Version, remote: &Version) -> bool {
+    use std::cmp::Ordering;
+
+    let core = (remote.major, remote.minor, remote.patch)
+        .cmp(&(current.major, current.minor, current.patch));
+    if core != Ordering::Equal {
+        return core == Ordering::Greater;
+    }
+
+    // Same x.y.z. A final release outranks any prerelease of that version.
+    match (current.pre.is_empty(), remote.pre.is_empty()) {
+        (true, true) => false,
+        (true, false) => false,
+        (false, true) => true,
+        (false, false) => {
+            compare_prerelease(remote.pre.as_str(), current.pre.as_str())
+                == Ordering::Greater
+        }
+    }
+}
+
+/// Split a prerelease identifier into its non-digit prefix and an optional
+/// trailing decimal number (so "beta10" -> ("beta", Some(10))).
+fn split_prerelease_identifier(segment: &str) -> (&str, Option<u64>) {
+    let digit_start = segment
+        .char_indices()
+        .find(|(_, c)| c.is_ascii_digit())
+        .map(|(i, _)| i);
+    match digit_start {
+        Some(i) => (&segment[..i], segment[i..].parse::<u64>().ok()),
+        None => (segment, None),
+    }
+}
+
+/// Compare two prerelease strings, treating a trailing run of ASCII digits
+/// as a decimal number (so "beta10" > "beta9"). All other segments fall back
+/// to a plain lexical comparison.
+fn compare_prerelease(left: &str, right: &str) -> std::cmp::Ordering {
+    use std::cmp::Ordering;
+
+    let left_segments: Vec<&str> = left.split('.').collect();
+    let right_segments: Vec<&str> = right.split('.').collect();
+
+    for (l, r) in left_segments.iter().zip(right_segments.iter()) {
+        let (l_prefix, l_num) = split_prerelease_identifier(l);
+        let (r_prefix, r_num) = split_prerelease_identifier(r);
+
+        match (l_num, r_num) {
+            (Some(ln), Some(rn)) if l_prefix == r_prefix => {
+                match ln.cmp(&rn) {
+                    Ordering::Equal => continue,
+                    other => return other,
+                }
+            }
+            _ => {
+                let prefix_cmp = l_prefix.cmp(r_prefix);
+                if prefix_cmp != Ordering::Equal {
+                    return prefix_cmp;
+                }
+                let num_cmp = l_num.cmp(&r_num);
+                if num_cmp != Ordering::Equal {
+                    return num_cmp;
+                }
+            }
+        }
+    }
+
+    left_segments.len().cmp(&right_segments.len())
+}
 
 // ── Shared types ─────────────────────────────────────────────────
 
@@ -228,7 +303,10 @@ async fn check_with_endpoints<R: Runtime>(
         .header("Accept", "application/json")?
         .header("X-Axolotl-Channel", channel)?
         .header("X-Axolotl-Platform", platform)?
-        .header("X-Axolotl-Version", current_version)?;
+        .header("X-Axolotl-Version", current_version)?
+        .version_comparator(|current, release| {
+            is_remote_newer(&current, &release.version)
+        });
 
     #[cfg(target_os = "windows")]
     {
