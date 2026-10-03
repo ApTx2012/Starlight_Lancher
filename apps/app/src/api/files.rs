@@ -9,7 +9,7 @@ use std::path::PathBuf;
 use std::sync::Mutex;
 use tauri::{Emitter, Runtime};
 use tauri_plugin_dialog::DialogExt;
-use theseus::instance::{get_full_path, list};
+use theseus::instance::get_full_path;
 
 const STUDIO_FILES_CHANGED_EVENT: &str = "studio-files-changed";
 

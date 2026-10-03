@@ -1,5 +1,6 @@
 use crate::api::Result;
 use futures::StreamExt;
+use semver::Version;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::sync::{Arc, Mutex};
@@ -8,7 +9,7 @@ use tauri::http::header::ACCEPT;
 use tauri::{Manager, ResourceId, Runtime, Webview};
 use tauri_plugin_http::reqwest;
 use tauri_plugin_http::reqwest::ClientBuilder;
-use tauri_plugin_updater::{Error, Update, UpdaterExt, Version};
+use tauri_plugin_updater::{Error, Update, UpdaterExt};
 use theseus::{
     LoadingBarType, emit_loading, init_loading, launcher_user_agent,
 };
