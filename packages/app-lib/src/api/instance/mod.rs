@@ -15,8 +15,8 @@ mod projects;
 mod run;
 mod screenshot_groups;
 mod screenshots;
-mod upgrade;
 pub(crate) mod synced_options;
+mod upgrade;
 pub(crate) mod synced_packs {
     pub(crate) use super::synced_packs_axolotl::{
         capture_resource_pack_selection_change, detach,

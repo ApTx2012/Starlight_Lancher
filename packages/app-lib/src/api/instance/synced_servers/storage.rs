@@ -212,13 +212,11 @@ async fn load_local_with<'e>(
             let position: i64 = row.get("position");
             Ok(LocalServer {
                 id,
-                source: ServerSource::from_str(&source).ok_or_else(
-                    || {
-                        ErrorKind::InputError(format!(
-                            "Unknown server source {source}"
-                        ))
-                    },
-                )?,
+                source: ServerSource::from_str(&source).ok_or_else(|| {
+                    ErrorKind::InputError(format!(
+                        "Unknown server source {source}"
+                    ))
+                })?,
                 excluded_synced_server_id,
                 data: nbt_from_bytes(nbt)?,
                 position,
@@ -289,13 +287,11 @@ pub(super) async fn load_projection_entries(
             let position: i64 = row.get("position");
             Ok(ProjectionEntry {
                 id: server_id,
-                owner: ProjectionOwner::from_str(&owner).ok_or_else(
-                    || {
-                        ErrorKind::InputError(format!(
-                            "Unknown server projection owner {owner}"
-                        ))
-                    },
-                )?,
+                owner: ProjectionOwner::from_str(&owner).ok_or_else(|| {
+                    ErrorKind::InputError(format!(
+                        "Unknown server projection owner {owner}"
+                    ))
+                })?,
                 data: nbt_from_bytes(nbt)?,
                 position,
             })

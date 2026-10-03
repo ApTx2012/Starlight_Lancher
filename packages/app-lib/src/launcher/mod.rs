@@ -61,7 +61,6 @@ pub(crate) async fn read_game_version_metadata_from_jar(
     Ok(None)
 }
 
-
 #[cfg(target_os = "windows")]
 use winreg::{RegKey, enums::HKEY_CURRENT_USER};
 

@@ -110,7 +110,6 @@ pub struct InstanceSyncedOptions {
     pub data_packs: bool,
 }
 
-
 /// The set of per-instance synchronization features. Mirrors the Axolotl
 /// `SyncedOption` enum, including its string keys used by the
 /// `instance_sync_preferences` / `sync_feature_settings` tables.

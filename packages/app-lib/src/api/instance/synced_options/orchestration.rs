@@ -28,7 +28,9 @@ use super::hotbars::{
     read_hotbar_state, reconcile_hotbar, regenerate_hotbars,
     write_hotbar_state,
 };
-use super::pending::{self, PendingAction, PendingChange, SyncedOptionJoinResolution};
+use super::pending::{
+    self, PendingAction, PendingChange, SyncedOptionJoinResolution,
+};
 use super::{COMMAND_HISTORY_FILE, HOTBAR_FILE};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize)]
@@ -981,12 +983,11 @@ pub async fn reconcile_all() -> crate::Result<()> {
 
 pub(crate) async fn monitor_persisted_processes() -> crate::Result<()> {
     let state = State::get().await?;
-    let instance_ids =
-        sqlx::query_scalar::<_, String>(
-            "SELECT DISTINCT instance_id FROM processes",
-        )
-        .fetch_all(&state.pool)
-        .await?;
+    let instance_ids = sqlx::query_scalar::<_, String>(
+        "SELECT DISTINCT instance_id FROM processes",
+    )
+    .fetch_all(&state.pool)
+    .await?;
     for instance_id in instance_ids {
         tokio::spawn(async move {
             loop {
