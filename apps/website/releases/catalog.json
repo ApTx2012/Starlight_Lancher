@@ -1,6 +1,163 @@
 {
-  "updated_at": "2026-10-01T05:02:05.765Z",
+  "updated_at": "2026-10-03T07:08:29.010Z",
   "announcements": [
+    {
+      "id": "launcher-1.0.1",
+      "version": "1.0.1",
+      "publishedAt": "2026-10-03",
+      "title": {
+        "en-US": "Starlight Launcher 1.0.1",
+        "zh-CN": "Starlight Launcher 1.0.1"
+      },
+      "changes": {
+        "added": [
+          {
+            "en-US": "Instance backups: create deduplicated snapshots of an instance while it is closed, preview and restore them, exclude specific files or folders, and move the backup repository.",
+            "zh-CN": "实例备份：在实例关闭时创建去重快照，可预览与恢复，支持排除指定文件或文件夹，并可迁移备份仓库。"
+          },
+          {
+            "en-US": "Customize the launcher's UI font and monospace font in appearance settings.",
+            "zh-CN": "在外观设置中自定义启动器界面字体与等宽字体。"
+          }
+        ],
+        "fixed": [
+          {
+            "en-US": "Fixed beta builds not auto-updating from beta9 to beta10 (prerelease versions were compared as text instead of by number).",
+            "zh-CN": "修复 beta 版本无法从 beta9 自动更新到 beta10 的问题（预发布版本此前按文本而非数字比较）。"
+          },
+          {
+            "en-US": "Fixed a cross-crate visibility issue that prevented the launcher from compiling with the ignore-SSL-errors option.",
+            "zh-CN": "修复因跨 crate 可见性导致的编译失败，此前启用“忽略 SSL 证书错误”选项时无法编译。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "launcher-1.0.1-beta10",
+      "version": "1.0.1-beta10",
+      "publishedAt": "2026-10-02",
+      "title": {
+        "en-US": "Starlight Launcher 1.0.1-beta10",
+        "zh-CN": "Starlight Launcher 1.0.1-beta10"
+      },
+      "changes": {
+        "added": [
+          {
+            "en-US": "Reworked the instance-page tour into four steps covering content, files, worlds, and logs.",
+            "zh-CN": "重做实例页导览，分为内容、文件、世界、日志四步。"
+          },
+          {
+            "en-US": "When the install location is a drive root, the installer now creates a Starlight subfolder automatically.",
+            "zh-CN": "安装位置选到盘符根目录时，安装器会自动创建 Starlight 子文件夹。"
+          }
+        ],
+        "fixed": [
+          {
+            "en-US": "Fixed the launcher UI scale reverting after a restart.",
+            "zh-CN": "修复启动器界面缩放重启后恢复原状的问题。"
+          },
+          {
+            "en-US": "Fixed developer feature flags not saving.",
+            "zh-CN": "修复开发者功能开关无法保存的问题。"
+          },
+          {
+            "en-US": "Fixed instance group edits not saving for instances without an applied content set.",
+            "zh-CN": "修复没有应用内容集的实例无法保存分组修改的问题。"
+          },
+          {
+            "en-US": "Fixed the launcher crashing on startup when feature flags were out of sync between the frontend and backend.",
+            "zh-CN": "修复前后端功能开关不同步导致启动器启动崩溃的问题。"
+          },
+          {
+            "en-US": "Fixed being unable to copy text inside the embedded skin site.",
+            "zh-CN": "修复内嵌皮肤站中无法复制文本的问题。"
+          },
+          {
+            "en-US": "Fixed the onboarding prompt not dismissing when clicking anywhere.",
+            "zh-CN": "修复导览提示点击任意位置无法关闭的问题。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "launcher-1.0.1-beta9",
+      "version": "1.0.1-beta9",
+      "publishedAt": "2026-10-02",
+      "title": {
+        "en-US": "Starlight Launcher 1.0.1-beta9",
+        "zh-CN": "Starlight Launcher 1.0.1-beta9"
+      },
+      "changes": {
+        "fixed": [
+          {
+            "en-US": "Fixed a crash on the minimal home layout caused by an unrecognized multiplayer feature flag (missing backend enum variant).",
+            "zh-CN": "修复多人联机功能开关缺少后端枚举变体、导致精简主页报错的问题。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "launcher-1.0.1-beta8",
+      "version": "1.0.1-beta8",
+      "publishedAt": "2026-10-02",
+      "title": {
+        "en-US": "Starlight Launcher 1.0.1-beta8",
+        "zh-CN": "Starlight Launcher 1.0.1-beta8"
+      },
+      "changes": {
+        "fixed": [
+          {
+            "en-US": "Fixed the sidebar navigation entries breaking after the screenshot center was added.",
+            "zh-CN": "修复添加截图中心后侧边栏导航项损坏的问题。"
+          },
+          {
+            "en-US": "Fixed being unable to install the StarLight hosted pack even after signing in (missing command permission).",
+            "zh-CN": "修复登录后仍无法安装 StarLight 实例的问题（命令权限缺失）。"
+          },
+          {
+            "en-US": "Fixed the launcher UI scaling not applying when changed (missing command permission).",
+            "zh-CN": "修复修改启动器界面缩放后不生效的问题（命令权限缺失）。"
+          },
+          {
+            "en-US": "Fixed several screenshot center actions failing due to missing command permissions.",
+            "zh-CN": "修复截图中心部分操作因命令权限缺失而失败的问题。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "launcher-1.0.1-beta7",
+      "version": "1.0.1-beta7",
+      "publishedAt": "2026-10-02",
+      "title": {
+        "en-US": "Starlight Launcher 1.0.1-beta7",
+        "zh-CN": "Starlight Launcher 1.0.1-beta7"
+      },
+      "changes": {
+        "added": [
+          {
+            "en-US": "Added a screenshot center: browse screenshots across every instance, group them (custom groups, by instance, or by date), preview, edit (crop, rotate, annotate, censor), and export as ZIP.",
+            "zh-CN": "新增截图中心：跨实例浏览截图，支持自定义/按实例/按日期分组，可预览、编辑（裁剪、标注、打码等）并导出为 ZIP。"
+          },
+          {
+            "en-US": "Added the multiplayer (Terracotta) entry to the sidebar, behind a feature flag.",
+            "zh-CN": "侧边栏新增多人联机（陶瓦）入口，由功能开关控制。"
+          }
+        ],
+        "changed": [
+          {
+            "en-US": "Launcher UI scaling is now persisted in the backend and applied via native webview zoom, so it scales embedded pages correctly and keeps onboarding anchors aligned.",
+            "zh-CN": "启动器界面缩放改为后端持久化，并通过原生 webview 缩放应用，可正确缩放内嵌页面且导览锚点不再偏移。"
+          }
+        ],
+        "fixed": [
+          {
+            "en-US": "Fixed the onboarding tour skipping its first step when the target anchor was missing.",
+            "zh-CN": "修复导览首步在目标锚点缺失时被自动跳过的问题。"
+          }
+        ]
+      }
+    },
     {
       "id": "launcher-1.0.1-beta6",
       "version": "1.0.1-beta6",
