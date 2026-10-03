@@ -1,5 +1,6 @@
 use crate::api::Result;
 use futures::StreamExt;
+use semver::Version;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::sync::{Arc, Mutex};
@@ -8,7 +9,7 @@ use tauri::http::header::ACCEPT;
 use tauri::{Manager, ResourceId, Runtime, Webview};
 use tauri_plugin_http::reqwest;
 use tauri_plugin_http::reqwest::ClientBuilder;
-use tauri_plugin_updater::{Error, Update, UpdaterExt, Version};
+use tauri_plugin_updater::{Error, Update, UpdaterExt};
 use theseus::{
     LoadingBarType, emit_loading, init_loading, launcher_user_agent,
 };
@@ -34,8 +35,11 @@ const UPDATE_DOWNLOAD_TIMEOUT: std::time::Duration =
 fn is_remote_newer(current: &Version, remote: &Version) -> bool {
     use std::cmp::Ordering;
 
-    let core = (remote.major, remote.minor, remote.patch)
-        .cmp(&(current.major, current.minor, current.patch));
+    let core = (remote.major, remote.minor, remote.patch).cmp(&(
+        current.major,
+        current.minor,
+        current.patch,
+    ));
     if core != Ordering::Equal {
         return core == Ordering::Greater;
     }
@@ -79,12 +83,10 @@ fn compare_prerelease(left: &str, right: &str) -> std::cmp::Ordering {
         let (r_prefix, r_num) = split_prerelease_identifier(r);
 
         match (l_num, r_num) {
-            (Some(ln), Some(rn)) if l_prefix == r_prefix => {
-                match ln.cmp(&rn) {
-                    Ordering::Equal => continue,
-                    other => return other,
-                }
-            }
+            (Some(ln), Some(rn)) if l_prefix == r_prefix => match ln.cmp(&rn) {
+                Ordering::Equal => continue,
+                other => return other,
+            },
             _ => {
                 let prefix_cmp = l_prefix.cmp(r_prefix);
                 if prefix_cmp != Ordering::Equal {

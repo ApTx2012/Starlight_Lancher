@@ -1,5 +1,11 @@
 import { defineStore } from 'pinia'
 
+import {
+	DEFAULT_MONO_FONT_STACK,
+	DEFAULT_UI_FONT_STACK,
+	resolveFontFamily,
+} from '@/helpers/font-family.ts'
+
 let systemThemeMq: MediaQueryList | null = null
 
 export const DEFAULT_FEATURE_FLAGS = {
@@ -130,6 +136,9 @@ export type ThemeStore = {
 
 	devMode: boolean
 	featureFlags: FeatureFlags
+
+	uiFont: string | null
+	monoFont: string | null
 }
 
 export const DEFAULT_THEME_STORE: ThemeStore = {
@@ -154,6 +163,9 @@ export const DEFAULT_THEME_STORE: ThemeStore = {
 
 	devMode: false,
 	featureFlags: DEFAULT_FEATURE_FLAGS,
+
+	uiFont: null,
+	monoFont: null,
 }
 
 export const useTheming = defineStore('themeStore', {
@@ -248,6 +260,32 @@ export const useTheming = defineStore('themeStore', {
 				'--transparent-window-alpha',
 				`${Math.min(Math.max(this.transparentBackgroundOpacity, 0), 100)}%`,
 			)
+		},
+		/**
+		 * The font tokens are declared on `body` in the shared defaults, so the
+		 * launcher picks up the chosen family by overriding the CSS variable there.
+		 */
+		setUiFont() {
+			const body = document.body
+			if (this.uiFont) {
+				body.style.setProperty(
+					'--font-standard',
+					resolveFontFamily(this.uiFont, DEFAULT_UI_FONT_STACK),
+				)
+			} else {
+				body.style.removeProperty('--font-standard')
+			}
+		},
+		setMonoFont() {
+			const body = document.body
+			if (this.monoFont) {
+				body.style.setProperty(
+					'--mono-font',
+					resolveFontFamily(this.monoFont, DEFAULT_MONO_FONT_STACK),
+				)
+			} else {
+				body.style.removeProperty('--mono-font')
+			}
 		},
 		getFeatureFlag(key: FeatureFlag) {
 			return this.featureFlags[key] ?? DEFAULT_FEATURE_FLAGS[key]

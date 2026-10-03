@@ -174,6 +174,8 @@ export type AppSettings = {
 	minimal_home_instance_id: string | null
 	close_behavior: 'ask' | 'close' | 'lightweight'
 	ui_scale: number
+	ui_font: string | null
+	mono_font: string | null
 	home_widgets: HomeDashboardConfig | null
 	terracotta_public_nodes: string[]
 
@@ -216,6 +218,8 @@ type LegacyMirrorSettings = {
 function normalizeDownloadSettings(settings: AppSettings & LegacyMirrorSettings): AppSettings {
 	settings.close_behavior ??= 'ask'
 	settings.ui_scale ??= 100
+	settings.ui_font ??= null
+	settings.mono_font ??= null
 	const hasLegacySettings =
 		typeof settings.use_minecraft_mirror === 'boolean' &&
 		typeof settings.use_modrinth_mirror === 'boolean' &&

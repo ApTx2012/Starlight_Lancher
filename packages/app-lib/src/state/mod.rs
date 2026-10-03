@@ -623,7 +623,7 @@ impl State {
     }
 
     /// 在设置变更（如忽略 SSL 证书开关）后重建 HTTP 客户端。
-    pub(crate) async fn update_http_client_for_settings(
+    pub async fn update_http_client_for_settings(
         &self,
         settings: &Settings,
     ) -> crate::Result<()> {
