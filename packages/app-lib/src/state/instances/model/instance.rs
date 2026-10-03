@@ -88,3 +88,24 @@ pub(crate) fn playtime_to_storage(
         .into()
     })
 }
+
+/// Per-instance synchronization feature switches. Mirrors the Axolotl
+/// `InstanceSyncedOptions` shape so the sync subsystem can be ported on top of
+/// the shared `instance_sync_preferences` table.
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+pub struct InstanceSyncedOptions {
+    #[serde(default)]
+    pub game_options: bool,
+    #[serde(default)]
+    pub command_history: bool,
+    #[serde(default)]
+    pub multiplayer_servers: bool,
+    #[serde(default)]
+    pub creative_hotbars: bool,
+    #[serde(default)]
+    pub screenshots: bool,
+    #[serde(default)]
+    pub resource_packs: bool,
+    #[serde(default)]
+    pub data_packs: bool,
+}

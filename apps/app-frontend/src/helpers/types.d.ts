@@ -23,6 +23,17 @@ export type GameInstance = {
 	loader_version?: string
 	loader_components: LoaderComponent[]
 
+	synced_options: Record<
+		| 'game_options'
+		| 'command_history'
+		| 'multiplayer_servers'
+		| 'creative_hotbars'
+		| 'screenshots'
+		| 'resource_packs'
+		| 'data_packs',
+		boolean
+	>
+
 	groups: string[]
 
 	link?: InstanceLink | null
