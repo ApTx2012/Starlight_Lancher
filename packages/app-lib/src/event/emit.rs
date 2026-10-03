@@ -1,9 +1,8 @@
 use super::{FriendPayload, LoadingBarId};
 use crate::event::{
     CommandPayload, EventError, InstanceBackupProgressPayload,
-    InstanceBulkUpdateProgressPayload,
-    InstancePayloadType, LoadingBar, LoadingBarType, ProcessPayloadType,
-    ServerPayloadType,
+    InstanceBulkUpdateProgressPayload, InstancePayloadType, LoadingBar,
+    LoadingBarType, ProcessPayloadType, ServerPayloadType,
 };
 #[cfg(feature = "tauri")]
 use crate::event::{

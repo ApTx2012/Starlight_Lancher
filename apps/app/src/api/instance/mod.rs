@@ -1718,9 +1718,8 @@ pub async fn instance_open_screenshot<R: tauri::Runtime>(
 // ===== 实例备份命令（移植自 Axolotl） =====
 
 #[tauri::command]
-pub async fn instance_get_backup_repository_status() -> Result<
-    theseus::instance::BackupRepositoryStatus,
-> {
+pub async fn instance_get_backup_repository_status()
+-> Result<theseus::instance::BackupRepositoryStatus> {
     Ok(theseus::instance::get_backup_repository_status().await?)
 }
 
@@ -1785,9 +1784,7 @@ pub async fn instance_start_backup(instance_id: String) -> Result<uuid::Uuid> {
 }
 
 #[tauri::command]
-pub async fn instance_cancel_backup(
-    operation_id: uuid::Uuid,
-) -> Result<bool> {
+pub async fn instance_cancel_backup(operation_id: uuid::Uuid) -> Result<bool> {
     Ok(theseus::instance::cancel_backup(operation_id).await?)
 }
 

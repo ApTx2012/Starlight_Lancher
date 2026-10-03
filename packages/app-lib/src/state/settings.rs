@@ -681,10 +681,12 @@ impl Settings {
             .bind(&self.ui_font)
             .execute(exec)
             .await?;
-	sqlx::query("UPDATE settings SET backup_repository_path = ? WHERE id = 0")
-		.bind(&self.backup_repository_path)
-		.execute(exec)
-		.await?;
+        sqlx::query(
+            "UPDATE settings SET backup_repository_path = ? WHERE id = 0",
+        )
+        .bind(&self.backup_repository_path)
+        .execute(exec)
+        .await?;
         sqlx::query("UPDATE settings SET mono_font = ? WHERE id = 0")
             .bind(&self.mono_font)
             .execute(exec)

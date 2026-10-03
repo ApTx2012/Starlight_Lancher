@@ -34,8 +34,11 @@ const UPDATE_DOWNLOAD_TIMEOUT: std::time::Duration =
 fn is_remote_newer(current: &Version, remote: &Version) -> bool {
     use std::cmp::Ordering;
 
-    let core = (remote.major, remote.minor, remote.patch)
-        .cmp(&(current.major, current.minor, current.patch));
+    let core = (remote.major, remote.minor, remote.patch).cmp(&(
+        current.major,
+        current.minor,
+        current.patch,
+    ));
     if core != Ordering::Equal {
         return core == Ordering::Greater;
     }
@@ -79,12 +82,10 @@ fn compare_prerelease(left: &str, right: &str) -> std::cmp::Ordering {
         let (r_prefix, r_num) = split_prerelease_identifier(r);
 
         match (l_num, r_num) {
-            (Some(ln), Some(rn)) if l_prefix == r_prefix => {
-                match ln.cmp(&rn) {
-                    Ordering::Equal => continue,
-                    other => return other,
-                }
-            }
+            (Some(ln), Some(rn)) if l_prefix == r_prefix => match ln.cmp(&rn) {
+                Ordering::Equal => continue,
+                other => return other,
+            },
             _ => {
                 let prefix_cmp = l_prefix.cmp(r_prefix);
                 if prefix_cmp != Ordering::Equal {
