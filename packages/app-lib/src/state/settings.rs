@@ -147,6 +147,8 @@ pub struct Settings {
     #[serde(default)]
     pub ui_font: Option<String>,
     #[serde(default)]
+    pub backup_repository_path: Option<String>,
+    #[serde(default)]
     pub mono_font: Option<String>,
     #[serde(default)]
     pub close_behavior: String,
@@ -294,6 +296,7 @@ impl Settings {
                 json(terracotta_public_nodes) terracotta_public_nodes,
                 ui_scale,
                 ui_font,
+                backup_repository_path,
                 mono_font,
                 version
             FROM settings
@@ -369,6 +372,7 @@ impl Settings {
             sidebar_instance_count: res.sidebar_instance_count as u32,
             ui_scale: res.ui_scale,
             ui_font: res.ui_font,
+            backup_repository_path: res.backup_repository_path,
             mono_font: res.mono_font,
             close_behavior,
             auto_hide_downloads_button: res.auto_hide_downloads_button == 1,
@@ -677,6 +681,10 @@ impl Settings {
             .bind(&self.ui_font)
             .execute(exec)
             .await?;
+	sqlx::query("UPDATE settings SET backup_repository_path = ? WHERE id = 0")
+		.bind(&self.backup_repository_path)
+		.execute(exec)
+		.await?;
         sqlx::query("UPDATE settings SET mono_font = ? WHERE id = 0")
             .bind(&self.mono_font)
             .execute(exec)
