@@ -1,6 +1,37 @@
 {
-  "updated_at": "2026-10-01T05:02:05.765Z",
+  "updated_at": "2026-10-03T00:00:00.000Z",
   "announcements": [
+    {
+      "id": "launcher-1.0.1",
+      "version": "1.0.1",
+      "publishedAt": "2026-10-03",
+      "title": {
+        "en-US": "Starlight Launcher 1.0.1",
+        "zh-CN": "Starlight Launcher 1.0.1"
+      },
+      "changes": {
+        "added": [
+          {
+            "en-US": "Instance backups: create deduplicated snapshots of an instance while it is closed, preview and restore them, exclude specific files or folders, and move the backup repository.",
+            "zh-CN": "实例备份：在实例关闭时创建去重快照，可预览与恢复，支持排除指定文件或文件夹，并可迁移备份仓库。"
+          },
+          {
+            "en-US": "Customize the launcher's UI font and monospace font in appearance settings.",
+            "zh-CN": "在外观设置中自定义启动器界面字体与等宽字体。"
+          }
+        ],
+        "fixed": [
+          {
+            "en-US": "Fixed beta builds not auto-updating from beta9 to beta10 (prerelease versions were compared as text instead of by number).",
+            "zh-CN": "修复 beta 版本无法从 beta9 自动更新到 beta10 的问题（预发布版本此前按文本而非数字比较）。"
+          },
+          {
+            "en-US": "Fixed a cross-crate visibility issue that prevented the launcher from compiling with the ignore-SSL-errors option.",
+            "zh-CN": "修复因跨 crate 可见性导致的编译失败，此前启用“忽略 SSL 证书错误”选项时无法编译。"
+          }
+        ]
+      }
+    },
     {
       "id": "launcher-1.0.1-beta6",
       "version": "1.0.1-beta6",
