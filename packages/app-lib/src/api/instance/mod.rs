@@ -16,6 +16,8 @@ mod run;
 mod screenshot_groups;
 mod screenshots;
 mod upgrade;
+pub(crate) mod synced_options;
+pub(crate) mod synced_servers;
 
 pub use self::backup::{
     BackupDeleteSummary, BackupExclusion, BackupExclusionKind, BackupOperation,

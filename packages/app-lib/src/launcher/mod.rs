@@ -47,6 +47,21 @@ use tokio::io::AsyncReadExt;
 use tokio::process::Command;
 use tokio_util::sync::CancellationToken;
 
+pub(crate) struct GameVersionMetadata {
+    pub world_version: Option<u32>,
+}
+
+/// Reads the embedded `version.json` DataVersion from a client jar.
+///
+/// Ported as a stub to match the upstream Axolotl implementation, which also
+/// returns `None`; callers fall back to the legacy data-version table.
+pub(crate) async fn read_game_version_metadata_from_jar(
+    _path: &Path,
+) -> crate::Result<Option<GameVersionMetadata>> {
+    Ok(None)
+}
+
+
 #[cfg(target_os = "windows")]
 use winreg::{RegKey, enums::HKEY_CURRENT_USER};
 
