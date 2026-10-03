@@ -10764,5 +10764,170 @@
   },
   "app.navigation.screenshots": {
     "message": "截图"
+  },
+  "instance.backups.added-size": {
+    "message": "新增存储 {size}"
+  },
+  "instance.backups.all-included": {
+    "message": "实例中的所有文件和文件夹都会纳入备份。"
+  },
+  "instance.backups.backup-now": {
+    "message": "立即备份"
+  },
+  "instance.backups.cancel": {
+    "message": "取消备份"
+  },
+  "instance.backups.choose": {
+    "message": "默认备份实例中的全部内容，请添加不需要备份的文件或文件夹。"
+  },
+  "instance.backups.delete": {
+    "message": "删除备份"
+  },
+  "instance.backups.delete-body": {
+    "message": "此快照将被永久删除，不再使用的仓库文件也会一并清理。"
+  },
+  "instance.backups.delete-title": {
+    "message": "删除此备份？"
+  },
+  "instance.backups.description": {
+    "message": "在实例关闭时，为整个实例创建去重快照。"
+  },
+  "instance.backups.disable": {
+    "message": "关闭备份"
+  },
+  "instance.backups.disable-blocked": {
+    "message": "必须先删除全部快照才能关闭备份。"
+  },
+  "instance.backups.edit-exclusions": {
+    "message": "编辑排除项"
+  },
+  "instance.backups.empty": {
+    "message": "尚未创建任何备份。"
+  },
+  "instance.backups.enable": {
+    "message": "启用备份"
+  },
+  "instance.backups.excluded-paths": {
+    "message": "不备份：{paths}"
+  },
+  "instance.backups.exclusions.add-file": {
+    "message": "添加忽略文件"
+  },
+  "instance.backups.exclusions.add-folder": {
+    "message": "添加忽略文件夹"
+  },
+  "instance.backups.exclusions.empty": {
+    "message": "没有忽略任何文件或文件夹。"
+  },
+  "instance.backups.exclusions.remove": {
+    "message": "从排除项中移除 {path}"
+  },
+  "instance.backups.loading": {
+    "message": "正在加载备份设置……"
+  },
+  "instance.backups.progress-bytes": {
+    "message": "已处理 {processed}，共 {total}"
+  },
+  "instance.backups.restore": {
+    "message": "恢复备份"
+  },
+  "instance.backups.restore-body": {
+    "message": "即将进行的操作：新增 {added} 个文件，修改 {modified} 个文件，删除 {deleted} 个文件。是否继续？"
+  },
+  "instance.backups.restore-title": {
+    "message": "恢复此备份？"
+  },
+  "instance.backups.save-exclusions": {
+    "message": "保存排除项"
+  },
+  "instance.backups.snapshot-meta": {
+    "message": "{files, plural, other {# 个文件}} · {size}"
+  },
+  "instance.backups.snapshots": {
+    "message": "快照"
+  },
+  "instance.backups.stage.applying": {
+    "message": "正在应用变更文件"
+  },
+  "instance.backups.stage.failed": {
+    "message": "备份失败"
+  },
+  "instance.backups.stage.hashing": {
+    "message": "正在计算文件哈希"
+  },
+  "instance.backups.stage.interrupted": {
+    "message": "备份任务已中断"
+  },
+  "instance.backups.stage.materializing": {
+    "message": "正在准备变更文件"
+  },
+  "instance.backups.stage.preview": {
+    "message": "正在分析恢复变更"
+  },
+  "instance.backups.stage.queued": {
+    "message": "等待开始"
+  },
+  "instance.backups.stage.saving": {
+    "message": "正在保存快照索引"
+  },
+  "instance.backups.stage.scanning": {
+    "message": "正在扫描文件"
+  },
+  "instance.backups.stage.validating": {
+    "message": "正在验证恢复任务"
+  },
+  "instance.backups.title": {
+    "message": "实例备份"
+  },
+  "instance.backups.unavailable": {
+    "message": "备份不可用"
+  },
+  "instance.backups.unavailable.direct-linked": {
+    "message": "不支持备份直接关联到其他启动器的实例。"
+  },
+  "instance.backups.unavailable.external-directory": {
+    "message": "不支持备份使用外部游戏目录的实例。"
+  },
+  "instance.backups.unavailable.not-installed": {
+    "message": "请先完成实例安装，再启用备份。"
+  },
+  "instance.backups.unavailable.root-link": {
+    "message": "不支持备份根文件夹为链接的实例。"
+  },
+  "instance.backups.unavailable.root-missing": {
+    "message": "实例文件夹不存在。"
+  },
+  "instance.backups.unavailable.symlink": {
+    "message": "不支持备份以符号链接导入的实例。"
+  },
+  "settings.backups.repository.change": {
+    "message": "更改文件夹"
+  },
+  "settings.backups.repository.description": {
+    "message": "存放去重后的实例备份数据及其独立索引数据库。"
+  },
+  "settings.backups.repository.location": {
+    "message": "位置"
+  },
+  "settings.backups.repository.location-description": {
+    "message": "更改位置会移动完整仓库。请选择新的或空的文件夹。"
+  },
+  "settings.backups.repository.moving": {
+    "message": "正在移动仓库……"
+  },
+  "settings.backups.repository.moving-progress": {
+    "message": "正在移动备份仓库：已处理 {processed}，共 {total}"
+  },
+  "settings.backups.repository.title": {
+    "message": "备份文件仓库"
+  },
+  "settings.backups.repository.unavailable": {
+    "message": "仓库不可用"
+  },
+  "settings.backups.repository.usage": {
+    "message": "存储占用"
+  },
+  "settings.backups.repository.usage-description": {
+    "message": "实际存储 {stored}，对应 {logical} 的备份数据，共 {count, plural, other {# 个快照}}。"
   }
 }
