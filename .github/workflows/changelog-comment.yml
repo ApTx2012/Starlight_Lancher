@@ -19,6 +19,11 @@ jobs:
     name: Post changelog comment
     runs-on: ubuntu-latest
 
+    permissions:
+      issues: write
+      pull-requests: read
+      contents: read
+
     steps:
       - name: Post or update changelog comment
         uses: actions/github-script@d746ffe35508b1917358783b479e04febd2b8f71 # v9.0.0
