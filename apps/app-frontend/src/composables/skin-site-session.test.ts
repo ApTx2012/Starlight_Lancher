@@ -605,3 +605,110 @@ test('skin updates are restricted to known non-Mojang players and validated resu
 	setSkinSiteFrame(null)
 	resetSkinSiteSession()
 })
+
+test('hosted create auto-authenticates the first skin site player when no game account exists', async () => {
+	const previousWindow = Object.getOwnPropertyDescriptor(globalThis, 'window')
+	const calls: Array<{ command: string; args: Record<string, unknown> }> = []
+	let accounts: Array<{
+		account_type: string
+		yggdrasil?: { api_root: string }
+	}> = []
+	const frame = {
+		postMessage(data: { type: string; requestId: string }) {
+			if (data.type === 'starlight-pack-token-request') {
+				receiveSkinSiteMessage(
+					{
+						origin: SKIN_SITE_ORIGIN,
+						source: frame,
+						data: {
+							type: 'starlight-pack-token-result',
+							requestId: data.requestId,
+							token: 'site.jwt.secret',
+						},
+					} as MessageEvent,
+					frame,
+				)
+				return
+			}
+			if (data.type === 'starlight-skin-players-request') {
+				receiveSkinSiteMessage(
+					{
+						origin: SKIN_SITE_ORIGIN,
+						source: frame,
+						data: {
+							type: 'starlight-skin-players-result',
+							requestId: data.requestId,
+							ok: true,
+							players: [
+								{
+									uuid: '11111111-1111-1111-1111-111111111111',
+									name: 'AutoPlayer',
+									isMojang: false,
+									skinState: 'empty',
+								},
+							],
+						},
+					} as MessageEvent,
+					frame,
+				)
+			}
+		},
+	} as unknown as Window
+	Object.defineProperty(globalThis, 'window', {
+		configurable: true,
+		value: {
+			__TAURI_INTERNALS__: {
+				async invoke(command: string, args: Record<string, unknown>) {
+					calls.push({ command, args })
+					if (command === 'plugin:install|hosted_has_game_account') {
+						return accounts.some(
+							(account) =>
+								account.account_type === 'microsoft' ||
+								(account.account_type === 'yggdrasil' &&
+									account.yggdrasil?.api_root.replace(/\/+$/, '') ===
+										'https://skin.starlight.cool/yggdrasil'),
+						)
+					}
+					if (command === 'plugin:auth|login_skin_site_player') {
+						accounts = [
+							{
+								account_type: 'yggdrasil',
+								yggdrasil: { api_root: 'https://skin.starlight.cool/yggdrasil' },
+							},
+						]
+						return null
+					}
+					if (command === 'plugin:instance|instance_get') return null
+					return command === 'plugin:install|hosted_create' ? 'auto-instance' : null
+				},
+			},
+		},
+	})
+	try {
+		resetSkinSiteSession()
+		setSkinSiteFrame(frame)
+		receiveSkinSiteMessage(
+			{
+				origin: SKIN_SITE_ORIGIN,
+				source: frame,
+				data: {
+					type: 'starlight-skin-session',
+					status: 'signed-in',
+					user: { uuid: 'site-user', username: 'Site' },
+				},
+			} as MessageEvent,
+			frame,
+		)
+		await requestSkinSitePlayers().catch(() => {})
+		assert.equal(await hostedCreate(), 'auto-instance')
+		assert.ok(
+			calls.some(({ command }) => command === 'plugin:auth|login_skin_site_player'),
+			'expected automatic player authentication',
+		)
+	} finally {
+		resetSkinSiteSession()
+		setSkinSiteFrame(null)
+		if (previousWindow) Object.defineProperty(globalThis, 'window', previousWindow)
+		else delete (globalThis as { window?: unknown }).window
+	}
+})

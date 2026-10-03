@@ -2,10 +2,13 @@ import { invoke } from '@tauri-apps/api/core'
 
 import {
 	requestSkinSiteDownloadToken,
+	requestSkinSitePlayers,
+	skinSitePlayers,
 	skinSiteStatus,
 	skinSiteUser,
 	waitForSkinSiteSession,
 } from '../composables/skin-site-session.ts'
+import { authenticateInstancePlayer } from './instance-player.ts'
 
 export const HOSTED_ACCOUNT_REQUIRED_MESSAGE = '您需要登录正版或皮肤站账号后才能操作'
 
@@ -24,10 +27,36 @@ function startHostedPackAttempt(instanceId: string) {
 }
 
 export async function requireHostedGameAccount(): Promise<void> {
-	const available = await invokeHosted<boolean>('plugin:install|hosted_has_game_account')
-	if (!available) {
-		throw new Error(HOSTED_ACCOUNT_REQUIRED_MESSAGE)
+	if (await invokeHosted<boolean>('plugin:install|hosted_has_game_account')) return
+
+	// No game credential yet, but a signed-in skin site already lists the
+	// user's players. Authenticate the first one automatically so the user
+	// does not have to pick a player manually before creating an instance.
+	await waitForSkinSiteSession()
+	if (skinSiteStatus.value === 'signed-in' && skinSiteUser.value) {
+		if (skinSitePlayers.value.length === 0) {
+			await requestSkinSitePlayers().catch(() => {})
+		}
+		const player =
+			skinSitePlayers.value.find((candidate) => !candidate.isMojang) ?? skinSitePlayers.value[0]
+		if (player) {
+			try {
+				await authenticateInstancePlayer({
+					id: player.uuid,
+					name: player.name,
+					account_type: 'yggdrasil',
+					skin_site_user: skinSiteUser.value.uuid,
+				})
+			} catch {
+				// Fall through to the login-required error below.
+			}
+			if (await invokeHosted<boolean>('plugin:install|hosted_has_game_account')) {
+				return
+			}
+		}
 	}
+
+	throw new Error(HOSTED_ACCOUNT_REQUIRED_MESSAGE)
 }
 
 export function clearHostedSession(): Promise<void> {
