@@ -1835,6 +1835,25 @@ mod tests {
     }
 }
 
+pub(crate) async fn set_instance_sync_preference(
+    instance_id: &str,
+    option: crate::state::SyncedOption,
+    enabled: bool,
+    pool: &SqlitePool,
+) -> crate::Result<()> {
+    sqlx::query(
+        "INSERT INTO instance_sync_preferences (instance_id, feature, enabled)
+         VALUES (?, ?, ?)
+         ON CONFLICT(instance_id, feature) DO UPDATE SET enabled = excluded.enabled",
+    )
+    .bind(instance_id)
+    .bind(option.as_str())
+    .bind(enabled)
+    .execute(pool)
+    .await?;
+    Ok(())
+}
+
 pub(crate) async fn get_instance_synced_options(
     instance_id: &str,
     pool: &SqlitePool,

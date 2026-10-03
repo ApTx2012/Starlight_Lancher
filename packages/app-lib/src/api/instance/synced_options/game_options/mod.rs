@@ -22,6 +22,7 @@ pub(crate) mod locales;
 mod options_file;
 mod pack_updates;
 mod read_instance_changes;
+mod resource_pack_options;
 mod settings_editor;
 mod source_selection;
 mod write_shared_settings;
@@ -53,6 +54,10 @@ pub(crate) use write_shared_settings::sync_all_participating_instances;
 
 pub(in crate::api::instance) use pack_updates::{
     detach_instance, prepare_instance_update_with_state,
+};
+pub(in crate::api::instance) use resource_pack_options::{
+    ResourcePackOptionsUpdate, merge_resource_pack_entries,
+    merge_resource_pack_order, read_resource_pack_entries,
 };
 pub(in crate::api::instance) use source_selection::initialize_from_source_instance;
 pub(in crate::api::instance) use write_shared_settings::{
