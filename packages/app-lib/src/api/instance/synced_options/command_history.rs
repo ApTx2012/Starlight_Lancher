@@ -2,10 +2,9 @@ use super::COMMAND_HISTORY_FILE;
 use super::files::{
     CheckpointStatus, begin_checkpoint, checkpoint, ensure_link,
     finish_checkpoint, instance_game_dir, sha1_bytes, sha1_file,
+    synced_options_path,
 };
-use super::orchestration::{
-    create_synced_directories, option_effective, synced_options_path,
-};
+use super::orchestration::{create_synced_directories, option_effective};
 use crate::State;
 use crate::state::{InstanceMetadata, SyncedOption};
 use crate::util::io;

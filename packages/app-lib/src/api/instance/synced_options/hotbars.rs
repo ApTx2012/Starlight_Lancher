@@ -3,10 +3,11 @@ use super::files::{
     CheckpointStatus, begin_checkpoint, checkpoint, ensure_link,
     finish_checkpoint, instance_game_dir, nbt_from_bytes, nbt_to_bytes,
     read_nbt_file, safe_instance_id, sha1_bytes, sha1_file,
+    synced_options_path,
 };
 use super::orchestration::{
     backup_bytes, create_synced_directories, option_effective,
-    seed_from_instance, synced_options_path,
+    seed_from_instance,
 };
 use crate::state::{InstanceMetadata, SyncedOption};
 use crate::util::io;

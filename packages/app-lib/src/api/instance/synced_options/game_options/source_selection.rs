@@ -100,7 +100,7 @@ pub(in crate::api::instance) async fn initialize_from_source_instance(
             )
             .bind(revision)
             .bind(now)
-            .bind(custom_id)
+            .bind(&custom_id)
             .execute(&mut *tx)
             .await?;
             sqlx::query(
@@ -109,7 +109,7 @@ pub(in crate::api::instance) async fn initialize_from_source_instance(
                 WHERE option_id = ?",
             )
             .bind(revision)
-            .bind(custom_id)
+            .bind(&custom_id)
             .execute(&mut *tx)
             .await?;
         }
@@ -244,7 +244,7 @@ pub(in crate::api::instance) async fn initialize_from_source_instance(
                 source_instance_id = excluded.source_instance_id,
                 updated_at = excluded.updated_at",
         )
-        .bind(option_id)
+        .bind(&option_id)
         .bind(key)
         .bind(value_json)
         .bind(option_revision)
@@ -261,7 +261,7 @@ pub(in crate::api::instance) async fn initialize_from_source_instance(
 			ON CONFLICT(option_id) DO NOTHING
 			",
         )
-        .bind(option_id)
+        .bind(&option_id)
         .bind(option_revision)
         .execute(&mut *tx)
         .await?;

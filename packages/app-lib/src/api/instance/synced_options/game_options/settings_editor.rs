@@ -436,7 +436,7 @@ pub async fn save_changes(
                         source_game_version = NULL, source_instance_id = NULL,
                         updated_at = excluded.updated_at",
                 )
-                .bind(setting.option_id)
+                .bind(&setting.option_id)
                 .bind(kind)
                 .bind(raw_key)
                 .bind(canonical_type)
@@ -457,7 +457,7 @@ pub async fn save_changes(
                 )
                 .bind(revision)
                 .bind(now)
-                .bind(setting.option_id)
+                .bind(&setting.option_id)
                 .execute(&mut *tx)
                 .await?;
             }
@@ -471,7 +471,7 @@ pub async fn save_changes(
                     enabled = excluded.enabled, source = 'user',
                     revision = excluded.revision",
             )
-            .bind(setting.option_id)
+            .bind(&setting.option_id)
             .bind(enabled)
             .bind("user")
             .bind(revision)

@@ -19,8 +19,8 @@ pub(super) use self::files::{
 pub(super) use self::orchestration::instance_option_supported;
 pub use self::orchestration::{
     GlobalSyncedOptions, SyncedOptionCapability, SyncedOptionJoinAction,
-    SyncedOptionJoinPreview, SyncedOptionJoinResolution, SyncedOptionsOverview,
-    get_capabilities, get_global_options, get_initialized_options,
+    SyncedOptionJoinPreview, SyncedOptionsOverview, get_capabilities,
+    get_global_options, get_initialized_options,
     get_instance_option_join_preview, get_overview, get_synced_options_folder,
     reconcile_all, reconcile_changed_file, reconcile_instance,
     set_global_option, set_instance_option,
@@ -30,3 +30,4 @@ pub(crate) use self::orchestration::{
     reconcile_instance_after_pack_update_with_state,
     remove_generated_instance_files,
 };
+pub use self::pending::SyncedOptionJoinResolution;

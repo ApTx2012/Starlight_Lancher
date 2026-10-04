@@ -120,11 +120,13 @@ async fn write_canonical_rows(
             nbt_to_bytes(&server.data)?,
         ));
     }
+    use sqlx::Row;
     if current.len() == desired.len()
         && current.iter().zip(&desired).all(|(current, desired)| {
-            current.id == desired.0
-                && current.position == desired.1
-                && current.nbt == desired.2
+            let id: String = current.get("id");
+            let position: i64 = current.get("position");
+            let nbt: Vec<u8> = current.get("nbt");
+            id == desired.0 && position == desired.1 && nbt == desired.2
         })
     {
         return Ok(false);
@@ -133,9 +135,10 @@ async fn write_canonical_rows(
     let desired_ids =
         desired.iter().map(|(id, _, _)| *id).collect::<HashSet<_>>();
     for row in &current {
-        if !desired_ids.contains(row.id.as_str()) {
+        let row_id: String = row.get("id");
+        if !desired_ids.contains(row_id.as_str()) {
             sqlx::query("DELETE FROM synced_servers WHERE id = ?")
-                .bind(&row.id)
+                .bind(&row_id)
                 .execute(&mut **tx)
                 .await?;
         }
@@ -143,7 +146,10 @@ async fn write_canonical_rows(
 
     let position_offset = current
         .iter()
-        .map(|row| row.position)
+        .map(|row| {
+            let p: i64 = row.get("position");
+            p
+        })
         .max()
         .unwrap_or(0)
         .max(servers.len() as i64)

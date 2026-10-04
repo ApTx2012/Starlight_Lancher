@@ -124,10 +124,10 @@ pub(super) async fn read_instance_changes_into_shared_settings(
             .bind(canonical_type)
             .bind(value_json)
             .bind(next_revision)
-            .bind(metadata.applied_content_set.game_version)
-            .bind(metadata.instance.id)
+            .bind(&metadata.applied_content_set.game_version)
+            .bind(&metadata.instance.id)
             .bind(now)
-            .bind(option_id)
+            .bind(&option_id)
             .bind(current_revision)
             .execute(&mut *tx)
             .await?;
@@ -209,7 +209,7 @@ pub(super) async fn discover_custom_settings(
             )
             .bind(revision)
             .bind(now)
-            .bind(custom_id)
+            .bind(&custom_id)
             .execute(&mut *tx)
             .await?;
             sqlx::query(
@@ -218,7 +218,7 @@ pub(super) async fn discover_custom_settings(
                 WHERE option_id = ?",
             )
             .bind(revision)
-            .bind(custom_id)
+            .bind(&custom_id)
             .execute(&mut *tx)
             .await?;
             discovered = true;
@@ -254,7 +254,7 @@ pub(super) async fn discover_custom_settings(
             .bind(canonical_type)
             .bind(value_json)
             .bind(game_version)
-            .bind(metadata.instance.id)
+            .bind(&metadata.instance.id)
             .bind(now)
             .execute(&mut *tx)
             .await?;
@@ -320,12 +320,12 @@ pub(super) async fn discover_custom_settings(
                 source_instance_id = excluded.source_instance_id,
                 updated_at = excluded.updated_at",
         )
-        .bind(option_id)
+        .bind(&option_id)
         .bind(key)
         .bind(value_json)
         .bind(revision)
         .bind(game_version)
-        .bind(metadata.instance.id)
+        .bind(&metadata.instance.id)
         .bind(now)
         .execute(&mut *tx)
         .await?;

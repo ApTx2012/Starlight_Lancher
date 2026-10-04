@@ -134,7 +134,7 @@ pub(in crate::api::instance) async fn detach_instance(
         "DELETE FROM instance_sync_checkpoints
         WHERE instance_id = ? AND feature = ?",
     )
-    .bind(metadata.instance.id)
+    .bind(&metadata.instance.id)
     .bind(feature)
     .execute(&state.pool)
     .await?;
@@ -150,7 +150,7 @@ pub(in crate::api::instance) async fn prepare_instance_update_with_state(
     sqlx::query(
         "DELETE FROM instance_game_option_update_state WHERE instance_id = ?",
     )
-    .bind(metadata.instance.id)
+    .bind(&metadata.instance.id)
     .execute(&state.pool)
     .await?;
     if sync_is_active_for_instance(metadata, state).await? {
@@ -184,7 +184,7 @@ pub(in crate::api::instance) async fn prepare_instance_update_with_state(
             had_file = excluded.had_file, sha1 = excluded.sha1,
             document = excluded.document",
     )
-    .bind(metadata.instance.id)
+    .bind(&metadata.instance.id)
     .bind(had_file)
     .bind(sha1)
     .bind(bytes)

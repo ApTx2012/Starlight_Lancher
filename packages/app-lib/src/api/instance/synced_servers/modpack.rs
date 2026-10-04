@@ -5,7 +5,7 @@ use super::operations::{compose_instance, effective};
 use super::storage::{load_local, write_local_rows};
 use super::types::{LocalServer, ServerSource};
 use crate::state::{CachedEntry, InstanceLink, InstanceMetadata};
-use crate::util::fetch::{DownloadMeta, DownloadReason, fetch};
+use crate::util::fetch::fetch;
 use crate::{ErrorKind, State};
 use async_zip::base::read::seek::ZipFileReader;
 use quartz_nbt::NbtCompound;
@@ -74,7 +74,7 @@ async fn replace_modpack_servers(
         ON CONFLICT(instance_id) DO UPDATE SET
             version_id = excluded.version_id",
     )
-    .bind(metadata.instance.id)
+    .bind(&metadata.instance.id)
     .bind(version_id)
     .execute(&mut *tx)
     .await?;
@@ -91,7 +91,7 @@ pub(super) async fn pack_state_matches_link(
         FROM instance_server_pack_state
         WHERE instance_id = ?",
     )
-    .bind(metadata.instance.id)
+    .bind(&metadata.instance.id)
     .fetch_optional(&state.pool)
     .await?;
     Ok(row.is_some_and(|row| {
@@ -149,16 +149,9 @@ pub(super) async fn reconstruct_modpack_servers(
                 "Modpack version {version_id} has no downloadable file"
             ))
         })?;
-    let download_meta = DownloadMeta {
-        reason: DownloadReason::Modpack,
-        game_version: metadata.applied_content_set.game_version.clone(),
-        loader: metadata.applied_content_set.loader.as_str().to_string(),
-        dependent_on: Some(version_id.to_string()),
-    };
     let mrpack = fetch(
         &primary_file.url,
         primary_file.hashes.get("sha1").map(String::as_str),
-        Some(&download_meta),
         None,
         &state.api_semaphore,
         &state.pool,

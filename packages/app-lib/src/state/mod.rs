@@ -948,6 +948,8 @@ impl State {
             configured_http_client: RwLock::new(configured_http_client),
             configured_http_client_update: AsyncMutex::new(()),
             file_watcher,
+            synced_options_lock: Arc::new(AsyncMutex::new(())),
+            game_locale_indexer: Default::default(),
             // app_identifier,
         }))
     }
