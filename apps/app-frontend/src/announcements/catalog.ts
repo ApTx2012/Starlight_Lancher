@@ -33,6 +33,27 @@ export const ANNOUNCEMENT_CHANGE_TYPES: readonly AnnouncementChangeType[] = [
 
 export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 	{
+		id: 'launcher-1.0.2-beta1',
+		version: '1.0.2-beta1',
+		publishedAt: '2026-10-04',
+		title: {
+			'en-US': 'Starlight Launcher 1.0.2-beta1',
+			'zh-CN': 'Starlight Launcher 1.0.2-beta1',
+		},
+		changes: {
+			added: [
+				{
+					'en-US': 'Starlight turns 12! On October 4th every year the launcher now shows a celebration banner and falling confetti. The anniversary number is computed from 2014.',
+					'zh-CN': 'Starlight 十二周年！每年 10 月 4 日，启动器会显示庆祝横幅与飘落的彩带、蛋糕，周年数按 2014 年起算。',
+				},
+				{
+					'en-US': 'Added a developer feature flag to preview the anniversary celebration at any time.',
+					'zh-CN': '新增开发者功能开关，可随时预览周年庆效果。',
+				},
+			],
+		},
+	},
+	{
 		id: 'launcher-1.0.1',
 		version: '1.0.1',
 		publishedAt: '2026-10-03',
