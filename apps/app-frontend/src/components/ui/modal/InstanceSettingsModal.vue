@@ -55,8 +55,9 @@ let serverMetadataGeneration = 0
 const instanceRef = computed(() => props.instance)
 const tabbedModal = ref<InstanceType<typeof TabbedModal> | null>(null)
 
-function hide() {
+function hide(onAfterClose?: () => void) {
 	tabbedModal.value?.hide()
+	if (onAfterClose) nextTick(onAfterClose)
 }
 
 provideInstanceSettings({

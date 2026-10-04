@@ -35,6 +35,7 @@ import CommandHistoryModal from '../settings/instances/command-history-modal.vue
 import SyncedServersModal from '../settings/instances/servers-modal.vue'
 import SyncedPacksModal from '../settings/instances/SyncedPacksModal.vue'
 import SyncSourceModal from '../settings/instances/SyncSourceModal.vue'
+import GameSettingsModal from '../settings/instances/game-settings-modal/index.vue'
 
 const { handleError } = injectNotificationManager()
 const { formatMessage } = useVIntl()
@@ -42,6 +43,7 @@ const queryClient = useQueryClient()
 const syncedPacksModal = ref<InstanceType<typeof SyncedPacksModal>>()
 const commandHistoryModal = ref<InstanceType<typeof CommandHistoryModal>>()
 const syncedServersModal = ref<InstanceType<typeof SyncedServersModal>>()
+const gameSettingsModal = ref<InstanceType<typeof GameSettingsModal> | null>(null)
 
 const messages = defineMessages({
 	globalOptionsTitle: {
@@ -513,13 +515,21 @@ function editGlobalOption(row: (typeof globalRows)[number]) {
 	if (row.editable === 'resourcepack' || row.editable === 'datapack') {
 		void syncedPacksModal.value?.show(row.editable)
 	} else if (row.editable === 'game-settings') {
-		// Game settings modal is ported in a later pass.
-		return
+		openGameSettings()
 	} else if (row.editable === 'commands') {
 		void commandHistoryModal.value?.show()
 	} else {
 		void syncedServersModal.value?.show()
 	}
+}
+
+function openGameSettings() {
+	if (!hasGameOptionsToEdit.value) return
+	gameSettingsModal.value?.show()
+}
+
+async function handleGameSettingsSaved() {
+	await invalidateSyncedOptions()
 }
 
 
@@ -537,6 +547,7 @@ onScopeDispose(clearBaseSource)
 		<SyncedPacksModal ref="syncedPacksModal" />
 		<CommandHistoryModal ref="commandHistoryModal" />
 		<SyncedServersModal ref="syncedServersModal" />
+		<GameSettingsModal ref="gameSettingsModal" @saved="handleGameSettingsSaved" />
 
 		<SyncSourceModal
 			ref="baseModal"
