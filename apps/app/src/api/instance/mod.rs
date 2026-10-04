@@ -2087,6 +2087,7 @@ pub async fn instance_list_synced_servers()
 -> Result<Vec<theseus::instance::SyncedServer>> {
     Ok(theseus::instance::list_synced_servers().await?)
 }
+
 #[tauri::command]
 pub async fn instance_update_synced_server(
     server: theseus::instance::SyncedServer,
@@ -2094,6 +2095,7 @@ pub async fn instance_update_synced_server(
     theseus::instance::update_synced_server(server).await?;
     Ok(())
 }
+
 #[tauri::command]
 pub async fn instance_remove_synced_server(id: String) -> Result<()> {
     theseus::instance::remove_synced_server(&id).await?;
