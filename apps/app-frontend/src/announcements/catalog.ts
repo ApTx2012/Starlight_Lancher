@@ -43,6 +43,10 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		changes: {
 			added: [
 				{
+					'en-US': 'Cross-instance sync: share game options, resource packs, data packs, multiplayer servers, command history, and creative hotbars across instances, with per-option toggles and a fine-grained game-settings editor.',
+					'zh-CN': '跨实例同步：可跨实例共享游戏选项、资源包、数据包、多人服务器、命令历史与创造模式快捷栏，支持逐项开关与精细的游戏设置编辑器。',
+				},
+				{
 					'en-US': 'Starlight turns 12! On October 4th every year the launcher now shows a celebration banner and falling confetti. The anniversary number is computed from 2014.',
 					'zh-CN': 'Starlight 十二周年！每年 10 月 4 日，启动器会显示庆祝横幅与飘落的彩带、蛋糕，周年数按 2014 年起算。',
 				},
