@@ -18,6 +18,7 @@ mod catalog;
 mod fullscreen;
 mod instance_support;
 mod launch_overrides;
+mod local_settings_editor;
 pub(crate) mod locales;
 mod options_file;
 mod pack_updates;
@@ -39,6 +40,10 @@ pub use api_types::{
     UpdateGameSettingsRequest,
 };
 pub use launch_overrides::{apply_launcher_overrides, sync_before_launch};
+pub use local_settings_editor::{
+    get_config as get_local_config, preview_changes as preview_local_changes,
+    save_changes as save_local_changes,
+};
 pub(crate) use locales::{
     GameLocaleIndexer, queue_game_locale_index, start_game_locale_indexer,
 };

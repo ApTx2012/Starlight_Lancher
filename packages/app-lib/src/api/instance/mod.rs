@@ -123,6 +123,18 @@ pub use self::screenshots::{
     list_all_screenshots, list_screenshots, list_synced_screenshots,
     move_screenshots, save_edited_screenshot,
 };
+pub use self::synced_options::game_options::{
+    GameOptionsSourceCandidate, GameSettingLocaleLabels,
+    GameSettingsEditorState, SaveGameSettingsResult, UpdateGameSettingsRequest,
+    get_config as get_synced_game_options_config,
+    get_game_setting_locale_labels,
+    get_local_config as get_local_game_options_config,
+    list_sync_sources as list_game_options_sync_sources,
+    preview_changes as preview_synced_game_option_changes,
+    preview_local_changes as preview_local_game_option_changes,
+    save_changes as save_synced_game_option_changes,
+    save_local_changes as save_local_game_option_changes,
+};
 pub(crate) use self::synced_options::game_options::{
     apply_launcher_overrides as apply_game_options_launcher_overrides,
     sync_before_launch as sync_game_options_before_launch,
