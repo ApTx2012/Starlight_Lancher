@@ -11350,5 +11350,6 @@
 	"app.settings.synced-options.game-settings.value-mixed": { "message": "各实例不同" },
 	"app.settings.synced-options.game-settings.value-off": { "message": "关闭" },
 	"app.settings.synced-options.game-settings.value-on": { "message": "开启" },
-	"app.settings.synced-options.game-settings.value-unset": { "message": "选择一个值" }
+	"app.settings.synced-options.game-settings.value-unset": { "message": "选择一个值" },
+	"app.anniversary.banner": { "message": "Starlight {ordinal} 周年快乐！" }
 }

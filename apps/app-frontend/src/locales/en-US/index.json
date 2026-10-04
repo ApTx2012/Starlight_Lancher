@@ -11428,5 +11428,8 @@
   },
   "app.settings.synced-options.game-settings.value-unset": {
     "message": "Choose a value"
+  },
+  "app.anniversary.banner": {
+    "message": "Happy {ordinal} Anniversary, Starlight!"
   }
 }

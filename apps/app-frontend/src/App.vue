@@ -72,6 +72,7 @@ import InstancePlayerModal from '@/components/instance/InstancePlayerModal.vue'
 import TaggedModDownloadsModal from '@/components/instance/TaggedModDownloadsModal.vue'
 import InstanceExportModal from '@/components/lab/recipe-generator/InstanceExportModal.vue'
 import AccountsCard from '@/components/ui/AccountsCard.vue'
+import AnniversaryCelebration from '@/components/ui/AnniversaryCelebration.vue'
 import AppActionBar from '@/components/ui/AppActionBar.vue'
 import AxolotlLogo from '@/components/ui/AxolotlLogo.vue'
 import Breadcrumbs from '@/components/ui/Breadcrumbs.vue'
@@ -2221,6 +2222,7 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 </script>
 
 <template>
+	<AnniversaryCelebration />
 	<SplashScreen v-if="!stateFailed" ref="splashScreen" data-tauri-drag-region />
 	<SkinSiteSessionFrame v-if="stateInitialized" />
 	<InstancePlayerModal v-if="stateInitialized" />

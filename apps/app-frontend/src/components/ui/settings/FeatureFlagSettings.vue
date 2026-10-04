@@ -71,6 +71,7 @@ const featureFlagLabels: Record<FeatureFlag, string> = {
 	advanced_filters_collapsed: '高级筛选默认折叠',
 	multiplayer_in_app: '多人联机',
 	auto_install_dependencies: '自动安装依赖',
+	force_anniversary_celebration: '强制显示周年庆庆祝（调试）',
 }
 
 const settings = ref(await getSettings())
