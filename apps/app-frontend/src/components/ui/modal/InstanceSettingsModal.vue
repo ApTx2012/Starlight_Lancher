@@ -7,6 +7,7 @@ import {
 	FileArchiveIcon,
 	InfoIcon,
 	MonitorIcon,
+	RefreshCwIcon,
 	WrenchIcon,
 } from '@modrinth/assets'
 import {
@@ -23,6 +24,7 @@ import { computed, nextTick, ref, watch } from 'vue'
 import BackupSettings from '@/components/ui/instance_settings/BackupSettings.vue'
 import CoreComponentsSettings from '@/components/ui/instance_settings/CoreComponentsSettings.vue'
 import GeneralSettings from '@/components/ui/instance_settings/GeneralSettings.vue'
+import SyncSettings from '@/components/ui/instance_settings/SyncSettings.vue'
 import HooksSettings from '@/components/ui/instance_settings/HooksSettings.vue'
 import InstallationSettings from '@/components/ui/instance_settings/InstallationSettings.vue'
 import JavaSettings from '@/components/ui/instance_settings/JavaSettings.vue'
@@ -146,6 +148,14 @@ const tabs = computed<TabbedModalTab[]>(() => [
 		}),
 		icon: CodeIcon,
 		content: HooksSettings,
+	},
+	{
+		name: defineMessage({
+			id: 'instance.settings.tabs.sync',
+			defaultMessage: 'Sync',
+		}),
+		icon: RefreshCwIcon,
+		content: SyncSettings,
 	},
 ])
 

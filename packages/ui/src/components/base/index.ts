@@ -11,6 +11,7 @@ export { default as BulletDivider } from './BulletDivider.vue'
 export { default as Button } from './Button.vue'
 export { default as NewButton } from './buttons/Button.vue'
 export { default as IconButton } from './buttons/IconButton.vue'
+export { default as CheckCircleButton } from './buttons/CheckCircleButton.vue'
 export type {
 	ButtonColor,
 	ButtonElementHandle,
@@ -78,6 +79,7 @@ export { default as NavTabs } from './NavTabs.vue'
 export { default as OptionGroup } from './OptionGroup.vue'
 export type { Option as OverflowMenuOption } from './OverflowMenu.vue'
 export { default as OverflowMenu } from './OverflowMenu.vue'
+export { default as TeleportOverflowMenu } from './TeleportOverflowMenu.vue'
 export { default as Page } from './Page.vue'
 export { default as Pagination } from './Pagination.vue'
 export { default as PopoutMenu } from './PopoutMenu.vue'

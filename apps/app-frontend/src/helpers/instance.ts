@@ -108,6 +108,104 @@ export async function get_many(instanceIds: string[]): Promise<GameInstance[]> {
 	return await invoke('plugin:instance|instance_get_many', { instanceIds })
 }
 
+export function adaptContentItems(items: ContentItem[]): ContentItem[] {
+	return items.map((item) => {
+		const embeddedMetadata = item.embedded_metadata
+		if (!embeddedMetadata?.icon_path) return item
+		return {
+			...item,
+			embedded_metadata: {
+				...embeddedMetadata,
+				icon_url: convertFileSrc(embeddedMetadata.icon_path),
+			},
+		}
+	})
+}
+
+export type SyncedOption =
+	| 'game_options'
+	| 'command_history'
+	| 'multiplayer_servers'
+	| 'creative_hotbars'
+	| 'screenshots'
+	| 'resource_packs'
+	| 'data_packs'
+export type GlobalSyncedOptions = Record<SyncedOption, boolean>
+export type SyncedOptionCapability = {
+	option: SyncedOption
+	supported: boolean
+	disabled_reason: string | null
+}
+export type SyncedOptionJoinPreview = { action: string }
+export type SyncedOptionsOverview = {
+	global_options: GlobalSyncedOptions
+	capabilities: SyncedOptionCapability[]
+}
+export async function get_global_synced_options(): Promise<GlobalSyncedOptions> {
+	return await invoke('plugin:instance|instance_get_synced_options')
+}
+export async function get_initialized_synced_options(): Promise<GlobalSyncedOptions> {
+	return await invoke('plugin:instance|instance_get_initialized_synced_options')
+}
+/**
+ * Every synced option is currently available on every instance. The parameter
+ * stays so callers keep passing the option they are asking about, which is what
+ * a real implementation will need.
+ */
+export function isSyncedOptionAvailable(_option: SyncedOption): boolean {
+	return true
+}
+export async function set_global_synced_option(
+	option: SyncedOption,
+	enabled: boolean,
+	baseInstanceId?: string | null,
+): Promise<GlobalSyncedOptions> {
+	return await invoke('plugin:instance|instance_set_synced_option', {
+		option,
+		enabled,
+		baseInstanceId,
+	})
+}
+export async function set_instance_synced_option(
+	instanceId: string,
+	option: SyncedOption,
+	enabled: boolean,
+	resolution?: string | null,
+): Promise<GameInstance> {
+	return await invoke('plugin:instance|instance_set_instance_synced_option', {
+		instanceId,
+		option,
+		enabled,
+		resolution,
+	})
+}
+export async function get_synced_options_overview(
+	instanceId: string,
+): Promise<SyncedOptionsOverview> {
+	return await invoke('plugin:instance|instance_get_synced_options_overview', { instanceId })
+}
+export async function get_command_history(): Promise<string> {
+	return await invoke('plugin:instance|instance_get_synced_command_history')
+}
+export async function set_command_history(contents: string): Promise<string> {
+	return await invoke('plugin:instance|instance_set_synced_command_history', { contents })
+}
+export type SyncedServer = {
+	id: string
+	name: string
+	address: string
+	accept_textures: boolean | null
+}
+export async function list_synced_servers(): Promise<SyncedServer[]> {
+	return await invoke('plugin:instance|instance_list_synced_servers')
+}
+export async function update_synced_server(server: SyncedServer): Promise<void> {
+	await invoke('plugin:instance|instance_update_synced_server', { server })
+}
+export async function remove_synced_server(id: string): Promise<void> {
+	await invoke('plugin:instance|instance_remove_synced_server', { id })
+}
+
 export async function get_projects(
 	instanceId: string,
 	cacheBehaviour?: CacheBehaviour,

@@ -10165,5 +10165,191 @@
   },
   "settings.backups.repository.usage-description": {
     "message": "{stored} stored for {logical} of backup data across {count, plural, one {# snapshot} other {# snapshots}}."
+  },
+  "app.settings.synced-options.choose-sync-source.command-history-description": {
+    "message": "Choose which instance to copy your command history from. This history is only used for the initial sync, and you can edit it from any instance afterward."
+  },
+  "app.settings.synced-options.choose-sync-source.command-history-title": {
+    "message": "Choose command history source"
+  },
+  "app.settings.synced-options.choose-sync-source.creative-hotbars-description": {
+    "message": "Choose which instance to copy your saved creative hotbars from. These hotbars are only used for the initial sync, and you can edit them from any instance afterward."
+  },
+  "app.settings.synced-options.choose-sync-source.creative-hotbars-title": {
+    "message": "Choose creative hotbars source"
+  },
+  "app.settings.synced-options.choose-sync-source.data-packs-title": {
+    "message": "Choose data packs source"
+  },
+  "app.settings.synced-options.choose-sync-source.game-settings-description": {
+    "message": "Choose which instance to copy your game settings from. These settings are only used for the initial sync, and you can edit them from any instance afterward."
+  },
+  "app.settings.synced-options.choose-sync-source.game-settings-title": {
+    "message": "Choose game settings source"
+  },
+  "app.settings.synced-options.choose-sync-source.ineligible": {
+    "message": "You cannot choose this instance as a sync source"
+  },
+  "app.settings.synced-options.choose-sync-source.load-error": {
+    "message": "Could not load sync sources. Please try again."
+  },
+  "app.settings.synced-options.choose-sync-source.multiplayer-servers-description": {
+    "message": "Choose which instance to copy your multiplayer servers from. These servers are only used for the initial sync, and you can edit them from any instance afterward."
+  },
+  "app.settings.synced-options.choose-sync-source.multiplayer-servers-title": {
+    "message": "Choose multiplayer servers source"
+  },
+  "app.settings.synced-options.choose-sync-source.no-instances-found": {
+    "message": "No instances found"
+  },
+  "app.settings.synced-options.choose-sync-source.resource-packs-title": {
+    "message": "Choose resource packs source"
+  },
+  "app.settings.synced-options.choose-sync-source.retry": {
+    "message": "Try again"
+  },
+  "app.settings.synced-options.choose-sync-source.search-placeholder": {
+    "message": "Search instance"
+  },
+  "app.settings.synced-options.choose-sync-source.sync": {
+    "message": "Sync"
+  },
+  "app.settings.synced-options.command-history": {
+    "message": "Sync command history"
+  },
+  "app.settings.synced-options.command-history.description": {
+    "message": "Use the same command history across your instances."
+  },
+  "app.settings.synced-options.command-history.editor-title": {
+    "message": "Edit command history"
+  },
+  "app.settings.synced-options.creative-hotbars": {
+    "message": "Sync saved creative hotbars"
+  },
+  "app.settings.synced-options.creative-hotbars.description": {
+    "message": "Use the same saved creative hotbars across your instances."
+  },
+  "app.settings.synced-options.data-packs": {
+    "message": "Sync data packs"
+  },
+  "app.settings.synced-options.data-packs.description": {
+    "message": "Use the same datapacks across your instances"
+  },
+  "app.settings.synced-options.data-packs.none-synced-yet": {
+    "message": "You haven't synced any data packs yet"
+  },
+  "app.settings.synced-options.edit.no-instances": {
+    "message": "Add an instance before editing synced data."
+  },
+  "app.settings.synced-options.edit.no-synced-data": {
+    "message": "Choose a sync source before editing this setting."
+  },
+  "app.settings.synced-options.game-settings": {
+    "message": "Sync game options"
+  },
+  "app.settings.synced-options.game-settings.button": {
+    "message": "Edit game settings"
+  },
+  "app.settings.synced-options.game-settings.description": {
+    "message": "Use the same game options across your instances."
+  },
+  "app.settings.synced-options.game-settings.disabled-tooltip": {
+    "message": "Enable game settings sync before choosing individual settings."
+  },
+  "app.settings.synced-options.game-settings.no-options-to-edit": {
+    "message": "You haven't got any options yet to edit"
+  },
+  "app.settings.synced-options.multiplayer-servers": {
+    "message": "Sync multiplayer servers"
+  },
+  "app.settings.synced-options.multiplayer-servers.address": {
+    "message": "Server address"
+  },
+  "app.settings.synced-options.multiplayer-servers.copy-address": {
+    "message": "Copy address"
+  },
+  "app.settings.synced-options.multiplayer-servers.count": {
+    "message": "{count, plural, one {# server} other {# servers}}"
+  },
+  "app.settings.synced-options.multiplayer-servers.description": {
+    "message": "Use the same multiplayer servers across your instances."
+  },
+  "app.settings.synced-options.multiplayer-servers.editor-title": {
+    "message": "Edit synced servers"
+  },
+  "app.settings.synced-options.multiplayer-servers.empty": {
+    "message": "No user-added servers are currently synced."
+  },
+  "app.settings.synced-options.multiplayer-servers.filter-offline": {
+    "message": "Offline"
+  },
+  "app.settings.synced-options.multiplayer-servers.filter-online": {
+    "message": "Online"
+  },
+  "app.settings.synced-options.multiplayer-servers.more-options": {
+    "message": "More server options"
+  },
+  "app.settings.synced-options.multiplayer-servers.name": {
+    "message": "Server name"
+  },
+  "app.settings.synced-options.multiplayer-servers.no-results": {
+    "message": "No synced servers match your search or filters."
+  },
+  "app.settings.synced-options.multiplayer-servers.none-synced-yet": {
+    "message": "You haven't synced any servers yet"
+  },
+  "app.settings.synced-options.multiplayer-servers.players-online": {
+    "message": "{count, number} online"
+  },
+  "app.settings.synced-options.multiplayer-servers.search": {
+    "message": "Search {count, number} {count, plural, one {synced server} other {synced servers}}..."
+  },
+  "app.settings.synced-options.multiplayer-servers.status": {
+    "message": "Status"
+  },
+  "app.settings.synced-options.packs.disabled": {
+    "message": "Enable syncing before editing shared packs."
+  },
+  "app.settings.synced-options.resource-packs": {
+    "message": "Sync resource packs"
+  },
+  "app.settings.synced-options.resource-packs.description": {
+    "message": "Use the same resource packs across your instances."
+  },
+  "app.settings.synced-options.resource-packs.none-synced-yet": {
+    "message": "You haven't synced any resource packs yet"
+  },
+  "app.settings.synced-options.title": {
+    "message": "Options synced across all instances"
+  },
+  "app.settings.synced-packs.data-packs": {
+    "message": "Data packs"
+  },
+  "app.settings.synced-packs.disable": {
+    "message": "Disable"
+  },
+  "app.settings.synced-packs.empty": {
+    "message": "No synced packs"
+  },
+  "app.settings.synced-packs.enable": {
+    "message": "Enable"
+  },
+  "app.settings.synced-packs.remove": {
+    "message": "Remove"
+  },
+  "app.settings.synced-packs.resource-packs": {
+    "message": "Resource packs"
+  },
+  "app.sync-instances-update.choose-source.data-packs": {
+    "message": "Choose which instance to copy your data packs from. These packs are only used for the initial sync, and you can edit them from any instance afterward."
+  },
+  "app.sync-instances-update.choose-source.resource-packs": {
+    "message": "Choose which instance to copy your resource packs from. These packs are only used for the initial sync, and you can edit them from any instance afterward."
+  },
+  "instance.settings.tabs.backups": {
+    "message": "Backups"
+  },
+  "instance.settings.tabs.sync": {
+    "message": "Synchronization"
   }
 }
