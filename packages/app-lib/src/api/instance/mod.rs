@@ -173,3 +173,4 @@ pub use self::upgrade::{
     update_instance_upgrade_resolution, update_instance_upgrade_resolutions,
 };
 pub use crate::state::{DailyPlaytime, DailyPlaytimeEntry};
+pub use crate::state::{InstanceSyncedOptions, SyncedOption};
