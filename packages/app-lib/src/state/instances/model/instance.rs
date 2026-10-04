@@ -88,3 +88,67 @@ pub(crate) fn playtime_to_storage(
         .into()
     })
 }
+
+/// Per-instance synchronization feature switches. Mirrors the Axolotl
+/// `InstanceSyncedOptions` shape so the sync subsystem can be ported on top of
+/// the shared `instance_sync_preferences` table.
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+pub struct InstanceSyncedOptions {
+    #[serde(default)]
+    pub game_options: bool,
+    #[serde(default)]
+    pub command_history: bool,
+    #[serde(default)]
+    pub multiplayer_servers: bool,
+    #[serde(default)]
+    pub creative_hotbars: bool,
+    #[serde(default)]
+    pub screenshots: bool,
+    #[serde(default)]
+    pub resource_packs: bool,
+    #[serde(default)]
+    pub data_packs: bool,
+}
+
+/// The set of per-instance synchronization features. Mirrors the Axolotl
+/// `SyncedOption` enum, including its string keys used by the
+/// `instance_sync_preferences` / `sync_feature_settings` tables.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SyncedOption {
+    GameOptions,
+    CommandHistory,
+    MultiplayerServers,
+    CreativeHotbars,
+    Screenshots,
+    ResourcePacks,
+    DataPacks,
+}
+
+impl SyncedOption {
+    pub const ALL: [Self; 7] = [
+        Self::GameOptions,
+        Self::CommandHistory,
+        Self::MultiplayerServers,
+        Self::CreativeHotbars,
+        Self::Screenshots,
+        Self::ResourcePacks,
+        Self::DataPacks,
+    ];
+
+    pub const fn is_available(self) -> bool {
+        true
+    }
+
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::GameOptions => "game_options",
+            Self::CommandHistory => "command_history",
+            Self::MultiplayerServers => "multiplayer_servers",
+            Self::CreativeHotbars => "creative_hotbars",
+            Self::Screenshots => "screenshots",
+            Self::ResourcePacks => "resource_packs",
+            Self::DataPacks => "data_packs",
+        }
+    }
+}

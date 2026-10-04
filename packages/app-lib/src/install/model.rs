@@ -394,6 +394,7 @@ mod tests {
                 groups: Vec::new(),
                 launch_overrides: InstanceLaunchOverrides::empty(instance_id),
                 loader_components: Vec::new(),
+                synced_options: Default::default(),
             },
             install_stage: InstanceInstallStage::Installed,
             content: None,

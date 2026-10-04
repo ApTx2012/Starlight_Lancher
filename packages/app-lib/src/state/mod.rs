@@ -67,6 +67,9 @@ pub use self::mr_auth::*;
 
 mod legacy_converter;
 
+mod game_options;
+pub use self::game_options::*;
+
 pub mod attached_world_data;
 pub mod server_join_log;
 
@@ -148,6 +151,9 @@ pub struct State {
     configured_http_client_update: AsyncMutex<()>,
 
     pub(crate) file_watcher: FileWatcher,
+
+    pub(crate) synced_options_lock: Arc<AsyncMutex<()>>,
+    pub(crate) game_locale_indexer: crate::api::instance::synced_options::game_options::locales::GameLocaleIndexer,
 }
 
 #[derive(Default)]
@@ -555,6 +561,12 @@ impl State {
         ))
     }
 
+    pub(crate) async fn lock_synced_options(
+        &self,
+    ) -> tokio::sync::OwnedMutexGuard<()> {
+        self.synced_options_lock.clone().lock_owned().await
+    }
+
     pub fn initialized() -> bool {
         LAUNCHER_STATE.initialized()
     }
@@ -936,6 +948,8 @@ impl State {
             configured_http_client: RwLock::new(configured_http_client),
             configured_http_client_update: AsyncMutex::new(()),
             file_watcher,
+            synced_options_lock: Arc::new(AsyncMutex::new(())),
+            game_locale_indexer: Default::default(),
             // app_identifier,
         }))
     }
@@ -967,6 +981,13 @@ impl State {
             .lock_owned()
             .await
     }
+}
+
+pub(crate) async fn instance_has_running_process(
+    instance_id: &str,
+    state: &State,
+) -> crate::Result<bool> {
+    Ok(state.process_manager.has_instance_process(instance_id))
 }
 
 #[cfg(test)]
@@ -1016,6 +1037,8 @@ pub(crate) async fn test_state(
         configured_http_client: RwLock::new(configured_http_client),
         configured_http_client_update: AsyncMutex::new(()),
         file_watcher,
+        synced_options_lock: Arc::new(AsyncMutex::new(())),
+        game_locale_indexer: Default::default(),
     }))
 }
 

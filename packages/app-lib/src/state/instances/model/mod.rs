@@ -65,3 +65,5 @@ pub use self::update_check::*;
 fn unknown_value(kind: &str, value: &str) -> crate::Error {
     crate::ErrorKind::InputError(format!("Unknown {kind} {value}")).into()
 }
+mod game_options;
+pub use self::game_options::*;

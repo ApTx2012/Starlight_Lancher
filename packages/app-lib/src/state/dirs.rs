@@ -68,8 +68,15 @@ impl DirectoryInfo {
 
     /// Get the Minecraft instance metadata directory
     #[inline]
+
     pub fn metadata_dir(&self) -> PathBuf {
         self.config_dir.join(METADATA_FOLDER_NAME)
+    }
+
+    /// Get the directory containing launcher-wide synced option files.
+    #[inline]
+    pub(crate) fn synced_options_dir(&self) -> PathBuf {
+        self.config_dir.join("synced-options")
     }
 
     /// Get the Minecraft java versions metadata directory
