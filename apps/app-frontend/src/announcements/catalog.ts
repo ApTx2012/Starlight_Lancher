@@ -33,6 +33,23 @@ export const ANNOUNCEMENT_CHANGE_TYPES: readonly AnnouncementChangeType[] = [
 
 export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 	{
+		id: 'launcher-1.0.2-beta3',
+		version: '1.0.2-beta3',
+		publishedAt: '2026-10-04',
+		title: {
+			'en-US': 'Starlight Launcher 1.0.2-beta3',
+			'zh-CN': 'Starlight Launcher 1.0.2-beta3',
+		},
+		changes: {
+			fixed: [
+				{
+					'en-US': 'Fixed the anniversary celebration banner not showing above the window title bar, and made the banner background semi-transparent so the content behind it stays visible.',
+					'zh-CN': '修复周年庆庆祝横幅被窗口标题栏遮挡、无法显示的问题，并将横幅背景改为半透明，避免遮住下方内容。',
+				},
+			],
+		},
+	},
+	{
 		id: 'launcher-1.0.2-beta2',
 		version: '1.0.2-beta2',
 		publishedAt: '2026-10-04',

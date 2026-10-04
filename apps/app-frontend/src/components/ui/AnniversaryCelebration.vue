@@ -154,7 +154,9 @@ const bannerText = computed(() =>
 
 .anniversary-banner {
 	position: absolute;
-	top: 0;
+	/* 避开原生窗口标题栏（Windows/macOS 系统装饰条会盖住 top:0 的内容）；
+	   titlebar-area-height 是 Tauri 暴露的标题栏高度变量，不支持时降级为 0 */
+	top: env(titlebar-area-height, 0px);
 	left: 0;
 	right: 0;
 	display: flex;
@@ -166,19 +168,24 @@ const bannerText = computed(() =>
 	font-size: 0.95rem;
 	letter-spacing: 0.02em;
 	color: #fff;
-	background: linear-gradient(
+	/* 半透明深色兜底：即使下面的渐变背景失效，白字也不会在浅色页面上隐形 */
+	background-color: rgba(20, 16, 28, 0.35);
+	/* 半透明彩色渐变：让窗口下方的内容能透出来 */
+	background-image: linear-gradient(
 		90deg,
-		#f472b6,
-		#facc15,
-		#4ade80,
-		#38bdf8,
-		#a78bfa,
-		#f472b6
+		rgba(244, 114, 182, 0.8),
+		rgba(250, 204, 21, 0.8),
+		rgba(74, 222, 128, 0.8),
+		rgba(56, 189, 248, 0.8),
+		rgba(167, 139, 250, 0.8),
+		rgba(244, 114, 182, 0.8)
 	);
 	background-size: 300% 100%;
 	animation: anniversary-gradient 8s linear infinite;
 	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
-	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+	text-shadow:
+		0 1px 2px rgba(0, 0, 0, 0.55),
+		0 0 4px rgba(0, 0, 0, 0.35);
 }
 
 .anniversary-banner-text {
