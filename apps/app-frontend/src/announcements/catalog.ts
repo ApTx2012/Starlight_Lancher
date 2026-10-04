@@ -33,6 +33,23 @@ export const ANNOUNCEMENT_CHANGE_TYPES: readonly AnnouncementChangeType[] = [
 
 export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 	{
+		id: 'launcher-1.0.2-beta2',
+		version: '1.0.2-beta2',
+		publishedAt: '2026-10-04',
+		title: {
+			'en-US': 'Starlight Launcher 1.0.2-beta2',
+			'zh-CN': 'Starlight Launcher 1.0.2-beta2',
+		},
+		changes: {
+			fixed: [
+				{
+					'en-US': 'Fixed the launcher failing to start with "no such table: synced_pack_catalog": the cross-instance sync migration was missing the synced_pack_catalog and synced_pack_instances tables.',
+					'zh-CN': '修复启动器因 "no such table: synced_pack_catalog" 无法启动的问题：跨实例同步迁移遗漏了 synced_pack_catalog 与 synced_pack_instances 两张表。',
+				},
+			],
+		},
+	},
+	{
 		id: 'launcher-1.0.2-beta1',
 		version: '1.0.2-beta1',
 		publishedAt: '2026-10-04',

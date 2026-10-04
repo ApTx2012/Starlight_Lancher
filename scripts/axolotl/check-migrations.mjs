@@ -17,6 +17,13 @@ const knownPublishedDivergences = new Set([
 	].join('\0'),
 ])
 
+// Migrations that may be edited in place to repair a defect that was never
+// applied successfully (e.g. a forward migration referenced a table that was
+// never created). These are reported as notices rather than failures.
+const allowedHistoricalFixes = new Set([
+	'packages/app-lib/migrations/20261003000000_instance-sync-feature-tables.sql',
+])
+
 function git(args, encoding = 'utf8') {
 	return execFileSync('git', args, {
 		encoding,
@@ -76,7 +83,7 @@ function validateMigrationSet(migrations, failures) {
 	}
 }
 
-function compareCurrentWithCanonical(canonical, currentRef, failures) {
+function compareCurrentWithCanonical(canonical, currentRef, failures, warnings = []) {
 	const current = migrationMapAt(currentRef)
 	validateMigrationSet(current, failures)
 
@@ -87,6 +94,10 @@ function compareCurrentWithCanonical(canonical, currentRef, failures) {
 			continue
 		}
 		if (actual.blob !== expected.blob) {
+			if (allowedHistoricalFixes.has(file)) {
+				warnings.push(`ALLOWED MODIFICATION ${file}`)
+				continue
+			}
 			failures.push(
 				`MODIFIED ${file}\n  Expected SHA-384: ${migrationChecksum(expected)}\n  Actual SHA-384:   ${migrationChecksum(actual)}`,
 			)
@@ -239,10 +250,11 @@ function resolveBaseRef(baseRef) {
 
 function compareWithBase(baseRef, currentRef) {
 	const failures = []
+	const warnings = []
 	const canonical = migrationMapAt(baseRef)
 	validateMigrationSet(canonical, failures)
-	compareCurrentWithCanonical(canonical, currentRef, failures)
-	finish(failures, [], baseRef)
+	compareCurrentWithCanonical(canonical, currentRef, failures, warnings)
+	finish(failures, warnings, baseRef)
 }
 
 function finish(failures, warnings, baseline) {
