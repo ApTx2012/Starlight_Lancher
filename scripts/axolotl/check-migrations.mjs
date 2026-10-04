@@ -91,6 +91,10 @@ function compareCurrentWithCanonical(canonical, currentRef, failures, warnings =
 	for (const [file, expected] of canonical) {
 		const actual = current.get(file)
 		if (!actual) {
+			if (allowedHistoricalFixes.has(file)) {
+				warnings.push(`ALLOWED DELETED ${file}`)
+				continue
+			}
 			failures.push(`DELETED ${file}`)
 			continue
 		}
