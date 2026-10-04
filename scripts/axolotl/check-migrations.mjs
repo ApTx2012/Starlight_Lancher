@@ -22,6 +22,7 @@ const knownPublishedDivergences = new Set([
 // never created). These are reported as notices rather than failures.
 const allowedHistoricalFixes = new Set([
 	'packages/app-lib/migrations/20261003000000_instance-sync-feature-tables.sql',
+	'packages/app-lib/migrations/20261003000050_synced-pack-tables.sql',
 ])
 
 function git(args, encoding = 'utf8') {
