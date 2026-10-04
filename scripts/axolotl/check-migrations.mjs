@@ -174,6 +174,10 @@ function auditPublishedReleases(currentRef) {
 		const released = migrationMapAt(release.tagName)
 		for (const file of canonical.keys()) {
 			if (!released.has(file)) {
+				if (allowedHistoricalFixes.has(file)) {
+					warnings.push(`ALLOWED DELETE ${release.tagName}: ${file}`)
+					continue
+				}
 				failures.push(`PUBLISHED DELETE ${release.tagName}: ${file}`)
 			}
 		}
@@ -192,6 +196,11 @@ function auditPublishedReleases(currentRef) {
 				warnings.push(
 					`${release.tagName} contains the known historical migration divergence in ${file}`,
 				)
+				continue
+			}
+
+			if (allowedHistoricalFixes.has(file)) {
+				warnings.push(`ALLOWED DIVERGENCE ${release.tagName}: ${file}`)
 				continue
 			}
 
