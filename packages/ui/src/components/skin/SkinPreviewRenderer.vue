@@ -17,12 +17,17 @@
 			</span>
 		</div>
 		<div
-			v-if="$slots.subtitle"
-			class="absolute left-0 right-0 z-10 flex items-center justify-center pointer-events-none"
+			v-if="$slots.subtitle || showsArmorControls"
+			class="absolute left-0 right-0 z-10 flex max-h-[calc(100%_-_1rem)] min-h-0 items-center justify-center overflow-y-auto pointer-events-none"
 			:style="subtitlePositionStyle"
 		>
-			<div ref="subtitleElement" class="pointer-events-auto" @click="ignoreControlClick">
+			<div
+				ref="subtitleElement"
+				class="flex max-w-[calc(100vw-2rem)] flex-wrap items-center justify-center gap-2 pointer-events-auto"
+				@click="ignoreControlClick"
+			>
 				<slot name="subtitle" />
+				<ArmorPreviewControls v-if="showsArmorControls" v-model="armorConfig" />
 			</div>
 		</div>
 		<div
@@ -116,12 +121,15 @@ import {
 
 import { defineMessages, useVIntl } from '#ui/composables/i18n'
 import type {
+	ArmorPreviewConfig,
 	SkinPreviewAnimationConfig,
 	SkinPreviewFitPadding,
 	SkinPreviewFraming,
 	SkinPreviewTuple,
 } from '#ui/composables/skin-rendering'
 import {
+	createDefaultArmorPreviewConfig,
+	useArmorPreview,
 	useSkinPreviewAnimation,
 	useSkinPreviewControls,
 	useSkinPreviewFit,
@@ -130,6 +138,7 @@ import {
 } from '#ui/composables/skin-rendering'
 
 import { useDynamicFontSize } from '../../composables'
+import ArmorPreviewControls from './ArmorPreviewControls.vue'
 import { createRadialSpotlightShader, syncDamageFlashShader } from './skin-preview-shader'
 
 const { formatMessage } = useVIntl()
@@ -157,6 +166,12 @@ const props = withDefaults(
 		fov?: number
 		initialRotation?: number
 		animationConfig?: SkinPreviewAnimationConfig
+		armorPreview?: boolean
+		/**
+		 * Whether the preview draws the armour controls itself. A page that lays
+		 * them out alongside its own controls turns this off and hosts them.
+		 */
+		armorControls?: boolean
 	}>(),
 	{
 		variant: 'CLASSIC',
@@ -173,6 +188,8 @@ const props = withDefaults(
 			randomAnimationInterval: 8000,
 			transitionDuration: 0.2,
 		}),
+		armorPreview: false,
+		armorControls: true,
 	},
 )
 
@@ -197,6 +214,7 @@ const isDarkPreviewTheme = computed(() => {
 	const classList = document.documentElement.classList
 	return classList.contains('dark-mode') || classList.contains('oled-mode')
 })
+const showsArmorControls = computed(() => Boolean(props.armorPreview) && props.armorControls)
 
 function getSubtitleLayoutRoot(element: HTMLElement) {
 	const elementChildren = Array.from(element.children).filter(
@@ -284,6 +302,18 @@ const { isModelLoaded, isTextureLoaded, modelCenter, modelSize, scene } = useSki
 	capeSrc: toRef(props, 'capeSrc'),
 	initializeAnimations,
 	cleanupAnimationState,
+})
+
+const armorConfig = defineModel<ArmorPreviewConfig>('armorConfig', {
+	default: createDefaultArmorPreviewConfig,
+})
+
+// Auto-fit is anchored to the load-time pose. Measuring again after an async
+// armor update could capture an arbitrary animation frame and jump on resize.
+useArmorPreview({
+	scene,
+	config: armorConfig,
+	enabled: toRef(props, 'armorPreview'),
 })
 
 function syncDamageFlashShaderMaterials() {
