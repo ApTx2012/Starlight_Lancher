@@ -85,6 +85,8 @@ const MAX_REDIRECT_LOCATION_BYTES: usize = 8 * 1024;
 const FILE_TRANSFER_CONNECT_TIMEOUT: time::Duration =
     time::Duration::from_secs(20);
 const RESOURCE_WAIT_TIMEOUT: time::Duration = time::Duration::from_secs(45);
+const RESOURCE_PRESSURE_INTERVAL: time::Duration = time::Duration::from_secs(3);
+const RESOURCE_STALL_TIMEOUT: time::Duration = time::Duration::from_secs(300);
 #[cfg(not(test))]
 const FILE_TRANSFER_READ_TIMEOUT: time::Duration =
     time::Duration::from_secs(60);
@@ -3894,6 +3896,73 @@ struct NativeConnectionPermit<'a> {
     _native: crate::util::download::native_budget::NativeBudgetPermit,
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) enum ResourceWaitError {
+    TimedOut,
+}
+
+pub(crate) async fn wait_for_resource_with_pressure<F, T, P>(
+    future: F,
+    pressure_interval: time::Duration,
+    stall_timeout: time::Duration,
+    mut on_pressure: P,
+) -> Result<T, ResourceWaitError>
+where
+    F: Future<Output = T>,
+    P: FnMut(),
+{
+    let pressure_interval =
+        pressure_interval.max(time::Duration::from_millis(1));
+    let pressure_timer = tokio::time::sleep(pressure_interval);
+    let stall_timer = tokio::time::sleep(stall_timeout);
+    tokio::pin!(future, pressure_timer, stall_timer);
+
+    loop {
+        tokio::select! {
+            result = &mut future => return Ok(result),
+            _ = &mut stall_timer => return Err(ResourceWaitError::TimedOut),
+            _ = &mut pressure_timer => {
+                on_pressure();
+                pressure_timer.as_mut().reset(
+                    tokio::time::Instant::now() + pressure_interval,
+                );
+            }
+        }
+    }
+}
+
+pub(crate) async fn wait_for_download_resource<F, T>(
+    future: F,
+) -> Result<T, ResourceWaitError>
+where
+    F: Future<Output = T>,
+{
+    wait_for_resource_with_pressure(
+        future,
+        RESOURCE_PRESSURE_INTERVAL,
+        RESOURCE_STALL_TIMEOUT,
+        || {
+            if let Some(state) = crate::State::get_if_initialized() {
+                state.record_download_queue_wait();
+            }
+        },
+    )
+    .await
+}
+
+pub(crate) async fn acquire_fetch_permit_with_pressure(
+    semaphore: &FetchSemaphore,
+) -> crate::Result<SemaphorePermit<'_>> {
+    wait_for_download_resource(semaphore.0.acquire())
+        .await
+        .map_err(|_| {
+            crate::Error::from(ErrorKind::NetworkError(
+                "download permit remained stalled for 5 minutes".to_string(),
+            ))
+        })?
+        .map_err(Into::into)
+}
+
 async fn acquire_native_connection<'a>(
     route: &DownloadRoute,
     semaphore: &'a FetchSemaphore,
@@ -3904,6 +3973,20 @@ async fn acquire_native_connection<'a>(
         _global: global,
         _native: native,
     })
+}
+
+async fn acquire_native_connection_with_pressure<'a>(
+    route: &DownloadRoute,
+    semaphore: &'a FetchSemaphore,
+) -> crate::Result<NativeConnectionPermit<'a>> {
+    wait_for_download_resource(acquire_native_connection(route, semaphore))
+        .await
+        .map_err(|_| {
+            crate::Error::from(ErrorKind::NetworkError(
+                "native download resources remained stalled for 5 minutes"
+                    .to_string(),
+            ))
+        })?
 }
 
 fn try_acquire_native_connection<'a>(
@@ -5703,19 +5786,11 @@ async fn download_to_path_inner(
         None
     };
     if let Some((h2_route, h2_policy)) = h2_selection {
-        let h2_permit =
-            tokio::time::timeout(RESOURCE_WAIT_TIMEOUT, semaphore.0.acquire())
-                .await
-                .map_err(|_| {
-                    ErrorKind::NetworkError(
-                        "timed out waiting for HTTP/2 download permit"
-                            .to_string(),
-                    )
-                })??;
         let h2_started = Instant::now();
         match crate::util::download::h2_download::try_download_via_h2(
             &request,
             &h2_route,
+            semaphore,
             destination,
             &part_path,
             h2_policy,
@@ -5808,7 +5883,6 @@ async fn download_to_path_inner(
                     .await?;
             }
         }
-        drop(h2_permit);
     }
 
     let mut official_integrity_retry = h2_failed_nonofficial.is_some();
@@ -6147,8 +6221,6 @@ async fn download_to_path_inner(
                 } else {
                     0
                 };
-                let mut activity = crate::State::get_if_initialized()
-                    .map(|state| state.begin_download_connection());
                 record_install_download_started(
                     &request,
                     route,
@@ -6161,25 +6233,21 @@ async fn download_to_path_inner(
                     DownloadItemStatus::WaitingForResource,
                 )
                 .await;
-                let permit_wait = tokio::time::timeout(
-                    RESOURCE_WAIT_TIMEOUT,
-                    acquire_native_connection(route, semaphore),
-                );
+                let permit_wait =
+                    acquire_native_connection_with_pressure(route, semaphore);
                 let resource_wait_started = Instant::now();
-                let permit = if let Some(cancellation) = request.cancellation.as_ref() {
+                let permit = if let Some(cancellation) =
+                    request.cancellation.as_ref()
+                {
                     tokio::select! {
                         _ = cancellation.cancelled() => return Err(ErrorKind::OtherError("download canceled while waiting for native resources".to_string()).into()),
                         result = permit_wait => result,
                     }
                 } else {
                     permit_wait.await
-                }
-                .map_err(|_| {
-                    ErrorKind::NetworkError(
-                        "timed out waiting for native download resources"
-                            .to_string(),
-                    )
-                })??;
+                }?;
+                let mut activity = crate::State::get_if_initialized()
+                    .map(|state| state.begin_download_connection());
                 tracing::debug!(
                     route = %sanitize_url_for_log(&route.url),
                     resource = "native_connection_and_fetch",
@@ -7134,6 +7202,40 @@ mod tests {
         LazyLock::new(|| std::sync::Mutex::new(()));
     static H2_FALLBACK_TEST_LOCK: LazyLock<std::sync::Mutex<()>> =
         LazyLock::new(|| std::sync::Mutex::new(()));
+
+    #[tokio::test]
+    async fn resource_wait_reports_pressure_without_losing_queue_position() {
+        let pressure_events = Arc::new(AtomicUsize::new(0));
+        let observed = Arc::clone(&pressure_events);
+        let result = wait_for_resource_with_pressure(
+            async {
+                tokio::time::sleep(Duration::from_millis(35)).await;
+                7
+            },
+            Duration::from_millis(5),
+            Duration::from_millis(100),
+            move || {
+                observed.fetch_add(1, Ordering::Relaxed);
+            },
+        )
+        .await;
+
+        assert_eq!(result, Ok(7));
+        assert!(pressure_events.load(Ordering::Relaxed) >= 1);
+    }
+
+    #[tokio::test]
+    async fn resource_wait_keeps_a_final_stall_guard() {
+        let result = wait_for_resource_with_pressure(
+            std::future::pending::<()>(),
+            Duration::from_millis(5),
+            Duration::from_millis(25),
+            || {},
+        )
+        .await;
+
+        assert_eq!(result, Err(ResourceWaitError::TimedOut));
+    }
 
     async fn spawn_range_server(
         data: Arc<Vec<u8>>,

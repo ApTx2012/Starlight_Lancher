@@ -104,6 +104,20 @@ pub(crate) async fn acquire(
     }
 }
 
+pub(crate) async fn acquire_with_pressure(
+    route: &DownloadRoute,
+) -> crate::Result<H2StreamPermit> {
+    crate::util::fetch::wait_for_download_resource(acquire(route))
+        .await
+        .map_err(|_| {
+            crate::Error::from(crate::ErrorKind::NetworkError(
+                "HTTP/2 stream permit remained stalled for 5 minutes"
+                    .to_string(),
+            ))
+        })?
+        .map_err(Into::into)
+}
+
 /// Acquires a stream for the Minecraft asset batch. Assets retain a large
 /// logical worker window, but use a separate physical stream pool so they
 /// cannot consume the ordinary native content share.
@@ -134,10 +148,25 @@ pub(crate) async fn acquire_asset(
     }
 }
 
+pub(crate) async fn acquire_asset_with_pressure(
+    route: &DownloadRoute,
+) -> crate::Result<H2StreamPermit> {
+    crate::util::fetch::wait_for_download_resource(acquire_asset(route))
+        .await
+        .map_err(|_| {
+            crate::Error::from(crate::ErrorKind::NetworkError(
+                "asset HTTP/2 stream permit remained stalled for 5 minutes"
+                    .to_string(),
+            ))
+        })?
+        .map_err(Into::into)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::util::fetch::DownloadRouteSource;
+    use std::sync::atomic::{AtomicUsize, Ordering};
 
     fn route() -> DownloadRoute {
         DownloadRoute {
@@ -189,5 +218,41 @@ mod tests {
             budget(&route).unwrap().available_permits(),
             MAX_H2_STREAMS_PER_AUTHORITY
         );
+    }
+
+    #[tokio::test]
+    async fn contended_stream_wait_reports_pressure_and_resumes() {
+        let route = DownloadRoute {
+            url: "https://h2-pressure.example/file".to_string(),
+            source: DownloadRouteSource::Official,
+            is_mirror: false,
+            allow_sensitive_headers: true,
+            supports_range: true,
+            proxy: ProxyPolicy::Direct,
+        };
+        let mut held = Vec::new();
+        for _ in 0..MAX_H2_STREAMS_PER_AUTHORITY {
+            held.push(acquire(&route).await.unwrap());
+        }
+        let pressure = Arc::new(AtomicUsize::new(0));
+        let observed = Arc::clone(&pressure);
+        let release = tokio::spawn(async move {
+            tokio::time::sleep(Duration::from_millis(35)).await;
+            drop(held);
+        });
+
+        let permit = crate::util::fetch::wait_for_resource_with_pressure(
+            acquire(&route),
+            Duration::from_millis(5),
+            Duration::from_millis(100),
+            move || {
+                observed.fetch_add(1, Ordering::Relaxed);
+            },
+        )
+        .await;
+
+        release.await.unwrap();
+        assert!(permit.is_ok());
+        assert!(pressure.load(Ordering::Relaxed) >= 1);
     }
 }

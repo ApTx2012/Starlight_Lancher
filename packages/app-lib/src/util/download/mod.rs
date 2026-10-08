@@ -73,6 +73,19 @@ pub(crate) fn task_concurrency_limit(state: &crate::State) -> Option<usize> {
     if active_engine() == DownloadEngine::XmclCompat {
         None
     } else {
-        Some(state.download_concurrency())
+        Some(native_budget::task_limit(
+            state.download_concurrency(),
+            usize::MAX,
+        ))
+    }
+}
+
+pub(crate) fn single_authority_task_concurrency_limit(
+    state: &crate::State,
+) -> Option<usize> {
+    if active_engine() == DownloadEngine::XmclCompat {
+        None
+    } else {
+        Some(native_budget::task_limit(state.download_concurrency(), 1))
     }
 }

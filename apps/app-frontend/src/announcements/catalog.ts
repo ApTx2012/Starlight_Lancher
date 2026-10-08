@@ -33,6 +33,33 @@ export const ANNOUNCEMENT_CHANGE_TYPES: readonly AnnouncementChangeType[] = [
 
 export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 	{
+		id: 'launcher-1.0.2-beta4',
+		version: '1.0.2-beta4',
+		publishedAt: '2026-10-08',
+		title: {
+			'en-US': 'Starlight Launcher 1.0.2-beta4',
+			'zh-CN': 'Starlight Launcher 1.0.2-beta4',
+		},
+		changes: {
+			changed: [
+				{
+					'en-US': 'Improved download scheduling to reduce concurrency automatically when tasks are waiting for capacity, making large Minecraft installations more reliable on constrained connections.',
+					'zh-CN': '优化下载任务调度：任务因容量不足排队时会自动降低并发，提升大型 Minecraft 版本在受限网络环境下的安装稳定性。',
+				},
+			],
+			fixed: [
+				{
+					'en-US': 'Fixed downloads timing out while waiting for internal connection capacity, which could cause Minecraft installations to fail even when the network was available.',
+					'zh-CN': '修复下载任务等待内部连接容量时过早超时，导致网络正常的情况下 Minecraft 安装仍可能失败的问题。',
+				},
+				{
+					'en-US': 'Fixed instance group changes not saving for some instances.',
+					'zh-CN': '修复部分实例的分组修改无法保存的问题。',
+				},
+			],
+		},
+	},
+	{
 		id: 'launcher-1.0.2-beta3',
 		version: '1.0.2-beta3',
 		publishedAt: '2026-10-04',

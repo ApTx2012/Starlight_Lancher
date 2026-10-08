@@ -34,6 +34,7 @@ const CONNECTION_WAIT_TIMEOUT: Duration = Duration::from_secs(45);
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub(crate) enum H2ConnectFailureKind {
+    Capacity,
     Tcp,
     Tls,
     Protocol,
@@ -357,9 +358,41 @@ async fn connect_tcp(host: &str, port: u16) -> std::io::Result<TcpStream> {
 }
 
 /// Connects a new shared HTTP/2 connection to `authority` (host[:port]).
-async fn establish(
+async fn reserve_physical_budget(
     route: &DownloadRoute,
     reserve_native_budget: bool,
+) -> Result<Option<super::native_budget::NativeBudgetPermit>, H2ConnectError> {
+    Ok(if reserve_native_budget {
+        Some(
+            crate::util::fetch::wait_for_download_resource(
+                super::native_budget::acquire(route),
+            )
+            .await
+            .map_err(|_| {
+                H2ConnectError::new(
+                    H2ConnectFailureKind::Capacity,
+                    "HTTP/2 connection capacity remained stalled for 5 minutes"
+                        .to_string(),
+                )
+            })?
+            .map_err(|error| {
+                H2ConnectError::new(
+                    H2ConnectFailureKind::Capacity,
+                    format!(
+                        "failed to reserve HTTP/2 connection capacity: {error}"
+                    ),
+                )
+            })?,
+        )
+    } else {
+        None
+    })
+}
+
+/// Connects a new shared HTTP/2 connection to `authority` (host[:port]).
+async fn establish(
+    route: &DownloadRoute,
+    physical_budget: Option<super::native_budget::NativeBudgetPermit>,
 ) -> Result<Arc<SharedH2Connection>, H2ConnectError> {
     let authority =
         crate::util::fetch::url_authority(&route.url).ok_or_else(|| {
@@ -368,16 +401,6 @@ async fn establish(
                 "HTTP/2 route has no authority".to_string(),
             )
         })?;
-    let physical_budget = if reserve_native_budget {
-        Some(super::native_budget::acquire(route).await.map_err(|error| {
-            H2ConnectError::new(
-                H2ConnectFailureKind::Tcp,
-                format!("failed to reserve HTTP/2 connection capacity: {error}"),
-            )
-        })?)
-    } else {
-        None
-    };
     let (host, port) = authority
         .rsplit_once(':')
         .map(|(host, port)| (host, port.parse::<u16>().unwrap_or(443)))
@@ -487,16 +510,16 @@ pub(crate) async fn shared_connection(
             )
         })?;
     let slot = connection_slot(&authority).await;
-    let mut cached = tokio::time::timeout(CONNECTION_WAIT_TIMEOUT, slot.lock())
-        .await
-        .map_err(|_| {
-            H2ConnectError::new(
-                H2ConnectFailureKind::Protocol,
-                format!(
-                    "timed out waiting for HTTP/2 connection slot {authority}"
-                ),
-            )
-        })?;
+    let mut cached = crate::util::fetch::wait_for_download_resource(
+        slot.lock(),
+    )
+    .await
+    .map_err(|_| {
+        H2ConnectError::new(
+            H2ConnectFailureKind::Capacity,
+            format!("HTTP/2 connection slot remained stalled for {authority}"),
+        )
+    })?;
     if let Some(connection) = cached.as_ref().filter(|connection| {
         !connection.is_dead() && !connection.is_idle_expired()
     }) {
@@ -525,9 +548,11 @@ pub(crate) async fn shared_connection(
         ));
     }
     tracing::debug!(authority, "Establishing cold shared HTTP/2 connection");
+    let physical_budget =
+        reserve_physical_budget(route, reserve_native_budget).await?;
     let connection = tokio::time::timeout(
         CONNECTION_WAIT_TIMEOUT,
-        establish(route, reserve_native_budget),
+        establish(route, physical_budget),
     )
     .await
     .map_err(|_| {
@@ -555,15 +580,16 @@ pub(crate) async fn shared_batch_connection(
             )
         })?;
     let slot = batch_connection_slot(&authority).await;
-    let mut cached = tokio::time::timeout(
-        CONNECTION_WAIT_TIMEOUT,
+    let mut cached = crate::util::fetch::wait_for_download_resource(
         slot.lock(),
     )
     .await
     .map_err(|_| {
         H2ConnectError::new(
-            H2ConnectFailureKind::Protocol,
-            format!("timed out waiting for asset HTTP/2 connection slot {authority}"),
+            H2ConnectFailureKind::Capacity,
+            format!(
+                "asset HTTP/2 connection slot remained stalled for {authority}"
+            ),
         )
     })?;
     if let Some(connection) = cached.as_ref().filter(|connection| {
@@ -591,9 +617,11 @@ pub(crate) async fn shared_batch_connection(
         *cached = None;
     }
     tracing::debug!(authority, "Establishing sibling HTTP/2 asset connection");
+    let physical_budget =
+        reserve_physical_budget(route, reserve_native_budget).await?;
     let connection = tokio::time::timeout(
         CONNECTION_WAIT_TIMEOUT,
-        establish(route, reserve_native_budget),
+        establish(route, physical_budget),
     )
     .await
     .map_err(|_| {
@@ -614,10 +642,13 @@ pub(crate) async fn has_live_connection(authority: &str) -> bool {
         return false;
     };
     drop(connections);
-    let live = slot
-        .lock()
-        .await
+    let Ok(cached) = slot.try_lock() else {
+        // This is only an eligibility probe. A busy slot means another task
+        // is establishing or refreshing the connection; do not queue this
+        // caller behind that work before its cancellation-aware download path.
+        return false;
+    };
+    cached
         .as_ref()
-        .is_some_and(|connection| !connection.is_dead());
-    live
+        .is_some_and(|connection| !connection.is_dead())
 }
