@@ -1,6 +1,5 @@
 use crate::api::pack::import::{
-    ImportLauncherType,
-    direct_link::resolve_direct_link,
+    ImportLauncherType, direct_link::resolve_direct_link,
 };
 use crate::launcher::ExternalGameDirMode;
 use crate::state::instances::{

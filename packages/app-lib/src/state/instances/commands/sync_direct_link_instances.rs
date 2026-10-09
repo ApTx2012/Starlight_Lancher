@@ -1,7 +1,7 @@
 use super::create_direct_link_instance::create_direct_link_instance;
 use crate::api::pack::import::direct_link::{
-    detect_direct_link_source,
-    has_minecraft_version_manifest, resolve_direct_link,
+    detect_direct_link_source, has_minecraft_version_manifest,
+    resolve_direct_link,
 };
 use crate::event::{InstancePayloadType, emit::emit_instance};
 use crate::launcher::ExternalGameDirMode;
