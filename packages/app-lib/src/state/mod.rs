@@ -118,6 +118,7 @@ pub struct State {
     download_sample_requests: AtomicU64,
     download_sample_errors: AtomicU64,
     download_sample_throttles: AtomicU64,
+    download_sample_queue_waits: AtomicU64,
     pub(crate) install_job_semaphore: Semaphore,
     pub(crate) install_db_semaphore: Semaphore,
     pub(crate) install_job_cancellations: DashMap<Uuid, CancellationToken>,
@@ -196,6 +197,7 @@ struct AutoConcurrencySample {
     requests: u64,
     errors: u64,
     throttles: u64,
+    queue_waits: u64,
 }
 
 /// Per-instance lock registry with task-local reentrancy.
@@ -399,6 +401,15 @@ impl AutoConcurrencyController {
         } else {
             sample.errors as f64 / sample.requests as f64
         };
+        if sample.queue_waits > 0 {
+            self.high_utilization_windows = 0;
+            self.pressure_windows = 0;
+            self.probe = None;
+            self.cooldown_until = Some(now + AUTO_DOWNLOAD_PROBE_COOLDOWN);
+            return current
+                .saturating_sub(current.div_ceil(4))
+                .max(AUTO_DOWNLOAD_CONCURRENCY_MIN);
+        }
         // A single throttled window is handled by the per-host limiter; the
         // global concurrency only backs off when pressure persists across
         // several samples, and then in small steps instead of a big cut.
@@ -677,6 +688,11 @@ impl State {
         self.download_sample_errors.fetch_add(1, Ordering::AcqRel);
     }
 
+    pub(crate) fn record_download_queue_wait(&self) {
+        self.download_sample_queue_waits
+            .fetch_add(1, Ordering::AcqRel);
+    }
+
     pub(crate) fn update_download_settings(
         self: &Arc<Self>,
         settings: &Settings,
@@ -735,6 +751,7 @@ impl State {
                 self.download_sample_requests.swap(0, Ordering::AcqRel);
                 self.download_sample_errors.swap(0, Ordering::AcqRel);
                 self.download_sample_throttles.swap(0, Ordering::AcqRel);
+                self.download_sample_queue_waits.swap(0, Ordering::AcqRel);
                 continue;
             }
             let sample = AutoConcurrencySample {
@@ -748,6 +765,9 @@ impl State {
                 errors: self.download_sample_errors.swap(0, Ordering::AcqRel),
                 throttles: self
                     .download_sample_throttles
+                    .swap(0, Ordering::AcqRel),
+                queue_waits: self
+                    .download_sample_queue_waits
                     .swap(0, Ordering::AcqRel),
             };
             let current = self.download_concurrency();
@@ -771,6 +791,7 @@ impl State {
                     requests = sample.requests,
                     errors = sample.errors,
                     throttles = sample.throttles,
+                    queue_waits = sample.queue_waits,
                     "Adjusted automatic download concurrency"
                 );
                 self.resize_download_concurrency(target);
@@ -935,6 +956,7 @@ impl State {
             download_sample_requests: AtomicU64::new(0),
             download_sample_errors: AtomicU64::new(0),
             download_sample_throttles: AtomicU64::new(0),
+            download_sample_queue_waits: AtomicU64::new(0),
             install_job_semaphore: Semaphore::new(MAX_CONCURRENT_INSTALL_JOBS),
             install_db_semaphore: Semaphore::new(1),
             install_job_cancellations: DashMap::new(),
@@ -1024,6 +1046,7 @@ pub(crate) async fn test_state(
         download_sample_requests: AtomicU64::new(0),
         download_sample_errors: AtomicU64::new(0),
         download_sample_throttles: AtomicU64::new(0),
+        download_sample_queue_waits: AtomicU64::new(0),
         install_job_semaphore: Semaphore::new(1),
         install_db_semaphore: Semaphore::new(1),
         install_job_cancellations: DashMap::new(),
@@ -1053,7 +1076,22 @@ mod auto_concurrency_tests {
             requests: 100,
             errors: 0,
             throttles: 0,
+            queue_waits: 0,
         }
+    }
+
+    #[test]
+    fn queue_pressure_backs_off_immediately_and_repeatedly() {
+        let mut controller = AutoConcurrencyController::default();
+        let now = Instant::now();
+        let congested = AutoConcurrencySample {
+            queue_waits: 1,
+            ..healthy(8, 100)
+        };
+
+        assert_eq!(controller.next_target(now, 128, 128, congested), 96);
+        assert_eq!(controller.next_target(now, 96, 128, congested), 72);
+        assert_eq!(controller.next_target(now, 16, 128, congested), 16);
     }
 
     #[test]
@@ -1130,6 +1168,7 @@ mod auto_concurrency_tests {
             requests: 100,
             errors: 5,
             throttles: 0,
+            queue_waits: 0,
         };
         assert_eq!(controller.next_target(Instant::now(), 16, 128, sample), 16);
     }

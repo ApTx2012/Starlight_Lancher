@@ -62,6 +62,7 @@ pub(crate) enum H2DownloadOutcome {
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(crate) enum H2DownloadFailure {
     Ineligible(&'static str),
+    Capacity,
     Connect,
     Tls,
     Protocol,
@@ -76,6 +77,7 @@ impl H2DownloadFailure {
     pub(crate) const fn as_str(self) -> &'static str {
         match self {
             Self::Ineligible(reason) => reason,
+            Self::Capacity => "HTTP/2 connection capacity is unavailable",
             Self::Connect => "HTTP/2 TCP connection failed",
             Self::Tls => "HTTP/2 TLS connection failed",
             Self::Protocol => "HTTP/2 protocol failed",
@@ -104,6 +106,7 @@ impl H2DownloadFailure {
 pub(crate) async fn try_download_via_h2(
     request: &DownloadRequest,
     route: &DownloadRoute,
+    semaphore: &fetch::FetchSemaphore,
     destination: &Path,
     part_path: &Path,
     policy: super::native::NativeH2Policy,
@@ -122,17 +125,47 @@ pub(crate) async fn try_download_via_h2(
             preserve_partial: false,
         };
     }
-    let connection = match connect_authority(
-        route,
-        true,
-        policy.allow_cold_connection,
-    )
-    .await
+    let connection_wait =
+        connect_authority(route, true, policy.allow_cold_connection);
+    let connection_result = if let Some(cancellation) =
+        request.cancellation.as_ref()
     {
+        tokio::select! {
+            _ = cancellation.cancelled() => return H2DownloadOutcome::Canceled,
+            result = connection_wait => result,
+        }
+    } else {
+        connection_wait.await
+    };
+    let connection = match connection_result {
         Ok(connection) => connection,
         Err(failure) => {
             return H2DownloadOutcome::Fallback {
                 failure,
+                preserve_partial: false,
+            };
+        }
+    };
+    // The shared connection reserves native capacity when it is created.
+    // Acquire the per-download permit afterwards so every native path uses
+    // the same native-then-fetch order and cannot form a circular wait.
+    let fetch_permit_wait =
+        fetch::acquire_fetch_permit_with_pressure(semaphore);
+    let fetch_permit_result = if let Some(cancellation) =
+        request.cancellation.as_ref()
+    {
+        tokio::select! {
+            _ = cancellation.cancelled() => return H2DownloadOutcome::Canceled,
+            result = fetch_permit_wait => result,
+        }
+    } else {
+        fetch_permit_wait.await
+    };
+    let _fetch_permit = match fetch_permit_result {
+        Ok(permit) => permit,
+        Err(_) => {
+            return H2DownloadOutcome::Fallback {
+                failure: H2DownloadFailure::Connect,
                 preserve_partial: false,
             };
         }
@@ -156,14 +189,20 @@ pub(crate) async fn try_download_via_h2(
     let total_size = if let Some(size) = expected_size {
         size
     } else {
-        let _probe_stream_permit = match tokio::time::timeout(
-            ASSET_RESOURCE_WAIT_TIMEOUT,
-            super::h2_stream_budget::acquire(route),
-        )
-        .await
+        let probe_wait = super::h2_stream_budget::acquire_with_pressure(route);
+        let probe_result = if let Some(cancellation) =
+            request.cancellation.as_ref()
         {
-            Ok(Ok(permit)) => permit,
-            Ok(Err(_)) | Err(_) => {
+            tokio::select! {
+                _ = cancellation.cancelled() => return H2DownloadOutcome::Canceled,
+                result = probe_wait => result,
+            }
+        } else {
+            probe_wait.await
+        };
+        let _probe_stream_permit = match probe_result {
+            Ok(permit) => permit,
+            Err(_) => {
                 return H2DownloadOutcome::Fallback {
                     failure: H2DownloadFailure::Connect,
                     preserve_partial: false,
@@ -239,10 +278,7 @@ pub(crate) async fn try_download_via_h2(
         crate::install::DownloadItemStatus::WaitingForResource,
     )
     .await;
-    let stream_wait = tokio::time::timeout(
-        ASSET_RESOURCE_WAIT_TIMEOUT,
-        super::h2_stream_budget::acquire(route),
-    );
+    let stream_wait = super::h2_stream_budget::acquire_with_pressure(route);
     let stream_wait_started = Instant::now();
     let stream_result = if let Some(cancellation) =
         request.cancellation.as_ref()
@@ -255,8 +291,8 @@ pub(crate) async fn try_download_via_h2(
         stream_wait.await
     };
     let _stream_permit = match stream_result {
-        Ok(Ok(permit)) => permit,
-        Ok(Err(_)) | Err(_) => {
+        Ok(permit) => permit,
+        Err(_) => {
             return H2DownloadOutcome::Fallback {
                 failure: H2DownloadFailure::Connect,
                 preserve_partial: false,
@@ -327,6 +363,7 @@ async fn connect_authority(
                 "Failed to establish shared HTTP/2 connection"
             );
             Err(match error.kind {
+                H2ConnectFailureKind::Capacity => H2DownloadFailure::Capacity,
                 H2ConnectFailureKind::Tcp => H2DownloadFailure::Connect,
                 H2ConnectFailureKind::Tls => H2DownloadFailure::Tls,
                 H2ConnectFailureKind::Protocol => H2DownloadFailure::Protocol,
@@ -771,6 +808,12 @@ mod tests {
     use super::*;
     use bytes::Bytes;
 
+    #[test]
+    fn capacity_wait_is_not_classified_as_a_transport_failure() {
+        assert!(!H2DownloadFailure::Capacity.is_transfer_failure());
+        assert!(!H2DownloadFailure::Capacity.should_cooldown_authority());
+    }
+
     #[tokio::test]
     async fn single_stream_reports_bytes_before_the_response_finishes() {
         let size = 512 * 1024;
@@ -1183,28 +1226,6 @@ async fn download_asset_item(
             "timed out waiting for asset destination lock".to_string(),
         )
     })?;
-    let fetch_permit = if apply_native_policy {
-        let Some(semaphore) = native_semaphore else {
-            return Err(crate::ErrorKind::OtherError(
-                "native asset batch is missing fetch budget".to_string(),
-            )
-            .into());
-        };
-        Some(
-            tokio::time::timeout(
-                ASSET_RESOURCE_WAIT_TIMEOUT,
-                semaphore.0.acquire(),
-            )
-            .await
-            .map_err(|_| {
-                crate::ErrorKind::NetworkError(
-                    "timed out waiting for asset fetch permit".to_string(),
-                )
-            })??,
-        )
-    } else {
-        None
-    };
     // A different downloader may have committed the object while this item
     // waited for the destination lock. Reuse it instead of opening another
     // stream, which also prevents cross-engine `.part`/rename races.
@@ -1243,24 +1264,26 @@ async fn download_asset_item(
             return Ok(AssetBatchItemOutcome::LocalObjectFailed { error });
         }
     };
-    let _stream_permit = if apply_native_policy {
-        Some(
-            tokio::time::timeout(
-                ASSET_RESOURCE_WAIT_TIMEOUT,
-                super::h2_stream_budget::acquire_asset(route),
+    // Resolve the primary or lazily expanded sibling before taking the fetch
+    // permit. Shared connections reserve native capacity, so this preserves
+    // the native-then-fetch order used by every other native path.
+    let connection = connections.connection(rescue).await;
+    let fetch_permit = if apply_native_policy {
+        let Some(semaphore) = native_semaphore else {
+            return Err(crate::ErrorKind::OtherError(
+                "native asset batch is missing fetch budget".to_string(),
             )
-            .await
-            .map_err(|_| {
-                crate::ErrorKind::NetworkError(
-                    "timed out waiting for asset HTTP/2 stream permit"
-                        .to_string(),
-                )
-            })??,
-        )
+            .into());
+        };
+        Some(fetch::acquire_fetch_permit_with_pressure(semaphore).await?)
     } else {
         None
     };
-    let connection = connections.connection(rescue).await;
+    let _stream_permit = if apply_native_policy {
+        Some(super::h2_stream_budget::acquire_asset_with_pressure(route).await?)
+    } else {
+        None
+    };
     let _connection_stream = connection.track_stream();
     let mut headers = HeaderMap::new();
     headers.insert(

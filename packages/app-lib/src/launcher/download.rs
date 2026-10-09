@@ -1947,9 +1947,9 @@ pub async fn download_assets(
     // failures. Runs concurrently (same budget as the original scheduler) so
     // import flows are not serialised.
     if !fallback_assets.is_empty() {
-        let limit = crate::util::download::task_concurrency_limit(st)
-            .map(|limit| limit.saturating_mul(2))
-            .unwrap_or(ASSET_BATCH_CONCURRENCY);
+        let limit =
+            crate::util::download::single_authority_task_concurrency_limit(st)
+                .unwrap_or(ASSET_BATCH_CONCURRENCY);
         futures::stream::iter(fallback_assets)
             .map(Ok::<FallbackAsset, crate::Error>)
             .try_for_each_concurrent(limit, |item| {
@@ -2123,7 +2123,7 @@ pub async fn download_libraries(
     let num_files = tasks.len();
     loading_try_for_each_concurrent(
 		stream::iter(tasks).map(Ok::<LibraryDownloadTask<'_>, crate::Error>),
-		crate::util::download::task_concurrency_limit(&st).map(|limit| limit.saturating_mul(2)),
+		crate::util::download::task_concurrency_limit(&st),
         loading_bar,
         loading_amount,
         num_files,

@@ -144,6 +144,15 @@ pub(crate) fn available(route: &DownloadRoute) -> usize {
         .unwrap_or(MAX_CONNECTIONS_PER_AUTHORITY)
 }
 
+pub(crate) fn task_limit(
+    configured_limit: usize,
+    authority_count: usize,
+) -> usize {
+    configured_limit.max(1).min(MAX_NATIVE_CONNECTIONS).min(
+        MAX_CONNECTIONS_PER_AUTHORITY.saturating_mul(authority_count.max(1)),
+    )
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -173,5 +182,12 @@ mod tests {
         ));
         drop(permits);
         assert!(try_acquire(&route).is_ok());
+    }
+
+    #[test]
+    fn task_limit_matches_native_connection_capacity() {
+        assert_eq!(task_limit(128, 1), 8);
+        assert_eq!(task_limit(128, 4), 32);
+        assert_eq!(task_limit(4, 1), 4);
     }
 }
