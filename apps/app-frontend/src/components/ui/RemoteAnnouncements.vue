@@ -8,18 +8,26 @@ import {
 	useVIntl,
 } from '@modrinth/ui'
 import { renderString } from '@modrinth/utils'
+import { fetch as tauriFetch } from '@tauri-apps/plugin-http'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 
 import {
 	announcementKey,
 	isAnnouncementActive,
+	mapBroadcastAnnouncements,
 	OPEN_REMOTE_ANNOUNCEMENT_CENTER_EVENT,
 	parseAnnouncements,
 	REMOTE_ANNOUNCEMENTS_UPDATED_EVENT,
 	type RemoteAnnouncement,
 	safeAnnouncementUrl,
 } from '@/helpers/remote-announcements'
+
+import {
+	requestSkinSiteDownloadToken,
+	skinSiteStatus,
+	waitForSkinSiteSession,
+} from '@/composables/skin-site-session.ts'
 
 const props = defineProps<{ ready: boolean; previewOnly?: boolean }>()
 const { formatMessage } = useVIntl()
@@ -61,7 +69,7 @@ const queuedThisSession = new Set<string>()
 const startupNotified = new Set<string>()
 let items: RemoteAnnouncement[] = []
 let pending: RemoteAnnouncement[] = []
-let cacheKey = ''
+let cacheKey = 'starlight-remote-announcements-cache-v1'
 let cacheLoaded = false
 let disposed = false
 let interval: ReturnType<typeof setInterval> | undefined
@@ -202,11 +210,35 @@ function loadCache() {
 		// Ignore malformed or expired cache payloads
 	}
 }
+function saveCache(next: RemoteAnnouncement[]) {
+	if (!cacheKey) return
+	try {
+		localStorage.setItem(cacheKey, JSON.stringify({ savedAt: Date.now(), items: next }))
+	} catch {
+		// localStorage may be unavailable (private mode / quota)
+	}
+}
 async function refresh() {
-	// Remote fetching is disabled until Starlight has its own announcements API.
-	// We still load any previously cached items so the center has content to show.
 	if (disposed) return
 	loadCache()
+	if (skinSiteStatus.value !== 'signed-in') return
+	try {
+		await waitForSkinSiteSession()
+		const token = await requestSkinSiteDownloadToken()
+		const response = await tauriFetch('https://skin.starlight.cool/starlight/skin/broadcast/all', {
+			method: 'GET',
+			headers: { Authorization: `Bearer ${token}` },
+		})
+		if (!response.ok) return
+		const data = await response.json()
+		const parsed = mapBroadcastAnnouncements((data as { payload?: unknown } | null)?.payload)
+		if (parsed && !disposed) {
+			sync(parsed, true)
+			saveCache(parsed)
+		}
+	} catch {
+		// Remote fetch failed; previously cached items remain displayed
+	}
 }
 async function openLink(value: unknown) {
 	const url = safeAnnouncementUrl(value)
