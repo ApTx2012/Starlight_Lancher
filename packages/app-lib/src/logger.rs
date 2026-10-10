@@ -240,6 +240,114 @@ fn launcher_log_is_expired(
     now.duration_since(created).is_ok_and(|age| age > max_age)
 }
 
+/// Ordinal for the levels the launcher writes, ordered from most to least
+/// verbose. Unknown tokens are ignored so unrecognized lines are never pruned.
+fn log_level_ordinal(token: &str) -> Option<u8> {
+    match token {
+        "TRACE" => Some(0),
+        "DEBUG" => Some(1),
+        "INFO" => Some(2),
+        "WARN" => Some(3),
+        "ERROR" => Some(4),
+        _ => None,
+    }
+}
+
+fn log_level_minimum_ordinal(level: &str) -> Option<u8> {
+    match level {
+        "trace" => Some(0),
+        "debug" => Some(1),
+        "info" => Some(2),
+        "warn" => Some(3),
+        "error" => Some(4),
+        _ => None,
+    }
+}
+
+/// How a log line relates to the surrounding entries.
+enum LogEntryHeader {
+    /// Timestamp and level parsed: the entry can be filtered.
+    Classified(chrono::DateTime<chrono::FixedOffset>, u8),
+    /// Timestamp parsed but the level is unknown: keep it rather than
+    /// dropping content this logic does not understand.
+    Unclassified,
+}
+
+/// Reads the timestamp and level of an entry line. Continuation lines of a
+/// multi-line message carry no prefix and return `None`, so callers keep them
+/// grouped with the entry they belong to.
+fn parse_log_entry_header(line: &str) -> Option<LogEntryHeader> {
+    let (timestamp, rest) = line.split_once(char::is_whitespace)?;
+    let timestamp = chrono::DateTime::parse_from_rfc3339(timestamp).ok()?;
+    let level = rest.trim_start().split_whitespace().next()?;
+    Some(match log_level_ordinal(level) {
+        Some(ordinal) => LogEntryHeader::Classified(timestamp, ordinal),
+        None => LogEntryHeader::Unclassified,
+    })
+}
+
+/// Keeps or drops whole log entries by a predicate over their timestamp and
+/// level ordinal, returning `None` when nothing was dropped.
+///
+/// Multi-line messages are kept or dropped together with their header, the
+/// bytes of kept lines are preserved exactly (no re-encoding), and entries
+/// whose level cannot be classified are always kept.
+fn filter_log_entries<F>(contents: &[u8], keep: F) -> Option<Vec<u8>>
+where
+    F: Fn(chrono::DateTime<chrono::FixedOffset>, u8) -> bool,
+{
+    let mut kept = Vec::with_capacity(contents.len());
+    let mut changed = false;
+    let mut keep_entry = true;
+
+    for line in contents.split_inclusive(|byte| *byte == b'\n') {
+        match parse_log_entry_header(&String::from_utf8_lossy(line)) {
+            Some(LogEntryHeader::Classified(timestamp, ordinal)) => {
+                keep_entry = keep(timestamp, ordinal);
+            }
+            Some(LogEntryHeader::Unclassified) => keep_entry = true,
+            // Continuation line: it follows the decision of its entry.
+            None => {}
+        }
+
+        if keep_entry {
+            kept.extend_from_slice(line);
+        } else {
+            changed = true;
+        }
+    }
+
+    changed.then_some(kept)
+}
+
+/// Filters launcher log bytes for an export: entries older than `max_age` and
+/// entries below `min_level` are removed. Pass `None` for either bound to keep
+/// everything on that axis. Multi-line messages stay intact.
+pub fn filter_log_contents(
+    contents: &[u8],
+    max_age: Option<std::time::Duration>,
+    min_level: Option<&str>,
+) -> Vec<u8> {
+    let now = chrono::Local::now().fixed_offset();
+    let minimum = min_level.and_then(log_level_minimum_ordinal);
+
+    filter_log_entries(contents, |timestamp, ordinal| {
+        if let Some(minimum) = minimum
+            && ordinal < minimum
+        {
+            return false;
+        }
+        if let Some(max_age) = max_age {
+            let age = (now - timestamp).to_std().unwrap_or_default();
+            if age > max_age {
+                return false;
+            }
+        }
+        true
+    })
+    .unwrap_or_else(|| contents.to_vec())
+}
+
 struct LogEventWriter {
     writer: RotatingLogWriter,
     buffer: Vec<u8>,
