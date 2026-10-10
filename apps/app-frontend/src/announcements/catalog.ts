@@ -33,6 +33,33 @@ export const ANNOUNCEMENT_CHANGE_TYPES: readonly AnnouncementChangeType[] = [
 
 export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 	{
+		id: 'launcher-1.0.2-beta5',
+		version: '1.0.2-beta5',
+		publishedAt: '2026-10-11',
+		title: {
+			'en-US': 'Starlight Launcher 1.0.2-beta5',
+			'zh-CN': 'Starlight Launcher 1.0.2-beta5',
+		},
+		changes: {
+			added: [
+				{
+					'en-US': 'Added a remote announcements center: a bell in the top bar opens a panel listing launcher announcements fetched from the Starlight skin site.',
+					'zh-CN': '新增远程公告中心：顶栏的铃铛可打开公告面板，展示从 Starlight 皮肤站拉取的启动器公告。',
+				},
+				{
+					'en-US': 'Added a custom Minecraft window title option: set a global toggle and default title, and let each instance override it. The game window is renamed on Windows.',
+					'zh-CN': '新增自定义 Minecraft 窗口标题：可设置全局开关与默认标题，并允许各实例单独覆盖；Windows 下会重命名游戏窗口。',
+				},
+			],
+			fixed: [
+				{
+					'en-US': 'Completed the Chinese translations for the armor preview feature.',
+					'zh-CN': '补齐盔甲预览功能的中文翻译。',
+				},
+			],
+		},
+	},
+	{
 		id: 'launcher-1.0.2-beta4',
 		version: '1.0.2-beta4',
 		publishedAt: '2026-10-08',
