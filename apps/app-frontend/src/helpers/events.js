@@ -82,6 +82,16 @@ export async function instance_bulk_update_progress_listener(callback) {
 	return await listen('instance_bulk_update_progress', (event) => callback(event.payload))
 }
 
+/// Payload for the 'instance_groups_changed' event
+/*
+	InstanceGroupsChangedPayload {
+		instance_ids: string[]
+	}
+*/
+export async function instance_groups_listener(callback) {
+	return await listen('instance_groups_changed', (event) => callback(event.payload))
+}
+
 export async function install_job_listener(callback) {
 	return await listen('install_job', (event) => callback(event.payload))
 }
