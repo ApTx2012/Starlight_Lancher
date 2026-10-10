@@ -68,6 +68,23 @@
 			</template>
 		</Dropdown>
 		<ButtonStyled
+			v-tooltip="formatMessage(messages.announcements)"
+			type="transparent"
+			circular
+		>
+			<button
+				:aria-label="formatMessage(messages.announcements)"
+				class="relative"
+				@click="openAnnouncementCenter"
+			>
+				<NewspaperIcon />
+				<span
+					v-if="announcementUnreadCount"
+					class="absolute right-0 top-0 size-2 rounded-full bg-red ring-2 ring-bg-raised"
+				/>
+			</button>
+		</ButtonStyled>
+		<ButtonStyled
 			v-if="!isDownloadsPage && hasActiveDownloads && !hasVisibleActiveDownloadToasts"
 			color="brand"
 			type="transparent"
@@ -190,6 +207,7 @@
 <script setup lang="ts">
 import {
 	BellIcon,
+	NewspaperIcon,
 	DownloadIcon,
 	DropdownIcon,
 	OnlineIndicatorIcon,
@@ -211,7 +229,7 @@ import {
 } from '@modrinth/ui'
 import { convertFileSrc } from '@tauri-apps/api/core'
 import { Dropdown } from 'floating-vue'
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import AppUpdateButton from '@/components/ui/app-update-button/index.vue'
@@ -222,6 +240,10 @@ import { get_many as getInstances } from '@/helpers/instance'
 import { get_all as getRunningProcesses, kill as killProcess } from '@/helpers/process'
 import type { LoadingBar } from '@/helpers/state'
 import { progress_bars_list } from '@/helpers/state'
+import {
+	OPEN_REMOTE_ANNOUNCEMENT_CENTER_EVENT,
+	REMOTE_ANNOUNCEMENTS_UPDATED_EVENT,
+} from '@/helpers/remote-announcements'
 import type { GameInstance } from '@/helpers/types'
 import { downloadBarTypes, injectDownloadManager } from '@/providers/download-manager'
 
@@ -230,6 +252,25 @@ const { handleError } = notificationManager
 const popupNotificationManager = injectPopupNotificationManager()
 const downloadManager = injectDownloadManager()
 const { formatMessage } = useVIntl()
+
+const announcementUnreadCount = ref(0)
+
+function openAnnouncementCenter() {
+	window.dispatchEvent(new CustomEvent(OPEN_REMOTE_ANNOUNCEMENT_CENTER_EVENT))
+}
+
+function updateAnnouncementCount(event: Event) {
+	const detail = (event as CustomEvent<{ unreadKeys?: string[] }>).detail
+	announcementUnreadCount.value = detail?.unreadKeys?.length ?? 0
+}
+
+onMounted(() => {
+	window.addEventListener(REMOTE_ANNOUNCEMENTS_UPDATED_EVENT, updateAnnouncementCount)
+})
+
+onBeforeUnmount(() => {
+	window.removeEventListener(REMOTE_ANNOUNCEMENTS_UPDATED_EVENT, updateAnnouncementCount)
+})
 
 type NotificationHistoryItem = {
 	key: string
@@ -369,6 +410,10 @@ const messages = defineMessages({
 	notifications: {
 		id: 'app.action-bar.notifications',
 		defaultMessage: 'Notifications',
+	},
+	announcements: {
+		id: 'app.action-bar.announcements',
+		defaultMessage: 'Announcements',
 	},
 	clearNotifications: {
 		id: 'app.action-bar.notifications.clear',

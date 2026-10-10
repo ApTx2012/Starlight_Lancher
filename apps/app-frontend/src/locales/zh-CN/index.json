@@ -11351,5 +11351,8 @@
 	"app.settings.synced-options.game-settings.value-off": { "message": "关闭" },
 	"app.settings.synced-options.game-settings.value-on": { "message": "开启" },
 	"app.settings.synced-options.game-settings.value-unset": { "message": "选择一个值" },
-	"app.anniversary.banner": { "message": "Starlight {ordinal} 周年快乐！" }
+	"app.anniversary.banner": { "message": "Starlight {ordinal} 周年快乐！" },
+	"app.action-bar.announcements": { "message": "公告" },
+	"app.remote-announcements.center-title": { "message": "公告" },
+	"app.remote-announcements.empty": { "message": "暂无公告" }
 }

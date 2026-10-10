@@ -95,6 +95,7 @@ import NavRail from '@/components/ui/NavRail.vue'
 import OnboardingOverlay from '@/components/ui/onboarding/OnboardingOverlay.vue'
 import QuickInstanceSwitcher from '@/components/ui/QuickInstanceSwitcher.vue'
 import SkinSiteSessionFrame from '@/components/ui/SkinSiteSessionFrame.vue'
+import RemoteAnnouncements from '@/components/ui/RemoteAnnouncements.vue'
 import StartupAnnouncementModal from '@/components/ui/StartupAnnouncementModal.vue'
 import SplashScreen from '@/components/ui/SplashScreen.vue'
 import WindowControls from '@/components/ui/WindowControls.vue'
@@ -2227,6 +2228,7 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 	<SkinSiteSessionFrame v-if="stateInitialized" />
 	<InstancePlayerModal v-if="stateInitialized" />
 	<StartupAnnouncementModal ref="startupAnnouncementModal" />
+	<RemoteAnnouncements :ready="stateInitialized && !showOnboarding && !stateFailed" />
 	<div id="teleports"></div>
 	<div
 		v-if="stateInitialized && themeStore.customBackgroundPath && !themeStore.transparentBackground"
