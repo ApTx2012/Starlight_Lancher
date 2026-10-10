@@ -64,3 +64,6 @@ export function isAnnouncementActive(item: RemoteAnnouncement, now = Date.now())
 export function announcementKey(item: RemoteAnnouncement) {
 	return item.id + ':' + item.published_at
 }
+
+export const REMOTE_ANNOUNCEMENTS_UPDATED_EVENT = 'starlight:remote-announcements-updated'
+export const OPEN_REMOTE_ANNOUNCEMENT_CENTER_EVENT = 'starlight:open-remote-announcement-center'
