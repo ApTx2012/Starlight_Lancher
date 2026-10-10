@@ -11359,5 +11359,8 @@
 	"app.settings.defaults.window-title.enabled-description": { "message": "允许实例自定义 Minecraft 窗口标题。" },
 	"app.settings.defaults.window-title.default": { "message": "默认窗口标题" },
 	"app.settings.defaults.window-title.default-description": { "message": "当实例未提供自己的标题时使用。" },
-	"app.settings.defaults.window-title.default-placeholder": { "message": "输入默认窗口标题..." }
+	"app.settings.defaults.window-title.default-placeholder": { "message": "输入默认窗口标题..." },
+	"app.action-bar.announcements": { "message": "公告" },
+	"app.remote-announcements.center-title": { "message": "公告" },
+	"app.remote-announcements.empty": { "message": "暂无公告" }
 }

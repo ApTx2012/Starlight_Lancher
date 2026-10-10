@@ -11455,5 +11455,35 @@
   },
   "app.settings.defaults.window-title.default-placeholder": {
     "message": "Enter the default window title..."
+  },
+  "app.action-bar.announcements": {
+    "message": "Announcements"
+  },
+  "app.remote-announcements.center-title": {
+    "message": "Announcements"
+  },
+  "app.remote-announcements.empty": {
+    "message": "No announcements"
+  },
+  "app.remote-announcements.view": {
+    "message": "View announcement"
+  },
+  "app.remote-announcements.unread": {
+    "message": "Unread"
+  },
+  "app.remote-announcements.read-all": {
+    "message": "Mark all announcements as read"
+  },
+  "app.remote-announcements.preview-title": {
+    "message": "Announcement style preview"
+  },
+  "app.remote-announcements.preview-summary": {
+    "message": "This is a local preview notification. Select View announcement to see the full Markdown content."
+  },
+  "app.remote-announcements.preview-content": {
+    "message": "## Announcement preview\n\nThis is **sample content**, not a published announcement.\n\n- Supports headings, lists, and links\n- Close buttons are always available\n\n> Previewing does not change real announcement read status.\n\n| Type | Display |\n| --- | --- |\n| Modal | Full Markdown content |\n| Popup | Summary, then full content |\n\n[Visit the website](https://skin.starlight.cool/)"
+  },
+  "app.remote-announcements.preview-action": {
+    "message": "Visit website"
   }
 }
