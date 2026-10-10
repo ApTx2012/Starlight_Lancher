@@ -41,6 +41,16 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 			'zh-CN': 'Starlight Launcher 1.0.2-beta4',
 		},
 		changes: {
+			added: [
+				{
+					'en-US': 'Added armor and armor-trim rendering to the skin preview, letting you try on armor pieces and trim patterns directly in the skin editor.',
+					'zh-CN': '皮肤预览新增盔甲与盔甲纹饰渲染，可在皮肤编辑器内直接试穿各部位盔甲并调整纹饰图案。',
+				},
+				{
+					'en-US': 'Armor preview selections in the skin editor are now saved locally, so they persist across sessions.',
+					'zh-CN': '皮肤编辑器中的盔甲预览选择现在会保存在本地，跨会话保留。',
+				},
+			],
 			changed: [
 				{
 					'en-US': 'Improved download scheduling to reduce concurrency automatically when tasks are waiting for capacity, making large Minecraft installations more reliable on constrained connections.',
