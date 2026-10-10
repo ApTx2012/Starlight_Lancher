@@ -453,7 +453,8 @@ async fn rename_minecraft_window(pid: u32, title: &str) {
             unsafe {
                 use windows::Win32::Foundation::LPARAM;
                 use windows::Win32::UI::WindowsAndMessaging::EnumWindows;
-                let _ = EnumWindows(Some(rename_if_owned_by_process), LPARAM(0));
+                let _ =
+                    EnumWindows(Some(rename_if_owned_by_process), LPARAM(0));
             }
             RENAME_WINDOW_HANDLE.load(Ordering::Relaxed)
         };
@@ -477,7 +478,6 @@ async fn rename_minecraft_window(pid: u32, title: &str) {
 
 #[cfg(not(target_os = "windows"))]
 async fn rename_minecraft_window(_pid: u32, _title: &str) {}
-
 
 #[tauri::command]
 pub fn lightweight_mode_frontend_ready(

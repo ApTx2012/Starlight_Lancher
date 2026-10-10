@@ -689,10 +689,12 @@ impl Settings {
         .bind(self.custom_window_title_enabled)
         .execute(exec)
         .await?;
-        sqlx::query("UPDATE settings SET default_window_title = ? WHERE id = 0")
-            .bind(self.default_window_title.trim())
-            .execute(exec)
-            .await?;
+        sqlx::query(
+            "UPDATE settings SET default_window_title = ? WHERE id = 0",
+        )
+        .bind(self.default_window_title.trim())
+        .execute(exec)
+        .await?;
         sqlx::query("UPDATE settings SET mc_memory_optimize = ? WHERE id = 0")
             .bind(self.memory.optimize_before_launch)
             .execute(exec)

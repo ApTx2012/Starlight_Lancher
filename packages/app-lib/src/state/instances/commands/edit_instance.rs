@@ -378,7 +378,8 @@ fn apply_launch_overrides_patch(
         overrides.game_resolution = game_resolution;
     }
     if let Some(window_title) = patch.window_title {
-        overrides.window_title = window_title.filter(|value| !value.trim().is_empty());
+        overrides.window_title =
+            window_title.filter(|value| !value.trim().is_empty());
     }
     if let Some(mode) = patch.instance_mode {
         overrides.instance_mode = Some(mode);
