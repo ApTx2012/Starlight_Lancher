@@ -1,9 +1,9 @@
+use crate::state::instance_groups;
 use crate::state::instances::{
     ContentSet, Instance, InstanceLaunchOverrides, InstanceLink,
     LoaderComponent,
     adapters::sqlite::{instance_rows, loader_component_rows},
 };
-use crate::state::instance_groups;
 use serde::{Deserialize, Serialize};
 use sqlx::SqlitePool;
 

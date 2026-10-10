@@ -1750,9 +1750,7 @@ pub async fn instance_delete_group(id: String) -> Result<()> {
 }
 
 #[tauri::command]
-pub async fn instance_set_group_order(
-    group_ids: Vec<String>,
-) -> Result<()> {
+pub async fn instance_set_group_order(group_ids: Vec<String>) -> Result<()> {
     Ok(theseus::instance::set_group_order(group_ids).await?)
 }
 
