@@ -336,6 +336,8 @@ pub struct ProcessPayload {
     pub uuid: Uuid,
     pub pid: u32,
     pub maximize_window: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub window_title: Option<String>,
     pub event: ProcessPayloadType,
     pub message: String,
     #[serde(skip_serializing_if = "Option::is_none")]

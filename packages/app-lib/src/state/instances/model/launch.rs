@@ -38,6 +38,8 @@ pub struct InstanceLaunchOverrides {
     pub maximize_window: Option<bool>,
     pub game_resolution: Option<WindowSize>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub window_title: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub launch_preparation_timeout: Option<u64>,
     pub hooks: Hooks,
 }
@@ -55,6 +57,7 @@ impl InstanceLaunchOverrides {
             force_fullscreen: None,
             maximize_window: None,
             game_resolution: None,
+            window_title: None,
             launch_preparation_timeout: None,
             hooks: Hooks {
                 pre_launch: None,
@@ -86,6 +89,8 @@ pub(crate) struct InstanceLaunchOverridesData {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub game_resolution: Option<WindowSize>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub window_title: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub launch_preparation_timeout: Option<u64>,
     #[serde(default)]
     pub hooks: Hooks,
@@ -107,6 +112,7 @@ impl InstanceLaunchOverridesData {
             force_fullscreen: self.force_fullscreen,
             maximize_window: self.maximize_window,
             game_resolution: self.game_resolution,
+            window_title: self.window_title,
             launch_preparation_timeout: self.launch_preparation_timeout,
             hooks: self.hooks,
         }
@@ -125,6 +131,7 @@ impl From<&InstanceLaunchOverrides> for InstanceLaunchOverridesData {
             force_fullscreen: overrides.force_fullscreen,
             maximize_window: overrides.maximize_window,
             game_resolution: overrides.game_resolution,
+            window_title: overrides.window_title.clone(),
             launch_preparation_timeout: overrides.launch_preparation_timeout,
             hooks: overrides.hooks.clone(),
         }

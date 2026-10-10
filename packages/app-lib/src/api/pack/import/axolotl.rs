@@ -157,6 +157,7 @@ pub(crate) async fn import_axolotl(
                 ),
                 maximize_window: Some(config.launch_overrides.maximize_window),
                 game_resolution: Some(config.launch_overrides.game_resolution),
+                window_title: None,
                 launch_preparation_timeout: Some(
                     config.launch_overrides.launch_preparation_timeout,
                 ),

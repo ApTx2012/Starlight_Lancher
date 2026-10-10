@@ -11432,6 +11432,30 @@
   "app.anniversary.banner": {
     "message": "Happy {ordinal} Anniversary, Starlight!"
   },
+  "instance.settings.tabs.window.window-title": {
+    "message": "Window title"
+  },
+  "instance.settings.tabs.window.window-title.description": {
+    "message": "Customize the Minecraft window title. Leave empty to keep the default."
+  },
+  "instance.settings.tabs.window.window-title.enter": {
+    "message": "Enter window title..."
+  },
+  "app.settings.defaults.window-title.enabled": {
+    "message": "Custom Minecraft window title"
+  },
+  "app.settings.defaults.window-title.enabled-description": {
+    "message": "Allow instances to customize the Minecraft window title."
+  },
+  "app.settings.defaults.window-title.default": {
+    "message": "Default window title"
+  },
+  "app.settings.defaults.window-title.default-description": {
+    "message": "Used when an instance does not provide its own title."
+  },
+  "app.settings.defaults.window-title.default-placeholder": {
+    "message": "Enter the default window title..."
+  },
   "app.action-bar.announcements": {
     "message": "Announcements"
   },
