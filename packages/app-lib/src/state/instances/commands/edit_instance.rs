@@ -103,6 +103,12 @@ pub struct InstanceLaunchOverridesPatch {
         skip_serializing_if = "Option::is_none",
         with = "serde_with::rust::double_option"
     )]
+    pub window_title: Option<Option<String>>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        with = "serde_with::rust::double_option"
+    )]
     pub launch_preparation_timeout: Option<Option<u64>>,
     pub hooks: Option<Hooks>,
 }
@@ -370,6 +376,10 @@ fn apply_launch_overrides_patch(
     }
     if let Some(game_resolution) = patch.game_resolution {
         overrides.game_resolution = game_resolution;
+    }
+    if let Some(window_title) = patch.window_title {
+        overrides.window_title =
+            window_title.filter(|value| !value.trim().is_empty());
     }
     if let Some(mode) = patch.instance_mode {
         overrides.instance_mode = Some(mode);

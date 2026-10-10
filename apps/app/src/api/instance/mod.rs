@@ -333,6 +333,12 @@ pub struct EditInstance {
     )]
     pub launch_preparation_timeout: Option<Option<u64>>,
     pub hooks: Option<Hooks>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        with = "serde_with::rust::double_option"
+    )]
+    pub window_title: Option<Option<String>>,
 
     #[serde(
         default,
@@ -531,7 +537,8 @@ fn edit_to_core(edit_instance: EditInstance) -> Result<CoreEditInstance> {
                 || edit_instance.maximize_window.is_some()
                 || edit_instance.game_resolution.is_some()
                 || edit_instance.launch_preparation_timeout.is_some()
-                || edit_instance.hooks.is_some();
+                || edit_instance.hooks.is_some()
+                || edit_instance.window_title.is_some();
             if has_launch_change {
                 Some(InstanceLaunchOverridesPatch {
                     player: None,
@@ -546,6 +553,7 @@ fn edit_to_core(edit_instance: EditInstance) -> Result<CoreEditInstance> {
                     launch_preparation_timeout: edit_instance
                         .launch_preparation_timeout,
                     hooks: edit_instance.hooks,
+                    window_title: edit_instance.window_title,
                 })
             } else {
                 None

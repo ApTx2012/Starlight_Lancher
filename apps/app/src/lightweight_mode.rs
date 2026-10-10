@@ -253,6 +253,14 @@ impl LightweightMode {
                     if payload.maximize_window {
                         maximize_minecraft_window(payload.pid).await;
                     }
+                    if let Some(title) = payload
+                        .window_title
+                        .as_ref()
+                        .map(|value| value.trim())
+                        .filter(|value| !value.is_empty())
+                    {
+                        rename_minecraft_window(payload.pid, title).await;
+                    }
                     let settings = match theseus::settings::get().await {
                         Ok(settings) => settings,
                         Err(error) => {
@@ -332,6 +340,8 @@ struct ProcessEventPayload {
     pid: u32,
     #[serde(default)]
     maximize_window: bool,
+    #[serde(default)]
+    window_title: Option<String>,
     event: String,
     crashed: Option<bool>,
     #[serde(default)]
@@ -339,7 +349,7 @@ struct ProcessEventPayload {
 }
 
 #[cfg(target_os = "windows")]
-use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicIsize, AtomicU32, Ordering};
 
 #[cfg(target_os = "windows")]
 static MAXIMIZE_PROCESS_ID: AtomicU32 = AtomicU32::new(0);
@@ -400,6 +410,74 @@ async fn maximize_minecraft_window(pid: u32) {
 
 #[cfg(not(target_os = "windows"))]
 async fn maximize_minecraft_window(_pid: u32) {}
+#[cfg(target_os = "windows")]
+static RENAME_WINDOW_HANDLE: AtomicIsize = AtomicIsize::new(0);
+
+#[cfg(target_os = "windows")]
+unsafe extern "system" fn rename_if_owned_by_process(
+    hwnd: windows::Win32::Foundation::HWND,
+    _: windows::Win32::Foundation::LPARAM,
+) -> windows::core::BOOL {
+    use windows::Win32::UI::WindowsAndMessaging::{
+        GetWindowThreadProcessId, IsWindowVisible,
+    };
+    use windows::core::BOOL;
+
+    let mut window_pid = 0;
+    unsafe { GetWindowThreadProcessId(hwnd, Some(&mut window_pid)) };
+    if window_pid == MAXIMIZE_PROCESS_ID.load(Ordering::Relaxed)
+        && unsafe { IsWindowVisible(hwnd).as_bool() }
+    {
+        RENAME_WINDOW_HANDLE.store(hwnd.0 as isize, Ordering::Relaxed);
+        return BOOL(0);
+    }
+    BOOL(1)
+}
+
+#[cfg(target_os = "windows")]
+async fn rename_minecraft_window(pid: u32, title: &str) {
+    if pid == 0 || title.is_empty() {
+        return;
+    }
+
+    // PCL keeps re-applying the title: FML/Quilt and some mods reset it
+    // while the game boots, so a one-shot rename is not enough.
+    let deadline =
+        tokio::time::Instant::now() + std::time::Duration::from_secs(45);
+    let mut applied = false;
+    loop {
+        let found = {
+            let _guard = MAXIMIZE_WINDOW_ENUMERATION.lock();
+            MAXIMIZE_PROCESS_ID.store(pid, Ordering::Relaxed);
+            RENAME_WINDOW_HANDLE.store(0, Ordering::Relaxed);
+            unsafe {
+                use windows::Win32::Foundation::LPARAM;
+                use windows::Win32::UI::WindowsAndMessaging::EnumWindows;
+                let _ =
+                    EnumWindows(Some(rename_if_owned_by_process), LPARAM(0));
+            }
+            RENAME_WINDOW_HANDLE.load(Ordering::Relaxed)
+        };
+        if found != 0 {
+            let hwnd = windows::Win32::Foundation::HWND(found as *mut _);
+            let wide: Vec<u16> = title.encode_utf16().chain(Some(0)).collect();
+            unsafe {
+                use windows::Win32::UI::WindowsAndMessaging::SetWindowTextW;
+                let _ =
+                    SetWindowTextW(hwnd, windows::core::PCWSTR(wide.as_ptr()));
+            }
+            applied = true;
+        }
+        if tokio::time::Instant::now() >= deadline {
+            return;
+        }
+        let _ = applied;
+        tokio::time::sleep(std::time::Duration::from_millis(400)).await;
+    }
+}
+
+#[cfg(not(target_os = "windows"))]
+async fn rename_minecraft_window(_pid: u32, _title: &str) {}
 
 #[tauri::command]
 pub fn lightweight_mode_frontend_ready(

@@ -55,6 +55,7 @@ export type GameInstance = {
 	force_fullscreen?: boolean
 	maximize_window?: boolean
 	game_resolution?: [number, number]
+	window_title?: string | null
 	launch_preparation_timeout?: number | null
 	hooks: Hooks
 }
@@ -239,6 +240,8 @@ type AppSettings = {
 	force_fullscreen: boolean
 	maximize_window: boolean
 	game_resolution: [number, number]
+	custom_window_title_enabled: boolean
+	default_window_title: string
 	hide_on_process_start: boolean
 	enter_lightweight_mode_on_game_launch: boolean
 	auto_set_java_high_performance_mode: boolean
