@@ -1456,6 +1456,7 @@ mod post_upgrade_tests {
                     uuid,
                     pid: child.id().unwrap(),
                     maximize_window: false,
+                    window_title: None,
                     instance_id: "first".into(),
                     instance_path: "first".into(),
                     instance_name: "First".into(),
