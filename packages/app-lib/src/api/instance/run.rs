@@ -250,6 +250,17 @@ async fn run_credentials(
         .launch_overrides
         .maximize_window
         .unwrap_or(settings.maximize_window);
+    let window_title = settings
+        .custom_window_title_enabled
+        .then(|| {
+            context
+                .launch_overrides
+                .window_title
+                .clone()
+                .filter(|value| !value.trim().is_empty())
+                .unwrap_or_else(|| settings.default_window_title.clone())
+        })
+        .filter(|value| !value.trim().is_empty());
     let env_args = context
         .launch_overrides
         .custom_env_vars
@@ -319,6 +330,7 @@ async fn run_credentials(
         &memory,
         &resolution,
         maximize_window,
+        window_title,
         credentials,
         post_exit_hook,
         &context,

@@ -176,6 +176,10 @@ pub struct Settings {
     pub force_fullscreen: bool,
     pub maximize_window: bool,
     #[serde(default)]
+    pub custom_window_title_enabled: bool,
+    #[serde(default = "default_window_title")]
+    pub default_window_title: String,
+    #[serde(default)]
     pub force_unicode_font: bool,
     pub game_resolution: WindowSize,
     pub hide_on_process_start: bool,
@@ -196,6 +200,10 @@ pub struct Settings {
     pub auto_download_updates: Option<bool>,
 
     pub version: usize,
+}
+
+fn default_window_title() -> String {
+    "Minecraft".to_string()
 }
 
 fn default_true() -> bool {
@@ -328,6 +336,16 @@ impl Settings {
         )
         .fetch_one(exec)
         .await?;
+        let custom_window_title_enabled: bool = sqlx::query_scalar(
+            "SELECT custom_window_title_enabled FROM settings WHERE id = 0",
+        )
+        .fetch_one(exec)
+        .await?;
+        let default_window_title: String = sqlx::query_scalar(
+            "SELECT default_window_title FROM settings WHERE id = 0",
+        )
+        .fetch_one(exec)
+        .await?;
         let settings = Self {
             max_concurrent_downloads: res.max_concurrent_downloads as usize,
             max_concurrent_writes: res.max_concurrent_writes as usize,
@@ -415,6 +433,8 @@ impl Settings {
             },
             force_fullscreen: res.mc_force_fullscreen == 1,
             maximize_window: res.mc_maximize_window == 1,
+            custom_window_title_enabled,
+            default_window_title,
             force_unicode_font: sqlx::query_scalar(
                 "SELECT mc_force_unicode_font FROM settings WHERE id = 0",
             )
@@ -661,6 +681,16 @@ impl Settings {
         .await?;
         sqlx::query("UPDATE settings SET ignore_ssl_errors = ? WHERE id = 0")
             .bind(self.ignore_ssl_errors)
+            .execute(exec)
+            .await?;
+        sqlx::query(
+            "UPDATE settings SET custom_window_title_enabled = ? WHERE id = 0",
+        )
+        .bind(self.custom_window_title_enabled)
+        .execute(exec)
+        .await?;
+        sqlx::query("UPDATE settings SET default_window_title = ? WHERE id = 0")
+            .bind(self.default_window_title.trim())
             .execute(exec)
             .await?;
         sqlx::query("UPDATE settings SET mc_memory_optimize = ? WHERE id = 0")
