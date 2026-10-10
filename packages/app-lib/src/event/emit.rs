@@ -6,11 +6,10 @@ use crate::event::{
 };
 #[cfg(feature = "tauri")]
 use crate::event::{
-    InstancePayload, JavaDiscoveryPayload, JavaDownloadConfirmationPayload,
-    LoadingPayload, ProcessPayload, ServerPayload, WarningPayload,
+    InstanceGroupsChangedPayload, InstancePayload, JavaDiscoveryPayload,
+    JavaDownloadConfirmationPayload, LoadingPayload, ProcessPayload,
+    ServerPayload, WarningPayload,
 };
-use futures::prelude::*;
-use serde_json::Value;
 #[cfg(feature = "tauri")]
 use std::sync::LazyLock;
 #[cfg(feature = "tauri")]
@@ -485,6 +484,26 @@ pub async fn emit_friend(payload: FriendPayload) -> crate::Result<()> {
             .map_err(EventError::from)?;
     }
 
+    Ok(())
+}
+
+#[allow(unused_variables)]
+pub async fn emit_instance_groups_changed(
+    instance_ids: &[String],
+) -> crate::Result<()> {
+    #[cfg(feature = "tauri")]
+    {
+        let event_state = crate::EventState::get()?;
+        event_state
+            .app
+            .emit(
+                "instance_groups_changed",
+                InstanceGroupsChangedPayload {
+                    instance_ids: instance_ids.to_vec(),
+                },
+            )
+            .map_err(EventError::from)?;
+    }
     Ok(())
 }
 
