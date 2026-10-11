@@ -4,14 +4,14 @@ use crate::event::{
     InstanceBulkUpdateProgressPayload, InstancePayloadType, LoadingBar,
     LoadingBarType, ProcessPayloadType, ServerPayloadType,
 };
-use futures::prelude::*;
-use serde_json::Value;
 #[cfg(feature = "tauri")]
 use crate::event::{
     InstanceGroupsChangedPayload, InstancePayload, JavaDiscoveryPayload,
     JavaDownloadConfirmationPayload, LoadingPayload, ProcessPayload,
     ServerPayload, WarningPayload,
 };
+use futures::prelude::*;
+use serde_json::Value;
 #[cfg(feature = "tauri")]
 use std::sync::LazyLock;
 #[cfg(feature = "tauri")]
