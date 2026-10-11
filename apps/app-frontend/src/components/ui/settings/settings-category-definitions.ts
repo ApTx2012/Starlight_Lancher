@@ -13,6 +13,7 @@ export type SettingsCategoryId =
 	| 'updates'
 	| 'about'
 	| 'feature-flags'
+	| 'logs'
 
 export type SettingsGroupId = 'launcher' | 'game' | 'data-privacy' | 'support' | 'developer'
 
@@ -114,6 +115,11 @@ export const settingsCategoryDefinitions: SettingsCategoryDefinition[] = [
 	{
 		id: 'about',
 		name: { id: 'app.settings.tabs.about', defaultMessage: 'About' },
+		group: 'support',
+	},
+	{
+		id: 'logs',
+		name: { id: 'app.settings.tabs.logs', defaultMessage: 'Logs' },
 		group: 'support',
 	},
 	{

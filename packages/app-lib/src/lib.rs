@@ -28,6 +28,7 @@ pub use event::{
     EventState, LoadingBar, LoadingBarType, emit::emit_loading,
     emit::init_loading,
 };
+pub use logger::filter_log_contents;
 pub use logger::start_logger;
 pub use state::db::{
     backup_current_app_db_for_update, beta_database_exists,

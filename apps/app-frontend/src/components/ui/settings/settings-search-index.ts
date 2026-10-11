@@ -384,6 +384,16 @@ export const settingsSearchEntries: SettingsSearchEntry[] = [
 		categoryId: 'feature-flags',
 		label: message('settings.feature-flags.title', 'Feature flags'),
 	},
+	{
+		id: 'logs-export',
+		categoryId: 'logs',
+		targetId: 'settings-target-logs-export',
+		label: message('app.settings.logs.export.title', 'Export logs'),
+		description: message(
+			'app.settings.logs.export.description',
+			'Package launcher logs with an optional environment summary, instance log, and crash analysis.',
+		),
+	},
 ]
 
 export function validateSettingsSearchEntries(entries = settingsSearchEntries): string[] {
