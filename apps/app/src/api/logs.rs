@@ -4,7 +4,8 @@ use std::path::PathBuf;
 use theseus::logs::LogType;
 use theseus::logs::{
     self, CensoredString, CrashAnalysis, CrashAnalysisAiExplanation,
-    CrashAnalysisAiSettings, LatestLogCursor, LiveLogSnapshot, Logs,
+    CrashAnalysisAiSettings, LatestLogCursor, LiveLogSnapshot,
+    LogShareSettings, LogShareUploadResponse, Logs, SharedLog,
 };
 
 /*
