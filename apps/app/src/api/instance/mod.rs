@@ -131,6 +131,12 @@ pub fn init<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
             instance_delete_screenshot_group,
             instance_set_screenshot_group_memberships,
             instance_import_screenshot_groups,
+            instance_list_groups,
+            instance_create_group,
+            instance_rename_group,
+            instance_delete_group,
+            instance_set_group_order,
+            instance_set_group_memberships,
             instance_delete_screenshots,
             instance_export_screenshots,
             instance_move_screenshots,
@@ -1715,6 +1721,44 @@ pub async fn instance_import_screenshot_groups(
     groups: Vec<theseus::instance::ScreenshotGroupImport>,
 ) -> Result<()> {
     Ok(theseus::instance::import_screenshot_groups(groups).await?)
+}
+
+#[tauri::command]
+pub async fn instance_list_groups()
+-> Result<Vec<theseus::instance::InstanceGroup>> {
+    Ok(theseus::instance::list_groups().await?)
+}
+
+#[tauri::command]
+pub async fn instance_create_group(
+    name: String,
+) -> Result<theseus::instance::InstanceGroup> {
+    Ok(theseus::instance::create_group(name).await?)
+}
+
+#[tauri::command]
+pub async fn instance_rename_group(
+    id: String,
+    new_name: String,
+) -> Result<theseus::instance::InstanceGroup> {
+    Ok(theseus::instance::rename_group(id, new_name).await?)
+}
+
+#[tauri::command]
+pub async fn instance_delete_group(id: String) -> Result<()> {
+    Ok(theseus::instance::delete_group(id).await?)
+}
+
+#[tauri::command]
+pub async fn instance_set_group_order(group_ids: Vec<String>) -> Result<()> {
+    Ok(theseus::instance::set_group_order(group_ids).await?)
+}
+
+#[tauri::command]
+pub async fn instance_set_group_memberships(
+    updates: Vec<theseus::instance::InstanceGroupMembershipUpdate>,
+) -> Result<()> {
+    Ok(theseus::instance::set_group_memberships(updates).await?)
 }
 
 #[tauri::command]

@@ -395,6 +395,10 @@ pub enum ServerPayloadType {
         eula_text: String,
     },
 }
+#[derive(Serialize, Clone)]
+pub struct InstanceGroupsChangedPayload {
+    pub instance_ids: Vec<String>,
+}
 
 #[derive(Serialize, Clone)]
 #[cfg(feature = "tauri")]

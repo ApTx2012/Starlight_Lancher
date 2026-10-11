@@ -26,6 +26,7 @@ pub use self::instance_types::*;
 pub(crate) mod instances;
 pub use self::instances::*;
 
+pub(crate) mod instance_groups;
 mod settings;
 pub use self::settings::*;
 
@@ -486,6 +487,10 @@ impl State {
         let state = LAUNCHER_STATE
             .get_or_try_init(move || Self::initialize_state(app_identifier))
             .await?;
+
+        if let Err(e) = instance_groups::ensure_imported(state).await {
+            tracing::error!("Error importing legacy instance groups: {e}");
+        }
 
         if let Err(e) =
             crate::install::recovery::recover_interrupted_jobs(state).await
