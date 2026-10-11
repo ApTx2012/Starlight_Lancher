@@ -33,6 +33,55 @@ export const ANNOUNCEMENT_CHANGE_TYPES: readonly AnnouncementChangeType[] = [
 
 export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 	{
+		id: 'launcher-1.0.2-beta6',
+		version: '1.0.2-beta6',
+		publishedAt: '2026-10-11',
+		title: {
+			'en-US': 'Starlight Launcher 1.0.2-beta6',
+			'zh-CN': 'Starlight Launcher 1.0.2-beta6',
+		},
+		changes: {
+			added: [
+				{
+					'en-US': 'Added keyboard shortcut settings: enable and rebind navigation and quick-scrolling shortcuts.',
+					'zh-CN': '新增键盘快捷键设置：可启用并自定义导航与快速滚动快捷键。',
+				},
+				{
+					'en-US': 'Added crash log sharing and AI analysis: share crash diagnostics to LogShare for a structured summary and optional AI analysis, with a rebuilt crash window that browses log files and streams the analysis.',
+					'zh-CN': '新增崩溃日志分享与 AI 分析：可将崩溃诊断分享到 LogShare 获取结构化摘要与 AI 分析；崩溃窗口重做为双栏布局，可浏览日志文件并流式查看分析结果。',
+				},
+				{
+					'en-US': 'Crash logs now also collect JVM crash reports (hs_err_pid*.log) and launcher logs.',
+					'zh-CN': '崩溃日志现在也会收集 JVM 崩溃报告（hs_err_pid*.log）与启动器日志。',
+				},
+				{
+					'en-US': 'Added a launcher log export entry.',
+					'zh-CN': '新增启动器日志导出入口。',
+				},
+				{
+					'en-US': 'Instance groups can now be reordered by dragging.',
+					'zh-CN': '实例分组支持拖拽重排。',
+				},
+			],
+			changed: [
+				{
+					'en-US': 'Synced the latest supported AI chat model list from LobeHub.',
+					'zh-CN': '同步 LobeHub 最新的 AI 聊天模型列表。',
+				},
+			],
+			fixed: [
+				{
+					'en-US': 'Fixed remote announcements not refreshing.',
+					'zh-CN': '修复远端公告不刷新的问题。',
+				},
+				{
+					'en-US': 'Completed the Chinese translations for the armor preview feature.',
+					'zh-CN': '补齐盔甲预览功能的中文翻译。',
+				},
+			],
+		},
+	},
+	{
 		id: 'launcher-1.0.2-beta5',
 		version: '1.0.2-beta5',
 		publishedAt: '2026-10-11',
