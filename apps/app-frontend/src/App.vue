@@ -169,6 +169,7 @@ import { createServerInstall, provideServerInstall } from '@/providers/server-in
 import { setupProviders } from '@/providers/setup'
 import { setupAuthProvider } from '@/providers/setup/auth'
 import { setupLoadingStateProvider } from '@/providers/setup/loading-state'
+import { setupKeyboardShortcuts } from '@/composables/useKeyboardShortcuts'
 import { useError } from '@/store/error.js'
 import { useTheming } from '@/store/state'
 
@@ -183,6 +184,8 @@ const onSkinsPage = computed(() => route.path === '/skins')
 const onSchematicWorkshopPage = computed(() => route.path === '/lab/schematic-preview')
 const isSchematicFile = (path: string) => /\.(litematic|schematic|schem)$/i.test(path)
 const APP_LEFT_NAV_WIDTH = '4rem'
+
+setupKeyboardShortcuts()
 
 const discoverContentPath = computed(() => {
 	const projectType = route.params.projectType
