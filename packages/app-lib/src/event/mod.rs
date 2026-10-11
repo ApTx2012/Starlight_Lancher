@@ -472,6 +472,14 @@ mod log_types {
         #[serde(flatten)]
         pub event: LogEvent,
     }
+
+    #[derive(Serialize, Clone)]
+    #[serde(rename_all = "snake_case")]
+    pub struct LogShareAiEventPayload {
+        pub instance_id: String,
+        pub event_type: String,
+        pub data: serde_json::Value,
+    }
 }
 
 #[derive(Debug, thiserror::Error)]
