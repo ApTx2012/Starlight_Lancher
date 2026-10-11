@@ -3,6 +3,7 @@ import type { MessageDescriptor } from '@modrinth/ui'
 export type SettingsCategoryId =
 	| 'interface'
 	| 'home-navigation'
+	| 'shortcut-settings'
 	| 'language-translation'
 	| 'ai'
 	| 'java-performance'
@@ -44,6 +45,15 @@ export const settingsCategoryDefinitions: SettingsCategoryDefinition[] = [
 		},
 		group: 'launcher',
 		onboardingId: 'settings-tab-home-navigation',
+	},
+	{
+		id: 'shortcut-settings',
+		name: {
+			id: 'app.settings.tabs.shortcut-settings',
+			defaultMessage: 'Keyboard shortcuts',
+		},
+		group: 'launcher',
+		onboardingId: 'settings-tab-shortcut-settings',
 	},
 	{
 		id: 'language-translation',

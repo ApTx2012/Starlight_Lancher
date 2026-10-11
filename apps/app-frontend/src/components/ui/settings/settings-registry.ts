@@ -7,6 +7,7 @@ import {
 	GameIcon,
 	GaugeIcon,
 	InfoIcon,
+	KeyboardIcon,
 	LanguagesIcon,
 	LayoutTemplateIcon,
 	PaintbrushIcon,
@@ -48,6 +49,10 @@ const categoryContent: Record<SettingsCategoryId, Pick<SettingsCategory, 'icon' 
 	'home-navigation': {
 		icon: LayoutTemplateIcon,
 		content: defineAsyncComponent(() => import('./HomeNavigationSettings.vue')),
+	},
+	'shortcut-settings': {
+		icon: KeyboardIcon,
+		content: defineAsyncComponent(() => import('./KeybindSettings.vue')),
 	},
 	'language-translation': {
 		icon: LanguagesIcon,
