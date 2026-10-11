@@ -100,6 +100,7 @@ function emitState() {
 }
 function openCenter(item?: RemoteAnnouncement) {
 	if (!props.ready || disposed) return
+	void refresh()
 	centerOpen.value = true
 	if (item) {
 		startupNotice.value = null
@@ -301,6 +302,10 @@ onMounted(() => {
 	} else {
 		setTimeout(start, 500)
 	}
+})
+watch(skinSiteStatus, (status) => {
+	if (disposed || props.previewOnly) return
+	if (status === 'signed-in') void refresh()
 })
 watch([() => props.ready, hasModal], () => {
 	if (advanceTimer) clearTimeout(advanceTimer)

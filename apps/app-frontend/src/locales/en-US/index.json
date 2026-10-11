@@ -11554,5 +11554,12 @@
   },
   "app.settings.logs.export.notification-text": {
     "message": "The log archive was saved to {path}"
-  }
+  },
+  "app.skins.armor.title": {"message": "Armour and trims"},
+  "app.skins.armor.save": {"message": "Save"},
+  "app.skins.armor.close": {"message": "Close"},
+  "app.skins.armor.description": {"message": "Try armour and trims on your skin. Nothing is stored until you save it."},
+  "app.skins.armor.unsaved": {"message": "Unsaved changes"},
+  "app.skins.armor.reset-to-saved": {"message": "Reset to saved"},
+  "app.skins.armor.restore-defaults": {"message": "Restore defaults"}
 }
