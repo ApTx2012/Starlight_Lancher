@@ -11555,6 +11555,13 @@
   "app.settings.logs.export.notification-text": {
     "message": "The log archive was saved to {path}"
   },
+  "app.skins.armor.title": {"message": "Armour and trims"},
+  "app.skins.armor.save": {"message": "Save"},
+  "app.skins.armor.close": {"message": "Close"},
+  "app.skins.armor.description": {"message": "Try armour and trims on your skin. Nothing is stored until you save it."},
+  "app.skins.armor.unsaved": {"message": "Unsaved changes"},
+  "app.skins.armor.reset-to-saved": {"message": "Reset to saved"},
+  "app.skins.armor.restore-defaults": {"message": "Restore defaults"},
   "app.instances.batch-edit-groups.add": {"message": "Add"},
   "app.instances.batch-edit-groups.add-to-group-title": {"message": "Add instances to \"{groupName}\""},
   "app.instances.batch-edit-groups.added": {"message": "Added"},
@@ -11593,5 +11600,4 @@
   "app.library.context-menu.unpin-instance": {"message": "Unpin instance"},
   "app.library.group.new": {"message": "New group"},
   "app.library.selection.new-group": {"message": "New group"},
-  "app.library.selection.remove-from-group": {"message": "Remove from group"}
-}
+  "app.library.selection.remove-from-group": {"message": "Remove from group"}}
