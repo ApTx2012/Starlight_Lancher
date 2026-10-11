@@ -612,3 +612,25 @@ where
         })
         .await
 }
+pub async fn emit_logshare_ai_event(
+    instance_id: &str,
+    event_type: &str,
+    data: Value,
+) -> crate::Result<()> {
+    #[cfg(feature = "tauri")]
+    {
+        let event_state = crate::EventState::get()?;
+        event_state
+            .app
+            .emit(
+                "logshare_ai",
+                crate::event::LogShareAiEventPayload {
+                    instance_id: instance_id.to_string(),
+                    event_type: event_type.to_string(),
+                    data,
+                },
+            )
+            .map_err(EventError::from)?;
+    }
+    Ok(())
+}

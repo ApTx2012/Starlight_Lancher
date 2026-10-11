@@ -6,6 +6,8 @@ import { ref, watch } from 'vue'
 import { get, set } from '@/helpers/settings.ts'
 
 import CrashAnalysisAISettings from './CrashAnalysisAISettings.vue'
+import LogShareSettings from './LogShareSettings.vue'
+import SharedLogsSettings from './SharedLogsSettings.vue'
 import SettingsRow from './SettingsRow.vue'
 import SettingsSection from './SettingsSection.vue'
 
@@ -391,5 +393,7 @@ watch(
 		</SettingsSection>
 
 		<CrashAnalysisAISettings />
+		<LogShareSettings />
+		<SharedLogsSettings />
 	</div>
 </template>
