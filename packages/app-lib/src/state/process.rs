@@ -713,16 +713,37 @@ impl Process {
 
                 pending.push_str(&String::from_utf8_lossy(&chunk[..read]));
 
-                // Drain every complete frame currently buffered.
-                while let Some(frame) = take_next_log4j_frame(&mut pending) {
-                    Self::handle_log4j_frame(
-                        instance_id,
-                        instance_name,
-                        process_id,
-                        log_path.as_ref(),
-                        &frame,
-                    )
-                    .await;
+                // Mods can write plain text to either pipe even when the
+                // launcher selected XML logging. Forward it as soon as a line
+                // is complete instead of retaining it until the game exits.
+                while let Some(output) = take_next_log_output(&mut pending) {
+                    match output {
+                        LogOutput::Xml(frame) => {
+                            Self::handle_log4j_frame(
+                                instance_id,
+                                instance_name,
+                                process_id,
+                                log_path.as_ref(),
+                                &frame,
+                            )
+                            .await;
+                        }
+                        LogOutput::Legacy(text) => {
+                            if let Err(e) =
+                                Self::append_to_log_file(&log_path, &text)
+                            {
+                                tracing::warn!(
+                                    "Failed to write to log file: {e}"
+                                );
+                            }
+                            if !text.trim_end().is_empty() {
+                                Self::emit_legacy_log(
+                                    instance_id,
+                                    text.trim_end(),
+                                );
+                            }
+                        }
+                    }
                 }
 
                 // Guard against a runaway buffer if no frame delimiters ever
@@ -1360,31 +1381,118 @@ impl Process {
         Ok(())
     }
 }
-/// Cuts the next complete `<log4j:Event …>…</log4j:Event>` frame out of the
-/// live buffer and returns it as an owned string, leaving any trailing partial
-/// frame in place.
-///
-/// Returns `None` when the buffer does not yet contain a full frame. This is a
-/// plain string operation on purpose: it never poisons any parser state, so a
-/// split or malformed frame on the live pipe cannot stop log forwarding.
-fn take_next_log4j_frame(buffer: &mut String) -> Option<String> {
+#[derive(Debug, Eq, PartialEq)]
+enum LogOutput {
+    Xml(String),
+    Legacy(String),
+}
+
+/// Drains complete XML frames or plain text in stream order. Partial frames
+/// and plain text lines remain buffered until their next chunk arrives.
+fn take_next_log_output(buffer: &mut String) -> Option<LogOutput> {
     const OPEN: &str = "<log4j:Event";
     const CLOSE: &str = "</log4j:Event>";
 
-    let start = buffer.find(OPEN)?;
-    // Discard anything before the frame (raw text, XML prolog, …).
-    if start > 0 {
-        buffer.drain(..start);
+    match buffer.find(OPEN) {
+        Some(0) => {
+            let close = buffer.find(CLOSE)?;
+            let end = close + CLOSE.len();
+            Some(LogOutput::Xml(buffer.drain(..end).collect()))
+        }
+        Some(start) => Some(LogOutput::Legacy(buffer.drain(..start).collect())),
+        None => {
+            let end = buffer.find('\n')? + 1;
+            Some(LogOutput::Legacy(buffer.drain(..end).collect()))
+        }
     }
-    let close = buffer.find(CLOSE)?;
-    let end = close + CLOSE.len();
-    let frame = buffer[..end].to_string();
-    buffer.drain(..end);
-    Some(frame)
 }
 #[cfg(test)]
 mod post_upgrade_tests {
     use super::*;
+
+    #[test]
+    fn mixed_log_output_keeps_partial_xml_and_multiline_messages() {
+        let mut pending = "raw\n<log4j:Ev".to_string();
+        assert_eq!(
+            take_next_log_output(&mut pending),
+            Some(LogOutput::Legacy("raw\n".into()))
+        );
+        assert_eq!(take_next_log_output(&mut pending), None);
+        pending.push_str("ent><log4j:Message><![CDATA[first\nsecond");
+        assert_eq!(take_next_log_output(&mut pending), None);
+        pending.push_str("]]></log4j:Message></log4j:Event>\nafter\n");
+        assert_eq!(take_next_log_output(&mut pending), Some(LogOutput::Xml("<log4j:Event><log4j:Message><![CDATA[first\nsecond]]></log4j:Message></log4j:Event>".into())));
+        assert_eq!(
+            take_next_log_output(&mut pending),
+            Some(LogOutput::Legacy("\n".into()))
+        );
+        assert_eq!(
+            take_next_log_output(&mut pending),
+            Some(LogOutput::Legacy("after\n".into()))
+        );
+        assert!(pending.is_empty());
+    }
+
+    #[tokio::test]
+    async fn xml_logging_forwards_plain_text_before_pipe_closes() {
+        use tokio::io::AsyncWriteExt;
+
+        let instance_id = Uuid::new_v4().to_string();
+        let directory = tempfile::tempdir().unwrap();
+        let log_path = directory.path().join("live.log");
+        let (mut writer, reader) = tokio::io::duplex(1024);
+        let output = Process::process_output(
+            &instance_id,
+            "instance",
+            "Instance",
+            "process",
+            reader,
+            &log_path,
+            true,
+        );
+        tokio::pin!(output);
+        writer.write_all(b"mod output\n").await.unwrap();
+        let forwarded = async {
+            loop {
+                if get_log_buffer(&instance_id) == ["mod output"] {
+                    break;
+                }
+                tokio::time::sleep(std::time::Duration::from_millis(5)).await;
+            }
+        };
+        tokio::select! {
+            _ = &mut output => panic!("reader ended while writer is still open"),
+            result = tokio::time::timeout(std::time::Duration::from_secs(1), forwarded) => {
+                result.expect("plain text was buffered until EOF");
+            }
+        }
+        assert_eq!(std::fs::read_to_string(&log_path).unwrap(), "mod output\n");
+        drop(writer);
+        output.await;
+        remove_log_buffer(&instance_id);
+    }
+
+    #[tokio::test]
+    async fn xml_logging_preserves_plain_text_before_xml_frames() {
+        let instance_id = Uuid::new_v4().to_string();
+        let directory = tempfile::tempdir().unwrap();
+        let log_path = directory.path().join("mixed.log");
+        let input = "mod output\n<log4j:Event level=\"INFO\"><log4j:Message><![CDATA[xml output]]></log4j:Message></log4j:Event>\n";
+        Process::process_output(
+            &instance_id,
+            "instance",
+            "Instance",
+            "process",
+            std::io::Cursor::new(input),
+            &log_path,
+            true,
+        )
+        .await;
+        let lines = get_log_buffer(&instance_id);
+        assert_eq!(lines.first().map(String::as_str), Some("mod output"));
+        assert!(lines.iter().any(|line| line.contains("xml output")));
+        remove_log_buffer(&instance_id);
+    }
 
     #[test]
     fn live_log_snapshot_sequences_batches_and_preserves_position_after_clear()
