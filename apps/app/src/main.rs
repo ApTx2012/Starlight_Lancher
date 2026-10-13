@@ -339,7 +339,7 @@ fn get_launcher_root_dir() -> api::Result<String> {
 fn get_update_channel(app: tauri::AppHandle) -> api::Result<String> {
     let channel = read_update_channel_state(&app)?
         .active_channel
-        .unwrap_or_else(|| "release".to_string());
+        .unwrap_or_else(|| theseus::default_update_channel().to_string());
 
     match channel.as_str() {
         "release" | "beta" => Ok(channel),

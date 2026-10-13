@@ -304,6 +304,18 @@ async fn app_db_path(settings_dir: &Path) -> crate::Result<PathBuf> {
     Ok(settings_dir.join(channel).join(LEGACY_APP_DB_FILE))
 }
 
+/// The update channel a fresh install should default to. Beta builds carry a
+/// pre-release version (e.g. `1.0.2-beta7`), so their installers should start
+/// on the Beta channel instead of silently falling back to Release.
+pub fn default_update_channel() -> &'static str {
+    let version = env!("CARGO_PKG_VERSION");
+    if version.contains('-') {
+        "beta"
+    } else {
+        "release"
+    }
+}
+
 async fn read_update_channel(
     settings_dir: &Path,
 ) -> crate::Result<&'static str> {
@@ -311,7 +323,7 @@ async fn read_update_channel(
     let contents = match tokio::fs::read_to_string(&path).await {
         Ok(contents) => contents,
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
-            return Ok("release");
+            return Ok(default_update_channel());
         }
         Err(error) => return Err(error.into()),
     };
