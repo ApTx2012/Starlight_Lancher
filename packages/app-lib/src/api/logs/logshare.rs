@@ -4,8 +4,7 @@ use futures::StreamExt;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
-use super::CensoredString;
-use super::crash_analysis::analyze_crash;
+use super::crash_analysis::collect_crash_logs;
 use crate::State;
 use crate::emit_logshare_ai_event;
 
@@ -200,32 +199,6 @@ fn source_identifier() -> String {
     format!("{LOGSHARE_SOURCE_PREFIX}/{}", env!("CARGO_PKG_VERSION"))
 }
 
-struct CollectedCrashLog {
-    name: String,
-    content: CensoredString,
-}
-
-struct CollectedCrashLogs {
-    combined_log: CensoredString,
-    sources: Vec<CollectedCrashLog>,
-}
-
-async fn collect_crash_logs(
-    instance_id: &str,
-) -> crate::Result<CollectedCrashLogs> {
-    let analysis = analyze_crash(instance_id).await?;
-    Ok(CollectedCrashLogs {
-        combined_log: analysis.combined_log,
-        sources: analysis
-            .sources
-            .into_iter()
-            .map(|source| CollectedCrashLog {
-                name: source.filename,
-                content: source.content,
-            })
-            .collect(),
-    })
-}
 async fn prepare_upload(instance_id: &str) -> crate::Result<UploadBody> {
     let settings = get_log_share_settings().await?;
     let logs = collect_crash_logs(instance_id).await?;
