@@ -1142,3 +1142,151 @@ export function skinSiteRegenerateReviewInvite(
 		{ method: 'POST' },
 	)
 }
+
+export interface SkinSiteLauncherRelease {
+	id: number
+	version: string
+	channel: 'release' | 'beta'
+	notes: string
+	forceUpdate: boolean
+	uploadedBy: string
+	uploadedAt: number
+	publishedAt: number | null
+	active: boolean
+}
+
+export interface SkinSiteLauncherAdminState {
+	latestUrl: string
+	releases: SkinSiteLauncherRelease[]
+}
+
+export function skinSiteLauncherAdminState(): Promise<
+	SkinSiteResponse<SkinSiteLauncherAdminState>
+> {
+	return skinSiteRequest<SkinSiteLauncherAdminState>('launcher/admin')
+}
+
+export function skinSiteActivateLauncherRelease(
+	id: number,
+): Promise<SkinSiteResponse<SkinSiteLauncherRelease>> {
+	return skinSiteRequest<SkinSiteLauncherRelease>('launcher/admin/' + id + '/activate', {
+		method: 'POST',
+	})
+}
+
+export interface SkinSiteLauncherUploadStatus {
+	id: string
+	chunkSize: number
+	size: number
+	received: number
+	receivedChunks: number[]
+	uploadConcurrency: number
+	state: 'uploading' | 'processing' | 'ready' | 'failed' | 'cancelled'
+	release?: SkinSiteLauncherRelease | null
+	errorMessage?: string | null
+}
+
+const LAUNCHER_MAX_UPLOAD_BYTES = 4 * 1024 ** 3
+const LAUNCHER_MAX_CONCURRENCY = 6
+
+function launcherUploadError(message: string, code = 0): SkinSiteResponse<never> {
+	return { success: false, timestamp: Date.now(), errorCode: code, errorMessage: message }
+}
+
+export async function skinSiteUploadLauncherRelease(
+	file: File,
+	forceUpdate: boolean,
+	onProgress?: (percent: number) => void,
+): Promise<SkinSiteResponse<SkinSiteLauncherRelease>> {
+	if (!file.name.toLowerCase().endsWith('.zip')) {
+		return launcherUploadError('请选择 ZIP 格式的发布包。')
+	}
+	if (file.size < 1 || file.size > LAUNCHER_MAX_UPLOAD_BYTES) {
+		return launcherUploadError('请选择不超过 4 GiB 的完整发布 ZIP。')
+	}
+
+	const uploadId = crypto.randomUUID()
+	let result = await skinSiteRequest<SkinSiteLauncherUploadStatus>('launcher/admin/uploads', {
+		method: 'POST',
+		body: {
+			uploadId,
+			filename: file.name,
+			size: file.size,
+			forceUpdate,
+		},
+	})
+
+	const requestStatus = (path: string, method: 'GET' | 'POST' = 'GET') =>
+		skinSiteRequest<SkinSiteLauncherUploadStatus>(path, { method })
+
+	const chunkOnce = async (path: string, part: Blob) => {
+		const form = new FormData()
+		form.append('file', part, 'chunk.bin')
+		return skinSiteRequest<SkinSiteLauncherUploadStatus>(path, { method: 'POST', form })
+	}
+
+	let guard = 0
+	while (guard++ < 200) {
+		if (!result.success) return result
+		const status = result.payload
+		onProgress?.((status.received / file.size) * 100)
+
+		if (status.state === 'ready') {
+			return {
+				success: true,
+				timestamp: result.timestamp,
+				payload: status.release as SkinSiteLauncherRelease,
+			}
+		}
+		if (status.state === 'failed' || status.state === 'cancelled') {
+			return launcherUploadError(status.errorMessage || '发布包处理失败。')
+		}
+
+		if (status.state === 'uploading' && status.received < file.size) {
+			const received = new Set(status.receivedChunks)
+			const missing: number[] = []
+			for (let i = 0; i < Math.ceil(file.size / status.chunkSize); i++) {
+				if (!received.has(i)) missing.push(i)
+			}
+
+			let cursor = 0
+			let uploadError: SkinSiteResponse<never> | null = null
+			const worker = async () => {
+				while (!uploadError && cursor < missing.length) {
+					const index = missing[cursor++]
+					const start = index * status.chunkSize
+					const part = file.slice(start, Math.min(start + status.chunkSize, file.size))
+					let ack = await chunkOnce('launcher/admin/uploads/' + uploadId + '/chunks/' + index, part)
+					for (let retry = 0; retry < 2 && !ack.success; retry++) {
+						await new Promise((r) => setTimeout(r, 400 * (retry + 1)))
+						ack = await chunkOnce('launcher/admin/uploads/' + uploadId + '/chunks/' + index, part)
+					}
+					if (!ack.success) {
+						uploadError = ack
+						return
+					}
+				}
+			}
+			await Promise.all(
+				Array.from(
+					{
+						length: Math.min(
+							status.uploadConcurrency || 1,
+							LAUNCHER_MAX_CONCURRENCY,
+							missing.length || 1,
+						),
+					},
+					worker,
+				),
+			)
+			if (uploadError) return uploadError
+			result = await requestStatus('launcher/admin/uploads/' + uploadId)
+		} else if (status.state === 'uploading') {
+			result = await requestStatus('launcher/admin/uploads/' + uploadId + '/complete', 'POST')
+		} else {
+			await new Promise((r) => setTimeout(r, 800))
+			result = await requestStatus('launcher/admin/uploads/' + uploadId)
+		}
+	}
+	return launcherUploadError('上传超时，请刷新版本列表确认结果。')
+}
