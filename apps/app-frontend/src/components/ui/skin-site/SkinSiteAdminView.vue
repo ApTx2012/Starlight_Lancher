@@ -6,6 +6,7 @@ import { skinSiteUser } from '@/composables/skin-site-session'
 
 import AdminBroadcastPage from './admin/AdminBroadcastPage.vue'
 import AdminPlayersPage from './admin/AdminPlayersPage.vue'
+import AdminReviewPage from './admin/AdminReviewPage.vue'
 import AdminSummaryPage from './admin/AdminSummaryPage.vue'
 import AdminUsersPage from './admin/AdminUsersPage.vue'
 
@@ -160,6 +161,7 @@ const current = ref<AdminKey>('summary')
 				<AdminBroadcastPage v-else-if="current === 'broadcast'" />
 				<AdminUsersPage v-else-if="current === 'users'" />
 				<AdminPlayersPage v-else-if="current === 'players'" />
+				<AdminReviewPage v-else-if="current === 'review'" />
 				<p v-else class="m-0 text-sm text-secondary">{{ current }}</p>
 			</section>
 		</div>

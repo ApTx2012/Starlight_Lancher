@@ -1032,3 +1032,113 @@ export function skinSiteAdminUserFrequencyLimit(
 		'admin/users/' + encodeURIComponent(uuid) + '/frequency-limit',
 	)
 }
+
+export type SkinSiteReviewResult = 'PENDING' | 'PASSED' | 'REJECTED'
+export type SkinSiteReviewMode = 'AUTO' | 'MANUAL'
+
+export interface SkinSiteReviewAnswer {
+	id: string
+	questionId?: string
+	values?: string[]
+	text?: string
+	score?: number | null
+	[key: string]: unknown
+}
+
+export interface SkinSiteReviewSubmission {
+	id: number
+	reviewVersion: number
+	revision: number
+	applicantName: string
+	username?: string | null
+	qq?: string | null
+	userUuid?: string | null
+	registeredAt?: number | null
+	mode: SkinSiteReviewMode
+	result: SkinSiteReviewResult
+	score?: number | null
+	targetPermissions: string[]
+	automaticResults: Record<string, boolean>
+	inviteCode?: string | null
+	inviteUsed: boolean
+	reviewerUuid?: string | null
+	reviewerName?: string | null
+	createdAt: number
+	reviewedAt?: number | null
+	answers: SkinSiteReviewAnswer[]
+	decisionHistory?: Array<{
+		previousResult: SkinSiteReviewResult
+		result: SkinSiteReviewResult
+		reviewer: string
+		reason: string
+		at: number
+		permissionNote: string
+	}>
+	context?: {
+		ip: string | null
+		ipSource: string
+		userAgent: string
+		activity?: {
+			durationMs: number
+			hiddenMs: number
+			screenSwitches: number
+		} | null
+	} | null
+}
+
+export function skinSiteReviewSubmissions(params?: {
+	result?: SkinSiteReviewResult | 'COMPLETED'
+	limit?: number
+	offset?: number
+	paperId?: string
+}): Promise<SkinSiteResponse<SkinSiteReviewSubmission[]>> {
+	const query = new URLSearchParams({
+		limit: String(params?.limit ?? 20),
+		offset: String(params?.offset ?? 0),
+	})
+	if (params?.result) query.set('result', params.result)
+	if (params?.paperId) query.set('paperId', params.paperId)
+	return skinSiteRequest<SkinSiteReviewSubmission[]>('review/admin/submissions?' + query.toString())
+}
+
+export function skinSiteReviewSubmissionCount(params?: {
+	result?: SkinSiteReviewResult | 'COMPLETED'
+	paperId?: string
+}): Promise<SkinSiteResponse<number>> {
+	const query = new URLSearchParams()
+	if (params?.result) query.set('result', params.result)
+	if (params?.paperId) query.set('paperId', params.paperId)
+	const suffix = query.toString() ? '?' + query.toString() : ''
+	return skinSiteRequest<number>('review/admin/submissions/count' + suffix)
+}
+
+export function skinSiteDecideReviewSubmission(
+	id: number,
+	accepted: boolean,
+	manualScores: Record<string, number> = {},
+	expectedRevision?: number,
+	reason = '',
+): Promise<SkinSiteResponse<SkinSiteReviewSubmission>> {
+	const body: Record<string, unknown> = { accepted, manualScores, reason }
+	if (expectedRevision !== undefined) body.expectedRevision = expectedRevision
+	return skinSiteRequest<SkinSiteReviewSubmission>('review/admin/submissions/' + id + '/decision', {
+		method: 'POST',
+		body,
+	})
+}
+
+export interface SkinSiteReviewInviteDelivery {
+	email: string
+	inviteCode: string
+	emailSent: boolean
+	emailAttempted: boolean
+}
+
+export function skinSiteRegenerateReviewInvite(
+	id: number,
+): Promise<SkinSiteResponse<SkinSiteReviewInviteDelivery>> {
+	return skinSiteRequest<SkinSiteReviewInviteDelivery>(
+		'review/admin/submissions/' + id + '/invite/regenerate',
+		{ method: 'POST' },
+	)
+}
