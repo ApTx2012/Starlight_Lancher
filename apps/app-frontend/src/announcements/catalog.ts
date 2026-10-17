@@ -33,6 +33,31 @@ export const ANNOUNCEMENT_CHANGE_TYPES: readonly AnnouncementChangeType[] = [
 
 export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 	{
+		id: 'launcher-1.0.2-beta7',
+		version: '1.0.2-beta7',
+		publishedAt: '2026-10-17',
+		title: {
+			'en-US': 'Starlight Launcher 1.0.2-beta7',
+			'zh-CN': 'Starlight Launcher 1.0.2-beta7',
+		},
+		changes: {
+			fixed: [
+				{
+					'en-US': 'Fixed real-time log backlog that could stall the console under heavy output.',
+					'zh-CN': '修复实时日志积压导致控制台卡顿的问题。',
+				},
+				{
+					'en-US': 'The update channel now defaults to the build type: installing a Beta build starts on the Beta channel instead of Release.',
+					'zh-CN': '更新通道默认值改为跟随安装包版本：安装 Beta 版后默认使用 Beta 通道，不再回落为 Release。',
+				},
+				{
+					'en-US': 'On Linux, the default game directory for StarLight instances no longer points at the system install path (e.g. /usr/bin); it falls back to the home directory.',
+					'zh-CN': 'Linux 上 StarLight 实例的默认游戏目录不再指向系统安装路径（如 /usr/bin），改为回退到用户主目录。',
+				},
+			],
+		},
+	},
+	{
 		id: 'launcher-1.0.2-beta6',
 		version: '1.0.2-beta6',
 		publishedAt: '2026-10-11',
