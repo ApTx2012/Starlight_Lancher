@@ -197,6 +197,27 @@ export function useOnboardingTour(
 		requestAnimationFrame(updateRect)
 	}
 
+	// Bring the current step target into view when the tour jumps to a step
+	// whose target lives inside a scrollable container (e.g. the settings
+	// sidebar). Without this the bubble can point at an off-screen element.
+	function ensureTargetVisible() {
+		const target = targetElement.value
+		if (!target) return
+		const rect = target.getBoundingClientRect()
+		const outOfView =
+			rect.top < 0 ||
+			rect.left < 0 ||
+			rect.bottom > window.innerHeight ||
+			rect.right > window.innerWidth
+		if (!outOfView) return
+		target.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'smooth' })
+		requestAnimationFrame(() => {
+			if (targetElement.value === target) {
+				targetRect.value = target.getBoundingClientRect()
+			}
+		})
+	}
+
 	function goTo(destination: StepDestination) {
 		if (destination === 'complete') {
 			events.complete()
@@ -343,6 +364,7 @@ export function useOnboardingTour(
 		await nextTick()
 		updateBubbleSize()
 		updateTarget()
+		ensureTargetVisible()
 	})
 
 	watch(mode, () => {
