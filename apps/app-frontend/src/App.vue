@@ -94,13 +94,14 @@ import NavButton from '@/components/ui/NavButton.vue'
 import NavRail from '@/components/ui/NavRail.vue'
 import OnboardingOverlay from '@/components/ui/onboarding/OnboardingOverlay.vue'
 import QuickInstanceSwitcher from '@/components/ui/QuickInstanceSwitcher.vue'
-import SkinSiteSessionFrame from '@/components/ui/SkinSiteSessionFrame.vue'
 import RemoteAnnouncements from '@/components/ui/RemoteAnnouncements.vue'
-import StartupAnnouncementModal from '@/components/ui/StartupAnnouncementModal.vue'
 import SplashScreen from '@/components/ui/SplashScreen.vue'
+import StartupAnnouncementModal from '@/components/ui/StartupAnnouncementModal.vue'
 import WindowControls from '@/components/ui/WindowControls.vue'
 import { useCheckDisableMouseover } from '@/composables/macCssFix.js'
+import { initSkinSiteSession } from '@/composables/skin-site-session'
 import { useDropImport } from '@/composables/useDropImport'
+import { setupKeyboardShortcuts } from '@/composables/useKeyboardShortcuts'
 import { minecraftLaunchErrorKey } from '@/composables/useMinecraftLaunchError'
 import { useNetworkStatus } from '@/composables/useNetworkStatus'
 import { AxolotlBrandConfig, config, getOfficialLabrinthBaseUrl } from '@/config'
@@ -132,6 +133,7 @@ import {
 } from '@/helpers/settings.ts'
 import { getSidebarExpanded, setSidebarExpanded } from '@/helpers/sidebar-state.ts'
 import { get_opening_command, initialize_state } from '@/helpers/state'
+import { installUiScale, setUiScale } from '@/helpers/ui-scale'
 import {
 	areUpdatesEnabled,
 	backupAppDbForUpdate,
@@ -145,7 +147,6 @@ import {
 	isNetworkMetered,
 	setRestartAfterPendingUpdate,
 } from '@/helpers/utils.js'
-import { installUiScale, setUiScale } from '@/helpers/ui-scale'
 import { start_join_server, start_join_singleplayer_world } from '@/helpers/worlds.ts'
 import i18n, { resolveInitialLocale } from '@/i18n.config'
 import {
@@ -169,7 +170,6 @@ import { createServerInstall, provideServerInstall } from '@/providers/server-in
 import { setupProviders } from '@/providers/setup'
 import { setupAuthProvider } from '@/providers/setup/auth'
 import { setupLoadingStateProvider } from '@/providers/setup/loading-state'
-import { setupKeyboardShortcuts } from '@/composables/useKeyboardShortcuts'
 import { useError } from '@/store/error.js'
 import { useTheming } from '@/store/state'
 
@@ -1159,6 +1159,7 @@ async function setupApp() {
 	stateInitialized.value = true
 	showOnboarding.value = !onboarded
 	void reconcileMojangAuthSourceAtStartup().catch(handleError)
+	void initSkinSiteSession().catch(handleError)
 
 	isMaximized.value = await getCurrentWindow().isMaximized()
 
@@ -2228,7 +2229,6 @@ provideAppUpdateDownloadProgress(appUpdateDownload)
 <template>
 	<AnniversaryCelebration />
 	<SplashScreen v-if="!stateFailed" ref="splashScreen" data-tauri-drag-region />
-	<SkinSiteSessionFrame v-if="stateInitialized" />
 	<InstancePlayerModal v-if="stateInitialized" />
 	<StartupAnnouncementModal ref="startupAnnouncementModal" />
 	<RemoteAnnouncements :ready="stateInitialized && !showOnboarding && !stateFailed" />
