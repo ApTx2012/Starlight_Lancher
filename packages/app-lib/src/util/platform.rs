@@ -1,5 +1,6 @@
 //! Platform-related code
 use daedalus::minecraft::{Os, OsRule};
+use std::path::PathBuf;
 
 /// (e.g. "Run as administrator" on Windows).
 #[cfg(target_os = "windows")]
@@ -142,4 +143,32 @@ pub fn classpath_separator(java_arch: &str) -> &'static str {
         | Os::Unknown => ":",
         Os::Windows | Os::WindowsArm64 => ";",
     }
+}
+
+/// Root directory used as the default for one-click StarLight instance
+/// installs. Portable builds live next to their executable, which is a fine
+/// place for game data. System installs (e.g. a Linux `.deb` under `/usr/bin`)
+/// do not, so fall back to the user's home directory there.
+pub fn default_game_dir_root() -> Option<PathBuf> {
+    let exe_dir = std::env::current_exe().ok()?.parent()?.to_path_buf();
+    if cfg!(target_os = "linux") && is_system_install_dir(&exe_dir) {
+        return dirs::home_dir();
+    }
+    Some(exe_dir)
+}
+
+#[cfg(target_os = "linux")]
+fn is_system_install_dir(path: &std::path::Path) -> bool {
+    const SYSTEM_PREFIXES: &[&str] = &[
+        "/usr/", "/opt/", "/snap/", "/bin/", "/sbin/", "/lib/", "/lib64/",
+    ];
+    let display = path.to_string_lossy();
+    SYSTEM_PREFIXES
+        .iter()
+        .any(|prefix| display.starts_with(prefix))
+}
+
+#[cfg(not(target_os = "linux"))]
+fn is_system_install_dir(_path: &std::path::Path) -> bool {
+    false
 }
