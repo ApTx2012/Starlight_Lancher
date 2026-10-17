@@ -4,11 +4,13 @@ import { computed, ref } from 'vue'
 
 import { skinSiteUser } from '@/composables/skin-site-session'
 
+import AdminAccessAuditPage from './admin/AdminAccessAuditPage.vue'
 import AdminBroadcastPage from './admin/AdminBroadcastPage.vue'
 import AdminDownloadsPage from './admin/AdminDownloadsPage.vue'
 import AdminLauncherPage from './admin/AdminLauncherPage.vue'
 import AdminPlayersPage from './admin/AdminPlayersPage.vue'
 import AdminReviewPage from './admin/AdminReviewPage.vue'
+import AdminServersPage from './admin/AdminServersPage.vue'
 import AdminSummaryPage from './admin/AdminSummaryPage.vue'
 import AdminUsersPage from './admin/AdminUsersPage.vue'
 
@@ -160,6 +162,8 @@ const current = ref<AdminKey>('summary')
 				class="min-w-0 flex-1 overflow-y-auto rounded-xl border border-solid border-surface-5 bg-bg-raised p-4"
 			>
 				<AdminSummaryPage v-if="current === 'summary'" />
+				<AdminServersPage v-else-if="current === 'servers'" />
+				<AdminAccessAuditPage v-else-if="current === 'access-audit'" />
 				<AdminBroadcastPage v-else-if="current === 'broadcast'" />
 				<AdminUsersPage v-else-if="current === 'users'" />
 				<AdminPlayersPage v-else-if="current === 'players'" />

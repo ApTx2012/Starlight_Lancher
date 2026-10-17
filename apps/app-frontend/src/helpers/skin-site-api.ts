@@ -1391,3 +1391,64 @@ export function skinSiteUnbindDownloadCategory(
 		method: 'POST',
 	})
 }
+
+export interface SkinSiteMapServer {
+	name: string
+	internal: boolean
+	maps: Array<{ name: string; url: string }>
+}
+
+export function skinSiteMapServers(): Promise<SkinSiteResponse<SkinSiteMapServer[]>> {
+	return skinSiteRequest<SkinSiteMapServer[]>('maps')
+}
+
+export function skinSiteSaveMapServers(
+	servers: SkinSiteMapServer[],
+): Promise<SkinSiteResponse<SkinSiteMapServer[]>> {
+	return skinSiteRequest<SkinSiteMapServer[]>('maps', { method: 'PUT', body: servers })
+}
+
+export interface SkinSiteAccessAuditEntry {
+	id: number
+	subject: string
+	action: string
+	sourceIp: string
+	proxy: boolean
+	reportedPlayerIp: string | null
+	internalServer: boolean
+	count: number
+	firstAt: number
+	lastAt: number
+}
+
+export interface SkinSiteAccessAuditPage {
+	items: SkinSiteAccessAuditEntry[]
+	nextCursor: number | null
+	retentionDays: number
+	recordLimit: number
+}
+
+export function skinSiteAccessAudit(params?: {
+	before?: number
+	subject?: string
+	ip?: string
+	action?: string
+}): Promise<SkinSiteResponse<SkinSiteAccessAuditPage>> {
+	const query = new URLSearchParams()
+	if (params) {
+		for (const [key, value] of Object.entries(params)) {
+			if (value !== undefined && value !== '') query.set(key, String(value))
+		}
+	}
+	const suffix = query.toString() ? '?' + query.toString() : ''
+	return skinSiteRequest<SkinSiteAccessAuditPage>('admin/access-audit' + suffix)
+}
+
+export function skinSiteUpdateAccessAuditSettings(
+	retentionDays: number,
+): Promise<SkinSiteResponse<{ retentionDays: number }>> {
+	return skinSiteRequest<{ retentionDays: number }>('admin/access-audit/settings', {
+		method: 'PUT',
+		body: { retentionDays },
+	})
+}
