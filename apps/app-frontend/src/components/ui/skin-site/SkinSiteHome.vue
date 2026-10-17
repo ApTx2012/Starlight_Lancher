@@ -4,6 +4,7 @@ import { defineMessages, injectNotificationManager, useVIntl } from '@modrinth/u
 import { ref } from 'vue'
 
 import SkinSiteAccountCard from './SkinSiteAccountCard.vue'
+import SkinSiteAdminView from './SkinSiteAdminView.vue'
 import SkinSiteAnnouncements from './SkinSiteAnnouncements.vue'
 import SkinSiteBugCreateModal from './SkinSiteBugCreateModal.vue'
 import SkinSiteBugDetailView from './SkinSiteBugDetailView.vue'
@@ -35,7 +36,15 @@ const YGGDRASIL_URL = 'https://skin.starlight.cool/yggdrasil'
 const loginModal = ref<InstanceType<typeof SkinSiteLoginModal>>()
 const profileModal = ref<InstanceType<typeof SkinSiteProfileModal>>()
 const view = ref<
-	'home' | 'players' | 'downloads' | 'map' | 'review' | 'bugs' | 'bug-detail' | 'bug-notifications'
+	| 'home'
+	| 'players'
+	| 'downloads'
+	| 'map'
+	| 'review'
+	| 'bugs'
+	| 'bug-detail'
+	| 'bug-notifications'
+	| 'admin'
 >('home')
 const selectedBugId = ref<number | null>(null)
 
@@ -88,6 +97,7 @@ async function copyAddress() {
 				@back="view = 'bugs'"
 				@open="openBug"
 			/>
+			<SkinSiteAdminView v-else-if="view === 'admin'" @back="view = 'home'" />
 			<SkinSiteBugDetailView
 				v-else-if="view === 'bug-detail' && selectedBugId !== null"
 				:issue-id="selectedBugId"
@@ -104,6 +114,7 @@ async function copyAddress() {
 					@sign-in="loginModal?.show()"
 					@open-settings="profileModal?.show()"
 					@open-players="view = 'players'"
+					@open-admin="view = 'admin'"
 				/>
 
 				<div class="grid grid-cols-1 gap-6 lg:grid-cols-2">

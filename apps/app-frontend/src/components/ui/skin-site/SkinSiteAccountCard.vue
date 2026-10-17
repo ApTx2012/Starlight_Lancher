@@ -30,15 +30,23 @@ const messages = defineMessages({
 	error: { id: 'app.skin-site.home.error', defaultMessage: 'Could not load players.' },
 	signIn: { id: 'app.skin-site.home.sign-in', defaultMessage: 'Sign in' },
 	settings: { id: 'app.skin-site.home.settings', defaultMessage: 'Account' },
+	admin: { id: 'app.skin-site.home.admin', defaultMessage: 'Admin' },
 	myPlayers: { id: 'app.skin-site.home.my-players', defaultMessage: 'My players' },
 })
 
-const emit = defineEmits<{ (e: 'sign-in' | 'open-settings' | 'open-players'): void }>()
+const emit = defineEmits<{
+	(e: 'sign-in' | 'open-settings' | 'open-players' | 'open-admin'): void
+}>()
 
 const luck = ref<number | null>(null)
 const luckLoading = ref(false)
 
 const signedIn = computed(() => skinSiteStatus.value === 'signed-in' && !!skinSiteUser.value)
+
+const isAdmin = computed(() => {
+	const permissions = skinSiteUser.value?.permissions ?? []
+	return permissions.includes('WEB_ADMIN') || permissions.includes('SERVER_ADMIN')
+})
 const players = computed(() => skinSitePlayers.value)
 const playersLoading = computed(
 	() => skinSitePlayersStatus.value === 'checking' || skinSitePlayersStatus.value === 'idle',
@@ -97,6 +105,14 @@ watch(signedIn, loadLuck)
 					@click="emit('open-settings')"
 				>
 					{{ formatMessage(messages.settings) }}
+				</button>
+				<button
+					v-if="isAdmin"
+					type="button"
+					class="shrink-0 rounded-full bg-brand px-3 py-1 text-xs font-semibold text-contrast hover:brightness-110"
+					@click="emit('open-admin')"
+				>
+					{{ formatMessage(messages.admin) }}
 				</button>
 				<div
 					class="ml-auto flex shrink-0 items-center gap-1 rounded-full bg-button-bg px-3 py-1 text-sm"

@@ -19,7 +19,7 @@ import { fetchImageAsDataUrl, renderSkinHead } from '@/helpers/skin-site-render'
 
 export const SKIN_SITE_ORIGIN = 'https://skin.starlight.cool'
 
-export type SkinSiteUser = { uuid: string; username: string }
+export type SkinSiteUser = { uuid: string; username: string; permissions: string[] }
 export type SkinSiteStatus = 'checking' | 'signed-out' | 'signed-in' | 'error'
 export type SkinSitePlayer = {
 	uuid: string
@@ -46,7 +46,11 @@ export const skinSitePlayersStatus = readonly(playersStatus)
 export const selectedSkinSitePlayerId = readonly(selectedPlayerId)
 
 function toUser(raw: ApiSkinSiteUser): SkinSiteUser {
-	return { uuid: raw.uuid, username: raw.username }
+	return {
+		uuid: raw.uuid,
+		username: raw.username,
+		permissions: Array.isArray(raw.permissions) ? raw.permissions : [],
+	}
 }
 
 function clearSessionState() {
@@ -111,7 +115,7 @@ export async function signInSkinSite(payload: {
 			status.value = 'signed-in'
 			void requestSkinSitePlayers().catch(() => {})
 		} else {
-			user.value = { uuid: '', username: result.payload.username }
+			user.value = { uuid: '', username: result.payload.username, permissions: [] }
 			status.value = 'signed-in'
 		}
 	}
