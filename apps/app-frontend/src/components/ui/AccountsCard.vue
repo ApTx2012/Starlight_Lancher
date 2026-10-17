@@ -244,6 +244,7 @@
 		</div>
 	</Accordion>
 	<MinecraftLoginModal ref="minecraftLoginModal" @complete="onMicrosoftLogin" />
+	<SkinSiteLoginModal ref="skinSiteLoginModal" @signed-in="onSkinSiteSignedIn" />
 </template>
 
 <script setup lang="ts">
@@ -269,12 +270,12 @@ import { useQueryClient } from '@tanstack/vue-query'
 import { listen } from '@tauri-apps/api/event'
 import type { Ref } from 'vue'
 import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 
 import axolotlLogo from '@/assets/netherstar.png'
 import MinecraftLoginModal from '@/components/ui/MinecraftLoginModal.vue'
+import SkinSiteLoginModal from '@/components/ui/skin-site/SkinSiteLoginModal.vue'
 import {
-	openSkinSiteLogin,
 	requestSkinSitePlayers,
 	selectedSkinSitePlayerId,
 	selectSkinSitePlayer,
@@ -298,21 +299,20 @@ import { getPlayerHeadUrl } from '@/helpers/rendering/batch-skin-renderer.ts'
 import type { Skin } from '@/helpers/skins'
 import { get_available_skins } from '@/helpers/skins'
 import { handleSevereError } from '@/store/error.js'
-import { useTheming } from '@/store/state'
 
 const { formatMessage } = useVIntl()
 const { handleError } = injectNotificationManager()
 const { browserOffline, offline, refreshBrowserOffline } = useNetworkStatus()
 const queryClient = useQueryClient()
 const route = useRoute()
-const router = useRouter()
-const themeStore = useTheming()
+const skinSiteLoginModal = ref<InstanceType<typeof SkinSiteLoginModal>>()
 
 async function goToSkinSiteLogin() {
-	openSkinSiteLogin()
-	// The login action must reveal the iframe even if Minimal Home was selected.
-	themeStore.homeLayout = 'standard'
-	await router.push('/').catch(handleError)
+	skinSiteLoginModal.value?.show()
+}
+
+function onSkinSiteSignedIn() {
+	void requestSkinSitePlayers().catch(() => {})
 }
 const refreshingNetwork = ref(false)
 

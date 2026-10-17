@@ -1,5 +1,4 @@
 import { fetch as tauriFetch } from '@tauri-apps/plugin-http'
-
 export const SKIN_SITE_ORIGIN = 'https://skin.starlight.cool'
 
 /** Where the skin site stores the JWT for this launcher. Kept separate from
@@ -204,11 +203,10 @@ export function requestCaptcha(): Promise<SkinSiteResponse<SkinSiteCaptchaRequir
 	return skinSiteRequest<SkinSiteCaptchaRequire>('captcha', { auth: false })
 }
 
-/** Submit the captcha answer; resolves to the clientId to use for login/register. */
+/** Submit the captcha rotation angle; resolves to the clientId used for login/register. */
 export function verifyCaptcha(payload: {
 	clientId: string
-	answer: string
-	[key: string]: unknown
+	degree: number
 }): Promise<SkinSiteResponse<string>> {
 	return skinSiteRequest<string>('verifyCaptcha', { method: 'POST', body: payload, auth: false })
 }
