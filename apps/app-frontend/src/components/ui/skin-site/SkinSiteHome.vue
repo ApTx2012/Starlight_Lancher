@@ -5,8 +5,10 @@ import { ref } from 'vue'
 
 import SkinSiteAccountCard from './SkinSiteAccountCard.vue'
 import SkinSiteAnnouncements from './SkinSiteAnnouncements.vue'
+import SkinSiteBugCreateModal from './SkinSiteBugCreateModal.vue'
 import SkinSiteBugDetailView from './SkinSiteBugDetailView.vue'
 import SkinSiteBugListView from './SkinSiteBugListView.vue'
+import SkinSiteBugNotificationsView from './SkinSiteBugNotificationsView.vue'
 import SkinSiteDonationCard from './SkinSiteDonationCard.vue'
 import SkinSiteDownloadsView from './SkinSiteDownloadsView.vue'
 import SkinSiteLoginModal from './SkinSiteLoginModal.vue'
@@ -32,9 +34,9 @@ const messages = defineMessages({
 const YGGDRASIL_URL = 'https://skin.starlight.cool/yggdrasil'
 const loginModal = ref<InstanceType<typeof SkinSiteLoginModal>>()
 const profileModal = ref<InstanceType<typeof SkinSiteProfileModal>>()
-const view = ref<'home' | 'players' | 'downloads' | 'map' | 'review' | 'bugs' | 'bug-detail'>(
-	'home',
-)
+const view = ref<
+	'home' | 'players' | 'downloads' | 'map' | 'review' | 'bugs' | 'bug-detail' | 'bug-notifications'
+>('home')
 const selectedBugId = ref<number | null>(null)
 
 function openBug(id: number) {
@@ -45,6 +47,16 @@ function openBug(id: number) {
 function backToBugList() {
 	selectedBugId.value = null
 	view.value = 'bugs'
+}
+
+const bugCreateModal = ref<InstanceType<typeof SkinSiteBugCreateModal>>()
+
+function openBugNotifications() {
+	view.value = 'bug-notifications'
+}
+
+function onBugCreated(id: number) {
+	openBug(id)
 }
 
 async function copyAddress() {
@@ -64,7 +76,18 @@ async function copyAddress() {
 			<SkinSiteDownloadsView v-else-if="view === 'downloads'" @back="view = 'home'" />
 			<SkinSiteMapView v-else-if="view === 'map'" @back="view = 'home'" />
 			<SkinSiteReviewView v-else-if="view === 'review'" @back="view = 'home'" />
-			<SkinSiteBugListView v-else-if="view === 'bugs'" @back="view = 'home'" @open="openBug" />
+			<SkinSiteBugListView
+				v-else-if="view === 'bugs'"
+				@back="view = 'home'"
+				@open="openBug"
+				@create="bugCreateModal?.show()"
+				@notifications="openBugNotifications"
+			/>
+			<SkinSiteBugNotificationsView
+				v-else-if="view === 'bug-notifications'"
+				@back="view = 'bugs'"
+				@open="openBug"
+			/>
 			<SkinSiteBugDetailView
 				v-else-if="view === 'bug-detail' && selectedBugId !== null"
 				:issue-id="selectedBugId"
@@ -111,5 +134,6 @@ async function copyAddress() {
 
 		<SkinSiteLoginModal ref="loginModal" />
 		<SkinSiteProfileModal ref="profileModal" />
+		<SkinSiteBugCreateModal ref="bugCreateModal" @created="onBugCreated" />
 	</div>
 </template>

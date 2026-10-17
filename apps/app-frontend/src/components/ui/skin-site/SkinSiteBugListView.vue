@@ -27,6 +27,11 @@ const messages = defineMessages({
 	all: { id: 'app.skin-site.bugs.all', defaultMessage: 'All' },
 	more: { id: 'app.skin-site.bugs.more', defaultMessage: 'Load more' },
 	openOnly: { id: 'app.skin-site.bugs.open-only', defaultMessage: 'Open only' },
+	create: { id: 'app.skin-site.bugs.create', defaultMessage: 'New issue' },
+	notifications: {
+		id: 'app.skin-site.bugs.notifications',
+		defaultMessage: 'Notifications',
+	},
 	comments: { id: 'app.skin-site.bugs.comments', defaultMessage: '{count} comments' },
 	typeBug: { id: 'app.skin-site.bugs.type.bug', defaultMessage: 'Bug' },
 	typeFeature: { id: 'app.skin-site.bugs.type.feature', defaultMessage: 'Feature' },
@@ -42,7 +47,10 @@ const messages = defineMessages({
 	priorityNormal: { id: 'app.skin-site.bugs.priority.normal', defaultMessage: 'Normal' },
 	priorityLow: { id: 'app.skin-site.bugs.priority.low', defaultMessage: 'Low' },
 })
-const emit = defineEmits<{ (e: 'back'): void; (e: 'open', id: number): void }>()
+const emit = defineEmits<{
+	(e: 'back' | 'create' | 'notifications'): void
+	(e: 'open', id: number): void
+}>()
 
 const items = ref<SkinSiteBugIssue[]>([])
 const hasMore = ref(false)
@@ -164,9 +172,27 @@ onMounted(() => load(true))
 			← {{ formatMessage(messages.back) }}
 		</button>
 
-		<header class="flex flex-col gap-1">
-			<h1 class="m-0 text-xl font-bold text-contrast">{{ formatMessage(messages.title) }}</h1>
-			<p class="m-0 text-sm text-secondary">{{ formatMessage(messages.subtitle) }}</p>
+		<header class="flex flex-wrap items-start gap-3">
+			<div class="flex flex-col gap-1">
+				<h1 class="m-0 text-xl font-bold text-contrast">{{ formatMessage(messages.title) }}</h1>
+				<p class="m-0 text-sm text-secondary">{{ formatMessage(messages.subtitle) }}</p>
+			</div>
+			<div class="ml-auto flex items-center gap-2">
+				<button
+					type="button"
+					class="rounded-full bg-button-bg px-3 py-1 text-xs font-semibold text-secondary hover:brightness-110"
+					@click="emit('notifications')"
+				>
+					{{ formatMessage(messages.notifications) }}
+				</button>
+				<button
+					type="button"
+					class="rounded-full bg-brand px-4 py-2 text-sm font-semibold text-contrast hover:brightness-110"
+					@click="emit('create')"
+				>
+					{{ formatMessage(messages.create) }}
+				</button>
+			</div>
 		</header>
 
 		<div class="flex flex-wrap items-center gap-2">

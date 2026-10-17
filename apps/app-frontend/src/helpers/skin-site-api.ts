@@ -133,6 +133,8 @@ interface SendOptions {
 	method?: 'GET' | 'POST' | 'PUT' | 'DELETE'
 	type?: RequestType
 	body?: unknown
+	/** Send a multipart form body (e.g. issue creation with images). */
+	form?: FormData
 	/** Set to false to skip the Authorization header (e.g. login). */
 	auth?: boolean
 }
@@ -141,13 +143,14 @@ export async function skinSiteRequest<T>(
 	path: string,
 	options: SendOptions = {},
 ): Promise<SkinSiteResponse<T>> {
-	const { method = 'GET', type = 'starlight', body, auth = true } = options
+	const { method = 'GET', type = 'starlight', body, form, auth = true } = options
 	const url = `${SKIN_SITE_ORIGIN}${REQUEST_TYPE_PATH[type]}/${path.replace(/^\/+/, '')}`
 
 	const headers: Record<string, string> = {
 		Accept: 'application/json',
 	}
 	if (body !== undefined) headers['Content-Type'] = 'application/json'
+	// FormData sets its own multipart boundary; never set Content-Type for it.
 	if (auth) {
 		const token = getSkinSiteToken()
 		if (token) headers['Authorization'] = `Bearer ${token}`
@@ -158,7 +161,7 @@ export async function skinSiteRequest<T>(
 		response = await tauriFetch(url, {
 			method,
 			headers,
-			body: body !== undefined ? JSON.stringify(body) : undefined,
+			body: form ?? (body !== undefined ? JSON.stringify(body) : undefined),
 		})
 	} catch {
 		return handleException(0)
@@ -750,10 +753,14 @@ export function skinSiteBugComments(
 export function skinSiteCreateBugComment(
 	issueId: number,
 	content: string,
+	images: File[] = [],
 ): Promise<SkinSiteResponse<SkinSiteBugComment>> {
+	const form = new FormData()
+	form.append('payload', JSON.stringify({ content }))
+	for (const image of images) form.append('images', image)
 	return skinSiteRequest<SkinSiteBugComment>(`bug/${issueId}/comments`, {
 		method: 'POST',
-		body: { content },
+		form,
 	})
 }
 
@@ -767,4 +774,41 @@ export function skinSiteBugUnreadCount(): Promise<SkinSiteResponse<number>> {
 
 export function skinSiteMarkBugNotificationsRead(): Promise<SkinSiteResponse<string>> {
 	return skinSiteRequest<string>('bug/notifications/read', { method: 'POST' })
+}
+
+export interface SkinSiteBugCreateRequest {
+	type: SkinSiteBugIssueType
+	title: string
+	description: string
+	private?: boolean
+}
+
+export function skinSiteCreateBugIssue(
+	request: SkinSiteBugCreateRequest,
+	images: File[] = [],
+): Promise<SkinSiteResponse<SkinSiteBugIssue>> {
+	const form = new FormData()
+	form.append('payload', JSON.stringify(request))
+	for (const image of images) form.append('images', image)
+	return skinSiteRequest<SkinSiteBugIssue>('bug', { method: 'POST', form })
+}
+
+export interface SkinSiteBugNotification {
+	id: number
+	issueId: number
+	actorName: string
+	createdAt: number
+}
+
+export function skinSiteBugNotifications(): Promise<SkinSiteResponse<SkinSiteBugNotification[]>> {
+	return skinSiteRequest<SkinSiteBugNotification[]>('bug/notifications')
+}
+
+export function skinSiteMarkBugNotificationRead(
+	issueId?: number,
+): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('bug/notifications/read', {
+		method: 'POST',
+		body: issueId === undefined ? {} : { issueId },
+	})
 }
