@@ -75,7 +75,9 @@ const navGroups = computed<NavGroup[]>(() => [
 		id: 'security',
 		label: formatMessage(messages.groupSecurity),
 		items: [
-			{ key: 'servers', label: formatMessage(messages.itemServers) },
+			...(hasWebAdmin.value
+				? [{ key: 'servers' as AdminKey, label: formatMessage(messages.itemServers) }]
+				: []),
 			{ key: 'summary', label: formatMessage(messages.itemSummary) },
 			{ key: 'access-audit', label: formatMessage(messages.itemAccessAudit) },
 		],
@@ -113,6 +115,11 @@ const navGroups = computed<NavGroup[]>(() => [
 const hasAdminAccess = computed(() => {
 	const permissions = skinSiteUser.value?.permissions ?? []
 	return permissions.includes('WEB_ADMIN') || permissions.includes('SERVER_ADMIN')
+})
+
+const hasWebAdmin = computed(() => {
+	const permissions = skinSiteUser.value?.permissions ?? []
+	return permissions.includes('WEB_ADMIN')
 })
 
 const current = ref<AdminKey>('summary')
@@ -162,7 +169,7 @@ const current = ref<AdminKey>('summary')
 				class="min-w-0 flex-1 overflow-y-auto rounded-xl border border-solid border-surface-5 bg-bg-raised p-4"
 			>
 				<AdminSummaryPage v-if="current === 'summary'" />
-				<AdminServersPage v-else-if="current === 'servers'" />
+				<AdminServersPage v-else-if="current === 'servers' && hasWebAdmin" />
 				<AdminAccessAuditPage v-else-if="current === 'access-audit'" />
 				<AdminBroadcastPage v-else-if="current === 'broadcast'" />
 				<AdminUsersPage v-else-if="current === 'users'" />
