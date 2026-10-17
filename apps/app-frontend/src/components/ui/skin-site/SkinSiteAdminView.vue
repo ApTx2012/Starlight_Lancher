@@ -5,7 +5,9 @@ import { computed, ref } from 'vue'
 import { skinSiteUser } from '@/composables/skin-site-session'
 
 import AdminBroadcastPage from './admin/AdminBroadcastPage.vue'
+import AdminPlayersPage from './admin/AdminPlayersPage.vue'
 import AdminSummaryPage from './admin/AdminSummaryPage.vue'
+import AdminUsersPage from './admin/AdminUsersPage.vue'
 
 const emit = defineEmits<{ (e: 'back'): void }>()
 
@@ -156,6 +158,8 @@ const current = ref<AdminKey>('summary')
 			>
 				<AdminSummaryPage v-if="current === 'summary'" />
 				<AdminBroadcastPage v-else-if="current === 'broadcast'" />
+				<AdminUsersPage v-else-if="current === 'users'" />
+				<AdminPlayersPage v-else-if="current === 'players'" />
 				<p v-else class="m-0 text-sm text-secondary">{{ current }}</p>
 			</section>
 		</div>

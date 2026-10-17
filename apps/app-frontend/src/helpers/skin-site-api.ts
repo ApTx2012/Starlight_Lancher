@@ -904,3 +904,131 @@ export function skinSiteUpdateBroadcast(
 export function skinSiteDeleteBroadcast(id: number): Promise<SkinSiteResponse<string>> {
 	return skinSiteRequest<string>('broadcast/' + id, { method: 'DELETE', type: 'skin' })
 }
+
+export interface SkinSiteAdminPlayer {
+	uuid: string
+	name: string
+	isMojang: boolean
+	ownerUsername: string
+	legacyInternalAdapted: boolean
+}
+
+export interface SkinSiteAdminPlayerQuery {
+	limit: number
+	offset: number
+	searchField?: string
+	keyword?: string
+}
+
+export function skinSiteAdminPlayerCount(params?: {
+	searchField?: string
+	keyword?: string
+}): Promise<SkinSiteResponse<number>> {
+	const query = new URLSearchParams()
+	if (params?.searchField?.trim()) query.set('searchField', params.searchField!.trim())
+	if (params?.keyword?.trim()) query.set('keyword', params.keyword!.trim())
+	const suffix = query.toString() ? '?' + query.toString() : ''
+	return skinSiteRequest<number>('admin/players/number' + suffix, { type: 'skin' })
+}
+
+export function skinSiteAdminPlayerList(
+	query: SkinSiteAdminPlayerQuery,
+): Promise<SkinSiteResponse<SkinSiteAdminPlayer[]>> {
+	return skinSiteRequest<SkinSiteAdminPlayer[]>('admin/players/list', {
+		method: 'POST',
+		type: 'skin',
+		body: query,
+	})
+}
+
+export function skinSiteAdminUpdatePlayer(input: {
+	uuid: string
+	name: string
+	isMojang: boolean
+}): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('admin/update', {
+		method: 'POST',
+		type: 'skin',
+		body: input,
+	})
+}
+
+export function skinSiteAdminDeletePlayer(uuid: string): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('admin/delete/' + encodeURIComponent(uuid), {
+		method: 'POST',
+		type: 'skin',
+	})
+}
+
+export interface SkinSiteAdminUser {
+	uuid: string
+	username: string
+	email: string
+	qq?: number
+	banned: boolean
+	id: number
+	permissions: string[]
+	avatar?: string
+	registerTime: number
+}
+
+export function skinSiteAdminUserCount(params?: {
+	searchField?: string
+	keyword?: string
+}): Promise<SkinSiteResponse<number>> {
+	const query = new URLSearchParams()
+	if (params?.searchField?.trim()) query.set('searchField', params.searchField!.trim())
+	if (params?.keyword?.trim()) query.set('keyword', params.keyword!.trim())
+	const suffix = query.toString() ? '?' + query.toString() : ''
+	return skinSiteRequest<number>('admin/users/number' + suffix)
+}
+
+export function skinSiteAdminUserList(query: {
+	limit: number
+	offset: number
+	searchField?: string
+	keyword?: string
+}): Promise<SkinSiteResponse<SkinSiteAdminUser[]>> {
+	return skinSiteRequest<SkinSiteAdminUser[]>('admin/users/list', {
+		method: 'POST',
+		body: query,
+	})
+}
+
+export function skinSiteAdminUpdateUser(input: {
+	uuid: string
+	username: string
+	password?: string
+	email: string
+	qq?: number
+	banned: boolean
+	permissions: string[]
+}): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('admin/update', { method: 'POST', body: input })
+}
+
+export function skinSiteAdminDeleteUser(uuid: string): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('admin/delete/' + encodeURIComponent(uuid), {
+		method: 'POST',
+	})
+}
+
+export function skinSiteAdminUserPlayers(
+	uuid: string,
+): Promise<SkinSiteResponse<SkinSiteAdminPlayer[]>> {
+	return skinSiteRequest<SkinSiteAdminPlayer[]>(
+		'admin/users/' + encodeURIComponent(uuid) + '/players',
+	)
+}
+
+export interface SkinSiteFrequencyLimit {
+	dropPercent?: number | null
+}
+
+export function skinSiteAdminUserFrequencyLimit(
+	uuid: string,
+): Promise<SkinSiteResponse<SkinSiteFrequencyLimit>> {
+	return skinSiteRequest<SkinSiteFrequencyLimit>(
+		'admin/users/' + encodeURIComponent(uuid) + '/frequency-limit',
+	)
+}
