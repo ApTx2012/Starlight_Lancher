@@ -8,6 +8,7 @@ import SkinSiteAnnouncements from './SkinSiteAnnouncements.vue'
 import SkinSiteDonationCard from './SkinSiteDonationCard.vue'
 import SkinSiteDownloadsView from './SkinSiteDownloadsView.vue'
 import SkinSiteLoginModal from './SkinSiteLoginModal.vue'
+import SkinSiteMapView from './SkinSiteMapView.vue'
 import SkinSiteNavCards from './SkinSiteNavCards.vue'
 import SkinSiteProfileModal from './SkinSiteProfileModal.vue'
 import SkinSiteProfileView from './SkinSiteProfileView.vue'
@@ -28,7 +29,7 @@ const messages = defineMessages({
 const YGGDRASIL_URL = 'https://skin.starlight.cool/yggdrasil'
 const loginModal = ref<InstanceType<typeof SkinSiteLoginModal>>()
 const profileModal = ref<InstanceType<typeof SkinSiteProfileModal>>()
-const view = ref<'home' | 'players' | 'downloads' | 'review' | 'bugs'>('home')
+const view = ref<'home' | 'players' | 'downloads' | 'map' | 'review' | 'bugs'>('home')
 
 async function copyAddress() {
 	try {
@@ -45,6 +46,7 @@ async function copyAddress() {
 		<div class="mx-auto flex w-full max-w-5xl flex-col gap-6 p-6">
 			<SkinSiteProfileView v-if="view === 'players'" @back="view = 'home'" />
 			<SkinSiteDownloadsView v-else-if="view === 'downloads'" @back="view = 'home'" />
+			<SkinSiteMapView v-else-if="view === 'map'" @back="view = 'home'" />
 
 			<template v-else>
 				<header class="flex flex-col items-center gap-1 text-center">

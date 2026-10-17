@@ -12,7 +12,7 @@ import type { Component } from 'vue'
 
 const { formatMessage } = useVIntl()
 
-const emit = defineEmits<{ (e: 'navigate', view: 'downloads' | 'review' | 'bugs'): void }>()
+const emit = defineEmits<{ (e: 'navigate', view: 'downloads' | 'review' | 'bugs' | 'map'): void }>()
 
 const messages = defineMessages({
 	title: { id: 'app.skin-site.home.nav.title', defaultMessage: 'Skin site' },
@@ -104,7 +104,7 @@ const items: NavItem[] = [
 ]
 
 function open(item: NavItem) {
-	if (item.id === 'download' || item.id === 'review' || item.id === 'bugs') {
+	if (item.id === 'download' || item.id === 'review' || item.id === 'bugs' || item.id === 'map') {
 		emit('navigate', item.id === 'download' ? 'downloads' : item.id)
 		return
 	}

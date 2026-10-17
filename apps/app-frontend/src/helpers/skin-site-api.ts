@@ -532,3 +532,21 @@ export function skinSiteDownloadCategories(): Promise<
 > {
 	return skinSiteRequest<SkinSiteDownloadCategory[]>('download/category/list', { auth: false })
 }
+// ---------------------------------------------------------------------------
+// Maps
+// ---------------------------------------------------------------------------
+
+export interface SkinSiteMapEntry {
+	name: string
+	url: string
+}
+
+export interface SkinSiteMapServer {
+	name: string
+	internal: boolean
+	maps: SkinSiteMapEntry[]
+}
+
+export function skinSiteMapServers(): Promise<SkinSiteResponse<SkinSiteMapServer[]>> {
+	return skinSiteRequest<SkinSiteMapServer[]>('maps', { auth: false })
+}
