@@ -1297,6 +1297,7 @@ async fn collect_crash_context(
     let credentials = Credentials::get_all(&state.pool)
         .await?
         .into_iter()
+        .map(|credential| credential.1)
         .collect::<Vec<_>>();
     Ok(CrashContext {
         sources,
