@@ -1,0 +1,337 @@
+import { fetch as tauriFetch } from '@tauri-apps/plugin-http'
+
+export const SKIN_SITE_ORIGIN = 'https://skin.starlight.cool'
+
+/** Where the skin site stores the JWT for this launcher. Kept separate from
+ * the web site's own `loginToken` so the two sessions never clash. */
+const TOKEN_STORAGE_KEY = 'starlight-skin-site-token'
+
+export type SkinSiteResponse<T> =
+	| { readonly success: true; readonly payload: T; readonly timestamp: number }
+	| {
+			readonly success: false
+			readonly timestamp: number
+			readonly errorType?: string
+			readonly errorCode: number
+			readonly errorMessage: string
+	  }
+
+type RequestType = 'starlight' | 'skin' | 'mod'
+
+const REQUEST_TYPE_PATH: Record<RequestType, string> = {
+	starlight: '/starlight',
+	skin: '/starlight/skin',
+	mod: '/starlight/mod',
+}
+
+// ---------------------------------------------------------------------------
+// Token storage
+// ---------------------------------------------------------------------------
+
+export function getSkinSiteToken(): string | null {
+	try {
+		return localStorage.getItem(TOKEN_STORAGE_KEY)
+	} catch {
+		return null
+	}
+}
+
+export function setSkinSiteToken(token: string | null): void {
+	try {
+		if (token) localStorage.setItem(TOKEN_STORAGE_KEY, token)
+		else localStorage.removeItem(TOKEN_STORAGE_KEY)
+	} catch {
+		// Storage may be unavailable in some environments; ignore.
+	}
+}
+
+export function clearSkinSiteToken(): void {
+	setSkinSiteToken(null)
+}
+
+// ---------------------------------------------------------------------------
+// Core request
+// ---------------------------------------------------------------------------
+
+function createException(
+	errorCode: number,
+	errorMessage: string,
+	timestamp?: number,
+	errorType?: string,
+): SkinSiteResponse<never> {
+	return {
+		success: false,
+		timestamp: timestamp ?? Date.now(),
+		errorMessage,
+		errorType,
+		errorCode,
+	}
+}
+
+function handleException(status: number): SkinSiteResponse<never> {
+	switch (status) {
+		case 0:
+			return createException(0, '连接中断，请检查网络或代理后重试', undefined, 'NetworkError')
+		case 400:
+			return createException(status, '请求参数有误')
+		case 401:
+			return createException(status, '该功能需要登录后才能使用')
+		case 403:
+			return createException(status, '权限不足')
+		case 404:
+			return createException(status, '资源不存在')
+		case 413:
+			return createException(status, '文件超过服务器上传大小限制')
+		case 429:
+			return createException(status, '请求过于频繁，请稍后再试')
+		case 502:
+		case 503:
+			return createException(status, '服务器暂时不可用，请稍后重试')
+		case 504:
+			return createException(status, '网关等待服务器处理超时')
+		default:
+			return createException(status, `请求失败（HTTP ${status}）`)
+	}
+}
+
+async function processResponse<T>(response: Response): Promise<SkinSiteResponse<T>> {
+	const text = await response.text()
+
+	if (!response.ok && text.length === 0) {
+		return handleException(response.status)
+	}
+
+	let data: Record<string, unknown> | null = null
+	try {
+		data = text.length !== 0 ? JSON.parse(text) : null
+	} catch {
+		return response.ok
+			? createException(response.status, '服务器返回了无法识别的响应', undefined, 'InvalidResponse')
+			: handleException(response.status)
+	}
+
+	if (response.ok) {
+		return {
+			success: true,
+			payload: data?.payload as T,
+			timestamp: typeof data?.timestamp === 'number' ? data.timestamp : Date.now(),
+		}
+	}
+
+	const errorMessage = data?.errorMessage
+	if (typeof errorMessage === 'string' && errorMessage) {
+		return createException(
+			response.status,
+			errorMessage,
+			typeof data?.timestamp === 'number' ? data.timestamp : undefined,
+			typeof data?.error === 'string' ? data.error : undefined,
+		)
+	}
+	return handleException(response.status)
+}
+
+interface SendOptions {
+	method?: 'GET' | 'POST' | 'PUT' | 'DELETE'
+	type?: RequestType
+	body?: unknown
+	/** Set to false to skip the Authorization header (e.g. login). */
+	auth?: boolean
+}
+
+export async function skinSiteRequest<T>(
+	path: string,
+	options: SendOptions = {},
+): Promise<SkinSiteResponse<T>> {
+	const { method = 'GET', type = 'starlight', body, auth = true } = options
+	const url = `${SKIN_SITE_ORIGIN}${REQUEST_TYPE_PATH[type]}/${path.replace(/^\/+/, '')}`
+
+	const headers: Record<string, string> = {
+		Accept: 'application/json',
+	}
+	if (body !== undefined) headers['Content-Type'] = 'application/json'
+	if (auth) {
+		const token = getSkinSiteToken()
+		if (token) headers['Authorization'] = `Bearer ${token}`
+	}
+
+	let response: Response
+	try {
+		response = await tauriFetch(url, {
+			method,
+			headers,
+			body: body !== undefined ? JSON.stringify(body) : undefined,
+		})
+	} catch {
+		return handleException(0)
+	}
+
+	return processResponse<T>(response)
+}
+
+// ---------------------------------------------------------------------------
+// Auth types (mirrors the skin site's packet shapes)
+// ---------------------------------------------------------------------------
+
+export interface SkinSiteUser {
+	uuid: string
+	username: string
+	email?: string
+	qq?: number | null
+	banned?: boolean
+	id?: number
+	permissions?: string[]
+	registerTime?: number
+	avatar?: string | null
+}
+
+export interface SkinSiteLoginResult {
+	username: string
+	jwt: string
+}
+
+export interface SkinSiteCaptchaRequire {
+	clientId: string
+	image?: string
+	[extra: string]: unknown
+}
+
+// ---------------------------------------------------------------------------
+// Auth API
+// ---------------------------------------------------------------------------
+
+/** Ask the server for a captcha challenge. */
+export function requestCaptcha(): Promise<SkinSiteResponse<SkinSiteCaptchaRequire>> {
+	return skinSiteRequest<SkinSiteCaptchaRequire>('captcha', { auth: false })
+}
+
+/** Submit the captcha answer; resolves to the clientId to use for login/register. */
+export function verifyCaptcha(payload: {
+	clientId: string
+	answer: string
+	[key: string]: unknown
+}): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('verifyCaptcha', { method: 'POST', body: payload, auth: false })
+}
+
+export function skinSiteLogin(payload: {
+	username: string
+	password: string
+	clientId: string
+}): Promise<SkinSiteResponse<SkinSiteLoginResult>> {
+	return skinSiteRequest<SkinSiteLoginResult>('login', {
+		method: 'POST',
+		body: payload,
+		auth: false,
+	})
+}
+
+export function skinSiteRefresh(): Promise<SkinSiteResponse<SkinSiteLoginResult>> {
+	return skinSiteRequest<SkinSiteLoginResult>('user/refresh')
+}
+
+export function skinSiteCurrentUser(): Promise<SkinSiteResponse<SkinSiteUser>> {
+	return skinSiteRequest<SkinSiteUser>('user')
+}
+
+export function skinSiteLuck(): Promise<SkinSiteResponse<{ luck: number }>> {
+	return skinSiteRequest<{ luck: number }>('luck')
+}
+
+export function skinSiteRegisterCondition(): Promise<
+	SkinSiteResponse<{ registerAllowed: boolean; inviteCodeRequired: boolean }>
+> {
+	return skinSiteRequest('register/condition', { auth: false })
+}
+// ---------------------------------------------------------------------------
+// Players & skins (RequestType.SKIN)
+// ---------------------------------------------------------------------------
+
+export interface SkinSitePlayerInfo {
+	uuid: string
+	name: string
+	isMojang: boolean
+	ownerUsername?: string
+	legacyInternalAdapted?: boolean
+}
+
+export interface SkinSitePlayerSkin {
+	skin?: string
+	cape?: string
+	elytra?: string
+	model?: 'default' | 'slim'
+}
+
+/** List the players owned by the signed-in account. */
+export function skinSitePlayerList(): Promise<SkinSiteResponse<SkinSitePlayerInfo[]>> {
+	return skinSiteRequest<SkinSitePlayerInfo[]>('player', { type: 'skin' })
+}
+
+/** Fetch the skin/cape/elytra textures for a single player. */
+export function skinSitePlayerSkin(uuid: string): Promise<SkinSiteResponse<SkinSitePlayerSkin>> {
+	return skinSiteRequest<SkinSitePlayerSkin>(`player/skin/${encodeURIComponent(uuid)}`, {
+		type: 'skin',
+	})
+}
+
+export type SkinTextureType = 'SKIN' | 'CAPE' | 'ELYTRA'
+
+/** Upload (or replace) a texture for a player. */
+export async function skinSiteUploadTexture(
+	uuid: string,
+	file: File,
+	type: SkinTextureType,
+	metadata: Record<string, string> = {},
+): Promise<SkinSiteResponse<string>> {
+	const form = new FormData()
+	form.append('file', file)
+	for (const [key, value] of Object.entries(metadata)) form.append(key, value)
+
+	const url = `${SKIN_SITE_ORIGIN}/starlight/skin/player/skin/${encodeURIComponent(uuid)}/${type}`
+	const headers: Record<string, string> = {}
+	const token = getSkinSiteToken()
+	if (token) headers['Authorization'] = `Bearer ${token}`
+
+	let response: Response
+	try {
+		response = await tauriFetch(url, { method: 'PUT', headers, body: form })
+	} catch {
+		return handleException(0)
+	}
+	return processResponse<string>(response)
+}
+
+/** Remove a texture from a player. */
+export function skinSiteDeleteTexture(
+	uuid: string,
+	type: SkinTextureType,
+): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>(`player/skin/${encodeURIComponent(uuid)}/${type}`, {
+		method: 'DELETE',
+		type: 'skin',
+	})
+}
+
+/** Add a player by name to the signed-in account. */
+export function skinSiteAddPlayer(playerName: string): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>(`player/add/${encodeURIComponent(playerName)}`, {
+		method: 'POST',
+		type: 'skin',
+	})
+}
+
+export function skinSiteDeletePlayer(uuid: string): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>(`player/${encodeURIComponent(uuid)}`, {
+		method: 'DELETE',
+		type: 'skin',
+	})
+}
+
+export function skinSiteRenamePlayer(
+	uuid: string,
+	newName: string,
+): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>(
+		`player/${encodeURIComponent(uuid)}/rename/${encodeURIComponent(newName)}`,
+		{ method: 'POST', type: 'skin' },
+	)
+}
