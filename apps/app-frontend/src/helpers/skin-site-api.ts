@@ -1290,3 +1290,104 @@ export async function skinSiteUploadLauncherRelease(
 	}
 	return launcherUploadError('上传超时，请刷新版本列表确认结果。')
 }
+
+export type SkinSiteDownloadStatus = 'OK' | 'NEW' | 'LEGACY' | 'OUTDATED' | 'REMOVAL'
+
+export interface SkinSiteDownloadRoute {
+	name?: string | null
+	url: string
+}
+
+export interface SkinSiteDownloadItem {
+	id: number
+	uploader: string
+	url: string
+	routes: SkinSiteDownloadRoute[]
+	filename: string
+	description: string
+	status: SkinSiteDownloadStatus[]
+	category: string[]
+}
+
+export interface SkinSiteDownloadCategory {
+	id: number
+	name: string
+}
+
+export interface SkinSiteDownloadItemInput {
+	routes: SkinSiteDownloadRoute[]
+	filename: string
+	description: string
+	status: SkinSiteDownloadStatus[]
+}
+
+export function skinSiteDownloadItems(params?: {
+	limit?: number
+	offset?: number
+	category?: string
+}): Promise<SkinSiteResponse<SkinSiteDownloadItem[]>> {
+	const query = new URLSearchParams({
+		limit: String(params?.limit ?? 200),
+		offset: String(params?.offset ?? 0),
+	})
+	if (params?.category?.trim()) query.set('category', params.category.trim())
+	return skinSiteRequest<SkinSiteDownloadItem[]>('download/list?' + query.toString())
+}
+
+export function skinSiteDownloadItemCount(category?: string): Promise<SkinSiteResponse<number>> {
+	const query = new URLSearchParams()
+	if (category?.trim()) query.set('category', category.trim())
+	const suffix = query.toString() ? '?' + query.toString() : ''
+	return skinSiteRequest<number>('download/count' + suffix)
+}
+
+export function skinSiteAddDownloadItem(
+	data: SkinSiteDownloadItemInput,
+): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('download/add', { method: 'POST', body: data })
+}
+
+export function skinSiteUpdateDownloadItem(
+	id: number,
+	data: SkinSiteDownloadItemInput,
+): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('download/update/' + id, { method: 'POST', body: data })
+}
+
+export function skinSiteDeleteDownloadItem(id: number): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('download/' + id, { method: 'DELETE' })
+}
+
+export function skinSiteDownloadCategories(): Promise<
+	SkinSiteResponse<SkinSiteDownloadCategory[]>
+> {
+	return skinSiteRequest<SkinSiteDownloadCategory[]>('download/category/list')
+}
+
+export function skinSiteAddDownloadCategory(name: string): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('download/category/add/' + encodeURIComponent(name), {
+		method: 'POST',
+	})
+}
+
+export function skinSiteDeleteDownloadCategory(id: number): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('download/category/' + id, { method: 'DELETE' })
+}
+
+export function skinSiteBindDownloadCategory(
+	infoId: number,
+	categoryId: number,
+): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('download/category/bind/' + infoId + '/' + categoryId, {
+		method: 'POST',
+	})
+}
+
+export function skinSiteUnbindDownloadCategory(
+	infoId: number,
+	categoryId: number,
+): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('download/category/unbind/' + infoId + '/' + categoryId, {
+		method: 'POST',
+	})
+}

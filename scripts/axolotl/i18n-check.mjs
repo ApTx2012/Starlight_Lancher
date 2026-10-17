@@ -33,6 +33,7 @@ const allowedUntranslatedMessages = new Set([
 	'UUID',
 	'QQ',
 	'IP',
+	'URL',
 	'LogShare AI',
 	'NeoForge',
 	'OptiFine',
