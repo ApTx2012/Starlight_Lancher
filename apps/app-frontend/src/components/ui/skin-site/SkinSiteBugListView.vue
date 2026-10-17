@@ -42,7 +42,7 @@ const messages = defineMessages({
 	priorityNormal: { id: 'app.skin-site.bugs.priority.normal', defaultMessage: 'Normal' },
 	priorityLow: { id: 'app.skin-site.bugs.priority.low', defaultMessage: 'Low' },
 })
-const emit = defineEmits<{ (e: 'back'): void }>()
+const emit = defineEmits<{ (e: 'back'): void; (e: 'open', id: number): void }>()
 
 const items = ref<SkinSiteBugIssue[]>([])
 const hasMore = ref(false)
@@ -221,7 +221,8 @@ onMounted(() => load(true))
 			<div
 				v-for="issue in items"
 				:key="issue.id"
-				class="flex flex-col gap-1.5 rounded-xl border border-solid border-surface-5 bg-bg-raised p-3"
+				class="flex cursor-pointer flex-col gap-1.5 rounded-xl border border-solid border-surface-5 bg-bg-raised p-3 hover:border-brand"
+				@click="emit('open', issue.id)"
 			>
 				<div class="flex flex-wrap items-center gap-2">
 					<span

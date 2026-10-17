@@ -5,6 +5,7 @@ import { ref } from 'vue'
 
 import SkinSiteAccountCard from './SkinSiteAccountCard.vue'
 import SkinSiteAnnouncements from './SkinSiteAnnouncements.vue'
+import SkinSiteBugDetailView from './SkinSiteBugDetailView.vue'
 import SkinSiteBugListView from './SkinSiteBugListView.vue'
 import SkinSiteDonationCard from './SkinSiteDonationCard.vue'
 import SkinSiteDownloadsView from './SkinSiteDownloadsView.vue'
@@ -31,7 +32,20 @@ const messages = defineMessages({
 const YGGDRASIL_URL = 'https://skin.starlight.cool/yggdrasil'
 const loginModal = ref<InstanceType<typeof SkinSiteLoginModal>>()
 const profileModal = ref<InstanceType<typeof SkinSiteProfileModal>>()
-const view = ref<'home' | 'players' | 'downloads' | 'map' | 'review' | 'bugs'>('home')
+const view = ref<'home' | 'players' | 'downloads' | 'map' | 'review' | 'bugs' | 'bug-detail'>(
+	'home',
+)
+const selectedBugId = ref<number | null>(null)
+
+function openBug(id: number) {
+	selectedBugId.value = id
+	view.value = 'bug-detail'
+}
+
+function backToBugList() {
+	selectedBugId.value = null
+	view.value = 'bugs'
+}
 
 async function copyAddress() {
 	try {
@@ -50,7 +64,12 @@ async function copyAddress() {
 			<SkinSiteDownloadsView v-else-if="view === 'downloads'" @back="view = 'home'" />
 			<SkinSiteMapView v-else-if="view === 'map'" @back="view = 'home'" />
 			<SkinSiteReviewView v-else-if="view === 'review'" @back="view = 'home'" />
-			<SkinSiteBugListView v-else-if="view === 'bugs'" @back="view = 'home'" />
+			<SkinSiteBugListView v-else-if="view === 'bugs'" @back="view = 'home'" @open="openBug" />
+			<SkinSiteBugDetailView
+				v-else-if="view === 'bug-detail' && selectedBugId !== null"
+				:issue-id="selectedBugId"
+				@back="backToBugList"
+			/>
 
 			<template v-else>
 				<header class="flex flex-col items-center gap-1 text-center">
