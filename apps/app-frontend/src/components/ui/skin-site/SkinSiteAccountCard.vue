@@ -30,9 +30,10 @@ const messages = defineMessages({
 	error: { id: 'app.skin-site.home.error', defaultMessage: 'Could not load players.' },
 	signIn: { id: 'app.skin-site.home.sign-in', defaultMessage: 'Sign in' },
 	settings: { id: 'app.skin-site.home.settings', defaultMessage: 'Account' },
+	myPlayers: { id: 'app.skin-site.home.my-players', defaultMessage: 'My players' },
 })
 
-const emit = defineEmits<{ (e: 'sign-in' | 'open-settings'): void }>()
+const emit = defineEmits<{ (e: 'sign-in' | 'open-settings' | 'open-players'): void }>()
 
 const luck = ref<number | null>(null)
 const luckLoading = ref(false)

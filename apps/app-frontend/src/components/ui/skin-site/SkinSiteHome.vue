@@ -9,6 +9,7 @@ import SkinSiteDonationCard from './SkinSiteDonationCard.vue'
 import SkinSiteLoginModal from './SkinSiteLoginModal.vue'
 import SkinSiteNavCards from './SkinSiteNavCards.vue'
 import SkinSiteProfileModal from './SkinSiteProfileModal.vue'
+import SkinSiteProfileView from './SkinSiteProfileView.vue'
 
 const { formatMessage } = useVIntl()
 const { addNotification } = injectNotificationManager()
@@ -26,6 +27,7 @@ const messages = defineMessages({
 const YGGDRASIL_URL = 'https://skin.starlight.cool/yggdrasil'
 const loginModal = ref<InstanceType<typeof SkinSiteLoginModal>>()
 const profileModal = ref<InstanceType<typeof SkinSiteProfileModal>>()
+const view = ref<'home' | 'players'>('home')
 
 async function copyAddress() {
 	try {
@@ -40,36 +42,44 @@ async function copyAddress() {
 <template>
 	<div class="flex h-full min-h-0 w-full flex-col overflow-y-auto">
 		<div class="mx-auto flex w-full max-w-5xl flex-col gap-6 p-6">
-			<header class="flex flex-col items-center gap-1 text-center">
-				<h1 class="m-0 text-2xl font-bold text-contrast">{{ formatMessage(messages.title) }}</h1>
-				<p class="m-0 text-sm text-secondary">{{ formatMessage(messages.subtitle) }}</p>
-			</header>
+			<SkinSiteProfileView v-if="view === 'players'" @back="view = 'home'" />
 
-			<SkinSiteAccountCard @sign-in="loginModal?.show()" @open-settings="profileModal?.show()" />
+			<template v-else>
+				<header class="flex flex-col items-center gap-1 text-center">
+					<h1 class="m-0 text-2xl font-bold text-contrast">{{ formatMessage(messages.title) }}</h1>
+					<p class="m-0 text-sm text-secondary">{{ formatMessage(messages.subtitle) }}</p>
+				</header>
 
-			<div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-				<SkinSiteNavCards />
-				<SkinSiteAnnouncements />
-			</div>
+				<SkinSiteAccountCard
+					@sign-in="loginModal?.show()"
+					@open-settings="profileModal?.show()"
+					@open-players="view = 'players'"
+				/>
 
-			<SkinSiteDonationCard />
+				<div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+					<SkinSiteNavCards />
+					<SkinSiteAnnouncements />
+				</div>
 
-			<div
-				class="flex flex-wrap items-center gap-2 rounded-xl border border-solid border-surface-5 bg-bg-raised px-4 py-3"
-			>
-				<span class="text-sm font-semibold text-contrast">{{
-					formatMessage(messages.address)
-				}}</span>
-				<code class="min-w-0 flex-1 truncate text-xs text-secondary">{{ YGGDRASIL_URL }}</code>
-				<button
-					type="button"
-					class="flex shrink-0 items-center gap-1 rounded-full bg-button-bg px-3 py-1 text-xs font-semibold text-contrast hover:brightness-110"
-					@click="copyAddress"
+				<SkinSiteDonationCard />
+
+				<div
+					class="flex flex-wrap items-center gap-2 rounded-xl border border-solid border-surface-5 bg-bg-raised px-4 py-3"
 				>
-					<CopyIcon class="size-3.5" />
-					{{ formatMessage({ id: 'app.skin-site.home.copy', defaultMessage: 'Copy' }) }}
-				</button>
-			</div>
+					<span class="text-sm font-semibold text-contrast">{{
+						formatMessage(messages.address)
+					}}</span>
+					<code class="min-w-0 flex-1 truncate text-xs text-secondary">{{ YGGDRASIL_URL }}</code>
+					<button
+						type="button"
+						class="flex shrink-0 items-center gap-1 rounded-full bg-button-bg px-3 py-1 text-xs font-semibold text-contrast hover:brightness-110"
+						@click="copyAddress"
+					>
+						<CopyIcon class="size-3.5" />
+						{{ formatMessage({ id: 'app.skin-site.home.copy', defaultMessage: 'Copy' }) }}
+					</button>
+				</div>
+			</template>
 		</div>
 
 		<SkinSiteLoginModal ref="loginModal" />
