@@ -12,6 +12,7 @@ import SkinSiteMapView from './SkinSiteMapView.vue'
 import SkinSiteNavCards from './SkinSiteNavCards.vue'
 import SkinSiteProfileModal from './SkinSiteProfileModal.vue'
 import SkinSiteProfileView from './SkinSiteProfileView.vue'
+import SkinSiteReviewView from './SkinSiteReviewView.vue'
 
 const { formatMessage } = useVIntl()
 const { addNotification } = injectNotificationManager()
@@ -47,6 +48,7 @@ async function copyAddress() {
 			<SkinSiteProfileView v-if="view === 'players'" @back="view = 'home'" />
 			<SkinSiteDownloadsView v-else-if="view === 'downloads'" @back="view = 'home'" />
 			<SkinSiteMapView v-else-if="view === 'map'" @back="view = 'home'" />
+			<SkinSiteReviewView v-else-if="view === 'review'" @back="view = 'home'" />
 
 			<template v-else>
 				<header class="flex flex-col items-center gap-1 text-center">

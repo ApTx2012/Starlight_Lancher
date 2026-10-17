@@ -3,7 +3,7 @@ import { ExternalIcon, SpinnerIcon } from '@modrinth/assets'
 import { defineMessages, injectNotificationManager, useVIntl } from '@modrinth/ui'
 import { computed, onMounted, ref, watch } from 'vue'
 
-import { type SkinSiteMapServer,skinSiteMapServers } from '@/helpers/skin-site-api'
+import { type SkinSiteMapServer, skinSiteMapServers } from '@/helpers/skin-site-api'
 
 const { formatMessage } = useVIntl()
 const { handleError } = injectNotificationManager()

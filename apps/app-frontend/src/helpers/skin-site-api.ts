@@ -550,3 +550,81 @@ export interface SkinSiteMapServer {
 export function skinSiteMapServers(): Promise<SkinSiteResponse<SkinSiteMapServer[]>> {
 	return skinSiteRequest<SkinSiteMapServer[]>('maps', { auth: false })
 }
+// ---------------------------------------------------------------------------
+// Player review (public side)
+// ---------------------------------------------------------------------------
+
+export type SkinSiteReviewQuestionType = 'SINGLE' | 'MULTIPLE' | 'TRUE_FALSE' | 'FILL' | 'ESSAY'
+export type SkinSiteReviewResult = 'PENDING' | 'PASSED' | 'REJECTED'
+
+export interface SkinSiteReviewOption {
+	id: string
+	description: string
+	correct?: boolean
+	defaultSelected?: boolean
+}
+
+export interface SkinSiteReviewQuestion {
+	id: string
+	type: SkinSiteReviewQuestionType
+	title: string
+	annotation?: string | null
+	score?: number
+	optional?: boolean
+	fatal?: boolean
+	options?: SkinSiteReviewOption[]
+	answer?: string | null
+	maxLength?: number | null
+	informationQuestion?: boolean
+}
+
+export interface SkinSiteReviewPaper {
+	id: string
+	title: string
+	description?: string
+	questions: SkinSiteReviewQuestion[]
+	[key: string]: unknown
+}
+
+export interface SkinSiteReviewCatalog {
+	papers: SkinSiteReviewPaper[]
+	[key: string]: unknown
+}
+
+export interface SkinSiteReviewReceipt {
+	id?: number
+	accessToken?: string
+	result?: SkinSiteReviewResult
+	title?: string
+	[key: string]: unknown
+}
+
+export function skinSiteReviewCatalog(): Promise<SkinSiteResponse<SkinSiteReviewCatalog>> {
+	return skinSiteRequest<SkinSiteReviewCatalog>('review/public', { auth: false })
+}
+
+export function skinSiteReviewPaper(
+	paperId: string,
+): Promise<SkinSiteResponse<SkinSiteReviewPaper>> {
+	return skinSiteRequest<SkinSiteReviewPaper>(`review/public/${encodeURIComponent(paperId)}`, {
+		auth: false,
+	})
+}
+
+export interface SkinSiteReviewSubmitData {
+	paperId: string
+	email: string
+	answers: Record<string, unknown>
+	inviteCode?: string
+	[key: string]: unknown
+}
+
+export function skinSiteSubmitReview(
+	data: SkinSiteReviewSubmitData,
+): Promise<SkinSiteResponse<SkinSiteReviewReceipt>> {
+	return skinSiteRequest<SkinSiteReviewReceipt>('review/submit', {
+		method: 'POST',
+		body: data,
+		auth: false,
+	})
+}
