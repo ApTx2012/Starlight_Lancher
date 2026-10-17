@@ -6,6 +6,7 @@ import { ref } from 'vue'
 import SkinSiteAccountCard from './SkinSiteAccountCard.vue'
 import SkinSiteAnnouncements from './SkinSiteAnnouncements.vue'
 import SkinSiteDonationCard from './SkinSiteDonationCard.vue'
+import SkinSiteDownloadsView from './SkinSiteDownloadsView.vue'
 import SkinSiteLoginModal from './SkinSiteLoginModal.vue'
 import SkinSiteNavCards from './SkinSiteNavCards.vue'
 import SkinSiteProfileModal from './SkinSiteProfileModal.vue'
@@ -27,7 +28,7 @@ const messages = defineMessages({
 const YGGDRASIL_URL = 'https://skin.starlight.cool/yggdrasil'
 const loginModal = ref<InstanceType<typeof SkinSiteLoginModal>>()
 const profileModal = ref<InstanceType<typeof SkinSiteProfileModal>>()
-const view = ref<'home' | 'players'>('home')
+const view = ref<'home' | 'players' | 'downloads' | 'review' | 'bugs'>('home')
 
 async function copyAddress() {
 	try {
@@ -43,6 +44,7 @@ async function copyAddress() {
 	<div class="flex h-full min-h-0 w-full flex-col overflow-y-auto">
 		<div class="mx-auto flex w-full max-w-5xl flex-col gap-6 p-6">
 			<SkinSiteProfileView v-if="view === 'players'" @back="view = 'home'" />
+			<SkinSiteDownloadsView v-else-if="view === 'downloads'" @back="view = 'home'" />
 
 			<template v-else>
 				<header class="flex flex-col items-center gap-1 text-center">
@@ -57,7 +59,7 @@ async function copyAddress() {
 				/>
 
 				<div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-					<SkinSiteNavCards />
+					<SkinSiteNavCards @navigate="(v) => (view = v)" />
 					<SkinSiteAnnouncements />
 				</div>
 

@@ -480,3 +480,55 @@ export async function skinSiteUploadAvatar(blob: Blob): Promise<SkinSiteResponse
 	}
 	return processResponse<string>(response)
 }
+// ---------------------------------------------------------------------------
+// Downloads
+// ---------------------------------------------------------------------------
+
+export type SkinSiteDownloadStatus = 'OK' | 'NEW' | 'LEGACY' | 'OUTDATED' | 'REMOVAL'
+
+export interface SkinSiteDownloadRoute {
+	name?: string | null
+	url: string
+}
+
+export interface SkinSiteDownloadItem {
+	id: number
+	uploader: string
+	url: string
+	routes: SkinSiteDownloadRoute[]
+	filename: string
+	description: string
+	status: SkinSiteDownloadStatus[]
+	category: string[]
+}
+
+export interface SkinSiteDownloadCategory {
+	id: number
+	name: string
+}
+
+export function skinSiteDownloadList(options?: {
+	limit?: number
+	offset?: number
+	category?: string
+}): Promise<SkinSiteResponse<SkinSiteDownloadItem[]>> {
+	const query = new URLSearchParams({
+		limit: String(options?.limit ?? 200),
+		offset: String(options?.offset ?? 0),
+	})
+	if (options?.category) query.set('category', options.category)
+	return skinSiteRequest<SkinSiteDownloadItem[]>(`download/list?${query.toString()}`, {
+		auth: false,
+	})
+}
+
+export function skinSiteDownloadCount(category?: string): Promise<SkinSiteResponse<number>> {
+	const suffix = category ? `?category=${encodeURIComponent(category)}` : ''
+	return skinSiteRequest<number>(`download/count${suffix}`, { auth: false })
+}
+
+export function skinSiteDownloadCategories(): Promise<
+	SkinSiteResponse<SkinSiteDownloadCategory[]>
+> {
+	return skinSiteRequest<SkinSiteDownloadCategory[]>('download/category/list', { auth: false })
+}

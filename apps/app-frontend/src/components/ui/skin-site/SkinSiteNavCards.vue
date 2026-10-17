@@ -12,6 +12,8 @@ import type { Component } from 'vue'
 
 const { formatMessage } = useVIntl()
 
+const emit = defineEmits<{ (e: 'navigate', view: 'downloads' | 'review' | 'bugs'): void }>()
+
 const messages = defineMessages({
 	title: { id: 'app.skin-site.home.nav.title', defaultMessage: 'Skin site' },
 	download: { id: 'app.skin-site.home.nav.download', defaultMessage: 'Downloads' },
@@ -101,8 +103,12 @@ const items: NavItem[] = [
 	},
 ]
 
-function open(href: string) {
-	void import('@tauri-apps/plugin-opener').then(({ openUrl }) => openUrl(href))
+function open(item: NavItem) {
+	if (item.id === 'download' || item.id === 'review' || item.id === 'bugs') {
+		emit('navigate', item.id === 'download' ? 'downloads' : item.id)
+		return
+	}
+	void import('@tauri-apps/plugin-opener').then(({ openUrl }) => openUrl(item.href))
 }
 </script>
 
@@ -115,7 +121,7 @@ function open(href: string) {
 				:key="item.id"
 				type="button"
 				class="flex flex-col items-start gap-1 rounded-xl border border-solid border-surface-5 bg-bg-raised p-3 text-left transition-colors hover:bg-button-bg"
-				@click="open(item.href)"
+				@click="open(item)"
 			>
 				<component :is="item.icon" class="size-5 text-brand" />
 				<span class="text-sm font-semibold text-contrast">{{ item.title }}</span>
