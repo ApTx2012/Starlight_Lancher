@@ -275,12 +275,6 @@ export async function requestSkinSiteLuck(): Promise<number> {
 // ---------------------------------------------------------------------------
 
 /**
- * @deprecated The home view renders the skin site natively now. Kept only so
- * the transitional `SkinSiteFrame.vue` still compiles until it is replaced.
- */
-export const skinSiteFrameUrl = readonly(ref(`${SKIN_SITE_ORIGIN}/`))
-
-/**
  * Replace a player's skin texture.
  *
  * The caller hands us a base64 PNG (what the in-app editor produces); we turn

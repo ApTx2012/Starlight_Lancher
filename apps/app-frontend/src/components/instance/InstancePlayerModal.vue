@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { ButtonStyled, NewModal, useVIntl } from '@modrinth/ui'
 import { computed, onUnmounted, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
 
 import MinecraftLoginModal from '@/components/ui/MinecraftLoginModal.vue'
+import SkinSiteLoginModal from '@/components/ui/skin-site/SkinSiteLoginModal.vue'
 import {
-	openSkinSiteLogin,
 	requestSkinSitePlayers,
 	skinSitePlayers,
 	skinSiteStatus,
@@ -28,7 +27,7 @@ const { formatMessage } = useVIntl()
 
 const modal = ref<InstanceType<typeof NewModal>>()
 const microsoftLogin = ref<InstanceType<typeof MinecraftLoginModal>>()
-const router = useRouter()
+const skinSiteLoginModal = ref<InstanceType<typeof SkinSiteLoginModal>>()
 const accounts = ref<PlayerChoice[]>([])
 const active = ref(false)
 const loading = ref(false)
@@ -137,9 +136,8 @@ function signInSkinSite() {
 	rejectSelection?.(new PlayerSelectionNavigatedAwayError())
 	resolveSelection = undefined
 	rejectSelection = undefined
-	openSkinSiteLogin()
+	skinSiteLoginModal.value?.show()
 	modal.value?.hide()
-	void router.push('/starlight-skin')
 }
 
 const unregister = registerInstancePlayerPicker((id, saved) => {
@@ -246,5 +244,6 @@ onUnmounted(() => {
 			<p v-if="saving" class="m-0" role="status">{{ formatMessage(messages.saving) }}</p>
 		</div>
 	</NewModal>
+	<SkinSiteLoginModal ref="skinSiteLoginModal" @signed-in="refresh" />
 	<MinecraftLoginModal ref="microsoftLogin" @complete="refresh" />
 </template>

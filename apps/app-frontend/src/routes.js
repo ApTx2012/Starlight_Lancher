@@ -94,14 +94,6 @@ export default new createRouter({
 			},
 		},
 		{
-			path: '/starlight-skin',
-			name: 'Starlight skin',
-			component: () => import('@/pages/StarlightSkin.vue'),
-			meta: {
-				breadcrumb: [{ name: 'Starlight skin' }],
-			},
-		},
-		{
 			path: '/screenshots',
 			name: 'Screenshots',
 			component: () => import('@/pages/Screenshots.vue'),
