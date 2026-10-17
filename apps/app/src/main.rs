@@ -324,12 +324,9 @@ async fn initialize_state(app: tauri::AppHandle) -> api::Result<()> {
 /// external game-directory root for the one-click StarLight install flow.
 #[tauri::command]
 fn get_launcher_root_dir() -> api::Result<String> {
-    let exe = std::env::current_exe().map_err(|error| {
-        theseus::Error::from(theseus::ErrorKind::FSError(error.to_string()))
-    })?;
-    let dir = exe.parent().ok_or_else(|| {
+    let dir = theseus::default_game_dir_root().ok_or_else(|| {
         theseus::Error::from(theseus::ErrorKind::FSError(
-            "Launcher executable has no parent directory".to_string(),
+            "Could not determine a default game directory root".to_string(),
         ))
     })?;
     Ok(dir.to_string_lossy().into_owned())
