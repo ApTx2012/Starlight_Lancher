@@ -33,6 +33,51 @@ export const ANNOUNCEMENT_CHANGE_TYPES: readonly AnnouncementChangeType[] = [
 
 export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 	{
+		id: 'launcher-1.0.2-beta8',
+		version: '1.0.2-beta8',
+		publishedAt: '2026-10-18',
+		title: {
+			'en-US': 'Starlight Launcher 1.0.2-beta8',
+			'zh-CN': 'Starlight Launcher 1.0.2-beta8',
+		},
+		changes: {
+			added: [
+				{
+					'en-US': 'The skin site is now fully native inside the launcher: sign-in, registration, password reset, account settings, players, downloads, world map and player review all run through the launcher UI instead of an embedded web page.',
+					'zh-CN': '皮肤站全面改为启动器原生界面：登录、注册、找回密码、账号设置、角色管理、资源下载、服务器地图与玩家审核均不再依赖内嵌网页。',
+				},
+				{
+					'en-US': 'Added a bug tracker: browse and filter issues, read details and comments, post replies, create new issues and follow notifications.',
+					'zh-CN': '新增问题追踪：可浏览与筛选问题、查看详情与评论、发表回复、提交新问题并接收通知。',
+				},
+				{
+					'en-US': 'Added an admin console with a permission gate: system overview, announcements, users, players, player review and launcher releases.',
+					'zh-CN': '新增管理控制台（带权限校验）：系统概览、公告管理、用户管理、玩家管理、玩家审核与启动器版本管理。',
+				},
+			],
+			changed: [
+				{
+					'en-US': 'Hosted modpack downloads now go through the dedicated download server, keeping large downloads off the main API host.',
+					'zh-CN': '整合包下载改为走独立的下载服务器，避免大文件下载挤占主 API 服务。',
+				},
+			],
+			fixed: [
+				{
+					'en-US': 'LogShare now collects logs with a lightweight reader, fixing crash log uploads that previously failed.',
+					'zh-CN': 'LogShare 改用轻量日志收集，修复崩溃日志上传失败的问题。',
+				},
+				{
+					'en-US': 'The onboarding tour now scrolls each step into view when the step changes.',
+					'zh-CN': '引导教程在切换步骤时自动滚动到目标元素。',
+				},
+				{
+					'en-US': 'Fixed a type mismatch while collecting crash context credentials.',
+					'zh-CN': '修复崩溃上下文凭据收集中的类型不匹配问题。',
+				},
+			],
+		},
+	},
+	{
 		id: 'launcher-1.0.2-beta7',
 		version: '1.0.2-beta7',
 		publishedAt: '2026-10-17',
