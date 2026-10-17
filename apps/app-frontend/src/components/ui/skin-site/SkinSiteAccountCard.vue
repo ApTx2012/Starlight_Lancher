@@ -29,9 +29,10 @@ const messages = defineMessages({
 	loading: { id: 'app.skin-site.home.loading', defaultMessage: 'Loading…' },
 	error: { id: 'app.skin-site.home.error', defaultMessage: 'Could not load players.' },
 	signIn: { id: 'app.skin-site.home.sign-in', defaultMessage: 'Sign in' },
+	settings: { id: 'app.skin-site.home.settings', defaultMessage: 'Account' },
 })
 
-const emit = defineEmits<{ (e: 'sign-in'): void }>()
+const emit = defineEmits<{ (e: 'sign-in' | 'open-settings'): void }>()
 
 const luck = ref<number | null>(null)
 const luckLoading = ref(false)
@@ -89,6 +90,13 @@ watch(signedIn, loadLuck)
 					<span class="truncate font-semibold text-contrast">{{ skinSiteUser!.username }}</span>
 					<span class="truncate text-xs text-secondary">{{ skinSiteUser!.uuid }}</span>
 				</div>
+				<button
+					type="button"
+					class="shrink-0 rounded-full bg-button-bg px-3 py-1 text-xs font-semibold text-contrast hover:brightness-110"
+					@click="emit('open-settings')"
+				>
+					{{ formatMessage(messages.settings) }}
+				</button>
 				<div
 					class="ml-auto flex shrink-0 items-center gap-1 rounded-full bg-button-bg px-3 py-1 text-sm"
 					:title="formatMessage(messages.luck)"

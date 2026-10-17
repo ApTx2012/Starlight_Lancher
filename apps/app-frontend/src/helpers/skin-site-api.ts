@@ -431,3 +431,52 @@ export interface SkinSiteAnnouncement {
 export function skinSiteAnnouncements(): Promise<SkinSiteResponse<SkinSiteAnnouncement[]>> {
 	return skinSiteRequest<SkinSiteAnnouncement[]>('broadcast/all', { type: 'skin' })
 }
+// ---------------------------------------------------------------------------
+// Account updates (requires the JWT)
+// ---------------------------------------------------------------------------
+
+export function skinSiteChangeUsername(newUsername: string): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('update/username', {
+		method: 'POST',
+		body: { newUsername },
+	})
+}
+
+export function skinSiteChangePassword(
+	oldPassword: string,
+	newPassword: string,
+): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('update/password', {
+		method: 'POST',
+		body: { oldPassword, newPassword },
+	})
+}
+
+/** Pass null to reset the Minecraft password back to the website password. */
+export function skinSiteChangeYggdrasilPassword(
+	newPassword: string | null,
+): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('update/yggdrasilPassword', {
+		method: 'POST',
+		body: { newPassword },
+	})
+}
+
+/** Upload a new avatar image (multipart). */
+export async function skinSiteUploadAvatar(blob: Blob): Promise<SkinSiteResponse<string>> {
+	const form = new FormData()
+	form.append('avatar', blob)
+
+	const url = `${SKIN_SITE_ORIGIN}/starlight/update/avatar`
+	const headers: Record<string, string> = {}
+	const token = getSkinSiteToken()
+	if (token) headers['Authorization'] = `Bearer ${token}`
+
+	let response: Response
+	try {
+		response = await tauriFetch(url, { method: 'POST', headers, body: form })
+	} catch {
+		return handleException(0)
+	}
+	return processResponse<string>(response)
+}

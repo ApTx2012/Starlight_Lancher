@@ -8,6 +8,7 @@ import SkinSiteAnnouncements from './SkinSiteAnnouncements.vue'
 import SkinSiteDonationCard from './SkinSiteDonationCard.vue'
 import SkinSiteLoginModal from './SkinSiteLoginModal.vue'
 import SkinSiteNavCards from './SkinSiteNavCards.vue'
+import SkinSiteProfileModal from './SkinSiteProfileModal.vue'
 
 const { formatMessage } = useVIntl()
 const { addNotification } = injectNotificationManager()
@@ -24,6 +25,7 @@ const messages = defineMessages({
 
 const YGGDRASIL_URL = 'https://skin.starlight.cool/yggdrasil'
 const loginModal = ref<InstanceType<typeof SkinSiteLoginModal>>()
+const profileModal = ref<InstanceType<typeof SkinSiteProfileModal>>()
 
 async function copyAddress() {
 	try {
@@ -43,7 +45,7 @@ async function copyAddress() {
 				<p class="m-0 text-sm text-secondary">{{ formatMessage(messages.subtitle) }}</p>
 			</header>
 
-			<SkinSiteAccountCard @sign-in="loginModal?.show()" />
+			<SkinSiteAccountCard @sign-in="loginModal?.show()" @open-settings="profileModal?.show()" />
 
 			<div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
 				<SkinSiteNavCards />
@@ -71,5 +73,6 @@ async function copyAddress() {
 		</div>
 
 		<SkinSiteLoginModal ref="loginModal" />
+		<SkinSiteProfileModal ref="profileModal" />
 	</div>
 </template>
