@@ -30,6 +30,8 @@ const allowedUntranslatedMessages = new Set([
 	'Cleanroom',
 	'LiteLoader',
 	'LogShare.CN',
+	'UUID',
+	'QQ',
 	'LogShare AI',
 	'NeoForge',
 	'OptiFine',
