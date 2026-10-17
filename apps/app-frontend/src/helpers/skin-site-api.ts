@@ -812,3 +812,95 @@ export function skinSiteMarkBugNotificationRead(
 		body: issueId === undefined ? {} : { issueId },
 	})
 }
+
+// ---------------------------------------------------------------------------
+// Admin console
+// ---------------------------------------------------------------------------
+
+export interface SkinSiteAdminStatus {
+	bootTime: number
+	memoryUsage: number
+	userCount: number
+	playerCount: number
+}
+
+export function skinSiteAdminStatus(): Promise<SkinSiteResponse<SkinSiteAdminStatus>> {
+	return skinSiteRequest<SkinSiteAdminStatus>('admin/status')
+}
+
+export interface SkinSiteBroadcast {
+	id: number
+	title: string
+	subtitle: string
+	imageName?: string
+	content: string
+	updateAt: number
+	star: boolean
+	importantLevel: number
+	source: string
+	expireAt: number
+	uploader: string
+}
+
+export interface SkinSiteBroadcastInput {
+	title: string
+	subtitle: string
+	content: string
+	expireAt: number
+	star: boolean
+	importantLevel: number
+	imageFile?: File | null
+	removeImage?: boolean
+}
+
+export function skinSiteBroadcasts(): Promise<SkinSiteResponse<SkinSiteBroadcast[]>> {
+	return skinSiteRequest<SkinSiteBroadcast[]>('broadcast/all/complex', { type: 'skin' })
+}
+
+export function skinSiteCreateBroadcast(
+	input: SkinSiteBroadcastInput,
+): Promise<SkinSiteResponse<string>> {
+	const form = new FormData()
+	form.append(
+		'payload',
+		JSON.stringify({
+			title: input.title,
+			subtitle: input.subtitle,
+			content: input.content,
+			expireAt: input.expireAt,
+			star: input.star,
+			importantLevel: input.importantLevel,
+		}),
+	)
+	if (input.imageFile) form.append('image', input.imageFile)
+	return skinSiteRequest<string>('broadcast', { method: 'PUT', type: 'skin', form })
+}
+
+export function skinSiteUpdateBroadcast(
+	id: number,
+	input: SkinSiteBroadcastInput,
+): Promise<SkinSiteResponse<string>> {
+	const form = new FormData()
+	form.append(
+		'payload',
+		JSON.stringify({
+			title: input.title,
+			subtitle: input.subtitle,
+			content: input.content,
+			expireAt: input.expireAt,
+			star: input.star,
+			importantLevel: input.importantLevel,
+			removeImage: input.removeImage ?? false,
+		}),
+	)
+	if (input.imageFile) form.append('image', input.imageFile)
+	return skinSiteRequest<string>('broadcast/update/' + id, {
+		method: 'PUT',
+		type: 'skin',
+		form,
+	})
+}
+
+export function skinSiteDeleteBroadcast(id: number): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('broadcast/' + id, { method: 'DELETE', type: 'skin' })
+}

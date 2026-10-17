@@ -4,6 +4,9 @@ import { computed, ref } from 'vue'
 
 import { skinSiteUser } from '@/composables/skin-site-session'
 
+import AdminBroadcastPage from './admin/AdminBroadcastPage.vue'
+import AdminSummaryPage from './admin/AdminSummaryPage.vue'
+
 const emit = defineEmits<{ (e: 'back'): void }>()
 
 const { formatMessage } = useVIntl()
@@ -151,10 +154,9 @@ const current = ref<AdminKey>('summary')
 			<section
 				class="min-w-0 flex-1 overflow-y-auto rounded-xl border border-solid border-surface-5 bg-bg-raised p-4"
 			>
-				<h1 class="m-0 mb-3 text-xl font-bold text-contrast">
-					{{ formatMessage(messages.title) }} · {{ current }}
-				</h1>
-				<!-- Page content is filled in one admin screen at a time. -->
+				<AdminSummaryPage v-if="current === 'summary'" />
+				<AdminBroadcastPage v-else-if="current === 'broadcast'" />
+				<p v-else class="m-0 text-sm text-secondary">{{ current }}</p>
 			</section>
 		</div>
 	</div>
