@@ -31,7 +31,7 @@ use tokio::{
     sync::{Mutex, OwnedMutexGuard},
 };
 
-const API: &str = "https://skin.starlight.cool/starlight/mod/packs";
+const API: &str = "https://download.starlight.cool:20443/starlight/mod/packs";
 const STARLIGHT_YGGDRASIL_API_ROOT: &str =
     "https://skin.starlight.cool/yggdrasil";
 const ACCOUNT_REQUIRED_MESSAGE: &str = "您需要登录正版或皮肤站账号后才能操作";
