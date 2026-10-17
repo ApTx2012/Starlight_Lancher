@@ -5,6 +5,7 @@ import { ref } from 'vue'
 
 import SkinSiteAccountCard from './SkinSiteAccountCard.vue'
 import SkinSiteAnnouncements from './SkinSiteAnnouncements.vue'
+import SkinSiteBugListView from './SkinSiteBugListView.vue'
 import SkinSiteDonationCard from './SkinSiteDonationCard.vue'
 import SkinSiteDownloadsView from './SkinSiteDownloadsView.vue'
 import SkinSiteLoginModal from './SkinSiteLoginModal.vue'
@@ -49,6 +50,7 @@ async function copyAddress() {
 			<SkinSiteDownloadsView v-else-if="view === 'downloads'" @back="view = 'home'" />
 			<SkinSiteMapView v-else-if="view === 'map'" @back="view = 'home'" />
 			<SkinSiteReviewView v-else-if="view === 'review'" @back="view = 'home'" />
+			<SkinSiteBugListView v-else-if="view === 'bugs'" @back="view = 'home'" />
 
 			<template v-else>
 				<header class="flex flex-col items-center gap-1 text-center">

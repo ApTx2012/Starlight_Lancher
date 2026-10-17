@@ -628,3 +628,143 @@ export function skinSiteSubmitReview(
 		auth: false,
 	})
 }
+// ---------------------------------------------------------------------------
+// Bug tracker
+// ---------------------------------------------------------------------------
+
+export type SkinSiteBugIssueType = 'BUG' | 'FEATURE' | 'IMPROVEMENT'
+export type SkinSiteBugStatus =
+	| 'PENDING'
+	| 'CONFIRMED'
+	| 'NEEDS_INFO'
+	| 'IN_PROGRESS'
+	| 'VERIFYING'
+	| 'CLOSED'
+export type SkinSiteBugPriority = 'CRITICAL' | 'HIGH' | 'NORMAL' | 'LOW'
+export type SkinSiteBugSearchType = 'CONTENT' | 'SUBMITTER'
+export type SkinSiteBugResolution =
+	| 'FIXED'
+	| 'WONT_FIX'
+	| 'BY_DESIGN'
+	| 'DUPLICATE'
+	| 'CANNOT_REPRODUCE'
+	| 'INVALID'
+
+export interface SkinSiteBugImage {
+	hash: string
+	[key: string]: unknown
+}
+
+export interface SkinSiteBugIssue {
+	id: number
+	type: SkinSiteBugIssueType
+	title: string
+	description: string
+	private: boolean
+	authorUuid: string
+	authorName: string
+	authorAvatar: string | null
+	status: SkinSiteBugStatus
+	priority: SkinSiteBugPriority
+	resolution: SkinSiteBugResolution | null
+	assigneeUuid: string | null
+	assigneeName: string | null
+	commentCount: number
+	images: SkinSiteBugImage[]
+	createdAt: number
+	updatedAt: number
+	closedAt: number | null
+	canEdit: boolean
+	canManage: boolean
+}
+
+export interface SkinSiteBugIssuePage {
+	items: SkinSiteBugIssue[]
+	hasMore: boolean
+}
+
+export function skinSiteBugIssues(params: {
+	offset?: number
+	limit?: number
+	type?: SkinSiteBugIssueType | ''
+	status?: SkinSiteBugStatus | ''
+	priority?: SkinSiteBugPriority | ''
+	assigned?: boolean
+	openOnly?: boolean
+	pendingFirst?: boolean
+	searchType?: SkinSiteBugSearchType
+	keyword?: string
+}): Promise<SkinSiteResponse<SkinSiteBugIssuePage>> {
+	const query = new URLSearchParams({
+		offset: String(params.offset ?? 0),
+		limit: String(params.limit ?? 20),
+	})
+	if (params.type) query.set('type', params.type)
+	if (params.status) query.set('status', params.status)
+	if (params.priority) query.set('priority', params.priority)
+	if (params.assigned) query.set('assigned', 'true')
+	if (params.searchType && params.keyword) {
+		query.set('searchType', params.searchType)
+		query.set('keyword', params.keyword)
+	}
+	query.set('openOnly', String(params.openOnly ?? true))
+	query.set('pendingFirst', String(params.pendingFirst ?? true))
+	return skinSiteRequest<SkinSiteBugIssuePage>(`bug?${query.toString()}`)
+}
+
+export function skinSiteBugIssue(id: number): Promise<SkinSiteResponse<SkinSiteBugIssue>> {
+	return skinSiteRequest<SkinSiteBugIssue>(`bug/${id}`)
+}
+
+export interface SkinSiteBugComment {
+	id: number
+	issueId: number
+	authorUuid: string
+	authorName: string
+	authorAvatar: string | null
+	content: string
+	system: boolean
+	images: SkinSiteBugImage[]
+	createdAt: number
+	editedAt: number | null
+	deletedAt: number | null
+	canEdit: boolean
+	canDelete: boolean
+}
+
+export interface SkinSiteBugCommentPage {
+	items: SkinSiteBugComment[]
+	hasMore: boolean
+}
+
+export function skinSiteBugComments(
+	issueId: number,
+	offset = 0,
+	limit = 50,
+): Promise<SkinSiteResponse<SkinSiteBugCommentPage>> {
+	return skinSiteRequest<SkinSiteBugCommentPage>(
+		`bug/${issueId}/comments?offset=${offset}&limit=${limit}`,
+	)
+}
+
+export function skinSiteCreateBugComment(
+	issueId: number,
+	content: string,
+): Promise<SkinSiteResponse<SkinSiteBugComment>> {
+	return skinSiteRequest<SkinSiteBugComment>(`bug/${issueId}/comments`, {
+		method: 'POST',
+		body: { content },
+	})
+}
+
+export function skinSiteDeleteBugComment(id: number): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>(`bug/comments/${id}`, { method: 'DELETE' })
+}
+
+export function skinSiteBugUnreadCount(): Promise<SkinSiteResponse<number>> {
+	return skinSiteRequest<number>('bug/notifications/count')
+}
+
+export function skinSiteMarkBugNotificationsRead(): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('bug/notifications/read', { method: 'POST' })
+}
