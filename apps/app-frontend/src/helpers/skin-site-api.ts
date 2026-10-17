@@ -333,3 +333,52 @@ export function skinSiteRenamePlayer(
 		{ method: 'POST', type: 'skin' },
 	)
 }
+// ---------------------------------------------------------------------------
+// Registration & password reset
+// ---------------------------------------------------------------------------
+
+/** Send the email verification code used during registration. */
+export function skinSiteRegisterEmailVerify(email: string): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('register/emailVerify', {
+		method: 'POST',
+		body: { email },
+		auth: false,
+	})
+}
+
+export function skinSiteRegister(payload: {
+	qq?: number
+	email: string
+	emailVerifyCode: string
+	password: string
+	inviteCode?: string
+	clientId: string
+}): Promise<SkinSiteResponse<SkinSiteLoginResult>> {
+	return skinSiteRequest<SkinSiteLoginResult>('register', {
+		method: 'POST',
+		body: payload,
+		auth: false,
+	})
+}
+
+/** Ask the server to email a reset code. Always answers success to avoid probing. */
+export function skinSitePasswordResetEmailVerify(email: string): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('password/emailVerify', {
+		method: 'POST',
+		body: { email },
+		auth: false,
+	})
+}
+
+export function skinSitePasswordReset(payload: {
+	clientId: string
+	email: string
+	emailVerifyCode: string
+	newPassword: string
+}): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('password/reset', {
+		method: 'POST',
+		body: payload,
+		auth: false,
+	})
+}

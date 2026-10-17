@@ -12,6 +12,8 @@ import { computed, ref } from 'vue'
 import { reloadSkinSiteSession, signInSkinSite } from '@/composables/skin-site-session'
 
 import SkinSiteCaptchaModal from './SkinSiteCaptchaModal.vue'
+import SkinSitePasswordResetModal from './SkinSitePasswordResetModal.vue'
+import SkinSiteRegisterModal from './SkinSiteRegisterModal.vue'
 
 const { formatMessage } = useVIntl()
 const { handleError, addNotification } = injectNotificationManager()
@@ -22,6 +24,8 @@ const messages = defineMessages({
 	password: { id: 'app.skin-site.login.password', defaultMessage: 'Password' },
 	signIn: { id: 'app.skin-site.login.sign-in', defaultMessage: 'Sign in' },
 	signingIn: { id: 'app.skin-site.login.signing-in', defaultMessage: 'Signing in…' },
+	register: { id: 'app.skin-site.login.register', defaultMessage: 'Create account' },
+	forgotPassword: { id: 'app.skin-site.login.forgot', defaultMessage: 'Forgot password?' },
 	usernameHint: {
 		id: 'app.skin-site.login.username-hint',
 		defaultMessage: '3–16 characters, or a registered email address.',
@@ -37,6 +41,18 @@ const PASSWORD_RE = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,50}$/
 
 const modal = ref<InstanceType<typeof NewModal>>()
 const captchaModal = ref<InstanceType<typeof SkinSiteCaptchaModal>>()
+const registerModal = ref<InstanceType<typeof SkinSiteRegisterModal>>()
+const passwordResetModal = ref<InstanceType<typeof SkinSitePasswordResetModal>>()
+
+function openRegister() {
+	modal.value?.hide()
+	registerModal.value?.show()
+}
+
+function openPasswordReset() {
+	modal.value?.hide()
+	passwordResetModal.value?.show()
+}
 const username = ref('')
 const password = ref('')
 const working = ref(false)
@@ -98,6 +114,10 @@ function cancel() {
 	emit('cancel')
 }
 
+function onRegisterSignedIn() {
+	emit('signed-in')
+}
+
 defineExpose({ show })
 </script>
 
@@ -115,6 +135,14 @@ defineExpose({ show })
 				<StyledInput v-model="password" type="password" autocomplete="current-password" />
 				<span class="text-xs text-secondary">{{ formatMessage(messages.passwordHint) }}</span>
 			</label>
+			<div class="flex justify-between text-sm">
+				<button type="button" class="text-brand hover:underline" @click="openRegister">
+					{{ formatMessage(messages.register) }}
+				</button>
+				<button type="button" class="text-brand hover:underline" @click="openPasswordReset">
+					{{ formatMessage(messages.forgotPassword) }}
+				</button>
+			</div>
 		</div>
 
 		<template #actions>
@@ -137,6 +165,17 @@ defineExpose({ show })
 			</div>
 		</template>
 	</NewModal>
+
+	<SkinSiteRegisterModal
+		ref="registerModal"
+		@signed-in="onRegisterSignedIn"
+		@cancel="modal?.show()"
+	/>
+	<SkinSitePasswordResetModal
+		ref="passwordResetModal"
+		@done="modal?.show()"
+		@cancel="modal?.show()"
+	/>
 
 	<SkinSiteCaptchaModal
 		ref="captchaModal"
