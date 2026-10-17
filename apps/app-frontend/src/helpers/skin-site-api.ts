@@ -382,3 +382,52 @@ export function skinSitePasswordReset(payload: {
 		auth: false,
 	})
 }
+// ---------------------------------------------------------------------------
+// Donations & announcements
+// ---------------------------------------------------------------------------
+
+export interface SkinSiteDonationSummary {
+	totalAmount: string
+	donorCount: number
+}
+
+export interface SkinSiteDonationEntry {
+	id: number
+	rank: number
+	username: string
+	avatar: string | null
+	amount: string
+}
+
+export interface SkinSiteDonationPage {
+	items: SkinSiteDonationEntry[]
+	summary: SkinSiteDonationSummary
+	hasMore: boolean
+}
+
+export function skinSiteDonationSummary(): Promise<SkinSiteResponse<SkinSiteDonationSummary>> {
+	return skinSiteRequest<SkinSiteDonationSummary>('donation/summary', { auth: false })
+}
+
+export function skinSiteDonationList(offset = 0): Promise<SkinSiteResponse<SkinSiteDonationPage>> {
+	return skinSiteRequest<SkinSiteDonationPage>(`donation/list?limit=20&offset=${offset}`, {
+		auth: false,
+	})
+}
+
+export interface SkinSiteAnnouncement {
+	id: number
+	title: string
+	subtitle: string
+	imageName?: string
+	content: string
+	updateAt: number
+	star: boolean
+	importantLevel: number
+	source: string
+}
+
+/** Public announcements shown on the skin site. Requires the JWT when signed in. */
+export function skinSiteAnnouncements(): Promise<SkinSiteResponse<SkinSiteAnnouncement[]>> {
+	return skinSiteRequest<SkinSiteAnnouncement[]>('broadcast/all', { type: 'skin' })
+}

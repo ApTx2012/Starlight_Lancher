@@ -16,7 +16,7 @@ import HomeLaunchProgress from '@/components/home/HomeLaunchProgress.vue'
 import HomeMinecraftNews from '@/components/home/HomeMinecraftNews.vue'
 import HomeMinimal from '@/components/home/HomeMinimal.vue'
 import HomePlayInsights from '@/components/home/HomePlayInsights.vue'
-import SkinSiteFrame from '@/components/ui/SkinSiteFrame.vue'
+import SkinSiteHome from '@/components/ui/skin-site/SkinSiteHome.vue'
 import { useNetworkStatus } from '@/composables/useNetworkStatus'
 import { get_default_user, users } from '@/helpers/auth'
 import { DIRECT_LINKS_SYNCED_EVENT } from '@/helpers/direct-link-sync'
@@ -162,7 +162,7 @@ onUnmounted(() => {
 		@select="selectMinimalInstance"
 	/>
 	<div class="home-content" :class="{ 'is-minimal': isMinimal }">
-		<SkinSiteFrame v-if="!isMinimal" />
+		<SkinSiteHome v-if="!isMinimal" />
 
 		<HomeMinimal
 			v-else
