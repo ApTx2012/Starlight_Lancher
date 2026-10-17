@@ -1,7 +1,25 @@
-import { readonly, ref, watch } from 'vue'
+import { readonly, ref } from 'vue'
+
+import {
+	clearSkinSiteToken,
+	getSkinSiteToken,
+	setSkinSiteToken,
+	skinSiteCurrentUser,
+	skinSiteLogin,
+	skinSiteLuck,
+	skinSitePlayerList,
+	type SkinSitePlayerSkin,
+	skinSitePlayerSkin,
+	skinSiteRefresh,
+	type SkinSiteResponse,
+	skinSiteUploadTexture,
+	type SkinSiteUser as ApiSkinSiteUser,
+} from '@/helpers/skin-site-api'
+import { fetchImageAsDataUrl, renderSkinHead } from '@/helpers/skin-site-render'
 
 export const SKIN_SITE_ORIGIN = 'https://skin.starlight.cool'
-export type SkinSiteUser = { uuid: string; username: string }
+
+export type SkinSiteUser = { uuid: string; username: string; permissions: string[] }
 export type SkinSiteStatus = 'checking' | 'signed-out' | 'signed-in' | 'error'
 export type SkinSitePlayer = {
 	uuid: string
@@ -15,152 +33,227 @@ export type SkinSitePlayer = {
 export type SkinSitePlayersStatus = 'idle' | 'checking' | 'ready' | 'error'
 
 const user = ref<SkinSiteUser | null>(null)
-const status = ref<SkinSiteStatus>('signed-out')
+const status = ref<SkinSiteStatus>('checking')
 const players = ref<SkinSitePlayer[]>([])
 const playersStatus = ref<SkinSitePlayersStatus>('idle')
 const selectedPlayerId = ref<string | null>(null)
-const frameUrl = ref(`${SKIN_SITE_ORIGIN}/`)
-let connectedFrame: Window | null = null
-let luckRequestSequence = 0
-let playersRequestSequence = 0
-let skinUpdateRequestSequence = 0
-let packTokenRequestSequence = 0
-const pendingPackTokens = new Map<
-	string,
-	{
-		resolve: (token: string) => void
-		reject: (error: Error) => void
-		timeout: ReturnType<typeof setTimeout>
-	}
->()
-
-function rejectPendingPackTokens() {
-	for (const request of pendingPackTokens.values()) {
-		clearTimeout(request.timeout)
-		request.reject(new Error('StarLight 登录状态已变化，请重试。'))
-	}
-	pendingPackTokens.clear()
-}
-
-export function requestSkinSiteDownloadToken(): Promise<string> {
-	if (!connectedFrame || status.value !== 'signed-in' || !user.value) {
-		return Promise.reject(
-			new Error('请先在启动器中登录 StarLight 皮肤站，再下载整合包。无需选择玩家。'),
-		)
-	}
-	const requestId = `pack-token-${Date.now()}-${++packTokenRequestSequence}`
-	return new Promise((resolve, reject) => {
-		const timeout = setTimeout(() => {
-			pendingPackTokens.delete(requestId)
-			reject(new Error('获取 StarLight 登录凭据超时，请重试。'))
-		}, 10_000)
-		pendingPackTokens.set(requestId, { resolve, reject, timeout })
-		try {
-			connectedFrame?.postMessage(
-				{ type: 'starlight-pack-token-request', requestId },
-				SKIN_SITE_ORIGIN,
-			)
-		} catch {
-			clearTimeout(timeout)
-			pendingPackTokens.delete(requestId)
-			reject(new Error('无法读取 StarLight 登录状态，请重新登录。'))
-		}
-	})
-}
-
-type PendingLuckRequest = {
-	resolve: (luck: number) => void
-	reject: (error: Error) => void
-	timeout: ReturnType<typeof setTimeout>
-}
-
-const pendingLuckRequests = new Map<string, PendingLuckRequest>()
-type PendingPlayersRequest = {
-	resolve: (players: SkinSitePlayer[]) => void
-	reject: (error: Error) => void
-	timeout: ReturnType<typeof setTimeout>
-}
-const pendingPlayersRequests = new Map<string, PendingPlayersRequest>()
-type PendingSkinUpdateRequest = {
-	resolve: () => void
-	reject: (error: Error) => void
-	timeout: ReturnType<typeof setTimeout>
-}
-const pendingSkinUpdateRequests = new Map<string, PendingSkinUpdateRequest>()
-
-function isSafePngDataUrl(value: unknown, maxLength: number) {
-	return (
-		typeof value === 'string' &&
-		value.length <= maxLength &&
-		/^data:image\/png;base64,[a-z0-9+/]+={0,2}$/i.test(value)
-	)
-}
-
-function hasSafeSkinHead(player: SkinSitePlayer) {
-	if (!['ready', 'empty', 'error'].includes(player.skinState)) return false
-	if (player.skinState !== 'ready') return player.headDataUrl === undefined
-	return (
-		isSafePngDataUrl(player.headDataUrl, 100_000) &&
-		(player.skinDataUrl === undefined || isSafePngDataUrl(player.skinDataUrl, 2_000_000)) &&
-		(player.model === undefined || player.model === 'default' || player.model === 'slim')
-	)
-}
+let playersRequest: Promise<SkinSitePlayer[]> | null = null
 
 export const skinSiteUser = readonly(user)
 export const skinSiteStatus = readonly(status)
 export const skinSitePlayers = readonly(players)
 export const skinSitePlayersStatus = readonly(playersStatus)
 export const selectedSkinSitePlayerId = readonly(selectedPlayerId)
-export const skinSiteFrameUrl = readonly(frameUrl)
 
-export async function waitForSkinSiteSession() {
-	if (status.value !== 'checking') return
-	await new Promise<void>((resolve, reject) => {
-		const stop = watch(status, next => {
-			if (next === 'checking') return
-			clearTimeout(timer)
-			stop()
-			resolve()
-		})
-		const timer = setTimeout(() => {
-			stop()
-			reject(new Error('皮肤站登录状态仍在检查，请稍后重试。'))
-		}, 10_000)
-	})
-}
-
-function rejectPendingLuckRequests(message: string) {
-	for (const request of pendingLuckRequests.values()) {
-		clearTimeout(request.timeout)
-		request.reject(new Error(message))
+function toUser(raw: ApiSkinSiteUser): SkinSiteUser {
+	return {
+		uuid: raw.uuid,
+		username: raw.username,
+		permissions: Array.isArray(raw.permissions) ? raw.permissions : [],
 	}
-	pendingLuckRequests.clear()
 }
 
-function rejectPendingPlayersRequests(message: string) {
-	for (const request of pendingPlayersRequests.values()) {
-		clearTimeout(request.timeout)
-		request.reject(new Error(message))
+function clearSessionState() {
+	user.value = null
+	players.value = []
+	playersStatus.value = 'idle'
+	selectedPlayerId.value = null
+}
+
+// ---------------------------------------------------------------------------
+// Session lifecycle
+// ---------------------------------------------------------------------------
+
+let initialized: Promise<void> | null = null
+
+/**
+ * Resolve the current session from the stored JWT. Safe to call repeatedly;
+ * the first call performs the actual work and later ones reuse it.
+ */
+export function initSkinSiteSession(): Promise<void> {
+	if (initialized) return initialized
+	initialized = (async () => {
+		const token = getSkinSiteToken()
+		if (!token) {
+			status.value = 'signed-out'
+			return
+		}
+		status.value = 'checking'
+		const result = await skinSiteCurrentUser()
+		if (result.success) {
+			user.value = toUser(result.payload)
+			status.value = 'signed-in'
+			void requestSkinSitePlayers().catch(() => {})
+		} else if (result.errorCode === 401 || result.errorCode === 403) {
+			clearSkinSiteToken()
+			clearSessionState()
+			status.value = 'signed-out'
+		} else {
+			status.value = 'error'
+		}
+	})()
+	return initialized
+}
+
+/** Force a re-check (e.g. after the user signs in from another view). */
+export function reloadSkinSiteSession(): Promise<void> {
+	initialized = null
+	return initSkinSiteSession()
+}
+
+export async function signInSkinSite(payload: {
+	username: string
+	password: string
+	clientId: string
+}): Promise<SkinSiteResponse<{ username: string; jwt: string }>> {
+	const result = await skinSiteLogin(payload)
+	if (result.success) {
+		setSkinSiteToken(result.payload.jwt)
+		const current = await skinSiteCurrentUser()
+		if (current.success) {
+			user.value = toUser(current.payload)
+			status.value = 'signed-in'
+			void requestSkinSitePlayers().catch(() => {})
+		} else {
+			user.value = { uuid: '', username: result.payload.username, permissions: [] }
+			status.value = 'signed-in'
+		}
 	}
-	pendingPlayersRequests.clear()
+	return result
 }
 
-function rejectPendingSkinUpdateRequests(message: string) {
-	for (const request of pendingSkinUpdateRequests.values()) {
-		clearTimeout(request.timeout)
-		request.reject(new Error(message))
+export function signOutSkinSite() {
+	clearSkinSiteToken()
+	clearSessionState()
+	status.value = 'signed-out'
+	initialized = null
+}
+
+/** Refresh the JWT; returns true when a new token was stored. */
+export async function refreshSkinSiteSession(): Promise<boolean> {
+	if (status.value !== 'signed-in') return false
+	const result = await skinSiteRefresh()
+	if (result.success) {
+		setSkinSiteToken(result.payload.jwt)
+		return true
 	}
-	pendingSkinUpdateRequests.clear()
+	if (result.errorCode === 401 || result.errorCode === 403) signOutSkinSite()
+	return false
 }
 
-export function setSkinSiteFrame(frame: Window | null) {
-	if (frame && !user.value) status.value = 'checking'
-	if (connectedFrame === frame) return
-	rejectPendingPackTokens()
-	rejectPendingLuckRequests('The skin site connection changed.')
-	rejectPendingPlayersRequests('The skin site connection changed.')
-	rejectPendingSkinUpdateRequests('The skin site connection changed.')
-	connectedFrame = frame
+// ---------------------------------------------------------------------------
+// Compatibility shims for the old iframe-based API
+// ---------------------------------------------------------------------------
+
+/** @deprecated The session is no longer driven by an iframe. No-op. */
+export function setSkinSiteFrame(_frame: Window | null) {}
+
+/** @deprecated The session is no longer driven by an iframe. No-op. */
+export function receiveSkinSiteMessage(_event: MessageEvent, _frame: Window | null): boolean {
+	return false
+}
+
+/** @deprecated Use the in-app login view instead. No-op. */
+export function openSkinSiteLogin() {}
+
+export function resetSkinSiteSession() {
+	clearSessionState()
+	status.value = getSkinSiteToken() ? 'checking' : 'signed-out'
+	initialized = null
+}
+
+/** Resolves once the initial session check has settled. */
+export async function waitForSkinSiteSession(): Promise<void> {
+	await initSkinSiteSession()
+}
+
+// ---------------------------------------------------------------------------
+// Download token (the launcher's hosted pack downloader)
+// ---------------------------------------------------------------------------
+
+/**
+ * The hosted pack downloader authenticates with the skin site JWT. We hold it
+ * locally now, so this simply surfaces it (refreshing once if it is missing).
+ */
+export async function requestSkinSiteDownloadToken(): Promise<string> {
+	if (status.value !== 'signed-in') {
+		await initSkinSiteSession()
+	}
+	if (status.value !== 'signed-in') {
+		throw new Error('请先在启动器中登录 StarLight 皮肤站，再下载整合包。')
+	}
+	let token = getSkinSiteToken()
+	if (!token) {
+		if (await refreshSkinSiteSession()) token = getSkinSiteToken()
+	}
+	if (!token) throw new Error('StarLight 登录凭据不可用，请重新登录。')
+	return token
+}
+
+// ---------------------------------------------------------------------------
+// Players
+// ---------------------------------------------------------------------------
+
+async function buildPlayer(entry: {
+	uuid: string
+	name: string
+	isMojang: boolean
+}): Promise<SkinSitePlayer> {
+	const base: SkinSitePlayer = {
+		uuid: entry.uuid,
+		name: entry.name,
+		isMojang: entry.isMojang,
+		skinState: 'empty',
+	}
+	const skinResult = await skinSitePlayerSkin(entry.uuid)
+	if (!skinResult.success) return { ...base, skinState: 'error' }
+
+	const texture: SkinSitePlayerSkin = skinResult.payload ?? {}
+	if (!texture.skin) return base
+
+	try {
+		const [headDataUrl, skinDataUrl] = await Promise.all([
+			renderSkinHead(texture.skin),
+			fetchImageAsDataUrl(texture.skin),
+		])
+		return {
+			...base,
+			skinState: 'ready',
+			headDataUrl,
+			skinDataUrl,
+			model: texture.model === 'slim' ? 'slim' : 'default',
+		}
+	} catch {
+		return { ...base, skinState: 'error' }
+	}
+}
+
+export function requestSkinSitePlayers(): Promise<SkinSitePlayer[]> {
+	if (playersRequest) return playersRequest
+	if (status.value !== 'signed-in' || !user.value) {
+		return Promise.reject(new Error('请先登录 StarLight 皮肤站。'))
+	}
+
+	playersStatus.value = 'checking'
+	playersRequest = (async () => {
+		try {
+			const list = await skinSitePlayerList()
+			if (!list.success) throw new Error(list.errorMessage)
+			const built = await Promise.all(list.payload.map(buildPlayer))
+			players.value = built
+			if (selectedPlayerId.value && !built.some((p) => p.uuid === selectedPlayerId.value)) {
+				selectedPlayerId.value = null
+			}
+			playersStatus.value = 'ready'
+			return players.value
+		} catch (error) {
+			playersStatus.value = 'error'
+			throw error
+		} finally {
+			playersRequest = null
+		}
+	})()
+	return playersRequest
 }
 
 export function selectSkinSitePlayer(playerId: string | null) {
@@ -171,267 +264,59 @@ export function selectSkinSitePlayer(playerId: string | null) {
 	if (players.value.some((player) => player.uuid === playerId)) selectedPlayerId.value = playerId
 }
 
-export function openSkinSiteLogin() {
-	frameUrl.value = `${SKIN_SITE_ORIGIN}/login`
-}
+// ---------------------------------------------------------------------------
+// Luck
+// ---------------------------------------------------------------------------
 
-export function resetSkinSiteSession() {
-	rejectPendingPackTokens()
-	rejectPendingLuckRequests('The skin site session ended.')
-	rejectPendingPlayersRequests('The skin site session ended.')
-	rejectPendingSkinUpdateRequests('The skin site session ended.')
-	user.value = null
-	status.value = 'signed-out'
-	players.value = []
-	playersStatus.value = 'idle'
-	selectedPlayerId.value = null
+export async function requestSkinSiteLuck(): Promise<number> {
+	if (status.value !== 'signed-in') throw new Error('请先登录 StarLight 皮肤站。')
+	const result = await skinSiteLuck()
+	if (!result.success) throw new Error(result.errorMessage)
+	return result.payload.luck
 }
+// ---------------------------------------------------------------------------
+// Legacy compatibility
+// ---------------------------------------------------------------------------
 
-export function requestSkinSiteSkinUpdate(
+/**
+ * Replace a player's skin texture.
+ *
+ * The caller hands us a base64 PNG (what the in-app editor produces); we turn
+ * it back into a File and upload it through the skin site's texture endpoint.
+ */
+export async function requestSkinSiteSkinUpdate(
 	playerId: string,
 	textureDataUrl: string,
 	model: 'default' | 'slim',
-) {
+): Promise<void> {
+	if (status.value !== 'signed-in' || !user.value) {
+		throw new Error('请先登录 StarLight 皮肤站。')
+	}
 	const player = players.value.find((candidate) => candidate.uuid === playerId)
-	if (!connectedFrame || status.value !== 'signed-in' || !user.value) {
-		return Promise.reject(new Error('Sign in to the skin site before changing a skin.'))
-	}
 	if (!player || player.isMojang) {
-		return Promise.reject(new Error('This skin site player cannot be changed.'))
+		throw new Error('该玩家无法修改皮肤。')
 	}
-	if (!isSafePngDataUrl(textureDataUrl, 2_000_000)) {
-		return Promise.reject(new Error('The selected skin texture is invalid or too large.'))
+	if (!/^data:image\/png;base64,[a-z0-9+/]+={0,2}$/i.test(textureDataUrl)) {
+		throw new Error('皮肤图片无效或过大。')
 	}
 
-	const requestId = `skin-update-${Date.now()}-${++skinUpdateRequestSequence}`
-	return new Promise<void>((resolve, reject) => {
-		const timeout = setTimeout(() => {
-			pendingSkinUpdateRequests.delete(requestId)
-			reject(new Error('The skin site update timed out.'))
-		}, 20_000)
-		pendingSkinUpdateRequests.set(requestId, { resolve, reject, timeout })
-		try {
-			connectedFrame?.postMessage(
-				{
-					type: 'starlight-skin-update-request',
-					requestId,
-					playerId,
-					textureDataUrl,
-					model,
-				},
-				SKIN_SITE_ORIGIN,
-			)
-		} catch (error) {
-			clearTimeout(timeout)
-			pendingSkinUpdateRequests.delete(requestId)
-			reject(error instanceof Error ? error : new Error(String(error)))
-		}
-	})
+	const file = await dataUrlToFile(textureDataUrl, `${player.name}.png`)
+	const result = await skinSiteUploadTexture(playerId, file, 'SKIN', { model })
+	if (!result.success) throw new Error(result.errorMessage)
+
+	const refreshed = await skinSitePlayerSkin(playerId)
+	if (refreshed.success && refreshed.payload?.skin) {
+		const updated = await buildPlayer({
+			uuid: player.uuid,
+			name: player.name,
+			isMojang: player.isMojang,
+		})
+		players.value = players.value.map((entry) => (entry.uuid === playerId ? updated : entry))
+	}
 }
 
-export function requestSkinSitePlayers() {
-	if (!connectedFrame || status.value !== 'signed-in' || !user.value) {
-		return Promise.reject(new Error('Sign in to the skin site before requesting players.'))
-	}
-
-	playersStatus.value = 'checking'
-	const requestId = `skin-players-${Date.now()}-${++playersRequestSequence}`
-	return new Promise<SkinSitePlayer[]>((resolve, reject) => {
-		const timeout = setTimeout(() => {
-			pendingPlayersRequests.delete(requestId)
-			playersStatus.value = 'error'
-			reject(new Error('The skin site player request timed out.'))
-		}, 30_000)
-		pendingPlayersRequests.set(requestId, { resolve, reject, timeout })
-		try {
-			connectedFrame?.postMessage(
-				{ type: 'starlight-skin-players-request', requestId },
-				SKIN_SITE_ORIGIN,
-			)
-		} catch (error) {
-			clearTimeout(timeout)
-			pendingPlayersRequests.delete(requestId)
-			playersStatus.value = 'error'
-			reject(error instanceof Error ? error : new Error(String(error)))
-		}
-	})
-}
-
-export function requestSkinSiteLuck() {
-	if (!connectedFrame || status.value !== 'signed-in' || !user.value) {
-		return Promise.reject(new Error('Sign in to the skin site before requesting luck.'))
-	}
-
-	const requestId = `skin-luck-${Date.now()}-${++luckRequestSequence}`
-	return new Promise<number>((resolve, reject) => {
-		const timeout = setTimeout(() => {
-			pendingLuckRequests.delete(requestId)
-			reject(new Error('The skin site luck request timed out.'))
-		}, 12_000)
-		pendingLuckRequests.set(requestId, { resolve, reject, timeout })
-		try {
-			connectedFrame?.postMessage(
-				{ type: 'starlight-skin-luck-request', requestId },
-				SKIN_SITE_ORIGIN,
-			)
-		} catch (error) {
-			clearTimeout(timeout)
-			pendingLuckRequests.delete(requestId)
-			reject(error instanceof Error ? error : new Error(String(error)))
-		}
-	})
-}
-
-export function receiveSkinSiteMessage(event: MessageEvent, frame: Window | null) {
-	if (!frame || event.source !== frame || event.origin !== SKIN_SITE_ORIGIN) return false
-	const data = event.data
-	if (!data || typeof data !== 'object') return false
-	if (data.type === 'starlight-pack-token-result') {
-		const pending = pendingPackTokens.get(data.requestId)
-		if (!pending) return false
-		clearTimeout(pending.timeout)
-		pendingPackTokens.delete(data.requestId)
-		if (
-			status.value === 'signed-in' &&
-			typeof data.token === 'string' &&
-			data.token.length > 0 &&
-			data.token.length <= 16_384 &&
-			!/\s/.test(data.token)
-		) {
-			pending.resolve(data.token)
-		} else pending.reject(new Error('StarLight 登录凭据不可用，请重新登录。'))
-		return true
-	}
-
-	if (data.type === 'starlight-skin-players-result') {
-		if (typeof data.requestId !== 'string') return false
-		const pending = pendingPlayersRequests.get(data.requestId)
-		if (!pending) return false
-		clearTimeout(pending.timeout)
-		pendingPlayersRequests.delete(data.requestId)
-		if (data.ok === true && Array.isArray(data.players)) {
-			const nextPlayers = data.players.filter(
-				(player: unknown): player is SkinSitePlayer =>
-					typeof player === 'object' &&
-					player !== null &&
-					typeof (player as SkinSitePlayer).uuid === 'string' &&
-					/^[0-9a-f-]{32,36}$/i.test((player as SkinSitePlayer).uuid) &&
-					typeof (player as SkinSitePlayer).name === 'string' &&
-					(player as SkinSitePlayer).name.length > 0 &&
-					(player as SkinSitePlayer).name.length <= 64 &&
-					typeof (player as SkinSitePlayer).isMojang === 'boolean' &&
-					hasSafeSkinHead(player as SkinSitePlayer),
-			)
-			const previousPlayers = new Map(players.value.map((player) => [player.uuid, player]))
-			players.value = nextPlayers.map((player) => {
-				const previous = previousPlayers.get(player.uuid)
-				return player.skinState === 'error' && previous?.skinState === 'ready'
-					? { ...player, ...previous, name: player.name, isMojang: player.isMojang }
-					: player
-			})
-			if (
-				selectedPlayerId.value &&
-				!nextPlayers.some((player) => player.uuid === selectedPlayerId.value)
-			) {
-				selectedPlayerId.value = null
-			}
-			playersStatus.value = 'ready'
-			pending.resolve(players.value)
-		} else {
-			playersStatus.value = 'error'
-			pending.reject(
-				new Error(
-					typeof data.error === 'string' && data.error
-						? data.error.slice(0, 300)
-						: 'The skin site returned an invalid player list.',
-				),
-			)
-		}
-		return true
-	}
-
-	if (data.type === 'starlight-skin-luck-result') {
-		if (typeof data.requestId !== 'string') return false
-		const pending = pendingLuckRequests.get(data.requestId)
-		if (!pending) return false
-		clearTimeout(pending.timeout)
-		pendingLuckRequests.delete(data.requestId)
-		if (
-			data.ok === true &&
-			typeof data.luck === 'number' &&
-			Number.isFinite(data.luck) &&
-			data.luck >= 0 &&
-			data.luck <= 100
-		) {
-			pending.resolve(data.luck)
-		} else {
-			pending.reject(
-				new Error(
-					typeof data.error === 'string' && data.error
-						? data.error.slice(0, 300)
-						: 'The skin site returned an invalid luck result.',
-				),
-			)
-		}
-		return true
-	}
-
-	if (data.type === 'starlight-skin-update-result') {
-		if (typeof data.requestId !== 'string') return false
-		const pending = pendingSkinUpdateRequests.get(data.requestId)
-		if (!pending) return false
-		clearTimeout(pending.timeout)
-		pendingSkinUpdateRequests.delete(data.requestId)
-		if (data.ok === true) pending.resolve()
-		else {
-			pending.reject(
-				new Error(
-					typeof data.error === 'string' && data.error
-						? data.error.slice(0, 300)
-						: 'The skin site rejected the skin update.',
-				),
-			)
-		}
-		return true
-	}
-
-	if (data.type !== 'starlight-skin-session') return false
-	if (!['checking', 'signed-out', 'signed-in', 'error'].includes(data.status)) return false
-	let refreshPlayers = false
-	if (data.status === 'signed-in') {
-		if (
-			!data.user ||
-			typeof data.user.uuid !== 'string' ||
-			typeof data.user.username !== 'string' ||
-			!data.user.uuid ||
-			!data.user.username ||
-			data.user.username.length > 256
-		)
-			return false
-		if (user.value?.uuid && user.value.uuid !== data.user.uuid) {
-			rejectPendingPackTokens()
-			rejectPendingPlayersRequests('The skin site account changed.')
-			rejectPendingSkinUpdateRequests('The skin site account changed.')
-			players.value = []
-			playersStatus.value = 'idle'
-			selectedPlayerId.value = null
-		}
-		user.value = { uuid: data.user.uuid, username: data.user.username }
-		if ([`${SKIN_SITE_ORIGIN}/`, `${SKIN_SITE_ORIGIN}/login`].includes(frameUrl.value)) {
-			frameUrl.value = `${SKIN_SITE_ORIGIN}/profile`
-		}
-		refreshPlayers = true
-	} else {
-		rejectPendingPackTokens()
-		rejectPendingLuckRequests('The skin site session is unavailable.')
-		rejectPendingPlayersRequests('The skin site session is unavailable.')
-		rejectPendingSkinUpdateRequests('The skin site session is unavailable.')
-		user.value = null
-		players.value = []
-		playersStatus.value = 'idle'
-		selectedPlayerId.value = null
-	}
-	status.value = data.status
-	if (refreshPlayers) void requestSkinSitePlayers().catch(() => {})
-	return true
+async function dataUrlToFile(dataUrl: string, filename: string): Promise<File> {
+	const response = await fetch(dataUrl)
+	const blob = await response.blob()
+	return new File([blob], filename, { type: 'image/png' })
 }
