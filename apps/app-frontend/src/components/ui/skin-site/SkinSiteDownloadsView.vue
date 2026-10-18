@@ -4,11 +4,11 @@ import { defineMessages, injectNotificationManager, useVIntl } from '@modrinth/u
 import { computed, onMounted, ref } from 'vue'
 
 import {
-	skinSiteDownloadCategories,
-	type SkinSiteDownloadCategory,
-	type SkinSiteDownloadItem,
-	skinSiteDownloadList,
-	type SkinSiteDownloadStatus,
+	skinSitePublicDownloadCategories,
+	type SkinSitePublicDownloadCategory,
+	type SkinSitePublicDownloadItem,
+	skinSitePublicDownloadList,
+	type SkinSitePublicDownloadStatus,
 } from '@/helpers/skin-site-api'
 
 const { formatMessage } = useVIntl()
@@ -36,8 +36,8 @@ const messages = defineMessages({
 
 const emit = defineEmits<{ (e: 'back'): void }>()
 
-const items = ref<SkinSiteDownloadItem[]>([])
-const categories = ref<SkinSiteDownloadCategory[]>([])
+const items = ref<SkinSitePublicDownloadItem[]>([])
+const categories = ref<SkinSitePublicDownloadCategory[]>([])
 const selectedCategory = ref<string | null>(null)
 const loading = ref(true)
 const failed = ref(false)
@@ -48,7 +48,7 @@ const filtered = computed(() =>
 		: items.value,
 )
 
-function statusLabel(status: SkinSiteDownloadStatus): string {
+function statusLabel(status: SkinSitePublicDownloadStatus): string {
 	switch (status) {
 		case 'NEW':
 			return formatMessage(messages.statusNew)
@@ -68,7 +68,7 @@ async function openUrl(url: string) {
 	await open(url)
 }
 
-function download(item: SkinSiteDownloadItem) {
+function download(item: SkinSitePublicDownloadItem) {
 	const route = item.routes?.[0]
 	void openUrl(route?.url ?? item.url)
 }
@@ -78,8 +78,8 @@ async function load() {
 	failed.value = false
 	try {
 		const [listResult, categoryResult] = await Promise.all([
-			skinSiteDownloadList(),
-			skinSiteDownloadCategories(),
+			skinSitePublicDownloadList(),
+			skinSitePublicDownloadCategories(),
 		])
 		if (!listResult.success) throw new Error(listResult.errorMessage)
 		items.value = listResult.payload ?? []

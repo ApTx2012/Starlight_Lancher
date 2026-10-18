@@ -389,12 +389,12 @@ export function skinSitePasswordReset(payload: {
 // Donations & announcements
 // ---------------------------------------------------------------------------
 
-export interface SkinSiteDonationSummary {
+export interface SkinSitePublicDonationSummary {
 	totalAmount: string
 	donorCount: number
 }
 
-export interface SkinSiteDonationEntry {
+export interface SkinSitePublicDonationEntry {
 	id: number
 	rank: number
 	username: string
@@ -402,14 +402,16 @@ export interface SkinSiteDonationEntry {
 	amount: string
 }
 
-export interface SkinSiteDonationPage {
-	items: SkinSiteDonationEntry[]
-	summary: SkinSiteDonationSummary
+export interface SkinSitePublicDonationPage {
+	items: SkinSitePublicDonationEntry[]
+	summary: SkinSitePublicDonationSummary
 	hasMore: boolean
 }
 
-export function skinSiteDonationSummary(): Promise<SkinSiteResponse<SkinSiteDonationSummary>> {
-	return skinSiteRequest<SkinSiteDonationSummary>('donation/summary', { auth: false })
+export function skinSitePublicDonationSummary(): Promise<
+	SkinSiteResponse<SkinSitePublicDonationSummary>
+> {
+	return skinSiteRequest<SkinSitePublicDonationSummary>('donation/summary', { auth: false })
 }
 
 export function skinSiteDonationList(offset = 0): Promise<SkinSiteResponse<SkinSiteDonationPage>> {
@@ -487,71 +489,73 @@ export async function skinSiteUploadAvatar(blob: Blob): Promise<SkinSiteResponse
 // Downloads
 // ---------------------------------------------------------------------------
 
-export type SkinSiteDownloadStatus = 'OK' | 'NEW' | 'LEGACY' | 'OUTDATED' | 'REMOVAL'
+export type SkinSitePublicDownloadStatus = 'OK' | 'NEW' | 'LEGACY' | 'OUTDATED' | 'REMOVAL'
 
-export interface SkinSiteDownloadRoute {
+export interface SkinSitePublicDownloadRoute {
 	name?: string | null
 	url: string
 }
 
-export interface SkinSiteDownloadItem {
+export interface SkinSitePublicDownloadItem {
 	id: number
 	uploader: string
 	url: string
-	routes: SkinSiteDownloadRoute[]
+	routes: SkinSitePublicDownloadRoute[]
 	filename: string
 	description: string
-	status: SkinSiteDownloadStatus[]
+	status: SkinSitePublicDownloadStatus[]
 	category: string[]
 }
 
-export interface SkinSiteDownloadCategory {
+export interface SkinSitePublicDownloadCategory {
 	id: number
 	name: string
 }
 
-export function skinSiteDownloadList(options?: {
+export function skinSitePublicDownloadList(options?: {
 	limit?: number
 	offset?: number
 	category?: string
-}): Promise<SkinSiteResponse<SkinSiteDownloadItem[]>> {
+}): Promise<SkinSiteResponse<SkinSitePublicDownloadItem[]>> {
 	const query = new URLSearchParams({
 		limit: String(options?.limit ?? 200),
 		offset: String(options?.offset ?? 0),
 	})
 	if (options?.category) query.set('category', options.category)
-	return skinSiteRequest<SkinSiteDownloadItem[]>(`download/list?${query.toString()}`, {
+	return skinSiteRequest<SkinSitePublicDownloadItem[]>(`download/list?${query.toString()}`, {
 		auth: false,
 	})
 }
 
-export function skinSiteDownloadCount(category?: string): Promise<SkinSiteResponse<number>> {
+export function skinSitePublicDownloadCount(category?: string): Promise<SkinSiteResponse<number>> {
 	const suffix = category ? `?category=${encodeURIComponent(category)}` : ''
 	return skinSiteRequest<number>(`download/count${suffix}`, { auth: false })
 }
 
-export function skinSiteDownloadCategories(): Promise<
-	SkinSiteResponse<SkinSiteDownloadCategory[]>
+export function skinSitePublicDownloadCategories(): Promise<
+	SkinSiteResponse<SkinSitePublicDownloadCategory[]>
 > {
-	return skinSiteRequest<SkinSiteDownloadCategory[]>('download/category/list', { auth: false })
+	return skinSiteRequest<SkinSitePublicDownloadCategory[]>('download/category/list', {
+		auth: false,
+	})
 }
 // ---------------------------------------------------------------------------
 // Maps
 // ---------------------------------------------------------------------------
 
-export interface SkinSiteMapEntry {
+export interface SkinSitePublicMapEntry {
 	name: string
 	url: string
 }
 
-export interface SkinSiteMapServer {
+export interface SkinSitePublicMapServer {
 	name: string
 	internal: boolean
-	maps: SkinSiteMapEntry[]
+	maps: SkinSitePublicMapEntry[]
 }
 
-export function skinSiteMapServers(): Promise<SkinSiteResponse<SkinSiteMapServer[]>> {
-	return skinSiteRequest<SkinSiteMapServer[]>('maps', { auth: false })
+export function skinSitePublicMapServers(): Promise<SkinSiteResponse<SkinSitePublicMapServer[]>> {
+	return skinSiteRequest<SkinSitePublicMapServer[]>('maps', { auth: false })
 }
 // ---------------------------------------------------------------------------
 // Player review (public side)
@@ -1033,7 +1037,6 @@ export function skinSiteAdminUserFrequencyLimit(
 	)
 }
 
-export type SkinSiteReviewResult = 'PENDING' | 'PASSED' | 'REJECTED'
 export type SkinSiteReviewMode = 'AUTO' | 'MANUAL'
 
 export interface SkinSiteReviewAnswer {
