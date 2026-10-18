@@ -11927,5 +11927,18 @@
   "app.skin-site.admin.mods.available": {"message": "可用"},
   "app.skin-site.admin.mods.unavailable": {"message": "不可用"},
   "app.skin-site.admin.mods.active": {"message": "当前版本"},
-  "app.skin-site.admin.mods.uploader": {"message": "由 {name} 上传"}
+  "app.skin-site.admin.mods.uploader": {"message": "由 {name} 上传"},
+  "app.skin-site.home.nav.title": {"message": "皮肤站"},
+  "app.skin-site.home.nav.download": {"message": "资源下载"},
+  "app.skin-site.home.nav.download-desc": {"message": "浏览服务器分享的文件。"},
+  "app.skin-site.home.nav.review": {"message": "玩家审核"},
+  "app.skin-site.home.nav.review-desc": {"message": "提交并审核玩家申请。"},
+  "app.skin-site.home.nav.wiki": {"message": "服务器维基"},
+  "app.skin-site.home.nav.wiki-desc": {"message": "服务器的指南与文档。"},
+  "app.skin-site.home.nav.bugs": {"message": "问题追踪"},
+  "app.skin-site.home.nav.bugs-desc": {"message": "反馈问题并跟踪处理进度。"},
+  "app.skin-site.home.nav.map": {"message": "服务器地图"},
+  "app.skin-site.home.nav.map-desc": {"message": "探索实时世界地图。"},
+  "app.skin-site.home.nav.profile": {"message": "个人资料"},
+  "app.skin-site.home.nav.profile-desc": {"message": "管理你的账号与皮肤。"}
 }

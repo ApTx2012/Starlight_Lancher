@@ -12096,5 +12096,18 @@
   "app.skin-site.admin.mods.available": {"message": "Available"},
   "app.skin-site.admin.mods.unavailable": {"message": "Unavailable"},
   "app.skin-site.admin.mods.active": {"message": "Active"},
-  "app.skin-site.admin.mods.uploader": {"message": "by {name}"}
+  "app.skin-site.admin.mods.uploader": {"message": "by {name}"},
+  "app.skin-site.home.nav.title": {"message": "Skin site"},
+  "app.skin-site.home.nav.download": {"message": "Downloads"},
+  "app.skin-site.home.nav.download-desc": {"message": "Browse files shared by the server."},
+  "app.skin-site.home.nav.review": {"message": "Player review"},
+  "app.skin-site.home.nav.review-desc": {"message": "Submit and review player applications."},
+  "app.skin-site.home.nav.wiki": {"message": "Server wiki"},
+  "app.skin-site.home.nav.wiki-desc": {"message": "Guides and documentation for the server."},
+  "app.skin-site.home.nav.bugs": {"message": "Bug tracker"},
+  "app.skin-site.home.nav.bugs-desc": {"message": "Report issues and follow their progress."},
+  "app.skin-site.home.nav.map": {"message": "Server map"},
+  "app.skin-site.home.nav.map-desc": {"message": "Explore the live world map."},
+  "app.skin-site.home.nav.profile": {"message": "Profile"},
+  "app.skin-site.home.nav.profile-desc": {"message": "Manage your account and textures."}
 }
