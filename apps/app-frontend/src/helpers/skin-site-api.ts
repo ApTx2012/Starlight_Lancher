@@ -1902,3 +1902,116 @@ export function skinSiteUpdateReviewPaperAdmin(
 		{ method: 'PUT', body: data },
 	)
 }
+
+export interface SkinSiteBotInfo {
+	exists: boolean
+	username?: string | null
+	active: boolean
+	creationBanned: boolean
+	tokenHint?: string | null
+	createdAt?: number | null
+	updatedAt?: number | null
+}
+
+export interface SkinSiteUserFrequencyLimit {
+	dropPercent?: number | null
+}
+
+export type SkinSiteUserAdminAuditAction =
+	| 'USER_UPDATED'
+	| 'USER_DELETED'
+	| 'RATE_LIMIT_UPDATED'
+	| 'BOT_USERNAME_UPDATED'
+	| 'BOT_TOKEN_INVALIDATED'
+	| 'BOT_CREATION_BANNED'
+	| 'BOT_CREATION_UNBANNED'
+
+export interface SkinSiteUserAdminAuditChange {
+	field: string
+	before?: string | null
+	after?: string | null
+}
+
+export interface SkinSiteUserAdminAuditInfo {
+	id: number
+	actorUuid: string
+	actorName: string
+	targetUuid: string
+	targetName: string
+	action: SkinSiteUserAdminAuditAction
+	changes: SkinSiteUserAdminAuditChange[]
+	createdAt: number
+}
+
+export interface SkinSiteUserAdminAuditPage {
+	items: SkinSiteUserAdminAuditInfo[]
+	nextCursor?: number | null
+}
+
+export interface SkinSiteInviteCode {
+	email: string
+	code: string
+}
+
+export function skinSiteAdminBotInfo(
+	userUuid: string,
+): Promise<SkinSiteResponse<SkinSiteBotInfo>> {
+	return skinSiteRequest<SkinSiteBotInfo>('admin/users/' + encodeURIComponent(userUuid) + '/bot')
+}
+
+export function skinSiteAdminRenameBot(
+	userUuid: string,
+	username: string,
+): Promise<SkinSiteResponse<SkinSiteBotInfo>> {
+	return skinSiteRequest<SkinSiteBotInfo>(
+		'admin/users/' + encodeURIComponent(userUuid) + '/bot/username',
+		{ method: 'POST', body: { username } },
+	)
+}
+
+export function skinSiteAdminInvalidateBotToken(
+	userUuid: string,
+): Promise<SkinSiteResponse<SkinSiteBotInfo>> {
+	return skinSiteRequest<SkinSiteBotInfo>(
+		'admin/users/' + encodeURIComponent(userUuid) + '/bot/invalidate',
+		{ method: 'POST' },
+	)
+}
+
+export function skinSiteAdminSetBotCreationBanned(
+	userUuid: string,
+	banned: boolean,
+): Promise<SkinSiteResponse<SkinSiteBotInfo>> {
+	return skinSiteRequest<SkinSiteBotInfo>(
+		'admin/users/' + encodeURIComponent(userUuid) + '/bot/ban',
+		{ method: 'POST', body: { banned } },
+	)
+}
+
+export function skinSiteAdminUpdateUserFrequencyLimit(
+	userUuid: string,
+	dropPercent: number | null,
+): Promise<SkinSiteResponse<SkinSiteUserFrequencyLimit>> {
+	return skinSiteRequest<SkinSiteUserFrequencyLimit>(
+		'admin/users/' + encodeURIComponent(userUuid) + '/frequency-limit',
+		{ method: 'POST', body: { dropPercent } },
+	)
+}
+
+export function skinSiteAdminUserAudit(params?: {
+	targetUuid?: string
+	before?: number
+}): Promise<SkinSiteResponse<SkinSiteUserAdminAuditPage>> {
+	const query = new URLSearchParams()
+	if (params?.targetUuid) query.set('targetUuid', params.targetUuid)
+	if (params?.before) query.set('before', String(params.before))
+	const suffix = query.size > 0 ? '?' + query.toString() : ''
+	return skinSiteRequest<SkinSiteUserAdminAuditPage>('admin/users/audit' + suffix)
+}
+
+export function skinSiteAdminInviteUser(email: string): Promise<SkinSiteResponse<SkinSiteInviteCode>> {
+	return skinSiteRequest<SkinSiteInviteCode>('admin/inviteCode', {
+		method: 'POST',
+		body: { email },
+	})
+}

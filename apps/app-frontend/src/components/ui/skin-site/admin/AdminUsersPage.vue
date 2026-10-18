@@ -4,11 +4,22 @@ import { defineMessages, injectNotificationManager, useVIntl } from '@modrinth/u
 import { computed, onMounted, ref } from 'vue'
 
 import {
-	skinSiteAdminDeleteUser,
 	type SkinSiteAdminPlayer,
-	skinSiteAdminUpdateUser,
 	type SkinSiteAdminUser,
+	type SkinSiteBotInfo,
+	type SkinSiteUserAdminAuditInfo,
+	type SkinSiteUserFrequencyLimit,
+	skinSiteAdminBotInfo,
+	skinSiteAdminDeleteUser,
+	skinSiteAdminInvalidateBotToken,
+	skinSiteAdminInviteUser,
+	skinSiteAdminRenameBot,
+	skinSiteAdminSetBotCreationBanned,
+	skinSiteAdminUpdateUser,
+	skinSiteAdminUpdateUserFrequencyLimit,
+	skinSiteAdminUserAudit,
 	skinSiteAdminUserCount,
+	skinSiteAdminUserFrequencyLimit,
 	skinSiteAdminUserList,
 	skinSiteAdminUserPlayers,
 } from '@/helpers/skin-site-api'
@@ -36,10 +47,6 @@ const messages = defineMessages({
 	players: { id: 'app.skin-site.admin.users.players', defaultMessage: 'Players' },
 	updated: { id: 'app.skin-site.admin.users.updated', defaultMessage: 'User updated.' },
 	deleted: { id: 'app.skin-site.admin.users.deleted', defaultMessage: 'User deleted.' },
-	confirmDelete: {
-		id: 'app.skin-site.admin.users.confirm-delete',
-		defaultMessage: 'Delete user “{name}”? This cannot be undone.',
-	},
 	username: { id: 'app.skin-site.admin.users.username', defaultMessage: 'Username' },
 	email: { id: 'app.skin-site.admin.users.email', defaultMessage: 'Email' },
 	qq: { id: 'app.skin-site.admin.users.qq', defaultMessage: 'QQ' },
@@ -56,6 +63,108 @@ const messages = defineMessages({
 	},
 	noPlayers: { id: 'app.skin-site.admin.users.no-players', defaultMessage: 'No linked players.' },
 	registered: { id: 'app.skin-site.admin.users.registered', defaultMessage: 'Registered' },
+	bot: { id: 'app.skin-site.admin.users.bot', defaultMessage: 'Bot' },
+	botTitle: { id: 'app.skin-site.admin.users.bot-title', defaultMessage: 'Bot management' },
+	botExists: { id: 'app.skin-site.admin.users.bot-exists', defaultMessage: 'Bot created' },
+	botNotExists: { id: 'app.skin-site.admin.users.bot-not-exists', defaultMessage: 'No bot yet' },
+	botActive: { id: 'app.skin-site.admin.users.bot-active', defaultMessage: 'Token valid' },
+	botInactive: {
+		id: 'app.skin-site.admin.users.bot-inactive',
+		defaultMessage: 'Token invalidated',
+	},
+	botCreationBanned: {
+		id: 'app.skin-site.admin.users.bot-creation-banned',
+		defaultMessage: 'Token creation banned',
+	},
+	botUsername: {
+		id: 'app.skin-site.admin.users.bot-username',
+		defaultMessage: 'Bot username',
+	},
+	botSaveUsername: {
+		id: 'app.skin-site.admin.users.bot-save-username',
+		defaultMessage: 'Save bot username',
+	},
+	botTokenHint: {
+		id: 'app.skin-site.admin.users.bot-token-hint',
+		defaultMessage: 'Token hint',
+	},
+	botInvalidate: {
+		id: 'app.skin-site.admin.users.bot-invalidate',
+		defaultMessage: 'Invalidate token',
+	},
+	botBan: { id: 'app.skin-site.admin.users.bot-ban', defaultMessage: 'Ban bot creation' },
+	botUnban: { id: 'app.skin-site.admin.users.bot-unban', defaultMessage: 'Unban bot creation' },
+	frequency: { id: 'app.skin-site.admin.users.frequency', defaultMessage: 'Rate limit' },
+	frequencyTitle: {
+		id: 'app.skin-site.admin.users.frequency-title',
+		defaultMessage: 'Rate limit',
+	},
+	frequencyHint: {
+		id: 'app.skin-site.admin.users.frequency-hint',
+		defaultMessage: 'Packets from this user will be dropped at the given rate.',
+	},
+	frequencyNone: {
+		id: 'app.skin-site.admin.users.frequency-none',
+		defaultMessage: 'Not enabled',
+	},
+	frequencyCurrent: {
+		id: 'app.skin-site.admin.users.frequency-current',
+		defaultMessage: 'Currently {percent}%',
+	},
+	frequencyRange: {
+		id: 'app.skin-site.admin.users.frequency-range',
+		defaultMessage: 'Only integer values from 10% to 100% are allowed.',
+	},
+	frequencySave: {
+		id: 'app.skin-site.admin.users.frequency-save',
+		defaultMessage: 'Save limit',
+	},
+	frequencyClear: {
+		id: 'app.skin-site.admin.users.frequency-clear',
+		defaultMessage: 'Clear limit',
+	},
+	audit: { id: 'app.skin-site.admin.users.audit', defaultMessage: 'Audit' },
+	auditTitle: {
+		id: 'app.skin-site.admin.users.audit-title',
+		defaultMessage: 'User management audit',
+	},
+	auditEmpty: {
+		id: 'app.skin-site.admin.users.audit-empty',
+		defaultMessage: 'No audit records yet.',
+	},
+	auditMore: { id: 'app.skin-site.admin.users.audit-more', defaultMessage: 'Load earlier' },
+	invite: { id: 'app.skin-site.admin.users.invite', defaultMessage: 'Invite user' },
+	inviteTitle: { id: 'app.skin-site.admin.users.invite-title', defaultMessage: 'Invite user' },
+	inviteEmail: { id: 'app.skin-site.admin.users.invite-email', defaultMessage: 'Email' },
+	inviteGenerate: {
+		id: 'app.skin-site.admin.users.invite-generate',
+		defaultMessage: 'Generate invite code',
+	},
+	inviteCopy: { id: 'app.skin-site.admin.users.invite-copy', defaultMessage: 'Copy' },
+	inviteCopied: {
+		id: 'app.skin-site.admin.users.invite-copied',
+		defaultMessage: 'Invite code copied.',
+	},
+	inviteEmailInvalid: {
+		id: 'app.skin-site.admin.users.invite-email-invalid',
+		defaultMessage: 'Enter a valid email address.',
+	},
+	boundPlayersTitle: {
+		id: 'app.skin-site.admin.users.bound-players-title',
+		defaultMessage: 'Linked players',
+	},
+	legacyAdapted: {
+		id: 'app.skin-site.admin.users.legacy-adapted',
+		defaultMessage: 'Legacy internal adapted',
+	},
+	registeredAt: {
+		id: 'app.skin-site.admin.users.registered-at',
+		defaultMessage: 'Registered at',
+	},
+	status: { id: 'app.skin-site.admin.users.status', defaultMessage: 'Status' },
+	statusNormal: { id: 'app.skin-site.admin.users.status-normal', defaultMessage: 'Normal' },
+	statusBanned: { id: 'app.skin-site.admin.users.status-banned', defaultMessage: 'Banned' },
+	actions: { id: 'app.skin-site.admin.users.actions', defaultMessage: 'Actions' },
 })
 
 const PAGE_SIZE = 20
@@ -83,26 +192,283 @@ const deletingUuid = ref<string | null>(null)
 
 const playersFor = ref<SkinSiteAdminPlayer[] | null>(null)
 const playersLoading = ref(false)
-const playersUuid = ref<string | null>(null)
+const playersTarget = ref<SkinSiteAdminUser | null>(null)
 
 const page = computed(() => Math.floor(offset.value / PAGE_SIZE) + 1)
 const pageCount = computed(() => Math.max(1, Math.ceil(total.value / PAGE_SIZE)))
 const hasPrev = computed(() => offset.value > 0)
 const hasNext = computed(() => offset.value + PAGE_SIZE < total.value)
 
-const SEARCH_FIELDS: Array<'username' | 'email' | 'uuid'> = ['username', 'email', 'uuid']
+// ---------- bot ----------
+const botTarget = ref<SkinSiteAdminUser | null>(null)
+const botInfo = ref<SkinSiteBotInfo | null>(null)
+const botLoading = ref(false)
+const botBusy = ref(false)
+const botUsername = ref('')
+const validBotUsername = computed(() => {
+	const name = botUsername.value.trim()
+	return name.length >= 2 && name.length <= 32
+})
 
-function searchFieldLabel(field: string): string {
-	if (field === 'email') return formatMessage(messages.searchEmail)
-	if (field === 'uuid') return formatMessage(messages.searchUuid)
-	return formatMessage(messages.searchName)
+function openBot(user: SkinSiteAdminUser) {
+	botTarget.value = user
+	botInfo.value = null
+	botUsername.value = ''
+	botLoading.value = true
+	skinSiteAdminBotInfo(user.uuid)
+		.then((res) => {
+			if (!res.success) throw new Error(res.errorMessage)
+			botInfo.value = res.payload
+			botUsername.value = res.payload.username ?? ''
+		})
+		.catch(handleError)
+		.finally(() => {
+			botLoading.value = false
+		})
 }
 
-function formatDate(ts: number): string {
+function closeBot() {
+	botTarget.value = null
+	botInfo.value = null
+}
+
+async function saveBotUsername() {
+	if (!botTarget.value || !validBotUsername.value) return
+	botBusy.value = true
 	try {
-		return new Date(ts).toLocaleDateString()
+		const res = await skinSiteAdminRenameBot(botTarget.value.uuid, botUsername.value.trim())
+		if (!res.success) throw new Error(res.errorMessage)
+		botInfo.value = res.payload
+		botUsername.value = res.payload.username ?? ''
+	} catch (error) {
+		handleError(error)
+	} finally {
+		botBusy.value = false
+	}
+}
+
+async function invalidateBot() {
+	if (!botTarget.value) return
+	botBusy.value = true
+	try {
+		const res = await skinSiteAdminInvalidateBotToken(botTarget.value.uuid)
+		if (!res.success) throw new Error(res.errorMessage)
+		botInfo.value = res.payload
+	} catch (error) {
+		handleError(error)
+	} finally {
+		botBusy.value = false
+	}
+}
+
+async function toggleBotCreationBan() {
+	if (!botTarget.value || !botInfo.value) return
+	botBusy.value = true
+	try {
+		const res = await skinSiteAdminSetBotCreationBanned(
+			botTarget.value.uuid,
+			!botInfo.value.creationBanned,
+		)
+		if (!res.success) throw new Error(res.errorMessage)
+		botInfo.value = res.payload
+	} catch (error) {
+		handleError(error)
+	} finally {
+		botBusy.value = false
+	}
+}
+
+// ---------- frequency ----------
+const frequencyTarget = ref<SkinSiteAdminUser | null>(null)
+const frequencyLoading = ref(false)
+const frequencyBusy = ref(false)
+const frequencyCurrent = ref<SkinSiteUserFrequencyLimit | null>(null)
+const frequencyPercent = ref(50)
+
+const validFrequency = computed(
+	() =>
+		Number.isInteger(frequencyPercent.value) &&
+		frequencyPercent.value >= 10 &&
+		frequencyPercent.value <= 100,
+)
+const currentFrequencyLimit = computed(() => frequencyCurrent.value?.dropPercent ?? null)
+
+function openFrequency(user: SkinSiteAdminUser) {
+	frequencyTarget.value = user
+	frequencyCurrent.value = null
+	frequencyPercent.value = 50
+	frequencyLoading.value = true
+	skinSiteAdminUserFrequencyLimit(user.uuid)
+		.then((res) => {
+			if (!res.success) throw new Error(res.errorMessage)
+			frequencyCurrent.value = res.payload
+			frequencyPercent.value = res.payload.dropPercent ?? 50
+		})
+		.catch(handleError)
+		.finally(() => {
+			frequencyLoading.value = false
+		})
+}
+
+function closeFrequency() {
+	frequencyTarget.value = null
+	frequencyCurrent.value = null
+}
+
+async function saveFrequency() {
+	if (!frequencyTarget.value || !validFrequency.value) return
+	frequencyBusy.value = true
+	try {
+		const res = await skinSiteAdminUpdateUserFrequencyLimit(
+			frequencyTarget.value.uuid,
+			frequencyPercent.value,
+		)
+		if (!res.success) throw new Error(res.errorMessage)
+		frequencyCurrent.value = res.payload
+	} catch (error) {
+		handleError(error)
+	} finally {
+		frequencyBusy.value = false
+	}
+}
+
+async function clearFrequency() {
+	if (!frequencyTarget.value) return
+	frequencyBusy.value = true
+	try {
+		const res = await skinSiteAdminUpdateUserFrequencyLimit(frequencyTarget.value.uuid, null)
+		if (!res.success) throw new Error(res.errorMessage)
+		frequencyCurrent.value = res.payload
+	} catch (error) {
+		handleError(error)
+	} finally {
+		frequencyBusy.value = false
+	}
+}
+
+// ---------- audit ----------
+const auditTarget = ref<SkinSiteAdminUser | null>(null)
+const auditItems = ref<SkinSiteUserAdminAuditInfo[]>([])
+const auditLoading = ref(false)
+const auditNextCursor = ref<number | null>(null)
+
+const AUDIT_ACTION_LABELS: Record<string, string> = {
+	USER_UPDATED: 'user-updated',
+	USER_DELETED: 'user-deleted',
+	RATE_LIMIT_UPDATED: 'rate-limit-updated',
+	BOT_USERNAME_UPDATED: 'bot-username-updated',
+	BOT_TOKEN_INVALIDATED: 'bot-token-invalidated',
+	BOT_CREATION_BANNED: 'bot-creation-banned',
+	BOT_CREATION_UNBANNED: 'bot-creation-unbanned',
+}
+
+function auditActionLabel(action: string) {
+	return formatMessage({
+		id: 'app.skin-site.admin.users.audit-action.' + (AUDIT_ACTION_LABELS[action] ?? 'unknown'),
+		defaultMessage: action,
+	})
+}
+
+function auditFieldLabel(field: string) {
+	return formatMessage({
+		id: 'app.skin-site.admin.users.audit-field.' + field,
+		defaultMessage: field,
+	})
+}
+
+function auditValue(value?: string | null) {
+	if (value === null || value === undefined || value === '') return '—'
+	return value
+}
+
+async function loadAudit(reset = false) {
+	auditLoading.value = true
+	if (reset) {
+		auditItems.value = []
+		auditNextCursor.value = null
+	}
+	try {
+		const res = await skinSiteAdminUserAudit({
+			targetUuid: auditTarget.value?.uuid,
+			before: auditNextCursor.value ?? undefined,
+		})
+		if (!res.success) throw new Error(res.errorMessage)
+		auditItems.value = reset ? res.payload.items : [...auditItems.value, ...res.payload.items]
+		auditNextCursor.value = res.payload.nextCursor ?? null
+	} catch (error) {
+		handleError(error)
+	} finally {
+		auditLoading.value = false
+	}
+}
+
+function openAudit(user?: SkinSiteAdminUser) {
+	auditTarget.value = user ?? null
+	void loadAudit(true)
+}
+
+function closeAudit() {
+	auditTarget.value = null
+	auditItems.value = []
+	auditNextCursor.value = null
+}
+
+function loadMoreAudit() {
+	if (auditLoading.value) return
+	void loadAudit(false)
+}
+
+// ---------- invite ----------
+const inviteOpen = ref(false)
+const inviteEmail = ref('')
+const inviteCode = ref('')
+const inviteBusy = ref(false)
+const inviteEmailValid = computed(() => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inviteEmail.value))
+
+function openInvite() {
+	inviteOpen.value = true
+	inviteEmail.value = ''
+	inviteCode.value = ''
+}
+
+function closeInvite() {
+	inviteOpen.value = false
+}
+
+async function generateInvite() {
+	if (!inviteEmailValid.value) {
+		addNotification({ type: 'error', title: formatMessage(messages.inviteEmailInvalid) })
+		return
+	}
+	inviteBusy.value = true
+	try {
+		const res = await skinSiteAdminInviteUser(inviteEmail.value.trim())
+		if (!res.success) throw new Error(res.errorMessage)
+		inviteCode.value = res.payload.code
+	} catch (error) {
+		handleError(error)
+	} finally {
+		inviteBusy.value = false
+	}
+}
+
+async function copyInvite() {
+	if (!inviteCode.value) return
+	try {
+		await navigator.clipboard.writeText(inviteCode.value)
+		addNotification({ type: 'success', title: formatMessage(messages.inviteCopied) })
+	} catch (error) {
+		handleError(error)
+	}
+}
+
+// ---------- list ----------
+function formatDateTime(ts?: number | null): string {
+	if (!ts) return '—'
+	try {
+		return new Date(ts).toLocaleString()
 	} catch {
-		return ''
+		return '—'
 	}
 }
 
@@ -111,27 +477,29 @@ async function load(reset = false) {
 	loading.value = true
 	failed.value = false
 	try {
-		const kw = keyword.value.trim()
-		const listResult = await skinSiteAdminUserList({
+		const listRes = await skinSiteAdminUserList({
+			keyword: keyword.value.trim() || undefined,
+			searchField: searchField.value,
 			limit: PAGE_SIZE,
 			offset: offset.value,
-			searchField: kw ? searchField.value : undefined,
-			keyword: kw || undefined,
 		})
-		if (!listResult.success) throw new Error(listResult.errorMessage)
-		items.value = listResult.payload ?? []
-		const countResult = await skinSiteAdminUserCount(
-			kw ? { searchField: searchField.value, keyword: kw } : undefined,
-		)
-		if (countResult.success && typeof countResult.payload === 'number') {
-			total.value = countResult.payload
-		}
+		if (!listRes.success) throw new Error(listRes.errorMessage)
+		items.value = listRes.payload ?? []
+		const countRes = await skinSiteAdminUserCount({
+			keyword: keyword.value.trim() || undefined,
+			searchField: searchField.value,
+		})
+		if (countRes.success && typeof countRes.payload === 'number') total.value = countRes.payload
 	} catch (error) {
 		failed.value = true
 		handleError(error)
 	} finally {
 		loading.value = false
 	}
+}
+
+function search() {
+	void load(true)
 }
 
 async function prevPage() {
@@ -151,46 +519,38 @@ function startEdit(user: SkinSiteAdminUser) {
 	editForm.value = {
 		username: user.username,
 		email: user.email,
-		qq: user.qq === undefined || user.qq === null ? '' : String(user.qq),
+		qq: user.qq !== null && user.qq !== undefined ? String(user.qq) : '',
 		password: '',
 		banned: user.banned,
-		permissions: user.permissions.join(', '),
+		permissions: (user.permissions ?? []).join(', '),
 	}
 }
 
 function cancelEdit() {
 	editingUuid.value = null
-	editForm.value = {
-		username: '',
-		email: '',
-		qq: '',
-		password: '',
-		banned: false,
-		permissions: '',
-	}
 }
 
 async function saveEdit() {
 	if (!editingUuid.value || saving.value) return
 	saving.value = true
 	try {
-		const qqText = editForm.value.qq.trim()
-		const permissions = editForm.value.permissions
-			.split(',')
-			.map((p) => p.trim())
-			.filter(Boolean)
-		const result = await skinSiteAdminUpdateUser({
-			uuid: editingUuid.value,
+		const target = items.value.find((u) => u.uuid === editingUuid.value)
+		if (!target) throw new Error('user not found')
+		const res = await skinSiteAdminUpdateUser({
+			uuid: target.uuid,
 			username: editForm.value.username.trim(),
 			email: editForm.value.email.trim(),
-			qq: qqText ? Number(qqText) : undefined,
-			password: editForm.value.password ? editForm.value.password : undefined,
+			password: editForm.value.password.trim() || undefined,
+			qq: editForm.value.qq.trim() ? Number(editForm.value.qq.trim()) : undefined,
 			banned: editForm.value.banned,
-			permissions,
+			permissions: editForm.value.permissions
+				.split(',')
+				.map((p) => p.trim())
+				.filter(Boolean),
 		})
-		if (!result.success) throw new Error(result.errorMessage)
+		if (!res.success) throw new Error(res.errorMessage)
 		addNotification({ type: 'success', title: formatMessage(messages.updated) })
-		cancelEdit()
+		editingUuid.value = null
 		await load()
 	} catch (error) {
 		handleError(error)
@@ -199,13 +559,13 @@ async function saveEdit() {
 	}
 }
 
-async function remove(user: SkinSiteAdminUser) {
-	if (deletingUuid.value !== null) return
+async function removeUser(user: SkinSiteAdminUser) {
+	if (deletingUuid.value) return
 	if (!window.confirm(formatMessage(messages.confirmDelete, { name: user.username }))) return
 	deletingUuid.value = user.uuid
 	try {
-		const result = await skinSiteAdminDeleteUser(user.uuid)
-		if (!result.success) throw new Error(result.errorMessage)
+		const res = await skinSiteAdminDeleteUser(user.uuid)
+		if (!res.success) throw new Error(res.errorMessage)
 		addNotification({ type: 'success', title: formatMessage(messages.deleted) })
 		await load()
 	} catch (error) {
@@ -215,237 +575,194 @@ async function remove(user: SkinSiteAdminUser) {
 	}
 }
 
-async function togglePlayers(user: SkinSiteAdminUser) {
-	if (playersUuid.value === user.uuid) {
-		playersUuid.value = null
-		playersFor.value = null
-		return
-	}
-	playersUuid.value = user.uuid
-	playersLoading.value = true
+async function openPlayers(user: SkinSiteAdminUser) {
+	playersTarget.value = user
 	playersFor.value = null
+	playersLoading.value = true
 	try {
-		const result = await skinSiteAdminUserPlayers(user.uuid)
-		if (result.success) {
-			playersFor.value = result.payload ?? []
-		} else {
-			playersFor.value = []
-		}
+		const res = await skinSiteAdminUserPlayers(user.uuid)
+		if (!res.success) throw new Error(res.errorMessage)
+		playersFor.value = res.payload ?? []
 	} catch (error) {
-		playersFor.value = []
 		handleError(error)
 	} finally {
 		playersLoading.value = false
 	}
 }
 
+function closePlayers() {
+	playersTarget.value = null
+	playersFor.value = null
+}
+
 onMounted(() => void load())
 </script>
+
 <template>
-	<div class="flex flex-col gap-4">
-		<div class="flex flex-wrap items-center gap-2">
-			<h2 class="m-0 text-lg font-bold text-contrast">{{ formatMessage(messages.title) }}</h2>
-			<span class="text-xs text-secondary">
-				{{ formatMessage(messages.total, { count: total }) }}
-			</span>
+	<div class="flex w-full flex-col gap-4">
+		<div class="flex flex-wrap items-end justify-between gap-3">
+			<div>
+				<h2 class="m-0 text-xl font-bold text-contrast">{{ formatMessage(messages.title) }}</h2>
+				<p class="m-0 mt-1 text-sm text-secondary">
+					{{ formatMessage(messages.total, { count: total }) }}
+				</p>
+			</div>
+			<div class="flex flex-wrap items-center gap-2">
+				<button
+					type="button"
+					class="rounded-lg bg-brand px-3 py-1.5 text-xs font-semibold text-contrast hover:brightness-110"
+					@click="openInvite"
+				>
+					{{ formatMessage(messages.invite) }}
+				</button>
+				<button
+					type="button"
+					class="rounded-lg bg-button-bg px-3 py-1.5 text-xs font-semibold text-contrast hover:brightness-110"
+					@click="openAudit()"
+				>
+					{{ formatMessage(messages.audit) }}
+				</button>
+			</div>
 		</div>
 
 		<div class="flex flex-wrap items-center gap-2">
 			<select
 				v-model="searchField"
-				class="rounded-full bg-button-bg px-3 py-1 text-xs font-semibold text-contrast"
+				class="rounded-lg border border-solid border-surface-5 bg-bg-raised px-2 py-1.5 text-xs text-contrast outline-none focus:border-brand"
 			>
-				<option v-for="f in SEARCH_FIELDS" :key="f" :value="f">
-					{{ searchFieldLabel(f) }}
-				</option>
+				<option value="username">{{ formatMessage(messages.searchName) }}</option>
+				<option value="email">{{ formatMessage(messages.searchEmail) }}</option>
+				<option value="uuid">{{ formatMessage(messages.searchUuid) }}</option>
 			</select>
 			<input
 				v-model="keyword"
 				type="text"
 				:placeholder="formatMessage(messages.search)"
-				class="min-w-0 flex-1 rounded-full border border-solid border-surface-5 bg-bg px-3 py-1 text-xs text-contrast outline-none focus:border-brand"
-				@keyup.enter="load(true)"
+				class="min-w-48 flex-1 rounded-lg border border-solid border-surface-5 bg-bg-raised px-3 py-1.5 text-xs text-contrast outline-none focus:border-brand"
+				@keyup.enter="search"
 			/>
 			<button
 				type="button"
-				class="rounded-full bg-brand px-4 py-1 text-xs font-semibold text-contrast hover:brightness-110"
-				@click="load(true)"
+				class="rounded-lg bg-brand px-3 py-1.5 text-xs font-semibold text-contrast hover:brightness-110"
+				@click="search"
 			>
 				{{ formatMessage(messages.search) }}
 			</button>
 		</div>
 
-		<div v-if="loading" class="flex items-center gap-2 text-sm text-secondary">
+		<div v-if="loading" class="flex min-h-48 items-center justify-center gap-2 text-sm text-secondary">
 			<SpinnerIcon class="size-4 animate-spin" />
 			{{ formatMessage(messages.loading) }}
 		</div>
-		<p v-else-if="failed" class="m-0 text-sm text-secondary">
+		<p
+			v-else-if="failed"
+			class="m-0 rounded-lg border border-solid border-surface-5 bg-bg-raised p-4 text-sm text-secondary"
+		>
 			{{ formatMessage(messages.failed) }}
 		</p>
-		<p v-else-if="!items.length" class="m-0 rounded-xl bg-bg-raised p-4 text-sm text-secondary">
+		<p
+			v-else-if="!items.length"
+			class="m-0 rounded-lg border border-solid border-surface-5 bg-bg-raised p-4 text-sm text-secondary"
+		>
 			{{ formatMessage(messages.empty) }}
 		</p>
-		<div v-else class="flex flex-col gap-2">
-			<div
-				v-for="user in items"
-				:key="user.uuid"
-				class="flex flex-col gap-2 rounded-xl bg-bg-raised p-3"
-			>
-				<div class="flex flex-wrap items-center gap-3">
-					<div class="flex min-w-0 flex-1 flex-col">
-						<span class="truncate text-sm font-semibold text-contrast">
-							{{ user.username }}
-							<span class="text-xs font-normal text-secondary">#{{ user.id }}</span>
-						</span>
-						<span class="truncate text-xs text-secondary">{{ user.email }}</span>
-						<span class="truncate font-mono text-[10px] text-secondary">{{ user.uuid }}</span>
-					</div>
-					<span
-						v-if="user.banned"
-						class="shrink-0 rounded-full bg-red px-2 py-0.5 text-[10px] font-semibold text-contrast"
-					>
-						{{ formatMessage(messages.banned) }}
-					</span>
-					<span
-						v-for="perm in user.permissions"
-						:key="perm"
-						class="shrink-0 rounded-full bg-button-bg px-2 py-0.5 text-[10px] font-semibold text-secondary"
-					>
-						{{ perm }}
-					</span>
-					<span class="shrink-0 text-xs text-secondary">
-						{{ formatDate(user.registerTime) }}
-					</span>
-				</div>
 
-				<template v-if="editingUuid === user.uuid">
-					<div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
-						<label class="flex flex-col gap-1">
-							<span class="text-xs font-semibold text-contrast">
-								{{ formatMessage(messages.username) }}
-							</span>
-							<input
-								v-model="editForm.username"
-								type="text"
-								class="rounded-lg border border-solid border-surface-5 bg-bg px-2 py-1 text-sm text-contrast outline-none focus:border-brand"
-							/>
-						</label>
-						<label class="flex flex-col gap-1">
-							<span class="text-xs font-semibold text-contrast">
-								{{ formatMessage(messages.email) }}
-							</span>
-							<input
-								v-model="editForm.email"
-								type="email"
-								class="rounded-lg border border-solid border-surface-5 bg-bg px-2 py-1 text-sm text-contrast outline-none focus:border-brand"
-							/>
-						</label>
-						<label class="flex flex-col gap-1">
-							<span class="text-xs font-semibold text-contrast">
-								{{ formatMessage(messages.qq) }}
-							</span>
-							<input
-								v-model="editForm.qq"
-								type="text"
-								inputmode="numeric"
-								class="rounded-lg border border-solid border-surface-5 bg-bg px-2 py-1 text-sm text-contrast outline-none focus:border-brand"
-							/>
-						</label>
-						<label class="flex flex-col gap-1">
-							<span class="text-xs font-semibold text-contrast">
-								{{ formatMessage(messages.password) }}
-							</span>
-							<input
-								v-model="editForm.password"
-								type="password"
-								:placeholder="formatMessage(messages.passwordHint)"
-								class="rounded-lg border border-solid border-surface-5 bg-bg px-2 py-1 text-sm text-contrast outline-none focus:border-brand"
-							/>
-						</label>
-						<label class="flex flex-col gap-1 sm:col-span-2">
-							<span class="text-xs font-semibold text-contrast">
-								{{ formatMessage(messages.permissions) }}
-							</span>
-							<input
-								v-model="editForm.permissions"
-								type="text"
-								:placeholder="formatMessage(messages.permissionsHint)"
-								class="rounded-lg border border-solid border-surface-5 bg-bg px-2 py-1 text-sm text-contrast outline-none focus:border-brand"
-							/>
-						</label>
-						<label class="flex items-center gap-2">
-							<input v-model="editForm.banned" type="checkbox" />
-							<span class="text-sm text-contrast">{{ formatMessage(messages.banned) }}</span>
-						</label>
-					</div>
-					<div class="flex justify-end gap-2">
-						<button
-							type="button"
-							class="rounded-full bg-button-bg px-3 py-1 text-xs font-semibold text-contrast hover:brightness-110"
-							@click="cancelEdit"
+		<template v-else>
+			<div class="overflow-hidden rounded-lg border border-solid border-surface-5">
+				<table class="w-full border-collapse text-left text-sm">
+					<thead class="bg-bg-raised">
+						<tr class="text-xs text-secondary">
+							<th class="px-3 py-2 font-semibold">{{ formatMessage(messages.username) }}</th>
+							<th class="px-3 py-2 font-semibold">{{ formatMessage(messages.email) }}</th>
+							<th class="px-3 py-2 font-semibold">{{ formatMessage(messages.qq) }}</th>
+							<th class="px-3 py-2 font-semibold">{{ formatMessage(messages.status) }}</th>
+							<th class="px-3 py-2 font-semibold">{{ formatMessage(messages.registeredAt) }}</th>
+							<th class="px-3 py-2 font-semibold">{{ formatMessage(messages.actions) }}</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr
+							v-for="user in items"
+							:key="user.uuid"
+							class="border-t border-solid border-surface-5 hover:bg-bg-raised"
 						>
-							{{ formatMessage(messages.cancel) }}
-						</button>
-						<button
-							type="button"
-							class="rounded-full bg-brand px-3 py-1 text-xs font-semibold text-contrast hover:brightness-110 disabled:opacity-50"
-							:disabled="saving"
-							@click="saveEdit"
-						>
-							{{ formatMessage(messages.save) }}
-						</button>
-					</div>
-				</template>
-
-				<template v-else>
-					<div class="flex flex-wrap items-center gap-2">
-						<button
-							type="button"
-							class="rounded-full bg-button-bg px-3 py-1 text-xs font-semibold text-contrast hover:brightness-110"
-							@click="startEdit(user)"
-						>
-							{{ formatMessage(messages.edit) }}
-						</button>
-						<button
-							type="button"
-							class="rounded-full bg-button-bg px-3 py-1 text-xs font-semibold text-contrast hover:brightness-110"
-							@click="togglePlayers(user)"
-						>
-							{{ formatMessage(messages.players) }}
-						</button>
-						<button
-							type="button"
-							class="rounded-full bg-red px-3 py-1 text-xs font-semibold text-contrast hover:brightness-110 disabled:opacity-50"
-							:disabled="deletingUuid !== null"
-							@click="remove(user)"
-						>
-							{{ formatMessage(messages.remove) }}
-						</button>
-					</div>
-
-					<div v-if="playersUuid === user.uuid" class="flex flex-wrap gap-2 pt-1">
-						<div v-if="playersLoading" class="flex items-center gap-2 text-xs text-secondary">
-							<SpinnerIcon class="size-3 animate-spin" />
-							{{ formatMessage(messages.loading) }}
-						</div>
-						<span v-else-if="!playersFor || !playersFor.length" class="text-xs text-secondary">
-							{{ formatMessage(messages.noPlayers) }}
-						</span>
-						<span
-							v-for="p in playersFor ?? []"
-							:key="p.uuid"
-							class="rounded-full bg-button-bg px-2 py-0.5 text-[10px] font-semibold text-contrast"
-						>
-							{{ p.name }}
-						</span>
-					</div>
-				</template>
+							<td class="px-3 py-2">
+								<div class="font-semibold text-contrast">{{ user.username }}</div>
+								<div class="text-[10px] break-all text-secondary">{{ user.uuid }}</div>
+							</td>
+							<td class="px-3 py-2 text-xs break-all text-secondary">{{ user.email }}</td>
+							<td class="px-3 py-2 text-xs text-secondary">{{ user.qq ?? '—' }}</td>
+							<td class="px-3 py-2">
+								<span
+									class="rounded-full px-2 py-0.5 text-[10px] font-semibold"
+									:class="user.banned ? 'bg-red text-contrast' : 'bg-green text-contrast'"
+								>
+									{{
+										user.banned
+											? formatMessage(messages.statusBanned)
+											: formatMessage(messages.statusNormal)
+									}}
+								</span>
+							</td>
+							<td class="px-3 py-2 text-xs text-secondary">
+								{{ formatDateTime(user.registerTime) }}
+							</td>
+							<td class="px-3 py-2">
+								<div class="flex flex-wrap gap-1">
+									<button
+										type="button"
+										class="rounded bg-button-bg px-2 py-0.5 text-[11px] font-semibold text-contrast hover:brightness-110"
+										@click="openPlayers(user)"
+									>
+										{{ formatMessage(messages.players) }}
+									</button>
+									<button
+										type="button"
+										class="rounded bg-button-bg px-2 py-0.5 text-[11px] font-semibold text-contrast hover:brightness-110"
+										@click="openBot(user)"
+									>
+										{{ formatMessage(messages.bot) }}
+									</button>
+									<button
+										type="button"
+										class="rounded bg-button-bg px-2 py-0.5 text-[11px] font-semibold text-contrast hover:brightness-110"
+										@click="openFrequency(user)"
+									>
+										{{ formatMessage(messages.frequency) }}
+									</button>
+									<button
+										type="button"
+										class="rounded bg-button-bg px-2 py-0.5 text-[11px] font-semibold text-contrast hover:brightness-110"
+										@click="openAudit(user)"
+									>
+										{{ formatMessage(messages.audit) }}
+									</button>
+									<button
+										type="button"
+										class="rounded bg-brand px-2 py-0.5 text-[11px] font-semibold text-contrast hover:brightness-110"
+										@click="startEdit(user)"
+									>
+										{{ formatMessage(messages.edit) }}
+									</button>
+									<button
+										type="button"
+										class="rounded bg-red/20 px-2 py-0.5 text-[11px] font-semibold text-red hover:brightness-110 disabled:opacity-50"
+										:disabled="deletingUuid === user.uuid"
+										@click="removeUser(user)"
+									>
+										{{ formatMessage(messages.remove) }}
+									</button>
+								</div>
+							</td>
+						</tr>
+					</tbody>
+				</table>
 			</div>
 
-			<div class="flex items-center justify-center gap-3 pt-2">
+			<div class="flex items-center justify-center gap-3 pt-1">
 				<button
 					type="button"
-					class="rounded-full bg-button-bg px-3 py-1 text-xs font-semibold text-contrast hover:brightness-110 disabled:opacity-50"
+					class="rounded-lg bg-button-bg px-3 py-1 text-xs font-semibold text-contrast hover:brightness-110 disabled:opacity-50"
 					:disabled="!hasPrev"
 					@click="prevPage"
 				>
@@ -456,12 +773,518 @@ onMounted(() => void load())
 				</span>
 				<button
 					type="button"
-					class="rounded-full bg-button-bg px-3 py-1 text-xs font-semibold text-contrast hover:brightness-110 disabled:opacity-50"
+					class="rounded-lg bg-button-bg px-3 py-1 text-xs font-semibold text-contrast hover:brightness-110 disabled:opacity-50"
 					:disabled="!hasNext"
 					@click="nextPage"
 				>
 					{{ formatMessage(messages.next) }}
 				</button>
+			</div>
+		</template>
+
+		<!-- 编辑 -->
+		<div
+			v-if="editingUuid"
+			class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+			@click.self="cancelEdit"
+		>
+			<div
+				class="flex max-h-[85vh] w-full max-w-lg flex-col gap-3 overflow-y-auto rounded-xl bg-bg p-6"
+			>
+				<h3 class="m-0 text-lg font-bold text-contrast">{{ formatMessage(messages.edit) }}</h3>
+				<label class="flex flex-col gap-1">
+					<span class="text-xs font-semibold text-secondary">
+						{{ formatMessage(messages.username) }}
+					</span>
+					<input
+						v-model="editForm.username"
+						type="text"
+						class="rounded-lg border border-solid border-surface-5 bg-bg-raised px-3 py-2 text-sm text-contrast outline-none focus:border-brand"
+					/>
+				</label>
+				<label class="flex flex-col gap-1">
+					<span class="text-xs font-semibold text-secondary">
+						{{ formatMessage(messages.email) }}
+					</span>
+					<input
+						v-model="editForm.email"
+						type="email"
+						class="rounded-lg border border-solid border-surface-5 bg-bg-raised px-3 py-2 text-sm text-contrast outline-none focus:border-brand"
+					/>
+				</label>
+				<label class="flex flex-col gap-1">
+					<span class="text-xs font-semibold text-secondary">{{ formatMessage(messages.qq) }}</span>
+					<input
+						v-model="editForm.qq"
+						type="text"
+						class="rounded-lg border border-solid border-surface-5 bg-bg-raised px-3 py-2 text-sm text-contrast outline-none focus:border-brand"
+					/>
+				</label>
+				<label class="flex flex-col gap-1">
+					<span class="text-xs font-semibold text-secondary">
+						{{ formatMessage(messages.password) }}
+					</span>
+					<input
+						v-model="editForm.password"
+						type="password"
+						class="rounded-lg border border-solid border-surface-5 bg-bg-raised px-3 py-2 text-sm text-contrast outline-none focus:border-brand"
+					/>
+					<span class="text-[11px] text-secondary">{{ formatMessage(messages.passwordHint) }}</span>
+				</label>
+				<label class="flex flex-col gap-1">
+					<span class="text-xs font-semibold text-secondary">
+						{{ formatMessage(messages.permissions) }}
+					</span>
+					<input
+						v-model="editForm.permissions"
+						type="text"
+						class="rounded-lg border border-solid border-surface-5 bg-bg-raised px-3 py-2 text-sm text-contrast outline-none focus:border-brand"
+					/>
+					<span class="text-[11px] text-secondary">
+						{{ formatMessage(messages.permissionsHint) }}
+					</span>
+				</label>
+				<label class="flex cursor-pointer items-center gap-2 text-sm text-contrast">
+					<input v-model="editForm.banned" type="checkbox" class="size-4" />
+					{{ formatMessage(messages.banned) }}
+				</label>
+				<div class="flex justify-end gap-2 pt-2">
+					<button
+						type="button"
+						class="rounded-lg bg-button-bg px-4 py-2 text-sm font-semibold text-secondary hover:brightness-110"
+						@click="cancelEdit"
+					>
+						{{ formatMessage(messages.cancel) }}
+					</button>
+					<button
+						type="button"
+						class="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-contrast hover:brightness-110 disabled:opacity-50"
+						:disabled="saving"
+						@click="saveEdit"
+					>
+						{{ formatMessage(messages.save) }}
+					</button>
+				</div>
+			</div>
+		</div>
+
+		<!-- 绑定玩家 -->
+		<div
+			v-if="playersTarget"
+			class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+			@click.self="closePlayers"
+		>
+			<div
+				class="flex max-h-[85vh] w-full max-w-md flex-col gap-3 overflow-y-auto rounded-xl bg-bg p-6"
+			>
+				<h3 class="m-0 text-lg font-bold text-contrast">
+					{{ formatMessage(messages.boundPlayersTitle) }} · {{ playersTarget.username }}
+				</h3>
+				<div
+					v-if="playersLoading"
+					class="flex min-h-32 items-center justify-center gap-2 text-sm text-secondary"
+				>
+					<SpinnerIcon class="size-4 animate-spin" />
+					{{ formatMessage(messages.loading) }}
+				</div>
+				<p
+					v-else-if="!playersFor || !playersFor.length"
+					class="m-0 rounded-lg bg-bg-raised p-3 text-xs text-secondary"
+				>
+					{{ formatMessage(messages.noPlayers) }}
+				</p>
+				<div v-else class="flex flex-col gap-2">
+					<div
+						v-for="player in playersFor"
+						:key="player.uuid"
+						class="rounded-lg border border-solid border-surface-5 bg-bg-raised px-3 py-2"
+					>
+						<div class="flex items-center justify-between gap-2">
+							<span class="font-semibold text-contrast">{{ player.name }}</span>
+							<span
+								class="rounded-full px-2 py-0.5 text-[10px] font-semibold"
+								:class="player.isMojang ? 'bg-yellow text-contrast' : 'bg-brand text-contrast'"
+							>
+								{{ player.isMojang ? 'Mojang' : 'StarLight' }}
+							</span>
+						</div>
+						<p class="m-0 mt-1 text-[10px] break-all text-secondary">{{ player.uuid }}</p>
+						<p v-if="player.legacyInternalAdapted" class="m-0 mt-1 text-[10px] text-red">
+							{{ formatMessage(messages.legacyAdapted) }}
+						</p>
+					</div>
+				</div>
+				<div class="flex justify-end pt-2">
+					<button
+						type="button"
+						class="rounded-lg bg-button-bg px-4 py-2 text-sm font-semibold text-secondary hover:brightness-110"
+						@click="closePlayers"
+					>
+						{{ formatMessage(messages.cancel) }}
+					</button>
+				</div>
+			</div>
+		</div>
+
+		<!-- Bot 管理 -->
+		<div
+			v-if="botTarget"
+			class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+			@click.self="closeBot"
+		>
+			<div
+				class="flex max-h-[85vh] w-full max-w-md flex-col gap-3 overflow-y-auto rounded-xl bg-bg p-6"
+			>
+				<h3 class="m-0 text-lg font-bold text-contrast">
+					{{ formatMessage(messages.botTitle) }} · {{ botTarget.username }}
+				</h3>
+				<div class="rounded-lg bg-bg-raised px-3 py-2 text-xs text-secondary">
+					<p class="m-0 font-semibold text-contrast">{{ botTarget.username }}</p>
+					<p class="m-0 mt-1 break-all">{{ botTarget.uuid }}</p>
+				</div>
+				<div
+					v-if="botLoading"
+					class="flex min-h-32 items-center justify-center gap-2 text-sm text-secondary"
+				>
+					<SpinnerIcon class="size-4 animate-spin" />
+					{{ formatMessage(messages.loading) }}
+				</div>
+				<template v-else-if="botInfo">
+					<div class="flex flex-wrap gap-2">
+						<span
+							class="rounded-full px-2 py-0.5 text-[10px] font-semibold"
+							:class="botInfo.exists ? 'bg-brand text-contrast' : 'bg-button-bg text-secondary'"
+						>
+							{{
+								botInfo.exists
+									? formatMessage(messages.botExists)
+									: formatMessage(messages.botNotExists)
+							}}
+						</span>
+						<span
+							v-if="botInfo.exists"
+							class="rounded-full px-2 py-0.5 text-[10px] font-semibold"
+							:class="botInfo.active ? 'bg-green text-contrast' : 'bg-yellow text-contrast'"
+						>
+							{{
+								botInfo.active
+									? formatMessage(messages.botActive)
+									: formatMessage(messages.botInactive)
+							}}
+						</span>
+						<span
+							v-if="botInfo.creationBanned"
+							class="rounded-full bg-red px-2 py-0.5 text-[10px] font-semibold text-contrast"
+						>
+							{{ formatMessage(messages.botCreationBanned) }}
+						</span>
+					</div>
+
+					<form
+						v-if="botInfo.exists"
+						class="flex flex-col gap-2"
+						@submit.prevent="saveBotUsername"
+					>
+						<label class="flex flex-col gap-1">
+							<span class="text-xs font-semibold text-secondary">
+								{{ formatMessage(messages.botUsername) }}
+							</span>
+							<input
+								v-model="botUsername"
+								type="text"
+								minlength="2"
+								maxlength="32"
+								:disabled="botBusy"
+								class="rounded-lg border border-solid border-surface-5 bg-bg-raised px-3 py-2 text-sm text-contrast outline-none focus:border-brand disabled:opacity-50"
+							/>
+						</label>
+						<p class="m-0 text-[11px] text-secondary">
+							{{ formatMessage(messages.botTokenHint) }}:
+							{{ botInfo.tokenHint ? '••••••••' + botInfo.tokenHint : '—' }}
+						</p>
+						<button
+							type="submit"
+							class="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-contrast hover:brightness-110 disabled:opacity-50"
+							:disabled="botBusy || !validBotUsername || botUsername === botInfo.username"
+						>
+							{{ formatMessage(messages.botSaveUsername) }}
+						</button>
+					</form>
+
+					<div class="grid gap-2 sm:grid-cols-2">
+						<button
+							type="button"
+							class="rounded-lg bg-yellow/20 px-3 py-2 text-xs font-semibold text-yellow hover:brightness-110 disabled:opacity-50"
+							:disabled="botBusy || !botInfo.active"
+							@click="invalidateBot"
+						>
+							{{ formatMessage(messages.botInvalidate) }}
+						</button>
+						<button
+							type="button"
+							class="rounded-lg px-3 py-2 text-xs font-semibold hover:brightness-110 disabled:opacity-50"
+							:class="
+								botInfo.creationBanned
+									? 'bg-green/20 text-green'
+									: 'bg-red/20 text-red'
+							"
+							:disabled="botBusy"
+							@click="toggleBotCreationBan"
+						>
+							{{
+								botInfo.creationBanned
+									? formatMessage(messages.botUnban)
+									: formatMessage(messages.botBan)
+							}}
+						</button>
+					</div>
+				</template>
+				<div class="flex justify-end pt-2">
+					<button
+						type="button"
+						class="rounded-lg bg-button-bg px-4 py-2 text-sm font-semibold text-secondary hover:brightness-110"
+						@click="closeBot"
+					>
+						{{ formatMessage(messages.cancel) }}
+					</button>
+				</div>
+			</div>
+		</div>
+
+		<!-- 频率限制 -->
+		<div
+			v-if="frequencyTarget"
+			class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+			@click.self="closeFrequency"
+		>
+			<div
+				class="flex max-h-[85vh] w-full max-w-md flex-col gap-3 overflow-y-auto rounded-xl bg-bg p-6"
+			>
+				<h3 class="m-0 text-lg font-bold text-contrast">
+					{{ formatMessage(messages.frequencyTitle) }} · {{ frequencyTarget.username }}
+				</h3>
+				<div class="rounded-lg bg-bg-raised px-3 py-2 text-xs text-secondary">
+					<p class="m-0 font-semibold text-contrast">{{ frequencyTarget.username }}</p>
+					<p class="m-0 mt-1 break-all">{{ frequencyTarget.uuid }}</p>
+				</div>
+				<p class="m-0 text-xs text-secondary">{{ formatMessage(messages.frequencyHint) }}</p>
+				<div
+					v-if="frequencyLoading"
+					class="flex min-h-32 items-center justify-center gap-2 text-sm text-secondary"
+				>
+					<SpinnerIcon class="size-4 animate-spin" />
+					{{ formatMessage(messages.loading) }}
+				</div>
+				<template v-else>
+					<div class="flex items-center justify-between">
+						<span class="text-sm font-semibold text-contrast">
+							{{ formatMessage(messages.frequency) }}
+						</span>
+						<span
+							class="rounded-full px-2 py-0.5 text-[10px] font-semibold"
+							:class="
+								currentFrequencyLimit === null
+									? 'bg-button-bg text-secondary'
+									: 'bg-yellow text-contrast'
+							"
+						>
+							{{
+								currentFrequencyLimit === null
+									? formatMessage(messages.frequencyNone)
+									: formatMessage(messages.frequencyCurrent, { percent: currentFrequencyLimit })
+							}}
+						</span>
+					</div>
+					<input
+						v-model.number="frequencyPercent"
+						type="range"
+						min="10"
+						max="100"
+						step="1"
+						:disabled="frequencyBusy"
+						class="w-full accent-yellow"
+					/>
+					<input
+						v-model.number="frequencyPercent"
+						type="number"
+						min="10"
+						max="100"
+						step="1"
+						:disabled="frequencyBusy"
+						class="rounded-lg border border-solid border-surface-5 bg-bg-raised px-3 py-2 text-sm text-contrast outline-none focus:border-brand disabled:opacity-50"
+					/>
+					<p class="m-0 text-[11px] text-secondary">
+						{{ formatMessage(messages.frequencyRange) }}
+					</p>
+					<div class="grid gap-2 sm:grid-cols-2">
+						<button
+							type="button"
+							class="rounded-lg bg-yellow/20 px-3 py-2 text-xs font-semibold text-yellow hover:brightness-110 disabled:opacity-50"
+							:disabled="frequencyBusy || !validFrequency"
+							@click="saveFrequency"
+						>
+							{{ formatMessage(messages.frequencySave) }}
+						</button>
+						<button
+							type="button"
+							class="rounded-lg bg-button-bg px-3 py-2 text-xs font-semibold text-secondary hover:brightness-110 disabled:opacity-50"
+							:disabled="frequencyBusy || currentFrequencyLimit === null"
+							@click="clearFrequency"
+						>
+							{{ formatMessage(messages.frequencyClear) }}
+						</button>
+					</div>
+				</template>
+				<div class="flex justify-end pt-2">
+					<button
+						type="button"
+						class="rounded-lg bg-button-bg px-4 py-2 text-sm font-semibold text-secondary hover:brightness-110"
+						@click="closeFrequency"
+					>
+						{{ formatMessage(messages.cancel) }}
+					</button>
+				</div>
+			</div>
+		</div>
+
+		<!-- 审计 -->
+		<div
+			v-if="auditTarget !== null || auditItems.length || auditLoading"
+			class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+			@click.self="closeAudit"
+		>
+			<div
+				class="flex max-h-[85vh] w-full max-w-2xl flex-col gap-3 overflow-y-auto rounded-xl bg-bg p-6"
+			>
+				<h3 class="m-0 text-lg font-bold text-contrast">
+					{{ formatMessage(messages.auditTitle) }}
+					<span v-if="auditTarget" class="text-sm font-normal text-secondary">
+						· {{ auditTarget.username }}
+					</span>
+				</h3>
+				<div
+					v-if="auditLoading && !auditItems.length"
+					class="flex min-h-32 items-center justify-center gap-2 text-sm text-secondary"
+				>
+					<SpinnerIcon class="size-4 animate-spin" />
+					{{ formatMessage(messages.loading) }}
+				</div>
+				<p
+					v-else-if="!auditItems.length"
+					class="m-0 rounded-lg bg-bg-raised p-3 text-xs text-secondary"
+				>
+					{{ formatMessage(messages.auditEmpty) }}
+				</p>
+				<div v-else class="flex flex-col gap-2">
+					<article
+						v-for="entry in auditItems"
+						:key="entry.id"
+						class="rounded-lg border border-solid border-surface-5 bg-bg-raised p-3"
+					>
+						<div class="flex flex-wrap items-start justify-between gap-2">
+							<div>
+								<p class="m-0 text-sm font-semibold text-contrast">
+									{{ auditActionLabel(entry.action) }}
+								</p>
+								<p class="m-0 mt-1 text-xs text-secondary">
+									{{ entry.actorName }} → {{ entry.targetName }}
+								</p>
+							</div>
+							<span class="text-[10px] text-secondary">
+								{{ formatDateTime(entry.createdAt) }}
+							</span>
+						</div>
+						<div v-if="entry.changes.length" class="mt-2 flex flex-col gap-1">
+							<div
+								v-for="(change, i) in entry.changes"
+								:key="entry.id + '-' + change.field + '-' + i"
+								class="grid gap-1 rounded bg-bg px-2 py-1 text-[11px] sm:grid-cols-[8rem_1fr]"
+							>
+								<span class="font-semibold text-contrast">{{ auditFieldLabel(change.field) }}</span>
+								<span class="break-all text-secondary">
+									{{ auditValue(change.before) }}
+									<span class="px-1">→</span>
+									{{ auditValue(change.after) }}
+								</span>
+							</div>
+						</div>
+					</article>
+					<button
+						v-if="auditNextCursor"
+						type="button"
+						class="rounded-lg bg-button-bg px-4 py-2 text-xs font-semibold text-contrast hover:brightness-110 disabled:opacity-50"
+						:disabled="auditLoading"
+						@click="loadMoreAudit"
+					>
+						{{ formatMessage(messages.auditMore) }}
+					</button>
+				</div>
+				<div class="flex justify-end pt-2">
+					<button
+						type="button"
+						class="rounded-lg bg-button-bg px-4 py-2 text-sm font-semibold text-secondary hover:brightness-110"
+						@click="closeAudit"
+					>
+						{{ formatMessage(messages.cancel) }}
+					</button>
+				</div>
+			</div>
+		</div>
+		<!-- 邀请码 -->
+		<div
+			v-if="inviteOpen"
+			class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+			@click.self="closeInvite"
+		>
+			<div class="flex w-full max-w-md flex-col gap-3 rounded-xl bg-bg p-6">
+				<h3 class="m-0 text-lg font-bold text-contrast">
+					{{ formatMessage(messages.inviteTitle) }}
+				</h3>
+				<label class="flex flex-col gap-1">
+					<span class="text-xs font-semibold text-secondary">
+						{{ formatMessage(messages.inviteEmail) }}
+					</span>
+					<input
+						v-model="inviteEmail"
+						type="email"
+						placeholder="example@domain.com"
+						class="rounded-lg border border-solid border-surface-5 bg-bg-raised px-3 py-2 text-sm text-contrast outline-none focus:border-brand"
+						@keyup.enter="generateInvite"
+					/>
+				</label>
+				<div class="flex gap-2">
+					<input
+						:value="inviteCode"
+						type="text"
+						readonly
+						class="flex-1 rounded-lg border border-solid border-surface-5 bg-bg-raised px-3 py-2 font-mono text-sm text-contrast outline-none"
+					/>
+					<button
+						type="button"
+						class="rounded-lg bg-button-bg px-3 py-2 text-xs font-semibold text-contrast hover:brightness-110 disabled:opacity-50"
+						:disabled="!inviteCode"
+						@click="copyInvite"
+					>
+						{{ formatMessage(messages.inviteCopy) }}
+					</button>
+				</div>
+				<div class="flex justify-end gap-2 pt-2">
+					<button
+						type="button"
+						class="rounded-lg bg-button-bg px-4 py-2 text-sm font-semibold text-secondary hover:brightness-110"
+						@click="closeInvite"
+					>
+						{{ formatMessage(messages.cancel) }}
+					</button>
+					<button
+						type="button"
+						class="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-contrast hover:brightness-110 disabled:opacity-50"
+						:disabled="inviteBusy || !inviteEmailValid"
+						@click="generateInvite"
+					>
+						{{ formatMessage(messages.inviteGenerate) }}
+					</button>
+				</div>
 			</div>
 		</div>
 	</div>
