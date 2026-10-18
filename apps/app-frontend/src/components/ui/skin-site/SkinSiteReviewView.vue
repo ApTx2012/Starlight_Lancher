@@ -5,8 +5,8 @@ import { computed, onMounted, ref } from 'vue'
 
 import {
 	skinSiteReviewCatalog,
-	type SkinSiteReviewPaper,
-	type SkinSiteReviewQuestion,
+	type SkinSiteReviewPublicPaper,
+	type SkinSiteReviewPublicQuestion,
 	type SkinSiteReviewReceipt,
 	skinSiteSubmitReview,
 } from '@/helpers/skin-site-api'
@@ -46,10 +46,10 @@ const messages = defineMessages({
 
 const emit = defineEmits<{ (e: 'back'): void }>()
 
-const papers = ref<SkinSiteReviewPaper[]>([])
+const papers = ref<SkinSiteReviewPublicPaper[]>([])
 const loading = ref(true)
 const failed = ref(false)
-const activePaper = ref<SkinSiteReviewPaper | null>(null)
+const activePaper = ref<SkinSiteReviewPublicPaper | null>(null)
 const email = ref('')
 const inviteCode = ref('')
 const answers = ref<Record<string, string | string[]>>({})
@@ -70,7 +70,7 @@ const requiredAnswered = computed(() => {
 
 const canSubmit = computed(() => emailValid.value && requiredAnswered.value && !submitting.value)
 
-function defaultAnswer(q: SkinSiteReviewQuestion): string | string[] {
+function defaultAnswer(q: SkinSiteReviewPublicQuestion): string | string[] {
 	if (q.type === 'MULTIPLE' || q.type === 'SINGLE') {
 		const preset = (q.options ?? []).filter((o) => o.defaultSelected).map((o) => o.id)
 		return q.type === 'MULTIPLE' ? preset : (preset[0] ?? '')
@@ -78,7 +78,7 @@ function defaultAnswer(q: SkinSiteReviewQuestion): string | string[] {
 	return ''
 }
 
-function openPaper(paper: SkinSiteReviewPaper) {
+function openPaper(paper: SkinSiteReviewPublicPaper) {
 	activePaper.value = paper
 	answers.value = {}
 	for (const q of paper.questions) answers.value[q.id] = defaultAnswer(q)
@@ -93,7 +93,7 @@ function closePaper() {
 	receipt.value = null
 }
 
-function toggleMultiple(q: SkinSiteReviewQuestion, optionId: string, checked: boolean) {
+function toggleMultiple(q: SkinSiteReviewPublicQuestion, optionId: string, checked: boolean) {
 	const current = Array.isArray(answers.value[q.id]) ? (answers.value[q.id] as string[]) : []
 	answers.value[q.id] = checked
 		? [...current.filter((id) => id !== optionId), optionId]

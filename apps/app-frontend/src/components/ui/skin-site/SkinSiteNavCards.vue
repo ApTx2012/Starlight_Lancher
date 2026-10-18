@@ -12,7 +12,9 @@ import type { Component } from 'vue'
 
 const { formatMessage } = useVIntl()
 
-const emit = defineEmits<{ (e: 'navigate', view: 'downloads' | 'review' | 'bugs' | 'map'): void }>()
+const emit = defineEmits<{
+	(e: 'navigate', view: 'downloads' | 'review' | 'bugs' | 'map' | 'wiki'): void
+}>()
 
 const messages = defineMessages({
 	title: { id: 'app.skin-site.home.nav.title', defaultMessage: 'Skin site' },
@@ -104,8 +106,19 @@ const items: NavItem[] = [
 ]
 
 function open(item: NavItem) {
-	if (item.id === 'download' || item.id === 'review' || item.id === 'bugs' || item.id === 'map') {
-		emit('navigate', item.id === 'download' ? 'downloads' : item.id)
+	if (
+		item.id === 'download' ||
+		item.id === 'review' ||
+		item.id === 'bugs' ||
+		item.id === 'map' ||
+		item.id === 'wiki'
+	) {
+		emit(
+			'navigate',
+			item.id === 'download'
+				? 'downloads'
+				: (item.id as 'review' | 'bugs' | 'map' | 'wiki'),
+		)
 		return
 	}
 	void import('@tauri-apps/plugin-opener').then(({ openUrl }) => openUrl(item.href))

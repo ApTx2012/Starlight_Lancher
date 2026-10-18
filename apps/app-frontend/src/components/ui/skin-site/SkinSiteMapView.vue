@@ -3,7 +3,7 @@ import { ExternalIcon, SpinnerIcon } from '@modrinth/assets'
 import { defineMessages, injectNotificationManager, useVIntl } from '@modrinth/ui'
 import { computed, onMounted, ref, watch } from 'vue'
 
-import { type SkinSiteMapServer, skinSiteMapServers } from '@/helpers/skin-site-api'
+import { type SkinSitePublicMapServer, skinSitePublicMapServers } from '@/helpers/skin-site-api'
 
 const { formatMessage } = useVIntl()
 const { handleError } = injectNotificationManager()
@@ -23,7 +23,7 @@ const messages = defineMessages({
 
 const emit = defineEmits<{ (e: 'back'): void }>()
 
-const servers = ref<SkinSiteMapServer[]>([])
+const servers = ref<SkinSitePublicMapServer[]>([])
 const internal = ref(false)
 const serverIndex = ref(0)
 const mapIndex = ref(0)
@@ -52,7 +52,7 @@ async function load() {
 	loading.value = true
 	failed.value = false
 	try {
-		const result = await skinSiteMapServers()
+		const result = await skinSitePublicMapServers()
 		if (!result.success) throw new Error(result.errorMessage)
 		servers.value = result.payload ?? []
 		if (!servers.value.some((s) => !s.internal)) internal.value = true

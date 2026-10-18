@@ -3,7 +3,10 @@ import { HeartIcon, SpinnerIcon } from '@modrinth/assets'
 import { defineMessages, useVIntl } from '@modrinth/ui'
 import { onMounted, ref } from 'vue'
 
-import { type SkinSiteDonationSummary, skinSiteDonationSummary } from '@/helpers/skin-site-api'
+import {
+	type SkinSitePublicDonationSummary,
+	skinSitePublicDonationSummary,
+} from '@/helpers/skin-site-api'
 
 const { formatMessage } = useVIntl()
 
@@ -18,13 +21,13 @@ const messages = defineMessages({
 	loading: { id: 'app.skin-site.home.donation.loading', defaultMessage: 'Loading…' },
 })
 
-const summary = ref<SkinSiteDonationSummary | null>(null)
+const summary = ref<SkinSitePublicDonationSummary | null>(null)
 const loading = ref(true)
 const failed = ref(false)
 
 onMounted(async () => {
 	try {
-		const result = await skinSiteDonationSummary()
+		const result = await skinSitePublicDonationSummary()
 		if (result.success) summary.value = result.payload
 		else failed.value = true
 	} catch {

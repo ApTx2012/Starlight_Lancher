@@ -4,12 +4,19 @@ import { computed, ref } from 'vue'
 
 import { skinSiteUser } from '@/composables/skin-site-session'
 
+import AdminAccessAuditPage from './admin/AdminAccessAuditPage.vue'
 import AdminBroadcastPage from './admin/AdminBroadcastPage.vue'
+import AdminChatPage from './admin/AdminChatPage.vue'
+import AdminDonationsPage from './admin/AdminDonationsPage.vue'
+import AdminDownloadsPage from './admin/AdminDownloadsPage.vue'
 import AdminLauncherPage from './admin/AdminLauncherPage.vue'
+import AdminModsPage from './admin/AdminModsPage.vue'
 import AdminPlayersPage from './admin/AdminPlayersPage.vue'
 import AdminReviewPage from './admin/AdminReviewPage.vue'
+import AdminServersPage from './admin/AdminServersPage.vue'
 import AdminSummaryPage from './admin/AdminSummaryPage.vue'
 import AdminUsersPage from './admin/AdminUsersPage.vue'
+import AdminWikiPage from './admin/AdminWikiPage.vue'
 
 const emit = defineEmits<{ (e: 'back'): void }>()
 
@@ -72,7 +79,9 @@ const navGroups = computed<NavGroup[]>(() => [
 		id: 'security',
 		label: formatMessage(messages.groupSecurity),
 		items: [
-			{ key: 'servers', label: formatMessage(messages.itemServers) },
+			...(hasWebAdmin.value
+				? [{ key: 'servers' as AdminKey, label: formatMessage(messages.itemServers) }]
+				: []),
 			{ key: 'summary', label: formatMessage(messages.itemSummary) },
 			{ key: 'access-audit', label: formatMessage(messages.itemAccessAudit) },
 		],
@@ -93,7 +102,9 @@ const navGroups = computed<NavGroup[]>(() => [
 			{ key: 'broadcast', label: formatMessage(messages.itemBroadcast) },
 			{ key: 'chat', label: formatMessage(messages.itemChat) },
 			{ key: 'wiki', label: formatMessage(messages.itemWiki) },
-			{ key: 'donations', label: formatMessage(messages.itemDonations) },
+			...(hasWebAdmin.value
+				? [{ key: 'donations' as AdminKey, label: formatMessage(messages.itemDonations) }]
+				: []),
 		],
 	},
 	{
@@ -110,6 +121,11 @@ const navGroups = computed<NavGroup[]>(() => [
 const hasAdminAccess = computed(() => {
 	const permissions = skinSiteUser.value?.permissions ?? []
 	return permissions.includes('WEB_ADMIN') || permissions.includes('SERVER_ADMIN')
+})
+
+const hasWebAdmin = computed(() => {
+	const permissions = skinSiteUser.value?.permissions ?? []
+	return permissions.includes('WEB_ADMIN')
 })
 
 const current = ref<AdminKey>('summary')
@@ -159,11 +175,18 @@ const current = ref<AdminKey>('summary')
 				class="min-w-0 flex-1 overflow-y-auto rounded-xl border border-solid border-surface-5 bg-bg-raised p-4"
 			>
 				<AdminSummaryPage v-if="current === 'summary'" />
+				<AdminServersPage v-else-if="current === 'servers' && hasWebAdmin" />
+				<AdminAccessAuditPage v-else-if="current === 'access-audit'" />
 				<AdminBroadcastPage v-else-if="current === 'broadcast'" />
+				<AdminChatPage v-else-if="current === 'chat'" />
 				<AdminUsersPage v-else-if="current === 'users'" />
 				<AdminPlayersPage v-else-if="current === 'players'" />
 				<AdminReviewPage v-else-if="current === 'review'" />
 				<AdminLauncherPage v-else-if="current === 'launcher'" />
+				<AdminModsPage v-else-if="current === 'mods'" />
+				<AdminWikiPage v-else-if="current === 'wiki'" />
+				<AdminDownloadsPage v-else-if="current === 'downloads'" />
+				<AdminDonationsPage v-else-if="current === 'donations' && hasWebAdmin" />
 				<p v-else class="m-0 text-sm text-secondary">{{ current }}</p>
 			</section>
 		</div>

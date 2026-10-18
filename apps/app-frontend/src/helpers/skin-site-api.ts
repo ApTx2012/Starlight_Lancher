@@ -389,12 +389,12 @@ export function skinSitePasswordReset(payload: {
 // Donations & announcements
 // ---------------------------------------------------------------------------
 
-export interface SkinSiteDonationSummary {
+export interface SkinSitePublicDonationSummary {
 	totalAmount: string
 	donorCount: number
 }
 
-export interface SkinSiteDonationEntry {
+export interface SkinSitePublicDonationEntry {
 	id: number
 	rank: number
 	username: string
@@ -402,14 +402,16 @@ export interface SkinSiteDonationEntry {
 	amount: string
 }
 
-export interface SkinSiteDonationPage {
-	items: SkinSiteDonationEntry[]
-	summary: SkinSiteDonationSummary
+export interface SkinSitePublicDonationPage {
+	items: SkinSitePublicDonationEntry[]
+	summary: SkinSitePublicDonationSummary
 	hasMore: boolean
 }
 
-export function skinSiteDonationSummary(): Promise<SkinSiteResponse<SkinSiteDonationSummary>> {
-	return skinSiteRequest<SkinSiteDonationSummary>('donation/summary', { auth: false })
+export function skinSitePublicDonationSummary(): Promise<
+	SkinSiteResponse<SkinSitePublicDonationSummary>
+> {
+	return skinSiteRequest<SkinSitePublicDonationSummary>('donation/summary', { auth: false })
 }
 
 export function skinSiteDonationList(offset = 0): Promise<SkinSiteResponse<SkinSiteDonationPage>> {
@@ -487,71 +489,73 @@ export async function skinSiteUploadAvatar(blob: Blob): Promise<SkinSiteResponse
 // Downloads
 // ---------------------------------------------------------------------------
 
-export type SkinSiteDownloadStatus = 'OK' | 'NEW' | 'LEGACY' | 'OUTDATED' | 'REMOVAL'
+export type SkinSitePublicDownloadStatus = 'OK' | 'NEW' | 'LEGACY' | 'OUTDATED' | 'REMOVAL'
 
-export interface SkinSiteDownloadRoute {
+export interface SkinSitePublicDownloadRoute {
 	name?: string | null
 	url: string
 }
 
-export interface SkinSiteDownloadItem {
+export interface SkinSitePublicDownloadItem {
 	id: number
 	uploader: string
 	url: string
-	routes: SkinSiteDownloadRoute[]
+	routes: SkinSitePublicDownloadRoute[]
 	filename: string
 	description: string
-	status: SkinSiteDownloadStatus[]
+	status: SkinSitePublicDownloadStatus[]
 	category: string[]
 }
 
-export interface SkinSiteDownloadCategory {
+export interface SkinSitePublicDownloadCategory {
 	id: number
 	name: string
 }
 
-export function skinSiteDownloadList(options?: {
+export function skinSitePublicDownloadList(options?: {
 	limit?: number
 	offset?: number
 	category?: string
-}): Promise<SkinSiteResponse<SkinSiteDownloadItem[]>> {
+}): Promise<SkinSiteResponse<SkinSitePublicDownloadItem[]>> {
 	const query = new URLSearchParams({
 		limit: String(options?.limit ?? 200),
 		offset: String(options?.offset ?? 0),
 	})
 	if (options?.category) query.set('category', options.category)
-	return skinSiteRequest<SkinSiteDownloadItem[]>(`download/list?${query.toString()}`, {
+	return skinSiteRequest<SkinSitePublicDownloadItem[]>(`download/list?${query.toString()}`, {
 		auth: false,
 	})
 }
 
-export function skinSiteDownloadCount(category?: string): Promise<SkinSiteResponse<number>> {
+export function skinSitePublicDownloadCount(category?: string): Promise<SkinSiteResponse<number>> {
 	const suffix = category ? `?category=${encodeURIComponent(category)}` : ''
 	return skinSiteRequest<number>(`download/count${suffix}`, { auth: false })
 }
 
-export function skinSiteDownloadCategories(): Promise<
-	SkinSiteResponse<SkinSiteDownloadCategory[]>
+export function skinSitePublicDownloadCategories(): Promise<
+	SkinSiteResponse<SkinSitePublicDownloadCategory[]>
 > {
-	return skinSiteRequest<SkinSiteDownloadCategory[]>('download/category/list', { auth: false })
+	return skinSiteRequest<SkinSitePublicDownloadCategory[]>('download/category/list', {
+		auth: false,
+	})
 }
 // ---------------------------------------------------------------------------
 // Maps
 // ---------------------------------------------------------------------------
 
-export interface SkinSiteMapEntry {
+export interface SkinSitePublicMapEntry {
 	name: string
 	url: string
 }
 
-export interface SkinSiteMapServer {
+export interface SkinSitePublicMapServer {
 	name: string
 	internal: boolean
-	maps: SkinSiteMapEntry[]
+	maps: SkinSitePublicMapEntry[]
 }
 
-export function skinSiteMapServers(): Promise<SkinSiteResponse<SkinSiteMapServer[]>> {
-	return skinSiteRequest<SkinSiteMapServer[]>('maps', { auth: false })
+export function skinSitePublicMapServers(): Promise<SkinSiteResponse<SkinSitePublicMapServer[]>> {
+	return skinSiteRequest<SkinSitePublicMapServer[]>('maps', { auth: false })
 }
 // ---------------------------------------------------------------------------
 // Player review (public side)
@@ -560,32 +564,32 @@ export function skinSiteMapServers(): Promise<SkinSiteResponse<SkinSiteMapServer
 export type SkinSiteReviewQuestionType = 'SINGLE' | 'MULTIPLE' | 'TRUE_FALSE' | 'FILL' | 'ESSAY'
 export type SkinSiteReviewResult = 'PENDING' | 'PASSED' | 'REJECTED'
 
-export interface SkinSiteReviewOption {
+export interface SkinSiteReviewPublicOption {
 	id: string
 	description: string
 	correct?: boolean
 	defaultSelected?: boolean
 }
 
-export interface SkinSiteReviewQuestion {
+export interface SkinSiteReviewPublicQuestion {
 	id: string
-	type: SkinSiteReviewQuestionType
+	type: SkinSiteReviewPublicQuestionType
 	title: string
 	annotation?: string | null
 	score?: number
 	optional?: boolean
 	fatal?: boolean
-	options?: SkinSiteReviewOption[]
+	options?: SkinSiteReviewPublicOption[]
 	answer?: string | null
 	maxLength?: number | null
 	informationQuestion?: boolean
 }
 
-export interface SkinSiteReviewPaper {
+export interface SkinSiteReviewPublicPaper {
 	id: string
 	title: string
 	description?: string
-	questions: SkinSiteReviewQuestion[]
+	questions: SkinSiteReviewPublicQuestion[]
 	[key: string]: unknown
 }
 
@@ -1033,8 +1037,43 @@ export function skinSiteAdminUserFrequencyLimit(
 	)
 }
 
-export type SkinSiteReviewResult = 'PENDING' | 'PASSED' | 'REJECTED'
 export type SkinSiteReviewMode = 'AUTO' | 'MANUAL'
+
+export type SkinSiteReviewQuestionType = 'SINGLE' | 'MULTIPLE' | 'TRUE_FALSE' | 'FILL' | 'ESSAY'
+
+export interface SkinSiteReviewOption {
+	id: string
+	description: string
+	correct: boolean
+	defaultSelected: boolean
+	score: number
+}
+
+export interface SkinSiteReviewQuestion {
+	id: string
+	type: SkinSiteReviewQuestionType
+	title: string
+	annotation?: string | null
+	score: number
+	optional: boolean
+	fatal: boolean
+	autoReview: boolean
+	options: SkinSiteReviewOption[]
+	answer?: string | null
+	maxLength?: number | null
+	informationQuestion?: boolean
+	informationAlias?: string | null
+}
+
+export interface SkinSiteReviewPaper {
+	id: string
+	title: string
+	annotation?: string | null
+	mode: SkinSiteReviewMode
+	passScore: number
+	version: number
+	questions: SkinSiteReviewQuestion[]
+}
 
 export interface SkinSiteReviewAnswer {
 	id: string
@@ -1066,6 +1105,7 @@ export interface SkinSiteReviewSubmission {
 	createdAt: number
 	reviewedAt?: number | null
 	answers: SkinSiteReviewAnswer[]
+	paper: SkinSiteReviewPaper
 	decisionHistory?: Array<{
 		previousResult: SkinSiteReviewResult
 		result: SkinSiteReviewResult
@@ -1289,4 +1329,1213 @@ export async function skinSiteUploadLauncherRelease(
 		}
 	}
 	return launcherUploadError('上传超时，请刷新版本列表确认结果。')
+}
+
+export type SkinSiteDownloadStatus = 'OK' | 'NEW' | 'LEGACY' | 'OUTDATED' | 'REMOVAL'
+
+export interface SkinSiteDownloadRoute {
+	name?: string | null
+	url: string
+}
+
+export interface SkinSiteDownloadItem {
+	id: number
+	uploader: string
+	url: string
+	routes: SkinSiteDownloadRoute[]
+	filename: string
+	description: string
+	status: SkinSiteDownloadStatus[]
+	category: string[]
+}
+
+export interface SkinSiteDownloadCategory {
+	id: number
+	name: string
+}
+
+export interface SkinSiteDownloadItemInput {
+	routes: SkinSiteDownloadRoute[]
+	filename: string
+	description: string
+	status: SkinSiteDownloadStatus[]
+}
+
+export function skinSiteDownloadItems(params?: {
+	limit?: number
+	offset?: number
+	category?: string
+}): Promise<SkinSiteResponse<SkinSiteDownloadItem[]>> {
+	const query = new URLSearchParams({
+		limit: String(params?.limit ?? 200),
+		offset: String(params?.offset ?? 0),
+	})
+	if (params?.category?.trim()) query.set('category', params.category.trim())
+	return skinSiteRequest<SkinSiteDownloadItem[]>('download/list?' + query.toString())
+}
+
+export function skinSiteDownloadItemCount(category?: string): Promise<SkinSiteResponse<number>> {
+	const query = new URLSearchParams()
+	if (category?.trim()) query.set('category', category.trim())
+	const suffix = query.toString() ? '?' + query.toString() : ''
+	return skinSiteRequest<number>('download/count' + suffix)
+}
+
+export function skinSiteAddDownloadItem(
+	data: SkinSiteDownloadItemInput,
+): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('download/add', { method: 'POST', body: data })
+}
+
+export function skinSiteUpdateDownloadItem(
+	id: number,
+	data: SkinSiteDownloadItemInput,
+): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('download/update/' + id, { method: 'POST', body: data })
+}
+
+export function skinSiteDeleteDownloadItem(id: number): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('download/' + id, { method: 'DELETE' })
+}
+
+export function skinSiteDownloadCategories(): Promise<
+	SkinSiteResponse<SkinSiteDownloadCategory[]>
+> {
+	return skinSiteRequest<SkinSiteDownloadCategory[]>('download/category/list')
+}
+
+export function skinSiteAddDownloadCategory(name: string): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('download/category/add/' + encodeURIComponent(name), {
+		method: 'POST',
+	})
+}
+
+export function skinSiteDeleteDownloadCategory(id: number): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('download/category/' + id, { method: 'DELETE' })
+}
+
+export function skinSiteBindDownloadCategory(
+	infoId: number,
+	categoryId: number,
+): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('download/category/bind/' + infoId + '/' + categoryId, {
+		method: 'POST',
+	})
+}
+
+export function skinSiteUnbindDownloadCategory(
+	infoId: number,
+	categoryId: number,
+): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('download/category/unbind/' + infoId + '/' + categoryId, {
+		method: 'POST',
+	})
+}
+
+export interface SkinSiteMapServer {
+	name: string
+	internal: boolean
+	maps: Array<{ name: string; url: string }>
+}
+
+export function skinSiteMapServers(): Promise<SkinSiteResponse<SkinSiteMapServer[]>> {
+	return skinSiteRequest<SkinSiteMapServer[]>('maps')
+}
+
+export function skinSiteSaveMapServers(
+	servers: SkinSiteMapServer[],
+): Promise<SkinSiteResponse<SkinSiteMapServer[]>> {
+	return skinSiteRequest<SkinSiteMapServer[]>('maps', { method: 'PUT', body: servers })
+}
+
+export interface SkinSiteAccessAuditEntry {
+	id: number
+	subject: string
+	action: string
+	sourceIp: string
+	proxy: boolean
+	reportedPlayerIp: string | null
+	internalServer: boolean
+	count: number
+	firstAt: number
+	lastAt: number
+}
+
+export interface SkinSiteAccessAuditPage {
+	items: SkinSiteAccessAuditEntry[]
+	nextCursor: number | null
+	retentionDays: number
+	recordLimit: number
+}
+
+export function skinSiteAccessAudit(params?: {
+	before?: number
+	subject?: string
+	ip?: string
+	action?: string
+}): Promise<SkinSiteResponse<SkinSiteAccessAuditPage>> {
+	const query = new URLSearchParams()
+	if (params) {
+		for (const [key, value] of Object.entries(params)) {
+			if (value !== undefined && value !== '') query.set(key, String(value))
+		}
+	}
+	const suffix = query.toString() ? '?' + query.toString() : ''
+	return skinSiteRequest<SkinSiteAccessAuditPage>('admin/access-audit' + suffix)
+}
+
+export function skinSiteUpdateAccessAuditSettings(
+	retentionDays: number,
+): Promise<SkinSiteResponse<{ retentionDays: number }>> {
+	return skinSiteRequest<{ retentionDays: number }>('admin/access-audit/settings', {
+		method: 'PUT',
+		body: { retentionDays },
+	})
+}
+
+export interface SkinSiteDonationEntry {
+	id: number
+	rank: number
+	username: string
+	avatar: string | null
+	amount: string
+}
+
+export interface SkinSiteDonationSummary {
+	totalAmount: string
+	donorCount: number
+}
+
+export interface SkinSiteDonationAdminEntry {
+	donor: SkinSiteDonationEntry
+	userUuid: string | null
+	qq: string | null
+	external: boolean
+	version: number
+	updatedAt: number
+}
+
+export interface SkinSiteDonationAdminPage {
+	items: SkinSiteDonationAdminEntry[]
+	summary: SkinSiteDonationSummary
+	hasMore: boolean
+}
+
+export function skinSiteAdminDonations(
+	offset = 0,
+): Promise<SkinSiteResponse<SkinSiteDonationAdminPage>> {
+	return skinSiteRequest<SkinSiteDonationAdminPage>('donation/admin/list?limit=20&offset=' + offset)
+}
+
+export function skinSiteFindAdminDonations(identity: {
+	userUuid?: string
+	qq?: string
+}): Promise<SkinSiteResponse<SkinSiteDonationAdminEntry[]>> {
+	const query = new URLSearchParams()
+	if (identity.userUuid) query.set('userUuid', identity.userUuid)
+	if (identity.qq) query.set('qq', identity.qq)
+	return skinSiteRequest<SkinSiteDonationAdminEntry[]>('donation/admin/find?' + query.toString())
+}
+
+export interface SkinSiteDonationCreate {
+	amount: string
+	userUuid?: string
+	qq?: string
+	displayName?: string
+}
+
+export function skinSiteCreateDonation(
+	data: SkinSiteDonationCreate,
+): Promise<SkinSiteResponse<number>> {
+	return skinSiteRequest<number>('donation/admin', { method: 'POST', body: data })
+}
+
+export interface SkinSiteDonationUpdate {
+	amount: string
+	version: number
+	displayName?: string
+	mode?: 'REPLACE' | 'APPEND'
+}
+
+export function skinSiteUpdateDonation(
+	id: number,
+	data: SkinSiteDonationUpdate,
+): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('donation/admin/' + id, { method: 'PUT', body: data })
+}
+
+export function skinSiteDeleteDonation(
+	id: number,
+	version: number,
+): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('donation/admin/' + id + '?version=' + version, {
+		method: 'DELETE',
+	})
+}
+
+export type SkinSiteModLoaderType = 'FABRIC' | 'FORGE'
+
+export interface SkinSiteModMetadata {
+	modId?: string
+	name?: string
+	version?: string
+	iconBytes?: string
+	loaderType: SkinSiteModLoaderType[]
+}
+
+export interface SkinSiteModInfo {
+	domainRules: string[]
+	hash: string
+	name: string
+	size: number
+	metadata: SkinSiteModMetadata
+}
+
+export interface SkinSiteModRuleTag {
+	id: number
+	name: string
+	rules: string[]
+}
+
+export function skinSiteModCount(params?: {
+	serverAddr?: string
+	ruleTagId?: number | null
+}): Promise<SkinSiteResponse<number>> {
+	const query = new URLSearchParams()
+	const addr = params?.serverAddr?.trim()
+	if (addr) query.set('server_addr', addr)
+	if (params?.ruleTagId != null) query.set('rule_tag_id', String(params.ruleTagId))
+	const suffix = query.toString() ? '?' + query.toString() : ''
+	return skinSiteRequest<number>('query/mod/number' + suffix, { type: 'mod' })
+}
+
+export function skinSiteModList(params: {
+	limit: number
+	offset: number
+	serverAddr?: string
+	ruleTagId?: number | null
+}): Promise<SkinSiteResponse<SkinSiteModInfo[]>> {
+	return skinSiteRequest<SkinSiteModInfo[]>('query/mod/list', {
+		method: 'POST',
+		type: 'mod',
+		body: {
+			offset: params.offset || 0,
+			limit: params.limit || 0,
+			serverAddr: params.serverAddr?.trim() || undefined,
+			ruleTagId: params.ruleTagId ?? undefined,
+		},
+	})
+}
+
+export function skinSiteModSearch(
+	name: string,
+	ruleTagId?: number | null,
+): Promise<SkinSiteResponse<SkinSiteModInfo[]>> {
+	const query = new URLSearchParams()
+	if (ruleTagId != null) query.set('rule_tag_id', String(ruleTagId))
+	const suffix = query.toString() ? '?' + query.toString() : ''
+	return skinSiteRequest<SkinSiteModInfo[]>(
+		'query/mod/search/' + encodeURIComponent(name) + suffix,
+		{ type: 'mod' },
+	)
+}
+
+export function skinSiteUpdateModInfo(info: SkinSiteModInfo): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('update/info', { method: 'POST', type: 'mod', body: info })
+}
+
+export function skinSiteDeleteModFile(hash: string): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>(hash, { method: 'DELETE', type: 'mod' })
+}
+
+export function skinSiteDeleteMultiModFile(hashes: string[]): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('delete/multimod', {
+		method: 'POST',
+		type: 'mod',
+		body: { modHashes: hashes },
+	})
+}
+
+export function skinSiteModRuleTags(): Promise<SkinSiteResponse<SkinSiteModRuleTag[]>> {
+	return skinSiteRequest<SkinSiteModRuleTag[]>('rule-tags', { type: 'mod' })
+}
+
+export function skinSiteCreateModRuleTag(
+	name: string,
+	rules: string[],
+): Promise<SkinSiteResponse<SkinSiteModRuleTag>> {
+	return skinSiteRequest<SkinSiteModRuleTag>('rule-tags', {
+		method: 'POST',
+		type: 'mod',
+		body: { name, rules },
+	})
+}
+
+export function skinSiteUpdateModRuleTag(
+	id: number,
+	name: string,
+	rules: string[],
+): Promise<SkinSiteResponse<SkinSiteModRuleTag>> {
+	return skinSiteRequest<SkinSiteModRuleTag>('rule-tags/' + id, {
+		method: 'POST',
+		type: 'mod',
+		body: { name, rules },
+	})
+}
+
+export function skinSiteDeleteModRuleTag(id: number): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('rule-tags/' + id, { method: 'DELETE', type: 'mod' })
+}
+
+export interface SkinSiteModRuntimeRelease {
+	id: number
+	version: string
+	fileName: string
+	sha256: string
+	fileSize: number
+	uploadedBy: string
+	uploadedAt: number
+	publishedAt: number | null
+	active: boolean
+	available: boolean
+	downloadUrl: string
+}
+
+export interface SkinSiteModRuntimeAdminState {
+	manifestUrl: string
+	releases: SkinSiteModRuntimeRelease[]
+}
+
+export function skinSiteModRuntimeReleases(): Promise<
+	SkinSiteResponse<SkinSiteModRuntimeAdminState>
+> {
+	return skinSiteRequest<SkinSiteModRuntimeAdminState>('runtime/admin', { type: 'mod' })
+}
+
+export function skinSiteUploadModRuntime(
+	version: string,
+	file: File,
+): Promise<SkinSiteResponse<SkinSiteModRuntimeRelease>> {
+	const form = new FormData()
+	form.append('runtime', file, file.name)
+	return skinSiteRequest<SkinSiteModRuntimeRelease>(
+		'runtime/admin/upload?version=' + encodeURIComponent(version),
+		{ method: 'POST', type: 'mod', form },
+	)
+}
+
+export function skinSiteActivateModRuntime(
+	id: number,
+): Promise<SkinSiteResponse<SkinSiteModRuntimeRelease>> {
+	return skinSiteRequest<SkinSiteModRuntimeRelease>('runtime/admin/' + id + '/activate', {
+		method: 'POST',
+		type: 'mod',
+	})
+}
+
+export function skinSiteDeleteModRuntime(id: number): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('runtime/admin/' + id, { method: 'DELETE', type: 'mod' })
+}
+
+export type SkinSiteWikiReadPolicy = 'PUBLIC' | 'MEMBER'
+export type SkinSiteWikiEditPolicy = 'MEMBER' | 'WEB_ADMIN'
+
+export interface SkinSiteWikiNode {
+	type: string
+	color?: string | null
+	align?: 'left' | 'center' | 'right' | 'justify' | null
+	start?: number | null
+	colspan?: number | null
+	rowspan?: number | null
+	variant?: string | null
+	iconFamily?: string | null
+	iconName?: string | null
+	iconVersion?: number | null
+	linkTitle?: string | null
+	linkLabel?: string | null
+	tooltip?: string | null
+	exists?: boolean | null
+	text?: string | null
+	level?: number | null
+	href?: string | null
+	title?: string | null
+	children: SkinSiteWikiNode[]
+	rows: SkinSiteWikiNode[][][]
+}
+
+export interface SkinSiteWikiAttachmentInfo {
+	id: number
+	versionId: number
+	name: string
+	mime: string
+	size: number
+	image: boolean
+	uploaderName: string
+	createdAt: number
+}
+
+export interface SkinSiteWikiPageDetail {
+	title: string
+	revisionId: number
+	source: string
+	nodes: SkinSiteWikiNode[]
+	categories: string[]
+	updatedAt: number
+	authorName: string
+	summary: string
+	readPolicy: SkinSiteWikiReadPolicy
+	editPolicy: SkinSiteWikiEditPolicy
+	redirectTarget?: string | null
+	canEdit: boolean
+	watched: boolean
+}
+
+export interface SkinSiteWikiSettings {
+	domains: string[]
+	homePage: string
+	defaultSkin: string
+	maxPageUtf8Bytes: number
+	maxAttachmentBytes: number
+}
+
+export interface SkinSiteWikiAuditInfo {
+	id: number
+	actorName: string
+	action: string
+	target?: string | null
+	detail?: string | null
+	createdAt: number
+}
+
+export interface SkinSiteWikiAuditPage {
+	items: SkinSiteWikiAuditInfo[]
+	nextCursor?: number | null
+}
+
+export function skinSiteWikiPage(path: string): Promise<SkinSiteResponse<SkinSiteWikiPageDetail>> {
+	return skinSiteRequest<SkinSiteWikiPageDetail>('wiki/page?path=' + encodeURIComponent(path))
+}
+
+export function skinSiteWikiProtectPage(
+	path: string,
+	readPolicy: SkinSiteWikiReadPolicy,
+	editPolicy: SkinSiteWikiEditPolicy,
+): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('wiki/admin/protect', {
+		method: 'POST',
+		body: { path, readPolicy, editPolicy },
+	})
+}
+
+export function skinSiteWikiSetHomePage(path: string): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('wiki/admin/homepage', { method: 'POST', body: { path } })
+}
+
+export function skinSiteWikiSetPageDeleted(
+	path: string,
+	deleted: boolean,
+): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('wiki/admin/delete', {
+		method: 'POST',
+		body: { path, deleted },
+	})
+}
+
+export function skinSiteWikiAudit(
+	before?: number,
+): Promise<SkinSiteResponse<SkinSiteWikiAuditPage>> {
+	const suffix = before ? '?before=' + before : ''
+	return skinSiteRequest<SkinSiteWikiAuditPage>('wiki/admin/audit' + suffix)
+}
+
+export function skinSiteWikiSettings(): Promise<SkinSiteResponse<SkinSiteWikiSettings>> {
+	return skinSiteRequest<SkinSiteWikiSettings>('wiki/settings')
+}
+
+export function skinSiteWikiUpdateSettings(
+	settings: Partial<SkinSiteWikiSettings>,
+): Promise<SkinSiteResponse<SkinSiteWikiSettings>> {
+	return skinSiteRequest<SkinSiteWikiSettings>('wiki/admin/settings', {
+		method: 'POST',
+		body: settings,
+	})
+}
+
+
+export interface SkinSiteReviewPaperSummary {
+	id: string
+	enabled: boolean
+	title: string
+	annotation?: string | null
+	mode: SkinSiteReviewMode
+	passScore: number
+	targetPermissions: string[]
+	version: number
+	questionCount: number
+	totalScore: number
+	updatedAt: number
+	prerequisiteMode: 'ANY' | 'ALL'
+	prerequisitePermissions: string[]
+	eligible: boolean
+}
+
+export interface SkinSiteReviewMailConfig {
+	enabled: boolean
+	subject: string
+	message: string
+	includeInviteCode: boolean
+	extraText: string
+}
+
+export interface SkinSiteReviewConfigData {
+	preventDuplicate?: boolean
+	mail?: SkinSiteReviewMailConfig
+	id: string
+	enabled: boolean
+	title: string
+	annotation?: string | null
+	mode: SkinSiteReviewMode
+	passScore: number
+	targetPermissions: string[]
+	version: number
+	questions: SkinSiteReviewQuestion[]
+	updatedAt: number
+	prerequisiteMode: 'ANY' | 'ALL'
+	prerequisitePermissions: string[]
+}
+
+export function skinSiteReviewPaperList(): Promise<
+	SkinSiteResponse<SkinSiteReviewPaperSummary[]>
+> {
+	return skinSiteRequest<SkinSiteReviewPaperSummary[]>('review/admin/papers')
+}
+
+export function skinSiteReviewPaperAdmin(
+	paperId: string,
+): Promise<SkinSiteResponse<SkinSiteReviewConfigData>> {
+	return skinSiteRequest<SkinSiteReviewConfigData>(
+		'review/admin/papers/' + encodeURIComponent(paperId),
+	)
+}
+
+export function skinSiteCreateReviewPaperAdmin(
+	data: SkinSiteReviewConfigData,
+): Promise<SkinSiteResponse<SkinSiteReviewConfigData>> {
+	return skinSiteRequest<SkinSiteReviewConfigData>('review/admin/papers', {
+		method: 'POST',
+		body: data,
+	})
+}
+
+export function skinSiteUpdateReviewPaperAdmin(
+	paperId: string,
+	data: SkinSiteReviewConfigData,
+): Promise<SkinSiteResponse<SkinSiteReviewConfigData>> {
+	return skinSiteRequest<SkinSiteReviewConfigData>(
+		'review/admin/papers/' + encodeURIComponent(paperId),
+		{ method: 'PUT', body: data },
+	)
+}
+
+export interface SkinSiteBotInfo {
+	exists: boolean
+	username?: string | null
+	active: boolean
+	creationBanned: boolean
+	tokenHint?: string | null
+	createdAt?: number | null
+	updatedAt?: number | null
+}
+
+export interface SkinSiteUserFrequencyLimit {
+	dropPercent?: number | null
+}
+
+export type SkinSiteUserAdminAuditAction =
+	| 'USER_UPDATED'
+	| 'USER_DELETED'
+	| 'RATE_LIMIT_UPDATED'
+	| 'BOT_USERNAME_UPDATED'
+	| 'BOT_TOKEN_INVALIDATED'
+	| 'BOT_CREATION_BANNED'
+	| 'BOT_CREATION_UNBANNED'
+
+export interface SkinSiteUserAdminAuditChange {
+	field: string
+	before?: string | null
+	after?: string | null
+}
+
+export interface SkinSiteUserAdminAuditInfo {
+	id: number
+	actorUuid: string
+	actorName: string
+	targetUuid: string
+	targetName: string
+	action: SkinSiteUserAdminAuditAction
+	changes: SkinSiteUserAdminAuditChange[]
+	createdAt: number
+}
+
+export interface SkinSiteUserAdminAuditPage {
+	items: SkinSiteUserAdminAuditInfo[]
+	nextCursor?: number | null
+}
+
+export interface SkinSiteInviteCode {
+	email: string
+	code: string
+}
+
+export function skinSiteAdminBotInfo(
+	userUuid: string,
+): Promise<SkinSiteResponse<SkinSiteBotInfo>> {
+	return skinSiteRequest<SkinSiteBotInfo>('admin/users/' + encodeURIComponent(userUuid) + '/bot')
+}
+
+export function skinSiteAdminRenameBot(
+	userUuid: string,
+	username: string,
+): Promise<SkinSiteResponse<SkinSiteBotInfo>> {
+	return skinSiteRequest<SkinSiteBotInfo>(
+		'admin/users/' + encodeURIComponent(userUuid) + '/bot/username',
+		{ method: 'POST', body: { username } },
+	)
+}
+
+export function skinSiteAdminInvalidateBotToken(
+	userUuid: string,
+): Promise<SkinSiteResponse<SkinSiteBotInfo>> {
+	return skinSiteRequest<SkinSiteBotInfo>(
+		'admin/users/' + encodeURIComponent(userUuid) + '/bot/invalidate',
+		{ method: 'POST' },
+	)
+}
+
+export function skinSiteAdminSetBotCreationBanned(
+	userUuid: string,
+	banned: boolean,
+): Promise<SkinSiteResponse<SkinSiteBotInfo>> {
+	return skinSiteRequest<SkinSiteBotInfo>(
+		'admin/users/' + encodeURIComponent(userUuid) + '/bot/ban',
+		{ method: 'POST', body: { banned } },
+	)
+}
+
+export function skinSiteAdminUpdateUserFrequencyLimit(
+	userUuid: string,
+	dropPercent: number | null,
+): Promise<SkinSiteResponse<SkinSiteUserFrequencyLimit>> {
+	return skinSiteRequest<SkinSiteUserFrequencyLimit>(
+		'admin/users/' + encodeURIComponent(userUuid) + '/frequency-limit',
+		{ method: 'POST', body: { dropPercent } },
+	)
+}
+
+export function skinSiteAdminUserAudit(params?: {
+	targetUuid?: string
+	before?: number
+}): Promise<SkinSiteResponse<SkinSiteUserAdminAuditPage>> {
+	const query = new URLSearchParams()
+	if (params?.targetUuid) query.set('targetUuid', params.targetUuid)
+	if (params?.before) query.set('before', String(params.before))
+	const suffix = query.size > 0 ? '?' + query.toString() : ''
+	return skinSiteRequest<SkinSiteUserAdminAuditPage>('admin/users/audit' + suffix)
+}
+
+export function skinSiteAdminInviteUser(email: string): Promise<SkinSiteResponse<SkinSiteInviteCode>> {
+	return skinSiteRequest<SkinSiteInviteCode>('admin/inviteCode', {
+		method: 'POST',
+		body: { email },
+	})
+}
+
+export function skinSiteModHashFromFile(file: File): Promise<string> {
+	return import('xxhash-wasm').then(async ({ default: xxhash }) => {
+		const { create64 } = await xxhash()
+		const hasher = create64()
+		const reader = file.stream().getReader()
+		for (;;) {
+			const { done, value } = await reader.read()
+			if (done) break
+			hasher.update(value)
+		}
+		const raw: bigint = hasher.digest()
+		const mask = (1n << 64n) - 1n
+		const v = raw & mask
+		const signed = v >= 1n << 63n ? v - (1n << 64n) : v
+		return signed.toString()
+	})
+}
+
+export function skinSiteModExistsByHash(hash: string): Promise<SkinSiteResponse<unknown>> {
+	return skinSiteRequest<unknown>('query/hash/' + encodeURIComponent(hash), { type: 'mod' })
+}
+
+export function skinSiteModExistsByName(modName: string): Promise<SkinSiteResponse<unknown>> {
+	const q = new URLSearchParams({ mod_name: modName })
+	return skinSiteRequest<unknown>('query/name?' + q.toString(), { type: 'mod' })
+}
+
+export async function skinSiteUploadMod(
+	file: File,
+	ruleTagIds: number[] = [],
+	overwrite = false,
+): Promise<SkinSiteResponse<string>> {
+	const hash = await skinSiteModHashFromFile(file)
+	const form = new FormData()
+	form.append('mods', file, file.name)
+	const query = new URLSearchParams()
+	if (ruleTagIds.length) query.set('rule_tag_ids', ruleTagIds.join(','))
+	if (overwrite) query.set('overwrite', 'true')
+	const suffix = query.size ? '?' + query.toString() : ''
+	return skinSiteRequest<string>('upload/' + hash + suffix, {
+		method: 'POST',
+		type: 'mod',
+		form,
+	})
+}
+
+export function skinSiteUpdateMultiModInfo(
+	mods: SkinSiteModInfo[],
+): Promise<SkinSiteResponse<SkinSiteModInfo[]>> {
+	return skinSiteRequest<SkinSiteModInfo[]>('update/info/multi', {
+		method: 'POST',
+		type: 'mod',
+		body: mods,
+	})
+}
+
+// ---------------------------------------------------------------------------
+// Chat
+// ---------------------------------------------------------------------------
+
+export type SkinSiteChatRoomVisibility = 'PUBLIC' | 'PRIVATE'
+export type SkinSiteChatRoomKind = 'STANDARD' | 'SETTLEMENT'
+export type SkinSiteChatPrerequisiteMode = 'ANY' | 'ALL'
+
+export interface SkinSiteChatRoomInfo {
+	id: number
+	name: string
+	description: string
+	visibility: SkinSiteChatRoomVisibility
+	joined: boolean
+	invited: boolean
+	manager: boolean
+	createdAt: number
+	kind: SkinSiteChatRoomKind
+	avatarAttachmentId?: number | null
+	voiceEnabled: boolean
+	voiceAvailable: boolean
+	voiceParticipantCount: number
+	voicePublisherCount: number
+	voicePublisherLimit: number
+	voiceParticipantLimit: number
+	voiceListenerLimit: number
+	prerequisiteMode: SkinSiteChatPrerequisiteMode
+	prerequisitePermissions: string[]
+	prerequisiteEligible: boolean
+}
+
+export interface SkinSiteChatUploadInfo {
+	token: string
+	attachment: {
+		id: number
+		kind: 'IMAGE' | 'FILE'
+		name: string
+		size: number
+	}
+}
+
+export interface SkinSiteChatRoomCreateInput {
+	name: string
+	description: string
+	visibility: SkinSiteChatRoomVisibility
+	kind?: SkinSiteChatRoomKind
+	prerequisiteMode: SkinSiteChatPrerequisiteMode
+	prerequisitePermissions: string[]
+}
+
+export interface SkinSiteChatRoomUpdateInput {
+	name: string
+	description: string
+	visibility: SkinSiteChatRoomVisibility
+	prerequisiteMode: SkinSiteChatPrerequisiteMode
+	prerequisitePermissions: string[]
+}
+
+export function skinSiteChatRoomList(): Promise<SkinSiteResponse<SkinSiteChatRoomInfo[]>> {
+	return skinSiteRequest<SkinSiteChatRoomInfo[]>('chat/admin/rooms')
+}
+
+export function skinSiteChatRoomCreate(
+	data: SkinSiteChatRoomCreateInput,
+): Promise<SkinSiteResponse<SkinSiteChatRoomInfo>> {
+	return skinSiteRequest<SkinSiteChatRoomInfo>('chat/admin/rooms', {
+		method: 'POST',
+		body: data,
+	})
+}
+
+export function skinSiteChatRoomUpdate(
+	id: number,
+	data: SkinSiteChatRoomUpdateInput,
+): Promise<SkinSiteResponse<SkinSiteChatRoomInfo>> {
+	return skinSiteRequest<SkinSiteChatRoomInfo>('chat/rooms/' + id, {
+		method: 'PUT',
+		body: data,
+	})
+}
+
+export function skinSiteChatRoomDelete(id: number): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('chat/admin/rooms/' + id, { method: 'DELETE' })
+}
+
+export function skinSiteChatRoomAvatarUpdate(
+	roomId: number,
+	data: { imageToken?: string; removeImage?: boolean },
+): Promise<SkinSiteResponse<SkinSiteChatRoomInfo>> {
+	return skinSiteRequest<SkinSiteChatRoomInfo>('chat/rooms/' + roomId + '/avatar', {
+		method: 'PUT',
+		body: data,
+	})
+}
+
+export function skinSiteChatAttachmentUpload(
+	file: File,
+): Promise<SkinSiteResponse<SkinSiteChatUploadInfo>> {
+	const form = new FormData()
+	form.append('file', file, file.name)
+	return skinSiteRequest<SkinSiteChatUploadInfo>('chat/attachments', {
+		method: 'POST',
+		form,
+	})
+}
+
+export async function skinSiteChatRoomAvatarFetch(roomId: number): Promise<Blob | null> {
+	const url = `${SKIN_SITE_ORIGIN}${REQUEST_TYPE_PATH.starlight}/chat/rooms/${roomId}/avatar`
+	const headers: Record<string, string> = { Accept: 'image/*' }
+	const token = getSkinSiteToken()
+	if (token) headers['Authorization'] = `Bearer ${token}`
+	try {
+		const response = await tauriFetch(url, { method: 'GET', headers })
+		if (!response.ok) return null
+		const type = response.headers.get('content-type') ?? ''
+		if (type.includes('application/json') || type.includes('text/')) return null
+		return await response.blob()
+	} catch {
+		return null
+	}
+}
+
+export interface SkinSiteChatUserInfo {
+	uuid: string
+	id: number
+	username: string
+	avatar?: string | null
+	email: string
+	qq?: number | null
+	permissions: string[]
+	banned: boolean
+	registerTime: number
+}
+
+export interface SkinSiteChatAuditInfo {
+	id: number
+	actorUuid: string
+	actorName?: string
+	action: string
+	target?: string | null
+	createdAt: number
+}
+
+export function skinSiteChatUserSearch(
+	keyword: string,
+	roomId?: number,
+	searchBy: 'user' | 'player' = 'user',
+): Promise<SkinSiteResponse<SkinSiteChatUserInfo[]>> {
+	const query = new URLSearchParams({ keyword })
+	if (roomId !== undefined) query.set('room_id', String(roomId))
+	if (searchBy === 'player') query.set('search_by', 'player')
+	return skinSiteRequest<SkinSiteChatUserInfo[]>('chat/users/search?' + query.toString())
+}
+
+export function skinSiteChatManagerSet(
+	roomId: number,
+	userUuid: string,
+	manager: boolean,
+): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('chat/admin/rooms/' + roomId + '/manager', {
+		method: 'POST',
+		body: { userUuid, manager },
+	})
+}
+
+export function skinSiteChatSettlementOwnerAssign(
+	roomId: number,
+	userUuid: string,
+): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('chat/settlements/' + roomId + '/owner', {
+		method: 'POST',
+		body: { userUuid },
+	})
+}
+
+export function skinSiteChatAuditList(
+	roomId: number,
+): Promise<SkinSiteResponse<SkinSiteChatAuditInfo[]>> {
+	return skinSiteRequest<SkinSiteChatAuditInfo[]>('chat/rooms/' + roomId + '/audit')
+}
+
+export type SkinSiteChatVoiceRuntimeState =
+	| 'DISABLED'
+	| 'NOT_INSTALLED'
+	| 'DOWNLOADING'
+	| 'VERIFYING'
+	| 'EXTRACTING'
+	| 'STARTING'
+	| 'READY'
+	| 'FAILED'
+	| 'UNSUPPORTED_PLATFORM'
+
+export interface SkinSiteChatVoiceRuntimeInfo {
+	state: SkinSiteChatVoiceRuntimeState
+	version: string
+	progress?: number | null
+	message?: string | null
+	retryCount: number
+	publicUrl?: string | null
+}
+
+export interface SkinSiteChatVoiceGlobalConfig {
+	enabled: boolean
+	runtimePath: string
+	mirrorBaseUrl: string
+	publicUrl: string
+	bindAddress: string
+	signalPort: number
+	rtcTcpPort: number
+	rtcUdpPort: number
+	startupTimeoutSeconds: number
+	useExternalIp: boolean
+	nodeIp: string
+}
+
+export interface SkinSiteChatVoiceGlobalConfigUpdateResult {
+	config: SkinSiteChatVoiceGlobalConfig
+	runtime: SkinSiteChatVoiceRuntimeInfo
+	restarted: boolean
+}
+
+export interface SkinSiteChatVoiceLogEntry {
+	id: number
+	timestamp: number
+	message: string
+}
+
+export interface SkinSiteChatVoiceLogPage {
+	entries: SkinSiteChatVoiceLogEntry[]
+	latestId: number
+}
+
+export interface SkinSiteChatVoiceRoomInfo {
+	roomId: number
+	enabled: boolean
+	available: boolean
+	publisherLimit: number
+	participantLimit: number
+	listenerLimit: number
+	participantCount: number
+	publisherCount: number
+	listenerCount: number
+	joined: boolean
+	observer: boolean
+	muted: boolean
+	bannedUntil?: number | null
+}
+
+export function skinSiteChatVoiceRuntime(): Promise<
+	SkinSiteResponse<SkinSiteChatVoiceRuntimeInfo>
+> {
+	return skinSiteRequest<SkinSiteChatVoiceRuntimeInfo>('chat/voice/admin/runtime')
+}
+
+export function skinSiteChatVoiceRuntimeRetry(): Promise<
+	SkinSiteResponse<SkinSiteChatVoiceRuntimeInfo>
+> {
+	return skinSiteRequest<SkinSiteChatVoiceRuntimeInfo>('chat/voice/admin/runtime/retry', {
+		method: 'POST',
+	})
+}
+
+export function skinSiteChatVoiceConfig(): Promise<
+	SkinSiteResponse<SkinSiteChatVoiceGlobalConfig>
+> {
+	return skinSiteRequest<SkinSiteChatVoiceGlobalConfig>('chat/voice/admin/config')
+}
+
+export function skinSiteChatVoiceConfigUpdate(
+	data: SkinSiteChatVoiceGlobalConfig,
+): Promise<SkinSiteResponse<SkinSiteChatVoiceGlobalConfigUpdateResult>> {
+	return skinSiteRequest<SkinSiteChatVoiceGlobalConfigUpdateResult>(
+		'chat/voice/admin/config',
+		{ method: 'PUT', body: data },
+	)
+}
+
+export function skinSiteChatVoiceLogs(
+	after?: number,
+	limit = 300,
+): Promise<SkinSiteResponse<SkinSiteChatVoiceLogPage>> {
+	const query = new URLSearchParams({ limit: String(limit) })
+	if (after !== undefined) query.set('after', String(after))
+	return skinSiteRequest<SkinSiteChatVoiceLogPage>('chat/voice/admin/logs?' + query.toString())
+}
+
+export function skinSiteChatVoiceCapacityUpdate(
+	roomId: number,
+	data: { participantLimit: number; listenerLimit: number },
+): Promise<SkinSiteResponse<SkinSiteChatVoiceRoomInfo>> {
+	return skinSiteRequest<SkinSiteChatVoiceRoomInfo>(
+		'chat/admin/rooms/' + roomId + '/voice/capacity',
+		{ method: 'PUT', body: data },
+	)
+}
+
+// ---------------------------------------------------------------------------
+// Wiki migration
+// ---------------------------------------------------------------------------
+
+export type SkinSiteWikiMigrationState =
+	| 'IMPORTING'
+	| 'REVIEW'
+	| 'PUBLISHING'
+	| 'PUBLISHED'
+	| 'FAILED'
+	| 'ROLLED_BACK'
+
+export type SkinSiteWikiMigrationDecision = 'PENDING' | 'IMPORT' | 'EXCLUDE'
+
+export interface SkinSiteWikiMigrationJobInfo {
+	id: number
+	source: string
+	state: SkinSiteWikiMigrationState
+	total: number
+	reviewed: number
+	imported: number
+	excluded: number
+	error?: string | null
+	missingAttachmentCount?: number
+}
+
+export interface SkinSiteWikiMigrationCandidate {
+	id: number
+	title: string
+	lastUpdatedAt: number
+	maintainerCount: number
+	suspiciousReasons: string[]
+	decision: SkinSiteWikiMigrationDecision
+	conflict: boolean
+}
+
+export interface SkinSiteWikiMigrationPage {
+	items: SkinSiteWikiMigrationCandidate[]
+	nextCursor?: number | null
+}
+
+export interface SkinSiteWikiMigrationPublishResult {
+	imported: number
+	overwritten: number
+}
+
+export interface SkinSiteWikiAutomaticMigrationInput {
+	apiUrl: string
+	username?: string | null
+	password?: string | null
+	allowPrivateAddress: boolean
+	rules: {
+		staleDays: number
+		maintainerWindowDays: number
+		maximumMaintainers: number
+		staleMarkers: string[]
+	}
+}
+
+export function skinSiteWikiMigrationJobs(): Promise<
+	SkinSiteResponse<SkinSiteWikiMigrationJobInfo[]>
+> {
+	return skinSiteRequest<SkinSiteWikiMigrationJobInfo[]>('wiki/admin/migration')
+}
+
+export function skinSiteWikiMigrationStartAutomatic(
+	data: SkinSiteWikiAutomaticMigrationInput,
+): Promise<SkinSiteResponse<SkinSiteWikiMigrationJobInfo>> {
+	return skinSiteRequest<SkinSiteWikiMigrationJobInfo>('wiki/admin/migration/automatic', {
+		method: 'POST',
+		body: data,
+	})
+}
+
+export function skinSiteWikiMigrationStartXml(
+	file: File,
+): Promise<SkinSiteResponse<SkinSiteWikiMigrationJobInfo>> {
+	const form = new FormData()
+	form.append('xml', file, file.name)
+	return skinSiteRequest<SkinSiteWikiMigrationJobInfo>('wiki/admin/migration/xml', {
+		method: 'POST',
+		form,
+	})
+}
+
+export function skinSiteWikiMigrationCandidates(
+	jobId: number,
+	after?: number,
+): Promise<SkinSiteResponse<SkinSiteWikiMigrationPage>> {
+	const suffix = after ? '?after=' + after : ''
+	return skinSiteRequest<SkinSiteWikiMigrationPage>(
+		'wiki/admin/migration/' + jobId + '/candidates' + suffix,
+	)
+}
+
+export function skinSiteWikiMigrationDecide(
+	candidateId: number,
+	data: { decision: SkinSiteWikiMigrationDecision; targetTitle?: string | null; overwrite?: boolean },
+): Promise<SkinSiteResponse<void>> {
+	return skinSiteRequest<void>('wiki/admin/migration/candidates/' + candidateId, {
+		method: 'POST',
+		body: data,
+	})
+}
+
+export function skinSiteWikiMigrationPublish(
+	jobId: number,
+): Promise<SkinSiteResponse<SkinSiteWikiMigrationPublishResult>> {
+	return skinSiteRequest<SkinSiteWikiMigrationPublishResult>(
+		'wiki/admin/migration/' + jobId + '/publish',
+		{ method: 'POST' },
+	)
+}
+
+export function skinSiteWikiMigrationRollback(
+	jobId: number,
+): Promise<SkinSiteResponse<void>> {
+	return skinSiteRequest<void>('wiki/admin/migration/' + jobId + '/rollback', {
+		method: 'POST',
+	})
+}
+
+export function skinSiteWikiMigrationDelete(jobId: number): Promise<SkinSiteResponse<void>> {
+	return skinSiteRequest<void>('wiki/admin/migration/' + jobId, { method: 'DELETE' })
+}
+
+export function skinSiteWikiAttachment(
+	name: string,
+): Promise<SkinSiteResponse<SkinSiteWikiAttachmentInfo>> {
+	return skinSiteRequest<SkinSiteWikiAttachmentInfo>(
+		'wiki/attachment?name=' + encodeURIComponent(name),
+	)
+}
+
+export function skinSiteWikiAttachmentUrl(id: number): string {
+	return `${SKIN_SITE_ORIGIN}${REQUEST_TYPE_PATH.starlight}/wiki/attachment/${id}/content`
 }
