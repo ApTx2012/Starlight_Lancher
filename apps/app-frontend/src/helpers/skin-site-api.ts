@@ -2539,3 +2539,69 @@ export function skinSiteWikiAttachment(
 export function skinSiteWikiAttachmentUrl(id: number): string {
 	return `${SKIN_SITE_ORIGIN}${REQUEST_TYPE_PATH.starlight}/wiki/attachment/${id}/content`
 }
+
+export interface SkinSiteWikiRevisionInfo {
+	id: number
+	authorName: string
+	summary: string
+	minor: boolean
+	createdAt: number
+	sourceWiki?: string | null
+	sourceRevisionId?: number | null
+}
+
+export interface SkinSiteWikiRevisionPage {
+	items: SkinSiteWikiRevisionInfo[]
+	nextCursor?: number | null
+}
+
+export interface SkinSiteWikiRevisionDetail {
+	revision: SkinSiteWikiRevisionInfo
+	source: string
+	nodes: SkinSiteWikiNode[]
+}
+
+export interface SkinSiteWikiDiffLine {
+	type: 'UNCHANGED' | 'REMOVED' | 'ADDED'
+	oldLine?: number | null
+	newLine?: number | null
+	text: string
+}
+
+export function skinSiteWikiHistory(
+	title: string,
+	before?: number,
+): Promise<SkinSiteResponse<SkinSiteWikiRevisionPage>> {
+	const query = new URLSearchParams({ title })
+	if (before) query.set('before', String(before))
+	return skinSiteRequest<SkinSiteWikiRevisionPage>('wiki/history?' + query.toString())
+}
+
+export function skinSiteWikiRevision(
+	title: string,
+	revisionId: number,
+): Promise<SkinSiteResponse<SkinSiteWikiRevisionDetail>> {
+	return skinSiteRequest<SkinSiteWikiRevisionDetail>(
+		'wiki/revision/' + revisionId + '?title=' + encodeURIComponent(title),
+	)
+}
+
+export function skinSiteWikiDiff(
+	title: string,
+	older: number,
+	newer: number,
+): Promise<SkinSiteResponse<SkinSiteWikiDiffLine[]>> {
+	const query = new URLSearchParams({ title, older: String(older), newer: String(newer) })
+	return skinSiteRequest<SkinSiteWikiDiffLine[]>('wiki/diff?' + query.toString())
+}
+
+export function skinSiteWikiRevert(data: {
+	title: string
+	revisionId: number
+	baseRevisionId: number
+}): Promise<SkinSiteResponse<SkinSiteWikiPageDetail>> {
+	return skinSiteRequest<SkinSiteWikiPageDetail>('wiki/revert', {
+		method: 'POST',
+		body: data,
+	})
+}

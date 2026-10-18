@@ -12265,5 +12265,18 @@
   "app.skin-site.wiki.updated-at": {"message": "最后编辑于 {date}，编辑者 {author}"},
   "app.skin-site.wiki.revision": {"message": "修订 #{id}"},
   "app.skin-site.wiki.categories": {"message": "分类"},
-  "app.skin-site.wiki.back": {"message": "返回"}
+  "app.skin-site.wiki.back": {"message": "返回"},
+  "app.skin-site.wiki.history": {"message": "历史"},
+  "app.skin-site.wiki.read": {"message": "阅读"},
+  "app.skin-site.wiki.history-empty": {"message": "暂无修订记录。"},
+  "app.skin-site.wiki.no-summary": {"message": "未填写编辑摘要"},
+  "app.skin-site.wiki.minor": {"message": "小修改"},
+  "app.skin-site.wiki.view-revision": {"message": "查看"},
+  "app.skin-site.wiki.revert-to": {"message": "撤销至此版本"},
+  "app.skin-site.wiki.confirm-revert": {"message": "确认撤销"},
+  "app.skin-site.wiki.revert-done": {"message": "页面已撤销到指定修订。"},
+  "app.skin-site.wiki.revision-preview": {"message": "修订 #{id} 预览"},
+  "app.skin-site.wiki.close-preview": {"message": "关闭预览"},
+  "app.skin-site.wiki.diff-title": {"message": "与当前版本的逐行差异"},
+  "app.skin-site.wiki.cancel": {"message": "取消"}
 }

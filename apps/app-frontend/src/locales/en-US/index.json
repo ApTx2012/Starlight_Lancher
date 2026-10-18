@@ -12434,5 +12434,18 @@
   "app.skin-site.wiki.updated-at": {"message": "Last edited {date} by {author}"},
   "app.skin-site.wiki.revision": {"message": "Revision #{id}"},
   "app.skin-site.wiki.categories": {"message": "Categories"},
-  "app.skin-site.wiki.back": {"message": "Back"}
+  "app.skin-site.wiki.back": {"message": "Back"},
+  "app.skin-site.wiki.history": {"message": "History"},
+  "app.skin-site.wiki.read": {"message": "Read"},
+  "app.skin-site.wiki.history-empty": {"message": "No revisions yet."},
+  "app.skin-site.wiki.no-summary": {"message": "No edit summary"},
+  "app.skin-site.wiki.minor": {"message": "Minor"},
+  "app.skin-site.wiki.view-revision": {"message": "View"},
+  "app.skin-site.wiki.revert-to": {"message": "Revert to this"},
+  "app.skin-site.wiki.confirm-revert": {"message": "Confirm revert"},
+  "app.skin-site.wiki.revert-done": {"message": "Page reverted to the selected revision."},
+  "app.skin-site.wiki.revision-preview": {"message": "Preview of revision #{id}"},
+  "app.skin-site.wiki.close-preview": {"message": "Close preview"},
+  "app.skin-site.wiki.diff-title": {"message": "Line diff against the current revision"},
+  "app.skin-site.wiki.cancel": {"message": "Cancel"}
 }
