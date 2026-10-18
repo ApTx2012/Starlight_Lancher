@@ -12278,5 +12278,16 @@
   "app.skin-site.wiki.revision-preview": {"message": "修订 #{id} 预览"},
   "app.skin-site.wiki.close-preview": {"message": "关闭预览"},
   "app.skin-site.wiki.diff-title": {"message": "与当前版本的逐行差异"},
-  "app.skin-site.wiki.cancel": {"message": "取消"}
+  "app.skin-site.wiki.cancel": {"message": "取消"},
+  "app.skin-site.wiki.browser.search-placeholder": {"message": "搜索 Wiki 页面…"},
+  "app.skin-site.wiki.browser.tab-search": {"message": "搜索"},
+  "app.skin-site.wiki.browser.tab-recent": {"message": "最近"},
+  "app.skin-site.wiki.browser.tab-category": {"message": "分类"},
+  "app.skin-site.wiki.browser.category-placeholder": {"message": "分类名称"},
+  "app.skin-site.wiki.browser.load-more": {"message": "加载更多"},
+  "app.skin-site.wiki.browser.empty-search": {"message": "没有匹配的页面。"},
+  "app.skin-site.wiki.browser.empty-list": {"message": "这里还没有内容。"},
+  "app.skin-site.wiki.browser.hint-search": {"message": "输入关键词开始搜索。"},
+  "app.skin-site.wiki.browser.hint-category": {"message": "输入分类名称开始浏览。"},
+  "app.skin-site.wiki.browser.by-author": {"message": "由 {author} 编辑"}
 }

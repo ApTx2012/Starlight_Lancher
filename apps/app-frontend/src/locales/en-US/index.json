@@ -12447,5 +12447,16 @@
   "app.skin-site.wiki.revision-preview": {"message": "Preview of revision #{id}"},
   "app.skin-site.wiki.close-preview": {"message": "Close preview"},
   "app.skin-site.wiki.diff-title": {"message": "Line diff against the current revision"},
-  "app.skin-site.wiki.cancel": {"message": "Cancel"}
+  "app.skin-site.wiki.cancel": {"message": "Cancel"},
+  "app.skin-site.wiki.browser.search-placeholder": {"message": "Search wiki pages…"},
+  "app.skin-site.wiki.browser.tab-search": {"message": "Search"},
+  "app.skin-site.wiki.browser.tab-recent": {"message": "Recent"},
+  "app.skin-site.wiki.browser.tab-category": {"message": "Category"},
+  "app.skin-site.wiki.browser.category-placeholder": {"message": "Category name"},
+  "app.skin-site.wiki.browser.load-more": {"message": "Load more"},
+  "app.skin-site.wiki.browser.empty-search": {"message": "No pages match your search."},
+  "app.skin-site.wiki.browser.empty-list": {"message": "Nothing here yet."},
+  "app.skin-site.wiki.browser.hint-search": {"message": "Type a keyword to search."},
+  "app.skin-site.wiki.browser.hint-category": {"message": "Enter a category name to browse."},
+  "app.skin-site.wiki.browser.by-author": {"message": "by {author}"}
 }

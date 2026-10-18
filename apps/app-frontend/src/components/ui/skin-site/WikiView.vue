@@ -16,6 +16,7 @@ import {
 } from '@/helpers/skin-site-api'
 
 import WikiNodeRenderer from './wiki/WikiNodeRenderer.vue'
+import WikiBrowser from './wiki/WikiBrowser.vue'
 
 const { formatMessage } = useVIntl()
 const { handleError, addNotification } = injectNotificationManager()
@@ -258,6 +259,8 @@ onMounted(() => {
 				</button>
 			</template>
 		</div>
+
+		<WikiBrowser @navigate="onNavigate" />
 
 		<div v-if="loading" class="flex min-h-48 items-center justify-center gap-2 text-sm text-secondary">
 			<SpinnerIcon class="size-4 animate-spin" />

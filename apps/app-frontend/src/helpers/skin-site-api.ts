@@ -2605,3 +2605,80 @@ export function skinSiteWikiRevert(data: {
 		body: data,
 	})
 }
+// ─── Wiki: 搜索 / 列表 / 最近 / 分类 ───────────────────────────────────────
+
+export interface SkinSiteWikiPageSummary {
+	title: string
+	updatedAt: number
+	authorName: string
+	readPolicy: SkinSiteWikiReadPolicy
+	editPolicy: SkinSiteWikiEditPolicy
+	redirectTarget?: string | null
+}
+
+export interface SkinSiteWikiPageListItem {
+	id: number
+	title: string
+	namespace: string
+	revisionId: number
+	updatedAt: number
+	authorName: string
+	readPolicy: SkinSiteWikiReadPolicy
+	editPolicy: SkinSiteWikiEditPolicy
+	redirectTarget?: string | null
+}
+
+export interface SkinSiteWikiPageList {
+	items: SkinSiteWikiPageListItem[]
+	nextCursor?: string | null
+}
+
+export interface SkinSiteWikiSearchPage {
+	items: SkinSiteWikiPageSummary[]
+	nextCursor?: number | null
+}
+
+export function skinSiteWikiSearch(
+	query: string,
+): Promise<SkinSiteResponse<SkinSiteWikiPageSummary[]>> {
+	const q = query.trim()
+	if (!q) {
+		return Promise.resolve({
+			success: true,
+			payload: [],
+			timestamp: Date.now(),
+		} as SkinSiteResponse<SkinSiteWikiPageSummary[]>)
+	}
+	return skinSiteRequest<SkinSiteWikiPageSummary[]>('wiki/search?q=' + encodeURIComponent(q))
+}
+
+export function skinSiteWikiPages(
+	params: {
+		prefix?: string
+		namespace?: string
+		limit?: number
+		cursor?: string
+	} = {},
+): Promise<SkinSiteResponse<SkinSiteWikiPageList>> {
+	const query = new URLSearchParams()
+	if (params.prefix) query.set('prefix', params.prefix)
+	if (params.namespace != null) query.set('namespace', params.namespace)
+	if (params.limit != null) query.set('limit', String(params.limit))
+	if (params.cursor) query.set('cursor', params.cursor)
+	return skinSiteRequest<SkinSiteWikiPageList>('wiki/pages?' + query.toString())
+}
+
+export function skinSiteWikiRecent(before?: number): Promise<SkinSiteResponse<SkinSiteWikiSearchPage>> {
+	const query = new URLSearchParams()
+	if (before != null) query.set('before', String(before))
+	return skinSiteRequest<SkinSiteWikiSearchPage>('wiki/recent?' + query.toString())
+}
+
+export function skinSiteWikiCategory(
+	name: string,
+	before?: number,
+): Promise<SkinSiteResponse<SkinSiteWikiSearchPage>> {
+	const query = new URLSearchParams({ name })
+	if (before != null) query.set('before', String(before))
+	return skinSiteRequest<SkinSiteWikiSearchPage>('wiki/category?' + query.toString())
+}
