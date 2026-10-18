@@ -374,6 +374,44 @@ jobs:
           )
           gh release upload "${GITHUB_REF_NAME}" "release-check/${bundle_name}" --clobber
 
+      - name: Publish to skin site
+        continue-on-error: true
+        env:
+          SKIN_SITE_TOKEN: ${{ secrets.SKIN_SITE_CI_UPLOAD_TOKEN }}
+          SKIN_SITE_URL: ${{ vars.SKIN_SITE_URL || 'https://skin.starlight.cool' }}
+        run: |
+          set -euo pipefail
+          if [ -z "${SKIN_SITE_TOKEN:-}" ]; then
+            echo "::warning::SKIN_SITE_CI_UPLOAD_TOKEN not configured, skipping skin site publish"
+            exit 0
+          fi
+
+          version="${GITHUB_REF_NAME#v}"
+          bundle="release-check/Starlight_Launcher_${version}_skin-site-update.zip"
+          if [ ! -f "${bundle}" ]; then
+            echo "::warning::Bundle ${bundle} not found, skipping skin site publish"
+            exit 0
+          fi
+
+          upload_response=$(curl -fsS -X POST \
+            -H "Authorization: Bearer ${SKIN_SITE_TOKEN}" \
+            -F "archive=@${bundle};type=application/zip" \
+            "${SKIN_SITE_URL}/starlight/launcher/admin/upload?forceUpdate=false")
+
+          release_id=$(printf '%s' "${upload_response}" | jq -r '.payload.id // empty')
+          if [ -z "${release_id}" ]; then
+            echo "::warning::Skin site upload did not return a release id: ${upload_response}"
+            exit 0
+          fi
+
+          echo "Uploaded release id: ${release_id}"
+
+          curl -fsS -X POST \
+            -H "Authorization: Bearer ${SKIN_SITE_TOKEN}" \
+            "${SKIN_SITE_URL}/starlight/launcher/admin/${release_id}/activate"
+
+          echo "Skin site release ${version} published"
+
       - name: Notify Update Server to publish release assets
         if: ${{ env.UPDATE_SERVER_URL != '' && env.UPDATE_SERVER_WEBHOOK_SECRET != '' }}
         env:
