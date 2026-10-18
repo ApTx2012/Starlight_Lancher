@@ -1452,3 +1452,83 @@ export function skinSiteUpdateAccessAuditSettings(
 		body: { retentionDays },
 	})
 }
+
+export interface SkinSiteDonationEntry {
+	id: number
+	rank: number
+	username: string
+	avatar: string | null
+	amount: string
+}
+
+export interface SkinSiteDonationSummary {
+	totalAmount: string
+	donorCount: number
+}
+
+export interface SkinSiteDonationAdminEntry {
+	donor: SkinSiteDonationEntry
+	userUuid: string | null
+	qq: string | null
+	external: boolean
+	version: number
+	updatedAt: number
+}
+
+export interface SkinSiteDonationAdminPage {
+	items: SkinSiteDonationAdminEntry[]
+	summary: SkinSiteDonationSummary
+	hasMore: boolean
+}
+
+export function skinSiteAdminDonations(
+	offset = 0,
+): Promise<SkinSiteResponse<SkinSiteDonationAdminPage>> {
+	return skinSiteRequest<SkinSiteDonationAdminPage>('donation/admin/list?limit=20&offset=' + offset)
+}
+
+export function skinSiteFindAdminDonations(identity: {
+	userUuid?: string
+	qq?: string
+}): Promise<SkinSiteResponse<SkinSiteDonationAdminEntry[]>> {
+	const query = new URLSearchParams()
+	if (identity.userUuid) query.set('userUuid', identity.userUuid)
+	if (identity.qq) query.set('qq', identity.qq)
+	return skinSiteRequest<SkinSiteDonationAdminEntry[]>('donation/admin/find?' + query.toString())
+}
+
+export interface SkinSiteDonationCreate {
+	amount: string
+	userUuid?: string
+	qq?: string
+	displayName?: string
+}
+
+export function skinSiteCreateDonation(
+	data: SkinSiteDonationCreate,
+): Promise<SkinSiteResponse<number>> {
+	return skinSiteRequest<number>('donation/admin', { method: 'POST', body: data })
+}
+
+export interface SkinSiteDonationUpdate {
+	amount: string
+	version: number
+	displayName?: string
+	mode?: 'REPLACE' | 'APPEND'
+}
+
+export function skinSiteUpdateDonation(
+	id: number,
+	data: SkinSiteDonationUpdate,
+): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('donation/admin/' + id, { method: 'PUT', body: data })
+}
+
+export function skinSiteDeleteDonation(
+	id: number,
+	version: number,
+): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('donation/admin/' + id + '?version=' + version, {
+		method: 'DELETE',
+	})
+}

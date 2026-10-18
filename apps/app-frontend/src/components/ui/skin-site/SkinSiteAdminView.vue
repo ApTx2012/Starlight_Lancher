@@ -6,6 +6,7 @@ import { skinSiteUser } from '@/composables/skin-site-session'
 
 import AdminAccessAuditPage from './admin/AdminAccessAuditPage.vue'
 import AdminBroadcastPage from './admin/AdminBroadcastPage.vue'
+import AdminDonationsPage from './admin/AdminDonationsPage.vue'
 import AdminDownloadsPage from './admin/AdminDownloadsPage.vue'
 import AdminLauncherPage from './admin/AdminLauncherPage.vue'
 import AdminPlayersPage from './admin/AdminPlayersPage.vue'
@@ -98,7 +99,9 @@ const navGroups = computed<NavGroup[]>(() => [
 			{ key: 'broadcast', label: formatMessage(messages.itemBroadcast) },
 			{ key: 'chat', label: formatMessage(messages.itemChat) },
 			{ key: 'wiki', label: formatMessage(messages.itemWiki) },
-			{ key: 'donations', label: formatMessage(messages.itemDonations) },
+			...(hasWebAdmin.value
+				? [{ key: 'donations' as AdminKey, label: formatMessage(messages.itemDonations) }]
+				: []),
 		],
 	},
 	{
@@ -177,6 +180,7 @@ const current = ref<AdminKey>('summary')
 				<AdminReviewPage v-else-if="current === 'review'" />
 				<AdminLauncherPage v-else-if="current === 'launcher'" />
 				<AdminDownloadsPage v-else-if="current === 'downloads'" />
+				<AdminDonationsPage v-else-if="current === 'donations' && hasWebAdmin" />
 				<p v-else class="m-0 text-sm text-secondary">{{ current }}</p>
 			</section>
 		</div>
