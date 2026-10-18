@@ -564,32 +564,32 @@ export function skinSitePublicMapServers(): Promise<SkinSiteResponse<SkinSitePub
 export type SkinSiteReviewQuestionType = 'SINGLE' | 'MULTIPLE' | 'TRUE_FALSE' | 'FILL' | 'ESSAY'
 export type SkinSiteReviewResult = 'PENDING' | 'PASSED' | 'REJECTED'
 
-export interface SkinSiteReviewOption {
+export interface SkinSiteReviewPublicOption {
 	id: string
 	description: string
 	correct?: boolean
 	defaultSelected?: boolean
 }
 
-export interface SkinSiteReviewQuestion {
+export interface SkinSiteReviewPublicQuestion {
 	id: string
-	type: SkinSiteReviewQuestionType
+	type: SkinSiteReviewPublicQuestionType
 	title: string
 	annotation?: string | null
 	score?: number
 	optional?: boolean
 	fatal?: boolean
-	options?: SkinSiteReviewOption[]
+	options?: SkinSiteReviewPublicOption[]
 	answer?: string | null
 	maxLength?: number | null
 	informationQuestion?: boolean
 }
 
-export interface SkinSiteReviewPaper {
+export interface SkinSiteReviewPublicPaper {
 	id: string
 	title: string
 	description?: string
-	questions: SkinSiteReviewQuestion[]
+	questions: SkinSiteReviewPublicQuestion[]
 	[key: string]: unknown
 }
 
@@ -1039,6 +1039,42 @@ export function skinSiteAdminUserFrequencyLimit(
 
 export type SkinSiteReviewMode = 'AUTO' | 'MANUAL'
 
+export type SkinSiteReviewQuestionType = 'SINGLE' | 'MULTIPLE' | 'TRUE_FALSE' | 'FILL' | 'ESSAY'
+
+export interface SkinSiteReviewOption {
+	id: string
+	description: string
+	correct: boolean
+	defaultSelected: boolean
+	score: number
+}
+
+export interface SkinSiteReviewQuestion {
+	id: string
+	type: SkinSiteReviewQuestionType
+	title: string
+	annotation?: string | null
+	score: number
+	optional: boolean
+	fatal: boolean
+	autoReview: boolean
+	options: SkinSiteReviewOption[]
+	answer?: string | null
+	maxLength?: number | null
+	informationQuestion?: boolean
+	informationAlias?: string | null
+}
+
+export interface SkinSiteReviewPaper {
+	id: string
+	title: string
+	annotation?: string | null
+	mode: SkinSiteReviewMode
+	passScore: number
+	version: number
+	questions: SkinSiteReviewQuestion[]
+}
+
 export interface SkinSiteReviewAnswer {
 	id: string
 	questionId?: string
@@ -1069,6 +1105,7 @@ export interface SkinSiteReviewSubmission {
 	createdAt: number
 	reviewedAt?: number | null
 	answers: SkinSiteReviewAnswer[]
+	paper: SkinSiteReviewPaper
 	decisionHistory?: Array<{
 		previousResult: SkinSiteReviewResult
 		result: SkinSiteReviewResult
@@ -1788,4 +1825,80 @@ export function skinSiteWikiUpdateSettings(
 		method: 'POST',
 		body: settings,
 	})
+}
+
+
+export interface SkinSiteReviewPaperSummary {
+	id: string
+	enabled: boolean
+	title: string
+	annotation?: string | null
+	mode: SkinSiteReviewMode
+	passScore: number
+	targetPermissions: string[]
+	version: number
+	questionCount: number
+	totalScore: number
+	updatedAt: number
+	prerequisiteMode: 'ANY' | 'ALL'
+	prerequisitePermissions: string[]
+	eligible: boolean
+}
+
+export interface SkinSiteReviewMailConfig {
+	enabled: boolean
+	subject: string
+	message: string
+	includeInviteCode: boolean
+	extraText: string
+}
+
+export interface SkinSiteReviewConfigData {
+	preventDuplicate?: boolean
+	mail?: SkinSiteReviewMailConfig
+	id: string
+	enabled: boolean
+	title: string
+	annotation?: string | null
+	mode: SkinSiteReviewMode
+	passScore: number
+	targetPermissions: string[]
+	version: number
+	questions: SkinSiteReviewQuestion[]
+	updatedAt: number
+	prerequisiteMode: 'ANY' | 'ALL'
+	prerequisitePermissions: string[]
+}
+
+export function skinSiteReviewPaperList(): Promise<
+	SkinSiteResponse<SkinSiteReviewPaperSummary[]>
+> {
+	return skinSiteRequest<SkinSiteReviewPaperSummary[]>('review/admin/papers')
+}
+
+export function skinSiteReviewPaperAdmin(
+	paperId: string,
+): Promise<SkinSiteResponse<SkinSiteReviewConfigData>> {
+	return skinSiteRequest<SkinSiteReviewConfigData>(
+		'review/admin/papers/' + encodeURIComponent(paperId),
+	)
+}
+
+export function skinSiteCreateReviewPaperAdmin(
+	data: SkinSiteReviewConfigData,
+): Promise<SkinSiteResponse<SkinSiteReviewConfigData>> {
+	return skinSiteRequest<SkinSiteReviewConfigData>('review/admin/papers', {
+		method: 'POST',
+		body: data,
+	})
+}
+
+export function skinSiteUpdateReviewPaperAdmin(
+	paperId: string,
+	data: SkinSiteReviewConfigData,
+): Promise<SkinSiteResponse<SkinSiteReviewConfigData>> {
+	return skinSiteRequest<SkinSiteReviewConfigData>(
+		'review/admin/papers/' + encodeURIComponent(paperId),
+		{ method: 'PUT', body: data },
+	)
 }
