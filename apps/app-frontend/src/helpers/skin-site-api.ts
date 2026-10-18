@@ -2367,3 +2367,129 @@ export function skinSiteChatVoiceCapacityUpdate(
 		{ method: 'PUT', body: data },
 	)
 }
+
+// ---------------------------------------------------------------------------
+// Wiki migration
+// ---------------------------------------------------------------------------
+
+export type SkinSiteWikiMigrationState =
+	| 'IMPORTING'
+	| 'REVIEW'
+	| 'PUBLISHING'
+	| 'PUBLISHED'
+	| 'FAILED'
+	| 'ROLLED_BACK'
+
+export type SkinSiteWikiMigrationDecision = 'PENDING' | 'IMPORT' | 'EXCLUDE'
+
+export interface SkinSiteWikiMigrationJobInfo {
+	id: number
+	source: string
+	state: SkinSiteWikiMigrationState
+	total: number
+	reviewed: number
+	imported: number
+	excluded: number
+	error?: string | null
+	missingAttachmentCount?: number
+}
+
+export interface SkinSiteWikiMigrationCandidate {
+	id: number
+	title: string
+	lastUpdatedAt: number
+	maintainerCount: number
+	suspiciousReasons: string[]
+	decision: SkinSiteWikiMigrationDecision
+	conflict: boolean
+}
+
+export interface SkinSiteWikiMigrationPage {
+	items: SkinSiteWikiMigrationCandidate[]
+	nextCursor?: number | null
+}
+
+export interface SkinSiteWikiMigrationPublishResult {
+	imported: number
+	overwritten: number
+}
+
+export interface SkinSiteWikiAutomaticMigrationInput {
+	apiUrl: string
+	username?: string | null
+	password?: string | null
+	allowPrivateAddress: boolean
+	rules: {
+		staleDays: number
+		maintainerWindowDays: number
+		maximumMaintainers: number
+		staleMarkers: string[]
+	}
+}
+
+export function skinSiteWikiMigrationJobs(): Promise<
+	SkinSiteResponse<SkinSiteWikiMigrationJobInfo[]>
+> {
+	return skinSiteRequest<SkinSiteWikiMigrationJobInfo[]>('wiki/admin/migration')
+}
+
+export function skinSiteWikiMigrationStartAutomatic(
+	data: SkinSiteWikiAutomaticMigrationInput,
+): Promise<SkinSiteResponse<SkinSiteWikiMigrationJobInfo>> {
+	return skinSiteRequest<SkinSiteWikiMigrationJobInfo>('wiki/admin/migration/automatic', {
+		method: 'POST',
+		body: data,
+	})
+}
+
+export function skinSiteWikiMigrationStartXml(
+	file: File,
+): Promise<SkinSiteResponse<SkinSiteWikiMigrationJobInfo>> {
+	const form = new FormData()
+	form.append('xml', file, file.name)
+	return skinSiteRequest<SkinSiteWikiMigrationJobInfo>('wiki/admin/migration/xml', {
+		method: 'POST',
+		form,
+	})
+}
+
+export function skinSiteWikiMigrationCandidates(
+	jobId: number,
+	after?: number,
+): Promise<SkinSiteResponse<SkinSiteWikiMigrationPage>> {
+	const suffix = after ? '?after=' + after : ''
+	return skinSiteRequest<SkinSiteWikiMigrationPage>(
+		'wiki/admin/migration/' + jobId + '/candidates' + suffix,
+	)
+}
+
+export function skinSiteWikiMigrationDecide(
+	candidateId: number,
+	data: { decision: SkinSiteWikiMigrationDecision; targetTitle?: string | null; overwrite?: boolean },
+): Promise<SkinSiteResponse<void>> {
+	return skinSiteRequest<void>('wiki/admin/migration/candidates/' + candidateId, {
+		method: 'POST',
+		body: data,
+	})
+}
+
+export function skinSiteWikiMigrationPublish(
+	jobId: number,
+): Promise<SkinSiteResponse<SkinSiteWikiMigrationPublishResult>> {
+	return skinSiteRequest<SkinSiteWikiMigrationPublishResult>(
+		'wiki/admin/migration/' + jobId + '/publish',
+		{ method: 'POST' },
+	)
+}
+
+export function skinSiteWikiMigrationRollback(
+	jobId: number,
+): Promise<SkinSiteResponse<void>> {
+	return skinSiteRequest<void>('wiki/admin/migration/' + jobId + '/rollback', {
+		method: 'POST',
+	})
+}
+
+export function skinSiteWikiMigrationDelete(jobId: number): Promise<SkinSiteResponse<void>> {
+	return skinSiteRequest<void>('wiki/admin/migration/' + jobId, { method: 'DELETE' })
+}
