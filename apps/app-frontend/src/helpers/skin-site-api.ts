@@ -1532,3 +1532,167 @@ export function skinSiteDeleteDonation(
 		method: 'DELETE',
 	})
 }
+
+export type SkinSiteModLoaderType = 'FABRIC' | 'FORGE'
+
+export interface SkinSiteModMetadata {
+	modId?: string
+	name?: string
+	version?: string
+	iconBytes?: string
+	loaderType: SkinSiteModLoaderType[]
+}
+
+export interface SkinSiteModInfo {
+	domainRules: string[]
+	hash: string
+	name: string
+	size: number
+	metadata: SkinSiteModMetadata
+}
+
+export interface SkinSiteModRuleTag {
+	id: number
+	name: string
+	rules: string[]
+}
+
+export function skinSiteModCount(params?: {
+	serverAddr?: string
+	ruleTagId?: number | null
+}): Promise<SkinSiteResponse<number>> {
+	const query = new URLSearchParams()
+	const addr = params?.serverAddr?.trim()
+	if (addr) query.set('server_addr', addr)
+	if (params?.ruleTagId != null) query.set('rule_tag_id', String(params.ruleTagId))
+	const suffix = query.toString() ? '?' + query.toString() : ''
+	return skinSiteRequest<number>('query/mod/number' + suffix, { type: 'mod' })
+}
+
+export function skinSiteModList(params: {
+	limit: number
+	offset: number
+	serverAddr?: string
+	ruleTagId?: number | null
+}): Promise<SkinSiteResponse<SkinSiteModInfo[]>> {
+	return skinSiteRequest<SkinSiteModInfo[]>('query/mod/list', {
+		method: 'POST',
+		type: 'mod',
+		body: {
+			offset: params.offset || 0,
+			limit: params.limit || 0,
+			serverAddr: params.serverAddr?.trim() || undefined,
+			ruleTagId: params.ruleTagId ?? undefined,
+		},
+	})
+}
+
+export function skinSiteModSearch(
+	name: string,
+	ruleTagId?: number | null,
+): Promise<SkinSiteResponse<SkinSiteModInfo[]>> {
+	const query = new URLSearchParams()
+	if (ruleTagId != null) query.set('rule_tag_id', String(ruleTagId))
+	const suffix = query.toString() ? '?' + query.toString() : ''
+	return skinSiteRequest<SkinSiteModInfo[]>(
+		'query/mod/search/' + encodeURIComponent(name) + suffix,
+		{ type: 'mod' },
+	)
+}
+
+export function skinSiteUpdateModInfo(info: SkinSiteModInfo): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('update/info', { method: 'POST', type: 'mod', body: info })
+}
+
+export function skinSiteDeleteModFile(hash: string): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>(hash, { method: 'DELETE', type: 'mod' })
+}
+
+export function skinSiteDeleteMultiModFile(hashes: string[]): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('delete/multimod', {
+		method: 'POST',
+		type: 'mod',
+		body: { modHashes: hashes },
+	})
+}
+
+export function skinSiteModRuleTags(): Promise<SkinSiteResponse<SkinSiteModRuleTag[]>> {
+	return skinSiteRequest<SkinSiteModRuleTag[]>('rule-tags', { type: 'mod' })
+}
+
+export function skinSiteCreateModRuleTag(
+	name: string,
+	rules: string[],
+): Promise<SkinSiteResponse<SkinSiteModRuleTag>> {
+	return skinSiteRequest<SkinSiteModRuleTag>('rule-tags', {
+		method: 'POST',
+		type: 'mod',
+		body: { name, rules },
+	})
+}
+
+export function skinSiteUpdateModRuleTag(
+	id: number,
+	name: string,
+	rules: string[],
+): Promise<SkinSiteResponse<SkinSiteModRuleTag>> {
+	return skinSiteRequest<SkinSiteModRuleTag>('rule-tags/' + id, {
+		method: 'POST',
+		type: 'mod',
+		body: { name, rules },
+	})
+}
+
+export function skinSiteDeleteModRuleTag(id: number): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('rule-tags/' + id, { method: 'DELETE', type: 'mod' })
+}
+
+export interface SkinSiteModRuntimeRelease {
+	id: number
+	version: string
+	fileName: string
+	sha256: string
+	fileSize: number
+	uploadedBy: string
+	uploadedAt: number
+	publishedAt: number | null
+	active: boolean
+	available: boolean
+	downloadUrl: string
+}
+
+export interface SkinSiteModRuntimeAdminState {
+	manifestUrl: string
+	releases: SkinSiteModRuntimeRelease[]
+}
+
+export function skinSiteModRuntimeReleases(): Promise<
+	SkinSiteResponse<SkinSiteModRuntimeAdminState>
+> {
+	return skinSiteRequest<SkinSiteModRuntimeAdminState>('runtime/admin', { type: 'mod' })
+}
+
+export function skinSiteUploadModRuntime(
+	version: string,
+	file: File,
+): Promise<SkinSiteResponse<SkinSiteModRuntimeRelease>> {
+	const form = new FormData()
+	form.append('runtime', file, file.name)
+	return skinSiteRequest<SkinSiteModRuntimeRelease>(
+		'runtime/admin/upload?version=' + encodeURIComponent(version),
+		{ method: 'POST', type: 'mod', form },
+	)
+}
+
+export function skinSiteActivateModRuntime(
+	id: number,
+): Promise<SkinSiteResponse<SkinSiteModRuntimeRelease>> {
+	return skinSiteRequest<SkinSiteModRuntimeRelease>('runtime/admin/' + id + '/activate', {
+		method: 'POST',
+		type: 'mod',
+	})
+}
+
+export function skinSiteDeleteModRuntime(id: number): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('runtime/admin/' + id, { method: 'DELETE', type: 'mod' })
+}

@@ -9,6 +9,7 @@ import AdminBroadcastPage from './admin/AdminBroadcastPage.vue'
 import AdminDonationsPage from './admin/AdminDonationsPage.vue'
 import AdminDownloadsPage from './admin/AdminDownloadsPage.vue'
 import AdminLauncherPage from './admin/AdminLauncherPage.vue'
+import AdminModsPage from './admin/AdminModsPage.vue'
 import AdminPlayersPage from './admin/AdminPlayersPage.vue'
 import AdminReviewPage from './admin/AdminReviewPage.vue'
 import AdminServersPage from './admin/AdminServersPage.vue'
@@ -179,6 +180,7 @@ const current = ref<AdminKey>('summary')
 				<AdminPlayersPage v-else-if="current === 'players'" />
 				<AdminReviewPage v-else-if="current === 'review'" />
 				<AdminLauncherPage v-else-if="current === 'launcher'" />
+				<AdminModsPage v-else-if="current === 'mods'" />
 				<AdminDownloadsPage v-else-if="current === 'downloads'" />
 				<AdminDonationsPage v-else-if="current === 'donations' && hasWebAdmin" />
 				<p v-else class="m-0 text-sm text-secondary">{{ current }}</p>
