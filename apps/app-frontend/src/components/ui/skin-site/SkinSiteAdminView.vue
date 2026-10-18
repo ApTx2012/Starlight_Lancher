@@ -6,6 +6,7 @@ import { skinSiteUser } from '@/composables/skin-site-session'
 
 import AdminAccessAuditPage from './admin/AdminAccessAuditPage.vue'
 import AdminBroadcastPage from './admin/AdminBroadcastPage.vue'
+import AdminChatPage from './admin/AdminChatPage.vue'
 import AdminDonationsPage from './admin/AdminDonationsPage.vue'
 import AdminDownloadsPage from './admin/AdminDownloadsPage.vue'
 import AdminLauncherPage from './admin/AdminLauncherPage.vue'
@@ -177,6 +178,7 @@ const current = ref<AdminKey>('summary')
 				<AdminServersPage v-else-if="current === 'servers' && hasWebAdmin" />
 				<AdminAccessAuditPage v-else-if="current === 'access-audit'" />
 				<AdminBroadcastPage v-else-if="current === 'broadcast'" />
+				<AdminChatPage v-else-if="current === 'chat'" />
 				<AdminUsersPage v-else-if="current === 'users'" />
 				<AdminPlayersPage v-else-if="current === 'players'" />
 				<AdminReviewPage v-else-if="current === 'review'" />

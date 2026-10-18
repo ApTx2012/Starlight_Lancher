@@ -2071,3 +2071,125 @@ export function skinSiteUpdateMultiModInfo(
 		body: mods,
 	})
 }
+
+// ---------------------------------------------------------------------------
+// Chat
+// ---------------------------------------------------------------------------
+
+export type SkinSiteChatRoomVisibility = 'PUBLIC' | 'PRIVATE'
+export type SkinSiteChatRoomKind = 'STANDARD' | 'SETTLEMENT'
+export type SkinSiteChatPrerequisiteMode = 'ANY' | 'ALL'
+
+export interface SkinSiteChatRoomInfo {
+	id: number
+	name: string
+	description: string
+	visibility: SkinSiteChatRoomVisibility
+	joined: boolean
+	invited: boolean
+	manager: boolean
+	createdAt: number
+	kind: SkinSiteChatRoomKind
+	avatarAttachmentId?: number | null
+	voiceEnabled: boolean
+	voiceAvailable: boolean
+	voiceParticipantCount: number
+	voicePublisherCount: number
+	voicePublisherLimit: number
+	voiceParticipantLimit: number
+	voiceListenerLimit: number
+	prerequisiteMode: SkinSiteChatPrerequisiteMode
+	prerequisitePermissions: string[]
+	prerequisiteEligible: boolean
+}
+
+export interface SkinSiteChatUploadInfo {
+	token: string
+	attachment: {
+		id: number
+		kind: 'IMAGE' | 'FILE'
+		name: string
+		size: number
+	}
+}
+
+export interface SkinSiteChatRoomCreateInput {
+	name: string
+	description: string
+	visibility: SkinSiteChatRoomVisibility
+	kind?: SkinSiteChatRoomKind
+	prerequisiteMode: SkinSiteChatPrerequisiteMode
+	prerequisitePermissions: string[]
+}
+
+export interface SkinSiteChatRoomUpdateInput {
+	name: string
+	description: string
+	visibility: SkinSiteChatRoomVisibility
+	prerequisiteMode: SkinSiteChatPrerequisiteMode
+	prerequisitePermissions: string[]
+}
+
+export function skinSiteChatRoomList(): Promise<SkinSiteResponse<SkinSiteChatRoomInfo[]>> {
+	return skinSiteRequest<SkinSiteChatRoomInfo[]>('chat/admin/rooms')
+}
+
+export function skinSiteChatRoomCreate(
+	data: SkinSiteChatRoomCreateInput,
+): Promise<SkinSiteResponse<SkinSiteChatRoomInfo>> {
+	return skinSiteRequest<SkinSiteChatRoomInfo>('chat/admin/rooms', {
+		method: 'POST',
+		body: data,
+	})
+}
+
+export function skinSiteChatRoomUpdate(
+	id: number,
+	data: SkinSiteChatRoomUpdateInput,
+): Promise<SkinSiteResponse<SkinSiteChatRoomInfo>> {
+	return skinSiteRequest<SkinSiteChatRoomInfo>('chat/rooms/' + id, {
+		method: 'PUT',
+		body: data,
+	})
+}
+
+export function skinSiteChatRoomDelete(id: number): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('chat/admin/rooms/' + id, { method: 'DELETE' })
+}
+
+export function skinSiteChatRoomAvatarUpdate(
+	roomId: number,
+	data: { imageToken?: string; removeImage?: boolean },
+): Promise<SkinSiteResponse<SkinSiteChatRoomInfo>> {
+	return skinSiteRequest<SkinSiteChatRoomInfo>('chat/rooms/' + roomId + '/avatar', {
+		method: 'PUT',
+		body: data,
+	})
+}
+
+export function skinSiteChatAttachmentUpload(
+	file: File,
+): Promise<SkinSiteResponse<SkinSiteChatUploadInfo>> {
+	const form = new FormData()
+	form.append('file', file, file.name)
+	return skinSiteRequest<SkinSiteChatUploadInfo>('chat/attachments', {
+		method: 'POST',
+		form,
+	})
+}
+
+export async function skinSiteChatRoomAvatarFetch(roomId: number): Promise<Blob | null> {
+	const url = `${SKIN_SITE_ORIGIN}${REQUEST_TYPE_PATH.starlight}/chat/rooms/${roomId}/avatar`
+	const headers: Record<string, string> = { Accept: 'image/*' }
+	const token = getSkinSiteToken()
+	if (token) headers['Authorization'] = `Bearer ${token}`
+	try {
+		const response = await tauriFetch(url, { method: 'GET', headers })
+		if (!response.ok) return null
+		const type = response.headers.get('content-type') ?? ''
+		if (type.includes('application/json') || type.includes('text/')) return null
+		return await response.blob()
+	} catch {
+		return null
+	}
+}
