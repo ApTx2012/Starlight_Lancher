@@ -1699,3 +1699,93 @@ export function skinSiteActivateModRuntime(
 export function skinSiteDeleteModRuntime(id: number): Promise<SkinSiteResponse<string>> {
 	return skinSiteRequest<string>('runtime/admin/' + id, { method: 'DELETE', type: 'mod' })
 }
+
+export type SkinSiteWikiReadPolicy = 'PUBLIC' | 'MEMBER'
+export type SkinSiteWikiEditPolicy = 'MEMBER' | 'WEB_ADMIN'
+
+export interface SkinSiteWikiPageDetail {
+	title: string
+	revisionId: number
+	source: string
+	nodes: unknown[]
+	categories: string[]
+	updatedAt: number
+	authorName: string
+	summary: string
+	readPolicy: SkinSiteWikiReadPolicy
+	editPolicy: SkinSiteWikiEditPolicy
+	redirectTarget?: string | null
+	canEdit: boolean
+	watched: boolean
+}
+
+export interface SkinSiteWikiSettings {
+	domains: string[]
+	homePage: string
+	defaultSkin: string
+	maxPageUtf8Bytes: number
+	maxAttachmentBytes: number
+}
+
+export interface SkinSiteWikiAuditInfo {
+	id: number
+	actorName: string
+	action: string
+	target?: string | null
+	detail?: string | null
+	createdAt: number
+}
+
+export interface SkinSiteWikiAuditPage {
+	items: SkinSiteWikiAuditInfo[]
+	nextCursor?: number | null
+}
+
+export function skinSiteWikiPage(path: string): Promise<SkinSiteResponse<SkinSiteWikiPageDetail>> {
+	return skinSiteRequest<SkinSiteWikiPageDetail>('wiki/page?path=' + encodeURIComponent(path))
+}
+
+export function skinSiteWikiProtectPage(
+	path: string,
+	readPolicy: SkinSiteWikiReadPolicy,
+	editPolicy: SkinSiteWikiEditPolicy,
+): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('wiki/admin/protect', {
+		method: 'POST',
+		body: { path, readPolicy, editPolicy },
+	})
+}
+
+export function skinSiteWikiSetHomePage(path: string): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('wiki/admin/homepage', { method: 'POST', body: { path } })
+}
+
+export function skinSiteWikiSetPageDeleted(
+	path: string,
+	deleted: boolean,
+): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('wiki/admin/delete', {
+		method: 'POST',
+		body: { path, deleted },
+	})
+}
+
+export function skinSiteWikiAudit(
+	before?: number,
+): Promise<SkinSiteResponse<SkinSiteWikiAuditPage>> {
+	const suffix = before ? '?before=' + before : ''
+	return skinSiteRequest<SkinSiteWikiAuditPage>('wiki/admin/audit' + suffix)
+}
+
+export function skinSiteWikiSettings(): Promise<SkinSiteResponse<SkinSiteWikiSettings>> {
+	return skinSiteRequest<SkinSiteWikiSettings>('wiki/settings')
+}
+
+export function skinSiteWikiUpdateSettings(
+	settings: Partial<SkinSiteWikiSettings>,
+): Promise<SkinSiteResponse<SkinSiteWikiSettings>> {
+	return skinSiteRequest<SkinSiteWikiSettings>('wiki/admin/settings', {
+		method: 'POST',
+		body: settings,
+	})
+}

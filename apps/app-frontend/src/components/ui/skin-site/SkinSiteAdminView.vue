@@ -15,6 +15,7 @@ import AdminReviewPage from './admin/AdminReviewPage.vue'
 import AdminServersPage from './admin/AdminServersPage.vue'
 import AdminSummaryPage from './admin/AdminSummaryPage.vue'
 import AdminUsersPage from './admin/AdminUsersPage.vue'
+import AdminWikiPage from './admin/AdminWikiPage.vue'
 
 const emit = defineEmits<{ (e: 'back'): void }>()
 
@@ -181,6 +182,7 @@ const current = ref<AdminKey>('summary')
 				<AdminReviewPage v-else-if="current === 'review'" />
 				<AdminLauncherPage v-else-if="current === 'launcher'" />
 				<AdminModsPage v-else-if="current === 'mods'" />
+				<AdminWikiPage v-else-if="current === 'wiki'" />
 				<AdminDownloadsPage v-else-if="current === 'downloads'" />
 				<AdminDonationsPage v-else-if="current === 'donations' && hasWebAdmin" />
 				<p v-else class="m-0 text-sm text-secondary">{{ current }}</p>
