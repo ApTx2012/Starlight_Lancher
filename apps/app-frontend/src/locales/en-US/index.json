@@ -12424,5 +12424,15 @@
   "app.skin-site.admin.wiki.published": {"message": "Published {imported} pages, overwrote {overwritten}."},
   "app.skin-site.admin.wiki.rolled-back": {"message": "Migration batch rolled back."},
   "app.skin-site.admin.wiki.job-deleted": {"message": "Migration record deleted."},
-  "app.skin-site.admin.wiki.select-xml": {"message": "Choose a MediaWiki XML file first."}
+  "app.skin-site.admin.wiki.select-xml": {"message": "Choose a MediaWiki XML file first."},
+  "app.skin-site.wiki.title": {"message": "StarLight Wiki"},
+  "app.skin-site.wiki.search-placeholder": {"message": "Enter a page title"},
+  "app.skin-site.wiki.open": {"message": "Open"},
+  "app.skin-site.wiki.loading": {"message": "Loading…"},
+  "app.skin-site.wiki.not-found": {"message": "Page not found."},
+  "app.skin-site.wiki.empty": {"message": "Enter a page title above to start reading."},
+  "app.skin-site.wiki.updated-at": {"message": "Last edited {date} by {author}"},
+  "app.skin-site.wiki.revision": {"message": "Revision #{id}"},
+  "app.skin-site.wiki.categories": {"message": "Categories"},
+  "app.skin-site.wiki.back": {"message": "Back"}
 }

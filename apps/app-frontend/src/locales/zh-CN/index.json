@@ -12255,5 +12255,15 @@
   "app.skin-site.admin.wiki.published": {"message": "已发布 {imported} 个页面，覆盖 {overwritten} 个。"},
   "app.skin-site.admin.wiki.rolled-back": {"message": "迁移批次已安全回滚。"},
   "app.skin-site.admin.wiki.job-deleted": {"message": "迁移记录已删除。"},
-  "app.skin-site.admin.wiki.select-xml": {"message": "请先选择 MediaWiki XML 文件。"}
+  "app.skin-site.admin.wiki.select-xml": {"message": "请先选择 MediaWiki XML 文件。"},
+  "app.skin-site.wiki.title": {"message": "StarLight 维基"},
+  "app.skin-site.wiki.search-placeholder": {"message": "输入页面标题"},
+  "app.skin-site.wiki.open": {"message": "打开"},
+  "app.skin-site.wiki.loading": {"message": "加载中…"},
+  "app.skin-site.wiki.not-found": {"message": "页面不存在。"},
+  "app.skin-site.wiki.empty": {"message": "在上方输入页面标题开始阅读。"},
+  "app.skin-site.wiki.updated-at": {"message": "最后编辑于 {date}，编辑者 {author}"},
+  "app.skin-site.wiki.revision": {"message": "修订 #{id}"},
+  "app.skin-site.wiki.categories": {"message": "分类"},
+  "app.skin-site.wiki.back": {"message": "返回"}
 }

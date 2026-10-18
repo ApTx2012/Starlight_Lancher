@@ -1740,11 +1740,45 @@ export function skinSiteDeleteModRuntime(id: number): Promise<SkinSiteResponse<s
 export type SkinSiteWikiReadPolicy = 'PUBLIC' | 'MEMBER'
 export type SkinSiteWikiEditPolicy = 'MEMBER' | 'WEB_ADMIN'
 
+export interface SkinSiteWikiNode {
+	type: string
+	color?: string | null
+	align?: 'left' | 'center' | 'right' | 'justify' | null
+	start?: number | null
+	colspan?: number | null
+	rowspan?: number | null
+	variant?: string | null
+	iconFamily?: string | null
+	iconName?: string | null
+	iconVersion?: number | null
+	linkTitle?: string | null
+	linkLabel?: string | null
+	tooltip?: string | null
+	exists?: boolean | null
+	text?: string | null
+	level?: number | null
+	href?: string | null
+	title?: string | null
+	children: SkinSiteWikiNode[]
+	rows: SkinSiteWikiNode[][][]
+}
+
+export interface SkinSiteWikiAttachmentInfo {
+	id: number
+	versionId: number
+	name: string
+	mime: string
+	size: number
+	image: boolean
+	uploaderName: string
+	createdAt: number
+}
+
 export interface SkinSiteWikiPageDetail {
 	title: string
 	revisionId: number
 	source: string
-	nodes: unknown[]
+	nodes: SkinSiteWikiNode[]
 	categories: string[]
 	updatedAt: number
 	authorName: string
@@ -2492,4 +2526,16 @@ export function skinSiteWikiMigrationRollback(
 
 export function skinSiteWikiMigrationDelete(jobId: number): Promise<SkinSiteResponse<void>> {
 	return skinSiteRequest<void>('wiki/admin/migration/' + jobId, { method: 'DELETE' })
+}
+
+export function skinSiteWikiAttachment(
+	name: string,
+): Promise<SkinSiteResponse<SkinSiteWikiAttachmentInfo>> {
+	return skinSiteRequest<SkinSiteWikiAttachmentInfo>(
+		'wiki/attachment?name=' + encodeURIComponent(name),
+	)
+}
+
+export function skinSiteWikiAttachmentUrl(id: number): string {
+	return `${SKIN_SITE_ORIGIN}${REQUEST_TYPE_PATH.starlight}/wiki/attachment/${id}/content`
 }

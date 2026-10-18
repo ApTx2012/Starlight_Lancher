@@ -18,6 +18,7 @@ import SkinSiteNavCards from './SkinSiteNavCards.vue'
 import SkinSiteProfileModal from './SkinSiteProfileModal.vue'
 import SkinSiteProfileView from './SkinSiteProfileView.vue'
 import SkinSiteReviewView from './SkinSiteReviewView.vue'
+import WikiView from './WikiView.vue'
 
 const { formatMessage } = useVIntl()
 const { addNotification } = injectNotificationManager()
@@ -45,6 +46,7 @@ const view = ref<
 	| 'bug-detail'
 	| 'bug-notifications'
 	| 'admin'
+	| 'wiki'
 >('home')
 const selectedBugId = ref<number | null>(null)
 
@@ -98,6 +100,8 @@ async function copyAddress() {
 				@open="openBug"
 			/>
 			<SkinSiteAdminView v-else-if="view === 'admin'" @back="view = 'home'" />
+			<WikiView v-else-if="view === 'wiki'" />
+
 			<SkinSiteBugDetailView
 				v-else-if="view === 'bug-detail' && selectedBugId !== null"
 				:issue-id="selectedBugId"
