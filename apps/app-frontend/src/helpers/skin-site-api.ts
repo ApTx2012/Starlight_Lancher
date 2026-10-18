@@ -2252,3 +2252,118 @@ export function skinSiteChatAuditList(
 ): Promise<SkinSiteResponse<SkinSiteChatAuditInfo[]>> {
 	return skinSiteRequest<SkinSiteChatAuditInfo[]>('chat/rooms/' + roomId + '/audit')
 }
+
+export type SkinSiteChatVoiceRuntimeState =
+	| 'DISABLED'
+	| 'NOT_INSTALLED'
+	| 'DOWNLOADING'
+	| 'VERIFYING'
+	| 'EXTRACTING'
+	| 'STARTING'
+	| 'READY'
+	| 'FAILED'
+	| 'UNSUPPORTED_PLATFORM'
+
+export interface SkinSiteChatVoiceRuntimeInfo {
+	state: SkinSiteChatVoiceRuntimeState
+	version: string
+	progress?: number | null
+	message?: string | null
+	retryCount: number
+	publicUrl?: string | null
+}
+
+export interface SkinSiteChatVoiceGlobalConfig {
+	enabled: boolean
+	runtimePath: string
+	mirrorBaseUrl: string
+	publicUrl: string
+	bindAddress: string
+	signalPort: number
+	rtcTcpPort: number
+	rtcUdpPort: number
+	startupTimeoutSeconds: number
+	useExternalIp: boolean
+	nodeIp: string
+}
+
+export interface SkinSiteChatVoiceGlobalConfigUpdateResult {
+	config: SkinSiteChatVoiceGlobalConfig
+	runtime: SkinSiteChatVoiceRuntimeInfo
+	restarted: boolean
+}
+
+export interface SkinSiteChatVoiceLogEntry {
+	id: number
+	timestamp: number
+	message: string
+}
+
+export interface SkinSiteChatVoiceLogPage {
+	entries: SkinSiteChatVoiceLogEntry[]
+	latestId: number
+}
+
+export interface SkinSiteChatVoiceRoomInfo {
+	roomId: number
+	enabled: boolean
+	available: boolean
+	publisherLimit: number
+	participantLimit: number
+	listenerLimit: number
+	participantCount: number
+	publisherCount: number
+	listenerCount: number
+	joined: boolean
+	observer: boolean
+	muted: boolean
+	bannedUntil?: number | null
+}
+
+export function skinSiteChatVoiceRuntime(): Promise<
+	SkinSiteResponse<SkinSiteChatVoiceRuntimeInfo>
+> {
+	return skinSiteRequest<SkinSiteChatVoiceRuntimeInfo>('chat/voice/admin/runtime')
+}
+
+export function skinSiteChatVoiceRuntimeRetry(): Promise<
+	SkinSiteResponse<SkinSiteChatVoiceRuntimeInfo>
+> {
+	return skinSiteRequest<SkinSiteChatVoiceRuntimeInfo>('chat/voice/admin/runtime/retry', {
+		method: 'POST',
+	})
+}
+
+export function skinSiteChatVoiceConfig(): Promise<
+	SkinSiteResponse<SkinSiteChatVoiceGlobalConfig>
+> {
+	return skinSiteRequest<SkinSiteChatVoiceGlobalConfig>('chat/voice/admin/config')
+}
+
+export function skinSiteChatVoiceConfigUpdate(
+	data: SkinSiteChatVoiceGlobalConfig,
+): Promise<SkinSiteResponse<SkinSiteChatVoiceGlobalConfigUpdateResult>> {
+	return skinSiteRequest<SkinSiteChatVoiceGlobalConfigUpdateResult>(
+		'chat/voice/admin/config',
+		{ method: 'PUT', body: data },
+	)
+}
+
+export function skinSiteChatVoiceLogs(
+	after?: number,
+	limit = 300,
+): Promise<SkinSiteResponse<SkinSiteChatVoiceLogPage>> {
+	const query = new URLSearchParams({ limit: String(limit) })
+	if (after !== undefined) query.set('after', String(after))
+	return skinSiteRequest<SkinSiteChatVoiceLogPage>('chat/voice/admin/logs?' + query.toString())
+}
+
+export function skinSiteChatVoiceCapacityUpdate(
+	roomId: number,
+	data: { participantLimit: number; listenerLimit: number },
+): Promise<SkinSiteResponse<SkinSiteChatVoiceRoomInfo>> {
+	return skinSiteRequest<SkinSiteChatVoiceRoomInfo>(
+		'chat/admin/rooms/' + roomId + '/voice/capacity',
+		{ method: 'PUT', body: data },
+	)
+}

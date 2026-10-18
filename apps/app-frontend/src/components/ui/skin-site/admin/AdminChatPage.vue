@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { SpinnerIcon } from '@modrinth/assets'
 import { defineMessages, injectNotificationManager, useVIntl } from '@modrinth/ui'
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 
 import {
 	type SkinSiteChatPrerequisiteMode,
@@ -17,6 +17,15 @@ import {
 	skinSiteChatSettlementOwnerAssign,
 	type SkinSiteChatAuditInfo,
 	type SkinSiteChatUserInfo,
+	skinSiteChatVoiceCapacityUpdate,
+	skinSiteChatVoiceConfig,
+	skinSiteChatVoiceConfigUpdate,
+	skinSiteChatVoiceLogs,
+	skinSiteChatVoiceRuntime,
+	skinSiteChatVoiceRuntimeRetry,
+	type SkinSiteChatVoiceGlobalConfig,
+	type SkinSiteChatVoiceLogEntry,
+	type SkinSiteChatVoiceRuntimeInfo,
 } from '@/helpers/skin-site-api'
 
 import ChatUserPicker from '../ChatUserPicker.vue'
@@ -158,6 +167,110 @@ const messages = defineMessages({
 		defaultMessage: 'Target: {name}',
 	},
 	close: { id: 'app.skin-site.chat.admin.close', defaultMessage: 'Close' },
+	voiceRuntimeTitle: {
+		id: 'app.skin-site.chat.admin.voice-runtime-title',
+		defaultMessage: 'Realtime voice runtime',
+	},
+	voiceLogs: {
+		id: 'app.skin-site.chat.admin.voice-logs',
+		defaultMessage: 'View logs',
+	},
+	voiceConfig: {
+		id: 'app.skin-site.chat.admin.voice-config',
+		defaultMessage: 'Configure runtime',
+	},
+	voiceRetry: {
+		id: 'app.skin-site.chat.admin.voice-retry',
+		defaultMessage: 'Retry deployment',
+	},
+	voiceConfigTitle: {
+		id: 'app.skin-site.chat.admin.voice-config-title',
+		defaultMessage: 'Voice runtime configuration',
+	},
+	voiceLogsTitle: {
+		id: 'app.skin-site.chat.admin.voice-logs-title',
+		defaultMessage: 'LiveKit logs',
+	},
+	voiceCapacityTitle: {
+		id: 'app.skin-site.chat.admin.voice-capacity-title',
+		defaultMessage: 'Voice capacity',
+	},
+	voiceCapacity: {
+		id: 'app.skin-site.chat.admin.voice-capacity',
+		defaultMessage: 'Voice capacity',
+	},
+	participantLimit: {
+		id: 'app.skin-site.chat.admin.participant-limit',
+		defaultMessage: 'Participant limit',
+	},
+	listenerLimit: {
+		id: 'app.skin-site.chat.admin.listener-limit',
+		defaultMessage: 'Listener limit',
+	},
+	voiceCapacityUpdated: {
+		id: 'app.skin-site.chat.admin.voice-capacity-updated',
+		defaultMessage: 'Voice capacity updated.',
+	},
+	voiceEnabled: {
+		id: 'app.skin-site.chat.admin.voice-enabled',
+		defaultMessage: 'Enable realtime voice',
+	},
+	voiceRuntimePath: {
+		id: 'app.skin-site.chat.admin.voice-runtime-path',
+		defaultMessage: 'Runtime directory',
+	},
+	voiceMirror: {
+		id: 'app.skin-site.chat.admin.voice-mirror',
+		defaultMessage: 'Mirror base URL',
+	},
+	voicePublicUrl: {
+		id: 'app.skin-site.chat.admin.voice-public-url',
+		defaultMessage: 'Public URL',
+	},
+	voiceBind: {
+		id: 'app.skin-site.chat.admin.voice-bind',
+		defaultMessage: 'Bind address',
+	},
+	voiceSignalPort: {
+		id: 'app.skin-site.chat.admin.voice-signal-port',
+		defaultMessage: 'Signal port',
+	},
+	voiceRtcTcpPort: {
+		id: 'app.skin-site.chat.admin.voice-rtc-tcp-port',
+		defaultMessage: 'Media TCP port',
+	},
+	voiceRtcUdpPort: {
+		id: 'app.skin-site.chat.admin.voice-rtc-udp-port',
+		defaultMessage: 'Media UDP port',
+	},
+	voiceStartupTimeout: {
+		id: 'app.skin-site.chat.admin.voice-startup-timeout',
+		defaultMessage: 'Startup timeout (s)',
+	},
+	voiceUseExternalIp: {
+		id: 'app.skin-site.chat.admin.voice-use-external-ip',
+		defaultMessage: 'Use external IP',
+	},
+	voiceNodeIp: {
+		id: 'app.skin-site.chat.admin.voice-node-ip',
+		defaultMessage: 'Node IP',
+	},
+	voiceSaved: {
+		id: 'app.skin-site.chat.admin.voice-saved',
+		defaultMessage: 'Voice configuration saved.',
+	},
+	voiceLogsAutoRefresh: {
+		id: 'app.skin-site.chat.admin.voice-logs-auto-refresh',
+		defaultMessage: 'Auto refresh',
+	},
+	voiceLogsRefresh: {
+		id: 'app.skin-site.chat.admin.voice-logs-refresh',
+		defaultMessage: 'Refresh',
+	},
+	voiceLogsEmpty: {
+		id: 'app.skin-site.chat.admin.voice-logs-empty',
+		defaultMessage: 'No logs yet.',
+	},
 })
 
 type FormState = {
@@ -460,7 +573,217 @@ function closeAudit() {
 	auditItems.value = []
 }
 
-onMounted(() => void loadRooms())
+// ---------- voice runtime ----------
+const voiceRuntime = ref<SkinSiteChatVoiceRuntimeInfo | null>(null)
+const runtimeRetrying = ref(false)
+let runtimePollTimer: number | undefined
+
+const VOICE_STATE_LABELS: Record<string, string> = {
+	DISABLED: '全局未启用',
+	NOT_INSTALLED: '等待部署',
+	DOWNLOADING: '正在下载',
+	VERIFYING: '正在校验',
+	EXTRACTING: '正在解压',
+	STARTING: '正在启动',
+	READY: '运行正常',
+	UNSUPPORTED_PLATFORM: '当前平台不受支持',
+}
+
+const voiceRuntimeLabel = computed(() => {
+	const state = voiceRuntime.value?.state
+	if (!state) return '状态未知'
+	if (state === 'FAILED') return voiceRuntime.value?.message || '部署失败'
+	return VOICE_STATE_LABELS[state] ?? '状态未知'
+})
+
+async function loadVoiceRuntime() {
+	try {
+		const res = await skinSiteChatVoiceRuntime()
+		if (res.success) voiceRuntime.value = res.payload
+	} catch (error) {
+		handleError(error)
+	}
+}
+
+async function retryVoiceRuntime() {
+	if (runtimeRetrying.value) return
+	runtimeRetrying.value = true
+	try {
+		const res = await skinSiteChatVoiceRuntimeRetry()
+		if (!res.success) throw new Error(res.errorMessage)
+		voiceRuntime.value = res.payload
+		addNotification({ type: 'success', title: formatMessage(messages.voiceRetry) })
+	} catch (error) {
+		handleError(error)
+	} finally {
+		runtimeRetrying.value = false
+	}
+}
+
+// ---------- voice config ----------
+const voiceConfigOpen = ref(false)
+const voiceConfigLoading = ref(false)
+const voiceConfigSaving = ref(false)
+const voiceConfigOriginal = ref<SkinSiteChatVoiceGlobalConfig | null>(null)
+const voiceConfigForm = reactive<SkinSiteChatVoiceGlobalConfig>({
+	enabled: true,
+	runtimePath: './data/voice-runtime',
+	mirrorBaseUrl: '',
+	publicUrl: '',
+	bindAddress: '127.0.0.1',
+	signalPort: 7880,
+	rtcTcpPort: 7881,
+	rtcUdpPort: 7882,
+	startupTimeoutSeconds: 120,
+	useExternalIp: true,
+	nodeIp: '',
+})
+
+async function openVoiceConfig() {
+	voiceConfigLoading.value = true
+	try {
+		const res = await skinSiteChatVoiceConfig()
+		if (!res.success) throw new Error(res.errorMessage)
+		voiceConfigOriginal.value = { ...res.payload }
+		Object.assign(voiceConfigForm, res.payload)
+		voiceConfigOpen.value = true
+	} catch (error) {
+		handleError(error)
+	} finally {
+		voiceConfigLoading.value = false
+	}
+}
+
+function closeVoiceConfig() {
+	voiceConfigOpen.value = false
+}
+
+async function saveVoiceConfig() {
+	if (voiceConfigSaving.value) return
+	voiceConfigSaving.value = true
+	try {
+		const res = await skinSiteChatVoiceConfigUpdate({ ...voiceConfigForm })
+		if (!res.success) throw new Error(res.errorMessage)
+		voiceConfigOriginal.value = { ...res.payload.config }
+		Object.assign(voiceConfigForm, res.payload.config)
+		voiceRuntime.value = res.payload.runtime
+		addNotification({ type: 'success', title: formatMessage(messages.voiceSaved) })
+		closeVoiceConfig()
+	} catch (error) {
+		handleError(error)
+	} finally {
+		voiceConfigSaving.value = false
+	}
+}
+
+// ---------- voice logs ----------
+const voiceLogsOpen = ref(false)
+const voiceLogs = ref<SkinSiteChatVoiceLogEntry[]>([])
+const voiceLogLoading = ref(false)
+const voiceLogError = ref('')
+const voiceLogAutoRefresh = ref(true)
+const voiceLogLatestId = ref(0)
+let voiceLogPollTimer: number | undefined
+
+async function openVoiceLogs() {
+	voiceLogs.value = []
+	voiceLogLatestId.value = 0
+	voiceLogError.value = ''
+	voiceLogsOpen.value = true
+	await loadVoiceLogs(true)
+	stopVoiceLogPolling()
+	voiceLogPollTimer = window.setInterval(() => {
+		if (voiceLogAutoRefresh.value && voiceLogsOpen.value) void loadVoiceLogs(false)
+	}, 2000)
+}
+
+function closeVoiceLogs() {
+	voiceLogsOpen.value = false
+	stopVoiceLogPolling()
+}
+
+function stopVoiceLogPolling() {
+	if (voiceLogPollTimer) {
+		window.clearInterval(voiceLogPollTimer)
+		voiceLogPollTimer = undefined
+	}
+}
+
+async function loadVoiceLogs(manual: boolean) {
+	if (voiceLogLoading.value) return
+	voiceLogLoading.value = true
+	try {
+		const res = await skinSiteChatVoiceLogs(
+			voiceLogs.value.length ? voiceLogLatestId.value : undefined,
+			voiceLogs.value.length ? 500 : 300,
+		)
+		if (!res.success) throw new Error(res.errorMessage)
+		voiceLogError.value = ''
+		if (res.payload.entries.length) {
+			voiceLogs.value.push(...res.payload.entries)
+			if (voiceLogs.value.length > 2000) {
+				voiceLogs.value.splice(0, voiceLogs.value.length - 2000)
+			}
+		}
+		voiceLogLatestId.value = res.payload.latestId
+	} catch (error) {
+		voiceLogError.value = error instanceof Error ? error.message : String(error)
+	} finally {
+		voiceLogLoading.value = false
+		void manual
+	}
+}
+
+// ---------- voice capacity ----------
+const capacityRoom = ref<SkinSiteChatRoomInfo | null>(null)
+const capacitySaving = ref(false)
+const capacityForm = reactive({ participantLimit: 0, listenerLimit: 0 })
+
+function openCapacity(room: SkinSiteChatRoomInfo) {
+	capacityRoom.value = room
+	capacityForm.participantLimit = room.voiceParticipantLimit
+	capacityForm.listenerLimit = room.voiceListenerLimit
+}
+
+function closeCapacity() {
+	capacityRoom.value = null
+}
+
+async function saveCapacity() {
+	if (!capacityRoom.value || capacitySaving.value) return
+	capacitySaving.value = true
+	try {
+		const res = await skinSiteChatVoiceCapacityUpdate(capacityRoom.value.id, {
+			participantLimit: capacityForm.participantLimit,
+			listenerLimit: capacityForm.listenerLimit,
+		})
+		if (!res.success) throw new Error(res.errorMessage)
+		addNotification({ type: 'success', title: formatMessage(messages.voiceCapacityUpdated) })
+		closeCapacity()
+		await loadRooms()
+	} catch (error) {
+		handleError(error)
+	} finally {
+		capacitySaving.value = false
+	}
+}
+
+onMounted(() => {
+	void loadRooms()
+	void loadVoiceRuntime()
+	runtimePollTimer = window.setInterval(() => {
+		const state = voiceRuntime.value?.state
+		if (state && !['READY', 'DISABLED', 'UNSUPPORTED_PLATFORM'].includes(state)) {
+			void loadVoiceRuntime()
+		}
+	}, 5000)
+})
+
+onBeforeUnmount(() => {
+	if (runtimePollTimer) window.clearInterval(runtimePollTimer)
+	stopVoiceLogPolling()
+})
+
 </script>
 
 <template>
@@ -478,6 +801,55 @@ onMounted(() => void loadRooms())
 				@click="openCreate"
 			>
 				{{ formatMessage(messages.createRoom) }}
+			</button>
+		</div>
+
+		<div
+			v-if="voiceRuntime"
+			class="flex flex-wrap items-center gap-3 rounded-xl border border-solid border-surface-5 bg-bg-raised px-4 py-3"
+		>
+			<span
+				class="size-2.5 shrink-0 rounded-full"
+				:class="
+					voiceRuntime.state === 'READY'
+						? 'bg-green'
+						: voiceRuntime.state === 'FAILED'
+							? 'bg-red'
+							: 'bg-yellow'
+				"
+			></span>
+			<div class="min-w-0 flex-1">
+				<p class="m-0 text-sm font-semibold text-contrast">
+					{{ formatMessage(messages.voiceRuntimeTitle) }}
+				</p>
+				<p class="m-0 truncate text-xs text-secondary">
+					{{ voiceRuntimeLabel }} · LiveKit {{ voiceRuntime.version }}
+					<span v-if="voiceRuntime.progress != null"> · {{ voiceRuntime.progress }}%</span>
+				</p>
+			</div>
+			<button
+				type="button"
+				class="rounded-lg bg-button-bg px-3 py-1.5 text-xs font-semibold text-contrast hover:brightness-110"
+				@click="openVoiceLogs"
+			>
+				{{ formatMessage(messages.voiceLogs) }}
+			</button>
+			<button
+				type="button"
+				class="rounded-lg bg-button-bg px-3 py-1.5 text-xs font-semibold text-contrast hover:brightness-110 disabled:opacity-50"
+				:disabled="voiceConfigLoading"
+				@click="openVoiceConfig"
+			>
+				{{ formatMessage(messages.voiceConfig) }}
+			</button>
+			<button
+				v-if="voiceRuntime.state === 'FAILED' || voiceRuntime.state === 'UNSUPPORTED_PLATFORM'"
+				type="button"
+				class="rounded-lg bg-yellow/20 px-3 py-1.5 text-xs font-semibold text-yellow hover:brightness-110 disabled:opacity-50"
+				:disabled="runtimeRetrying || voiceRuntime.state === 'UNSUPPORTED_PLATFORM'"
+				@click="retryVoiceRuntime"
+			>
+				{{ formatMessage(messages.voiceRetry) }}
 			</button>
 		</div>
 
@@ -584,6 +956,14 @@ onMounted(() => void loadRooms())
 						@click="openAudit(room)"
 					>
 						{{ formatMessage(messages.audit) }}
+					</button>
+					<button
+						v-if="room.voiceEnabled"
+						type="button"
+						class="rounded-lg bg-button-bg px-3 py-1 text-xs font-semibold text-contrast hover:brightness-110"
+						@click="openCapacity(room)"
+					>
+						{{ formatMessage(messages.voiceCapacity) }}
 					</button>
 					<button
 						type="button"
