@@ -31,6 +31,7 @@ const allowedUntranslatedMessages = new Set([
 	'LiteLoader',
 	'LogShare.CN',
 	'UUID',
+	'ID',
 	'QQ',
 	'IP',
 	'URL',

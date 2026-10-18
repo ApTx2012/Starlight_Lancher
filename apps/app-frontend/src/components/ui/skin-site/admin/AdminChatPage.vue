@@ -12,7 +12,14 @@ import {
 	skinSiteChatRoomDelete,
 	skinSiteChatRoomList,
 	skinSiteChatRoomUpdate,
+	skinSiteChatAuditList,
+	skinSiteChatManagerSet,
+	skinSiteChatSettlementOwnerAssign,
+	type SkinSiteChatAuditInfo,
+	type SkinSiteChatUserInfo,
 } from '@/helpers/skin-site-api'
+
+import ChatUserPicker from '../ChatUserPicker.vue'
 
 import RoomAvatar from '../RoomAvatar.vue'
 import RoomAvatarEditor from '../RoomAvatarEditor.vue'
@@ -98,6 +105,59 @@ const messages = defineMessages({
 		id: 'app.skin-site.chat.admin.voice-badge',
 		defaultMessage: 'Voice',
 	},
+	managers: { id: 'app.skin-site.chat.admin.managers', defaultMessage: 'Managers' },
+	managerTitle: {
+		id: 'app.skin-site.chat.admin.manager-title',
+		defaultMessage: 'Room manager',
+	},
+	managerHint: {
+		id: 'app.skin-site.chat.admin.manager-hint',
+		defaultMessage: 'Managers can moderate members, messages and files in this room.',
+	},
+	grant: { id: 'app.skin-site.chat.admin.grant', defaultMessage: 'Grant' },
+	revoke: { id: 'app.skin-site.chat.admin.revoke', defaultMessage: 'Revoke' },
+	managerGranted: {
+		id: 'app.skin-site.chat.admin.manager-granted',
+		defaultMessage: 'Manager granted.',
+	},
+	managerRevoked: {
+		id: 'app.skin-site.chat.admin.manager-revoked',
+		defaultMessage: 'Manager revoked.',
+	},
+	ownerTitle: {
+		id: 'app.skin-site.chat.admin.owner-title',
+		defaultMessage: 'Settlement owner',
+	},
+	ownerHint: {
+		id: 'app.skin-site.chat.admin.owner-hint',
+		defaultMessage: 'Assign the first settlement owner for this room.',
+	},
+	ownerAssigned: {
+		id: 'app.skin-site.chat.admin.owner-assigned',
+		defaultMessage: 'Settlement owner assigned.',
+	},
+	ownerCurrent: {
+		id: 'app.skin-site.chat.admin.owner-current',
+		defaultMessage: 'Current owner: {name}',
+	},
+	ownerNone: {
+		id: 'app.skin-site.chat.admin.owner-none',
+		defaultMessage: 'No settlement owner yet.',
+	},
+	audit: { id: 'app.skin-site.chat.admin.audit', defaultMessage: 'Audit' },
+	auditTitle: {
+		id: 'app.skin-site.chat.admin.audit-title',
+		defaultMessage: 'Room audit',
+	},
+	auditEmpty: {
+		id: 'app.skin-site.chat.admin.audit-empty',
+		defaultMessage: 'No audit records yet.',
+	},
+	auditTarget: {
+		id: 'app.skin-site.chat.admin.audit-target',
+		defaultMessage: 'Target: {name}',
+	},
+	close: { id: 'app.skin-site.chat.admin.close', defaultMessage: 'Close' },
 })
 
 type FormState = {
@@ -268,6 +328,138 @@ function formatDateTime(ts?: number | null): string {
 	}
 }
 
+const managerRoom = ref<SkinSiteChatRoomInfo | null>(null)
+const managerUser = ref<SkinSiteChatUserInfo | null>(null)
+const managerGranting = ref(false)
+
+const ownerRoom = ref<SkinSiteChatRoomInfo | null>(null)
+const ownerUser = ref<SkinSiteChatUserInfo | null>(null)
+const ownerSaving = ref(false)
+
+const auditRoom = ref<SkinSiteChatRoomInfo | null>(null)
+const auditItems = ref<SkinSiteChatAuditInfo[]>([])
+const auditLoading = ref(false)
+
+const AUDIT_LABELS: Record<string, string> = {
+	ROOM_CREATED: '创建房间',
+	ROOM_UPDATED: '修改房间资料',
+	ROOM_AVATAR_UPDATED: '更新房间头像',
+	ROOM_AVATAR_CLEARED: '移除房间头像',
+	MEMBER_JOINED: '成员加入房间',
+	MEMBER_LEFT: '成员退出房间',
+	MEMBER_INVITED: '邀请成员',
+	MEMBER_REMOVED: '踢出成员',
+	MEMBER_BANNED: '踢出并拉黑',
+	MEMBER_UNBANNED: '解除成员封禁',
+	MEMBER_MUTED: '禁言成员',
+	MEMBER_UNMUTED: '解除成员禁言',
+	MANAGER_ADDED: '任命房间管理',
+	MANAGER_REMOVED: '撤销房间管理',
+	BOT_ADDED: '添加机器人',
+	BOT_REMOVED: '移除机器人',
+	MESSAGE_DELETED: '撤回消息',
+	MESSAGE_RECALLED: '撤回消息',
+	MESSAGE_PINNED: '设为精华',
+	MESSAGE_UNPINNED: '取消精华',
+	ANNOUNCEMENT_UPDATED: '更新房间公告',
+	ANNOUNCEMENT_CLEARED: '清空房间公告',
+	FILE_DELETED: '删除房间文件',
+	VOICE_ROOM_UPDATED: '修改房间语音设置',
+	VOICE_CAPACITY_UPDATED: '修改房间语音容量',
+	VOICE_MEMBER_KICKED: '断开成员语音',
+	VOICE_MEMBER_BANNED: '临时封禁成员语音',
+	VOICE_MEMBER_UNBANNED: '解除成员语音封禁',
+	VOICE_SPEAKER_REVOKED: '关闭成员麦克风',
+	VOICE_OBSERVER_JOINED: 'Web管理开始旁听语音',
+	VOICE_OBSERVER_LEFT: 'Web管理结束旁听语音',
+	SETTLEMENT_OWNER_ASSIGNED: '任命聚落主',
+	SETTLEMENT_OWNER_TRANSFERRED: '转让聚落',
+	SETTLEMENT_MANAGER_ADDED: '任命聚落管理',
+	SETTLEMENT_MANAGER_REMOVED: '撤销聚落管理',
+}
+
+function auditLabel(action: string): string {
+	return AUDIT_LABELS[action] ?? action
+}
+
+function auditActor(name?: string): string {
+	return name?.trim() || '已删除用户'
+}
+
+function openManager(room: SkinSiteChatRoomInfo) {
+	managerRoom.value = room
+	managerUser.value = null
+}
+
+function closeManager() {
+	managerRoom.value = null
+	managerUser.value = null
+}
+
+async function grantManager(manager: boolean) {
+	if (!managerRoom.value || !managerUser.value || managerGranting.value) return
+	managerGranting.value = true
+	try {
+		const res = await skinSiteChatManagerSet(managerRoom.value.id, managerUser.value.uuid, manager)
+		if (!res.success) throw new Error(res.errorMessage)
+		addNotification({
+			type: 'success',
+			title: formatMessage(manager ? messages.managerGranted : messages.managerRevoked),
+		})
+		closeManager()
+	} catch (error) {
+		handleError(error)
+	} finally {
+		managerGranting.value = false
+	}
+}
+
+function openOwner(room: SkinSiteChatRoomInfo) {
+	ownerRoom.value = room
+	ownerUser.value = null
+}
+
+function closeOwner() {
+	ownerRoom.value = null
+	ownerUser.value = null
+}
+
+async function assignOwner() {
+	if (!ownerRoom.value || !ownerUser.value || ownerSaving.value) return
+	ownerSaving.value = true
+	try {
+		const res = await skinSiteChatSettlementOwnerAssign(ownerRoom.value.id, ownerUser.value.uuid)
+		if (!res.success) throw new Error(res.errorMessage)
+		addNotification({ type: 'success', title: formatMessage(messages.ownerAssigned) })
+		closeOwner()
+		await loadRooms()
+	} catch (error) {
+		handleError(error)
+	} finally {
+		ownerSaving.value = false
+	}
+}
+
+async function openAudit(room: SkinSiteChatRoomInfo) {
+	auditRoom.value = room
+	auditItems.value = []
+	auditLoading.value = true
+	try {
+		const res = await skinSiteChatAuditList(room.id)
+		if (!res.success) throw new Error(res.errorMessage)
+		auditItems.value = res.payload ?? []
+	} catch (error) {
+		handleError(error)
+	} finally {
+		auditLoading.value = false
+	}
+}
+
+function closeAudit() {
+	auditRoom.value = null
+	auditItems.value = []
+}
+
 onMounted(() => void loadRooms())
 </script>
 
@@ -371,6 +563,28 @@ onMounted(() => void loadRooms())
 					>
 						{{ perm }}
 					</span>
+					<button
+						v-if="room.kind === 'SETTLEMENT'"
+						type="button"
+						class="rounded-lg bg-button-bg px-3 py-1 text-xs font-semibold text-contrast hover:brightness-110"
+						@click="openOwner(room)"
+					>
+						{{ formatMessage(messages.ownerTitle) }}
+					</button>
+					<button
+						type="button"
+						class="rounded-lg bg-button-bg px-3 py-1 text-xs font-semibold text-contrast hover:brightness-110"
+						@click="openManager(room)"
+					>
+						{{ formatMessage(messages.managers) }}
+					</button>
+					<button
+						type="button"
+						class="rounded-lg bg-button-bg px-3 py-1 text-xs font-semibold text-contrast hover:brightness-110"
+						@click="openAudit(room)"
+					>
+						{{ formatMessage(messages.audit) }}
+					</button>
 					<button
 						type="button"
 						class="ml-auto rounded-lg bg-button-bg px-3 py-1 text-xs font-semibold text-contrast hover:brightness-110"
@@ -506,6 +720,150 @@ onMounted(() => void loadRooms())
 						@click="submit"
 					>
 						{{ formatMessage(messages.save) }}
+					</button>
+				</div>
+			</div>
+		</div>
+
+		<div
+			v-if="managerRoom"
+			class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+			@click.self="closeManager"
+		>
+			<div
+				class="flex max-h-[88vh] w-full max-w-lg flex-col gap-3 overflow-y-auto rounded-xl bg-bg p-6"
+			>
+				<h3 class="m-0 text-lg font-bold text-contrast">
+					{{ formatMessage(messages.managerTitle) }} · {{ managerRoom.name }}
+				</h3>
+				<p class="m-0 text-xs text-secondary">{{ formatMessage(messages.managerHint) }}</p>
+				<ChatUserPicker
+					v-model="managerUser"
+					:room-id="managerRoom.id"
+					:label="formatMessage(messages.managerTitle)"
+				/>
+				<div class="flex justify-end gap-2 border-t border-solid border-surface-5 pt-3">
+					<button
+						type="button"
+						class="rounded-lg bg-button-bg px-4 py-2 text-sm font-semibold text-secondary hover:brightness-110"
+						@click="closeManager"
+					>
+						{{ formatMessage(messages.cancel) }}
+					</button>
+					<button
+						type="button"
+						class="rounded-lg bg-red/20 px-4 py-2 text-sm font-semibold text-red hover:brightness-110 disabled:opacity-50"
+						:disabled="!managerUser || managerGranting"
+						@click="grantManager(false)"
+					>
+						{{ formatMessage(messages.revoke) }}
+					</button>
+					<button
+						type="button"
+						class="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-contrast hover:brightness-110 disabled:opacity-50"
+						:disabled="!managerUser || managerGranting"
+						@click="grantManager(true)"
+					>
+						{{ formatMessage(messages.grant) }}
+					</button>
+				</div>
+			</div>
+		</div>
+
+		<div
+			v-if="ownerRoom"
+			class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+			@click.self="closeOwner"
+		>
+			<div
+				class="flex max-h-[88vh] w-full max-w-lg flex-col gap-3 overflow-y-auto rounded-xl bg-bg p-6"
+			>
+				<h3 class="m-0 text-lg font-bold text-contrast">
+					{{ formatMessage(messages.ownerTitle) }} · {{ ownerRoom.name }}
+				</h3>
+				<p class="m-0 text-xs text-secondary">{{ formatMessage(messages.ownerHint) }}</p>
+				<p class="m-0 text-xs text-secondary">
+					{{
+						ownerRoom.settlementOwnerName
+							? formatMessage(messages.ownerCurrent, { name: ownerRoom.settlementOwnerName })
+							: formatMessage(messages.ownerNone)
+					}}
+				</p>
+				<ChatUserPicker
+					v-model="ownerUser"
+					:room-id="ownerRoom.id"
+					:label="formatMessage(messages.ownerTitle)"
+				/>
+				<div class="flex justify-end gap-2 border-t border-solid border-surface-5 pt-3">
+					<button
+						type="button"
+						class="rounded-lg bg-button-bg px-4 py-2 text-sm font-semibold text-secondary hover:brightness-110"
+						@click="closeOwner"
+					>
+						{{ formatMessage(messages.cancel) }}
+					</button>
+					<button
+						type="button"
+						class="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-contrast hover:brightness-110 disabled:opacity-50"
+						:disabled="!ownerUser || ownerSaving"
+						@click="assignOwner"
+					>
+						{{ formatMessage(messages.save) }}
+					</button>
+				</div>
+			</div>
+		</div>
+
+		<div
+			v-if="auditRoom"
+			class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+			@click.self="closeAudit"
+		>
+			<div
+				class="flex max-h-[88vh] w-full max-w-2xl flex-col gap-3 overflow-y-auto rounded-xl bg-bg p-6"
+			>
+				<h3 class="m-0 text-lg font-bold text-contrast">
+					{{ formatMessage(messages.auditTitle) }} · {{ auditRoom.name }}
+				</h3>
+				<div
+					v-if="auditLoading"
+					class="flex min-h-32 items-center justify-center gap-2 text-sm text-secondary"
+				>
+					<SpinnerIcon class="size-4 animate-spin" />
+					{{ formatMessage(messages.loading) }}
+				</div>
+				<p
+					v-else-if="!auditItems.length"
+					class="m-0 rounded-lg bg-bg-raised p-3 text-xs text-secondary"
+				>
+					{{ formatMessage(messages.auditEmpty) }}
+				</p>
+				<div v-else class="flex flex-col gap-1.5">
+					<div
+						v-for="entry in auditItems"
+						:key="entry.id"
+						class="flex flex-wrap items-center gap-2 rounded-lg border border-solid border-surface-5 bg-bg-raised px-3 py-2"
+					>
+						<span class="text-xs font-semibold text-contrast">{{ auditLabel(entry.action) }}</span>
+						<span class="text-[11px] text-secondary">{{ auditActor(entry.actorName) }}</span>
+						<span
+							v-if="entry.target"
+							class="text-[11px] text-secondary"
+						>
+							{{ formatMessage(messages.auditTarget, { name: entry.target }) }}
+						</span>
+						<span class="ml-auto text-[10px] text-secondary">
+							{{ formatDateTime(entry.createdAt) }}
+						</span>
+					</div>
+				</div>
+				<div class="flex justify-end border-t border-solid border-surface-5 pt-3">
+					<button
+						type="button"
+						class="rounded-lg bg-button-bg px-4 py-2 text-sm font-semibold text-secondary hover:brightness-110"
+						@click="closeAudit"
+					>
+						{{ formatMessage(messages.close) }}
 					</button>
 				</div>
 			</div>

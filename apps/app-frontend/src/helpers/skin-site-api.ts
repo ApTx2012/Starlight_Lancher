@@ -2193,3 +2193,62 @@ export async function skinSiteChatRoomAvatarFetch(roomId: number): Promise<Blob 
 		return null
 	}
 }
+
+export interface SkinSiteChatUserInfo {
+	uuid: string
+	id: number
+	username: string
+	avatar?: string | null
+	email: string
+	qq?: number | null
+	permissions: string[]
+	banned: boolean
+	registerTime: number
+}
+
+export interface SkinSiteChatAuditInfo {
+	id: number
+	actorUuid: string
+	actorName?: string
+	action: string
+	target?: string | null
+	createdAt: number
+}
+
+export function skinSiteChatUserSearch(
+	keyword: string,
+	roomId?: number,
+	searchBy: 'user' | 'player' = 'user',
+): Promise<SkinSiteResponse<SkinSiteChatUserInfo[]>> {
+	const query = new URLSearchParams({ keyword })
+	if (roomId !== undefined) query.set('room_id', String(roomId))
+	if (searchBy === 'player') query.set('search_by', 'player')
+	return skinSiteRequest<SkinSiteChatUserInfo[]>('chat/users/search?' + query.toString())
+}
+
+export function skinSiteChatManagerSet(
+	roomId: number,
+	userUuid: string,
+	manager: boolean,
+): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('chat/admin/rooms/' + roomId + '/manager', {
+		method: 'POST',
+		body: { userUuid, manager },
+	})
+}
+
+export function skinSiteChatSettlementOwnerAssign(
+	roomId: number,
+	userUuid: string,
+): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('chat/settlements/' + roomId + '/owner', {
+		method: 'POST',
+		body: { userUuid },
+	})
+}
+
+export function skinSiteChatAuditList(
+	roomId: number,
+): Promise<SkinSiteResponse<SkinSiteChatAuditInfo[]>> {
+	return skinSiteRequest<SkinSiteChatAuditInfo[]>('chat/rooms/' + roomId + '/audit')
+}
