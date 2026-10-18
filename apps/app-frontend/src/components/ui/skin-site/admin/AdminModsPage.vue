@@ -9,6 +9,7 @@ import {
 	skinSiteDeleteModFile,
 	skinSiteDeleteModRuleTag,
 	skinSiteDeleteModRuntime,
+	skinSiteDeleteMultiModFile,
 	skinSiteModCount,
 	type SkinSiteModInfo,
 	skinSiteModList,
@@ -20,8 +21,11 @@ import {
 	skinSiteModSearch,
 	skinSiteUpdateModInfo,
 	skinSiteUpdateModRuleTag,
+	skinSiteUpdateMultiModInfo,
 	skinSiteUploadModRuntime,
 } from '@/helpers/skin-site-api'
+
+import ModUploadModal from './ModUploadModal.vue'
 
 const { formatMessage } = useVIntl()
 const { handleError, addNotification } = injectNotificationManager()
@@ -92,6 +96,46 @@ const messages = defineMessages({
 	unavailable: { id: 'app.skin-site.admin.mods.unavailable', defaultMessage: 'Unavailable' },
 	active: { id: 'app.skin-site.admin.mods.active', defaultMessage: 'Active' },
 	uploader: { id: 'app.skin-site.admin.mods.uploader', defaultMessage: 'by {name}' },
+	upload: { id: 'app.skin-site.admin.mods.upload', defaultMessage: 'Upload' },
+	selectMode: {
+		id: 'app.skin-site.admin.mods.select-mode',
+		defaultMessage: 'Select multiple',
+	},
+	exitSelect: {
+		id: 'app.skin-site.admin.mods.exit-select',
+		defaultMessage: 'Done selecting',
+	},
+	selectAll: { id: 'app.skin-site.admin.mods.select-all', defaultMessage: 'Select all' },
+	clearSelection: {
+		id: 'app.skin-site.admin.mods.clear-selection',
+		defaultMessage: 'Clear selection',
+	},
+	selectedCount: {
+		id: 'app.skin-site.admin.mods.selected-count',
+		defaultMessage: '{count} selected',
+	},
+	deleteSelected: {
+		id: 'app.skin-site.admin.mods.delete-selected',
+		defaultMessage: 'Delete selected',
+	},
+	confirmDeleteMulti: {
+		id: 'app.skin-site.admin.mods.confirm-delete-multi',
+		defaultMessage: 'Delete {count} selected mods? This cannot be undone.',
+	},
+	deletedMulti: {
+		id: 'app.skin-site.admin.mods.deleted-multi',
+		defaultMessage: 'Selected mods deleted.',
+	},
+	serverAddress: {
+		id: 'app.skin-site.admin.mods.server-address',
+		defaultMessage: 'Server address',
+	},
+	serverAddressHint: {
+		id: 'app.skin-site.admin.mods.server-address-hint',
+		defaultMessage: 'Filter by server address',
+	},
+	apply: { id: 'app.skin-site.admin.mods.apply', defaultMessage: 'Apply' },
+	clear: { id: 'app.skin-site.admin.mods.clear', defaultMessage: 'Clear' },
 })
 
 type Tab = 'mods' | 'tags' | 'runtime'
@@ -111,6 +155,13 @@ const editingHash = ref<string | null>(null)
 const editForm = ref({ name: '', modId: '', version: '', domainRules: '' })
 const savingMod = ref(false)
 const deletingHash = ref<string | null>(null)
+
+const selectedHashes = ref<Set<string>>(new Set())
+const selectionMode = ref(false)
+const deletingMulti = ref(false)
+const serverAddressInput = ref('')
+const serverAddressFilter = ref('')
+const uploadOpen = ref(false)
 
 const tags = ref<SkinSiteModRuleTag[]>([])
 const tagsLoading = ref(false)
@@ -173,8 +224,12 @@ async function loadMods(reset = true) {
 					limit: PAGE_SIZE,
 					offset: modOffset.value,
 					ruleTagId: tagFilter.value,
+					serverAddr: serverAddressFilter.value || undefined,
 				}),
-				skinSiteModCount({ ruleTagId: tagFilter.value }),
+				skinSiteModCount({
+					ruleTagId: tagFilter.value,
+					serverAddr: serverAddressFilter.value || undefined,
+				}),
 			])
 			if (!listResult.success) throw new Error(listResult.errorMessage)
 			mods.value = listResult.payload ?? []
@@ -291,6 +346,56 @@ async function removeMod(mod: SkinSiteModInfo) {
 	} finally {
 		deletingHash.value = null
 	}
+}
+
+function toggleSelect(hash: string) {
+	const next = new Set(selectedHashes.value)
+	if (next.has(hash)) next.delete(hash)
+	else next.add(hash)
+	selectedHashes.value = next
+}
+
+function selectAllVisible() {
+	selectedHashes.value = new Set(mods.value.map((m) => m.hash))
+}
+
+function clearSelection() {
+	selectedHashes.value = new Set()
+}
+
+function exitSelectionMode() {
+	selectionMode.value = false
+	clearSelection()
+}
+
+async function deleteSelected() {
+	if (deletingMulti.value || !selectedHashes.value.size) return
+	const count = selectedHashes.value.size
+	if (!window.confirm(formatMessage(messages.confirmDeleteMulti, { count }))) return
+	deletingMulti.value = true
+	try {
+		const result = await skinSiteDeleteMultiModFile(Array.from(selectedHashes.value))
+		if (!result.success) throw new Error(result.errorMessage)
+		addNotification({ type: 'success', title: formatMessage(messages.deletedMulti) })
+		clearSelection()
+		selectionMode.value = false
+		await loadMods(false)
+	} catch (error) {
+		handleError(error)
+	} finally {
+		deletingMulti.value = false
+	}
+}
+
+function applyServerAddress() {
+	serverAddressFilter.value = serverAddressInput.value.trim()
+	void loadMods(true)
+}
+
+function clearServerAddress() {
+	serverAddressInput.value = ''
+	serverAddressFilter.value = ''
+	void loadMods(true)
 }
 
 function openNewTag() {
@@ -456,9 +561,84 @@ onMounted(async () => {
 					<option :value="null">{{ formatMessage(messages.filterAll) }}</option>
 					<option v-for="tag in tags" :key="tag.id" :value="tag.id">{{ tag.name }}</option>
 				</select>
+				<button
+					type="button"
+					class="rounded-full bg-brand px-3 py-1 text-xs font-semibold text-contrast hover:brightness-110"
+					@click="uploadOpen = true"
+				>
+					{{ formatMessage(messages.upload) }}
+				</button>
+				<button
+					v-if="!selectionMode"
+					type="button"
+					class="rounded-full bg-button-bg px-3 py-1 text-xs font-semibold text-contrast hover:brightness-110"
+					@click="selectionMode = true"
+				>
+					{{ formatMessage(messages.selectMode) }}
+				</button>
+				<template v-else>
+					<button
+						type="button"
+						class="rounded-full bg-button-bg px-3 py-1 text-xs font-semibold text-contrast hover:brightness-110"
+						@click="selectAllVisible"
+					>
+						{{ formatMessage(messages.selectAll) }}
+					</button>
+					<button
+						type="button"
+						class="rounded-full bg-button-bg px-3 py-1 text-xs font-semibold text-contrast hover:brightness-110 disabled:opacity-50"
+						:disabled="!selectedHashes.size"
+						@click="clearSelection"
+					>
+						{{ formatMessage(messages.clearSelection) }}
+					</button>
+					<button
+						type="button"
+						class="rounded-full bg-red px-3 py-1 text-xs font-semibold text-contrast hover:brightness-110 disabled:opacity-50"
+						:disabled="!selectedHashes.size || deletingMulti"
+						@click="deleteSelected"
+					>
+						{{ formatMessage(messages.deleteSelected) }}
+					</button>
+					<button
+						type="button"
+						class="rounded-full bg-button-bg px-3 py-1 text-xs font-semibold text-contrast hover:brightness-110"
+						@click="exitSelectionMode"
+					>
+						{{ formatMessage(messages.exitSelect) }}
+					</button>
+				</template>
 				<span class="text-xs text-secondary">
 					{{ formatMessage(messages.total, { count: modTotal }) }}
 				</span>
+				<span v-if="selectionMode && selectedHashes.size" class="text-xs font-semibold text-contrast">
+					{{ formatMessage(messages.selectedCount, { count: selectedHashes.size }) }}
+				</span>
+			</div>
+
+			<div class="flex flex-wrap items-center gap-2">
+				<input
+					v-model="serverAddressInput"
+					type="text"
+					:placeholder="formatMessage(messages.serverAddressHint)"
+					class="min-w-0 flex-1 rounded-full border border-solid border-surface-5 bg-bg px-3 py-1 text-xs text-contrast outline-none focus:border-brand"
+					@keyup.enter="applyServerAddress"
+				/>
+				<button
+					type="button"
+					class="rounded-full bg-button-bg px-3 py-1 text-xs font-semibold text-contrast hover:brightness-110"
+					@click="applyServerAddress"
+				>
+					{{ formatMessage(messages.apply) }}
+				</button>
+				<button
+					type="button"
+					class="rounded-full bg-button-bg px-3 py-1 text-xs font-semibold text-contrast hover:brightness-110 disabled:opacity-50"
+					:disabled="!serverAddressFilter"
+					@click="clearServerAddress"
+				>
+					{{ formatMessage(messages.clear) }}
+				</button>
 			</div>
 
 			<div v-if="modLoading" class="flex items-center gap-2 text-sm text-secondary">
@@ -476,8 +656,16 @@ onMounted(async () => {
 					v-for="mod in mods"
 					:key="mod.hash"
 					class="flex flex-col gap-2 rounded-xl bg-bg-raised p-3"
+					:class="selectionMode && selectedHashes.has(mod.hash) ? 'ring-2 ring-brand' : ''"
 				>
 					<div class="flex flex-wrap items-center gap-2">
+						<input
+							v-if="selectionMode"
+							type="checkbox"
+							class="size-3.5 shrink-0"
+							:checked="selectedHashes.has(mod.hash)"
+							@change="toggleSelect(mod.hash)"
+						/>
 						<span class="min-w-0 flex-1 truncate text-sm font-semibold text-contrast">
 							{{ mod.metadata.name || mod.name }}
 						</span>
@@ -784,5 +972,11 @@ onMounted(async () => {
 				</div>
 			</div>
 		</template>
+
+		<ModUploadModal
+			v-if="uploadOpen"
+			:rule-tags="tags"
+			@finished="uploadOpen = false"
+		/>
 	</div>
 </template>

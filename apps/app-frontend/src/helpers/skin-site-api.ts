@@ -2015,3 +2015,59 @@ export function skinSiteAdminInviteUser(email: string): Promise<SkinSiteResponse
 		body: { email },
 	})
 }
+
+export function skinSiteModHashFromFile(file: File): Promise<string> {
+	return import('xxhash-wasm').then(async ({ default: xxhash }) => {
+		const { create64 } = await xxhash()
+		const hasher = create64()
+		const reader = file.stream().getReader()
+		for (;;) {
+			const { done, value } = await reader.read()
+			if (done) break
+			hasher.update(value)
+		}
+		const raw: bigint = hasher.digest()
+		const mask = (1n << 64n) - 1n
+		const v = raw & mask
+		const signed = v >= 1n << 63n ? v - (1n << 64n) : v
+		return signed.toString()
+	})
+}
+
+export function skinSiteModExistsByHash(hash: string): Promise<SkinSiteResponse<unknown>> {
+	return skinSiteRequest<unknown>('query/hash/' + encodeURIComponent(hash), { type: 'mod' })
+}
+
+export function skinSiteModExistsByName(modName: string): Promise<SkinSiteResponse<unknown>> {
+	const q = new URLSearchParams({ mod_name: modName })
+	return skinSiteRequest<unknown>('query/name?' + q.toString(), { type: 'mod' })
+}
+
+export async function skinSiteUploadMod(
+	file: File,
+	ruleTagIds: number[] = [],
+	overwrite = false,
+): Promise<SkinSiteResponse<string>> {
+	const hash = await skinSiteModHashFromFile(file)
+	const form = new FormData()
+	form.append('mods', file, file.name)
+	const query = new URLSearchParams()
+	if (ruleTagIds.length) query.set('rule_tag_ids', ruleTagIds.join(','))
+	if (overwrite) query.set('overwrite', 'true')
+	const suffix = query.size ? '?' + query.toString() : ''
+	return skinSiteRequest<string>('upload/' + hash + suffix, {
+		method: 'POST',
+		type: 'mod',
+		form,
+	})
+}
+
+export function skinSiteUpdateMultiModInfo(
+	mods: SkinSiteModInfo[],
+): Promise<SkinSiteResponse<SkinSiteModInfo[]>> {
+	return skinSiteRequest<SkinSiteModInfo[]>('update/info/multi', {
+		method: 'POST',
+		type: 'mod',
+		body: mods,
+	})
+}
