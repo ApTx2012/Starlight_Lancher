@@ -281,9 +281,56 @@ onMounted(() => {
 		<template v-else-if="mode === 'read'">
 			<div class="flex flex-wrap items-baseline justify-between gap-2 border-b border-solid border-surface-5 pb-2">
 				<h1 class="m-0 text-2xl font-bold text-contrast">{{ page.title }}</h1>
-				<span class="text-[11px] text-secondary">
-					{{ formatMessage(messages.revision, { id: page.revisionId }) }}
-				</span>
+				<div class="flex flex-wrap items-center gap-1.5">
+					<span class="text-[11px] text-secondary">
+						{{ formatMessage(messages.revision, { id: page.revisionId }) }}
+					</span>
+					<button
+						type="button"
+						class="rounded-lg px-2.5 py-1 text-xs font-semibold disabled:opacity-50"
+						:class="watching ? 'bg-brand text-contrast' : 'bg-button-bg text-secondary'"
+						:disabled="watchBusy"
+						@click="toggleWatch"
+					>
+						{{ formatMessage(watching ? messages.unwatch : messages.watch) }}
+					</button>
+					<button
+						v-if="page.canEdit"
+						type="button"
+						class="rounded-lg bg-button-bg px-2.5 py-1 text-xs font-semibold text-secondary hover:brightness-110"
+						@click="openMove"
+					>
+						{{ formatMessage(messages.move) }}
+					</button>
+				</div>
+			</div>
+
+			<div
+				v-if="moving"
+				class="flex flex-wrap items-center gap-2 rounded-lg border border-solid border-surface-5 bg-bg-raised p-2"
+			>
+				<input
+					v-model="moveTarget"
+					type="text"
+					:placeholder="formatMessage(messages.moveTarget)"
+					class="min-w-0 flex-1 rounded-lg border border-solid border-surface-5 bg-bg px-2 py-1 text-xs text-contrast outline-none focus:border-brand"
+					@keyup.enter="confirmMove"
+				/>
+				<button
+					type="button"
+					class="rounded-lg bg-brand px-2.5 py-1 text-xs font-semibold text-contrast disabled:opacity-50"
+					:disabled="moveBusy"
+					@click="confirmMove"
+				>
+					{{ formatMessage(messages.moveConfirm) }}
+				</button>
+				<button
+					type="button"
+					class="rounded-lg bg-button-bg px-2.5 py-1 text-xs font-semibold text-secondary"
+					@click="moving = false"
+				>
+					{{ formatMessage(messages.cancel) }}
+				</button>
 			</div>
 
 			<p class="m-0 text-[11px] text-secondary">

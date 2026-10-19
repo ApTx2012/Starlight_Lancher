@@ -2682,3 +2682,25 @@ export function skinSiteWikiCategory(
 	if (before != null) query.set('before', String(before))
 	return skinSiteRequest<SkinSiteWikiSearchPage>('wiki/category?' + query.toString())
 }
+// ─── Wiki: 移动 / 关注 / 设首页 ─────────────────────────────────────────
+
+export function skinSiteWikiMove(data: {
+	title: string
+	targetTitle: string
+	leaveRedirect?: boolean
+}): Promise<SkinSiteResponse<SkinSiteWikiPageDetail>> {
+	return skinSiteRequest<SkinSiteWikiPageDetail>('wiki/move', {
+		method: 'POST',
+		body: data,
+	})
+}
+
+export function skinSiteWikiWatch(
+	title: string,
+	watched: boolean,
+): Promise<SkinSiteResponse<boolean>> {
+	return skinSiteRequest<boolean>('wiki/watch', {
+		method: 'POST',
+		body: { title, watched },
+	})
+}

@@ -12289,5 +12289,12 @@
   "app.skin-site.wiki.browser.empty-list": {"message": "这里还没有内容。"},
   "app.skin-site.wiki.browser.hint-search": {"message": "输入关键词开始搜索。"},
   "app.skin-site.wiki.browser.hint-category": {"message": "输入分类名称开始浏览。"},
-  "app.skin-site.wiki.browser.by-author": {"message": "由 {author} 编辑"}
+  "app.skin-site.wiki.browser.by-author": {"message": "由 {author} 编辑"},
+  "app.skin-site.wiki.watch": {"message": "关注"},
+  "app.skin-site.wiki.unwatch": {"message": "取消关注"},
+  "app.skin-site.wiki.watch-done": {"message": "关注状态已更新。"},
+  "app.skin-site.wiki.move": {"message": "移动"},
+  "app.skin-site.wiki.move-target": {"message": "新标题"},
+  "app.skin-site.wiki.move-confirm": {"message": "确认移动"},
+  "app.skin-site.wiki.move-done": {"message": "页面已移动到 {title}。"}
 }

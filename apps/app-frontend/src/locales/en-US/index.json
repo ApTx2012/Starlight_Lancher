@@ -12458,5 +12458,12 @@
   "app.skin-site.wiki.browser.empty-list": {"message": "Nothing here yet."},
   "app.skin-site.wiki.browser.hint-search": {"message": "Type a keyword to search."},
   "app.skin-site.wiki.browser.hint-category": {"message": "Enter a category name to browse."},
-  "app.skin-site.wiki.browser.by-author": {"message": "by {author}"}
+  "app.skin-site.wiki.browser.by-author": {"message": "by {author}"},
+  "app.skin-site.wiki.watch": {"message": "Watch"},
+  "app.skin-site.wiki.unwatch": {"message": "Unwatch"},
+  "app.skin-site.wiki.watch-done": {"message": "Watch state updated."},
+  "app.skin-site.wiki.move": {"message": "Move"},
+  "app.skin-site.wiki.move-target": {"message": "New title"},
+  "app.skin-site.wiki.move-confirm": {"message": "Confirm move"},
+  "app.skin-site.wiki.move-done": {"message": "Page moved to {title}."}
 }
