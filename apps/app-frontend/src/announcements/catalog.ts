@@ -33,6 +33,51 @@ export const ANNOUNCEMENT_CHANGE_TYPES: readonly AnnouncementChangeType[] = [
 
 export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 	{
+		id: 'launcher-1.0.2-beta9',
+		version: '1.0.2-beta9',
+		publishedAt: '2026-10-19',
+		title: {
+			'en-US': 'Starlight Launcher 1.0.2-beta9',
+			'zh-CN': 'Starlight Launcher 1.0.2-beta9',
+		},
+		changes: {
+			added: [
+				{
+					'en-US': 'Finished the skin site admin console: system overview, announcements, user and player management, review paper editor, mod upload with batch operations, chat room management with real-time voice, servers, audit log, resource downloads, donations and launcher releases.',
+					'zh-CN': '补全皮肤站管理台：系统概览、公告、用户与玩家管理、审核试卷编辑器、Mod 上传与批量操作、聊天室房间管理与实时语音、服务器、审计日志、资源下载、捐赠与启动器版本管理。',
+				},
+				{
+					'en-US': 'Added Wiki management to the admin console, including a MediaWiki migration center that imports pages from an existing wiki and lets you review, publish or roll back the result.',
+					'zh-CN': '管理台新增维基管理，包含 MediaWiki 迁移中心：可从现有 Wiki 导入页面，并对结果进行审核、发布或回滚。',
+				},
+				{
+					'en-US': 'Added a read-only Wiki reader in the launcher: render pages, follow links between entries, and keep a back stack while browsing.',
+					'zh-CN': '启动器新增维基阅读页：渲染词条正文、跟随词条链接跳转，并在浏览时保留返回栈。',
+				},
+			],
+			changed: [
+				{
+					'en-US': 'Releases are now published to the skin site automatically when a tag is pushed, so the download page stays in sync without a manual upload.',
+					'zh-CN': '推送 tag 发版时会自动把版本同步到皮肤站，下载页无需再手动上传即可保持同步。',
+				},
+				{
+					'en-US': 'Server management pages are only shown to web administrators.',
+					'zh-CN': '服务器管理页仅对网页管理员展示。',
+				},
+			],
+			fixed: [
+				{
+					'en-US': 'Fixed the Chinese and English text on the skin site home navigation cards.',
+					'zh-CN': '修复皮肤站主页导航卡片的中英文案。',
+				},
+				{
+					'en-US': 'Renamed the public download and map endpoints to resolve a duplicate export.',
+					'zh-CN': '重命名公开下载与地图接口，解决导出冲突。',
+				},
+			],
+		},
+	},
+	{
 		id: 'launcher-1.0.2-beta8',
 		version: '1.0.2-beta8',
 		publishedAt: '2026-10-18',
