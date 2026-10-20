@@ -33,6 +33,36 @@ export const ANNOUNCEMENT_CHANGE_TYPES: readonly AnnouncementChangeType[] = [
 
 export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 	{
+		id: 'launcher-1.0.2-beta10',
+		version: '1.0.2-beta10',
+		publishedAt: '2026-10-20',
+		title: {
+			'en-US': 'Starlight Launcher 1.0.2-beta10',
+			'zh-CN': 'Starlight Launcher 1.0.2-beta10',
+		},
+		changes: {
+			security: [
+				{
+					'en-US':
+						'Backported the upstream Axolotl modpack path traversal fix to prevent malicious modpacks from writing files outside the intended installation directory.',
+					'zh-CN':
+						'合入上游 Axolotl 整合包路径穿越安全补丁，阻止恶意整合包向安装目录之外写入文件。',
+				},
+				{
+					'en-US':
+						'Strengthened path validation for Modrinth and CurseForge modpacks, server installations, cached files and modpack uninstall cleanup, including unsafe Windows path aliases.',
+					'zh-CN':
+						'加强 Modrinth 与 CurseForge 整合包、服务端安装、缓存文件及整合包卸载清理的路径校验，拦截不安全的 Windows 路径别名。',
+				},
+			],
+		},
+		notes: {
+			'en-US':
+				'Users of earlier versions should update promptly, especially before installing modpacks from untrusted sources.',
+			'zh-CN': '建议旧版本用户尽快更新，尤其是在安装来源不明的整合包之前。',
+		},
+	},
+	{
 		id: 'launcher-1.0.2-beta9',
 		version: '1.0.2-beta9',
 		publishedAt: '2026-10-19',
@@ -43,21 +73,27 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		changes: {
 			added: [
 				{
-					'en-US': 'Finished the skin site admin console: system overview, announcements, user and player management, review paper editor, mod upload with batch operations, chat room management with real-time voice, servers, audit log, resource downloads, donations and launcher releases.',
-					'zh-CN': '补全皮肤站管理台：系统概览、公告、用户与玩家管理、审核试卷编辑器、Mod 上传与批量操作、聊天室房间管理与实时语音、服务器、审计日志、资源下载、捐赠与启动器版本管理。',
+					'en-US':
+						'Finished the skin site admin console: system overview, announcements, user and player management, review paper editor, mod upload with batch operations, chat room management with real-time voice, servers, audit log, resource downloads, donations and launcher releases.',
+					'zh-CN':
+						'补全皮肤站管理台：系统概览、公告、用户与玩家管理、审核试卷编辑器、Mod 上传与批量操作、聊天室房间管理与实时语音、服务器、审计日志、资源下载、捐赠与启动器版本管理。',
 				},
 				{
-					'en-US': 'Added Wiki management to the admin console, including a MediaWiki migration center that imports pages from an existing wiki and lets you review, publish or roll back the result.',
-					'zh-CN': '管理台新增维基管理，包含 MediaWiki 迁移中心：可从现有 Wiki 导入页面，并对结果进行审核、发布或回滚。',
+					'en-US':
+						'Added Wiki management to the admin console, including a MediaWiki migration center that imports pages from an existing wiki and lets you review, publish or roll back the result.',
+					'zh-CN':
+						'管理台新增维基管理，包含 MediaWiki 迁移中心：可从现有 Wiki 导入页面，并对结果进行审核、发布或回滚。',
 				},
 				{
-					'en-US': 'Added a read-only Wiki reader in the launcher: render pages, follow links between entries, and keep a back stack while browsing.',
+					'en-US':
+						'Added a read-only Wiki reader in the launcher: render pages, follow links between entries, and keep a back stack while browsing.',
 					'zh-CN': '启动器新增维基阅读页：渲染词条正文、跟随词条链接跳转，并在浏览时保留返回栈。',
 				},
 			],
 			changed: [
 				{
-					'en-US': 'Releases are now published to the skin site automatically when a tag is pushed, so the download page stays in sync without a manual upload.',
+					'en-US':
+						'Releases are now published to the skin site automatically when a tag is pushed, so the download page stays in sync without a manual upload.',
 					'zh-CN': '推送 tag 发版时会自动把版本同步到皮肤站，下载页无需再手动上传即可保持同步。',
 				},
 				{
@@ -88,27 +124,35 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		changes: {
 			added: [
 				{
-					'en-US': 'The skin site is now fully native inside the launcher: sign-in, registration, password reset, account settings, players, downloads, world map and player review all run through the launcher UI instead of an embedded web page.',
-					'zh-CN': '皮肤站全面改为启动器原生界面：登录、注册、找回密码、账号设置、角色管理、资源下载、服务器地图与玩家审核均不再依赖内嵌网页。',
+					'en-US':
+						'The skin site is now fully native inside the launcher: sign-in, registration, password reset, account settings, players, downloads, world map and player review all run through the launcher UI instead of an embedded web page.',
+					'zh-CN':
+						'皮肤站全面改为启动器原生界面：登录、注册、找回密码、账号设置、角色管理、资源下载、服务器地图与玩家审核均不再依赖内嵌网页。',
 				},
 				{
-					'en-US': 'Added a bug tracker: browse and filter issues, read details and comments, post replies, create new issues and follow notifications.',
-					'zh-CN': '新增问题追踪：可浏览与筛选问题、查看详情与评论、发表回复、提交新问题并接收通知。',
+					'en-US':
+						'Added a bug tracker: browse and filter issues, read details and comments, post replies, create new issues and follow notifications.',
+					'zh-CN':
+						'新增问题追踪：可浏览与筛选问题、查看详情与评论、发表回复、提交新问题并接收通知。',
 				},
 				{
-					'en-US': 'Added an admin console with a permission gate: system overview, announcements, users, players, player review and launcher releases.',
-					'zh-CN': '新增管理控制台（带权限校验）：系统概览、公告管理、用户管理、玩家管理、玩家审核与启动器版本管理。',
+					'en-US':
+						'Added an admin console with a permission gate: system overview, announcements, users, players, player review and launcher releases.',
+					'zh-CN':
+						'新增管理控制台（带权限校验）：系统概览、公告管理、用户管理、玩家管理、玩家审核与启动器版本管理。',
 				},
 			],
 			changed: [
 				{
-					'en-US': 'Hosted modpack downloads now go through the dedicated download server, keeping large downloads off the main API host.',
+					'en-US':
+						'Hosted modpack downloads now go through the dedicated download server, keeping large downloads off the main API host.',
 					'zh-CN': '整合包下载改为走独立的下载服务器，避免大文件下载挤占主 API 服务。',
 				},
 			],
 			fixed: [
 				{
-					'en-US': 'LogShare now collects logs with a lightweight reader, fixing crash log uploads that previously failed.',
+					'en-US':
+						'LogShare now collects logs with a lightweight reader, fixing crash log uploads that previously failed.',
 					'zh-CN': 'LogShare 改用轻量日志收集，修复崩溃日志上传失败的问题。',
 				},
 				{
@@ -137,12 +181,16 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 					'zh-CN': '修复实时日志积压导致控制台卡顿的问题。',
 				},
 				{
-					'en-US': 'The update channel now defaults to the build type: installing a Beta build starts on the Beta channel instead of Release.',
-					'zh-CN': '更新通道默认值改为跟随安装包版本：安装 Beta 版后默认使用 Beta 通道，不再回落为 Release。',
+					'en-US':
+						'The update channel now defaults to the build type: installing a Beta build starts on the Beta channel instead of Release.',
+					'zh-CN':
+						'更新通道默认值改为跟随安装包版本：安装 Beta 版后默认使用 Beta 通道，不再回落为 Release。',
 				},
 				{
-					'en-US': 'On Linux, the default game directory for StarLight instances no longer points at the system install path (e.g. /usr/bin); it falls back to the home directory.',
-					'zh-CN': 'Linux 上 StarLight 实例的默认游戏目录不再指向系统安装路径（如 /usr/bin），改为回退到用户主目录。',
+					'en-US':
+						'On Linux, the default game directory for StarLight instances no longer points at the system install path (e.g. /usr/bin); it falls back to the home directory.',
+					'zh-CN':
+						'Linux 上 StarLight 实例的默认游戏目录不再指向系统安装路径（如 /usr/bin），改为回退到用户主目录。',
 				},
 			],
 		},
@@ -158,15 +206,19 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		changes: {
 			added: [
 				{
-					'en-US': 'Added keyboard shortcut settings: enable and rebind navigation and quick-scrolling shortcuts.',
+					'en-US':
+						'Added keyboard shortcut settings: enable and rebind navigation and quick-scrolling shortcuts.',
 					'zh-CN': '新增键盘快捷键设置：可启用并自定义导航与快速滚动快捷键。',
 				},
 				{
-					'en-US': 'Added crash log sharing and AI analysis: share crash diagnostics to LogShare for a structured summary and optional AI analysis, with a rebuilt crash window that browses log files and streams the analysis.',
-					'zh-CN': '新增崩溃日志分享与 AI 分析：可将崩溃诊断分享到 LogShare 获取结构化摘要与 AI 分析；崩溃窗口重做为双栏布局，可浏览日志文件并流式查看分析结果。',
+					'en-US':
+						'Added crash log sharing and AI analysis: share crash diagnostics to LogShare for a structured summary and optional AI analysis, with a rebuilt crash window that browses log files and streams the analysis.',
+					'zh-CN':
+						'新增崩溃日志分享与 AI 分析：可将崩溃诊断分享到 LogShare 获取结构化摘要与 AI 分析；崩溃窗口重做为双栏布局，可浏览日志文件并流式查看分析结果。',
 				},
 				{
-					'en-US': 'Crash logs now also collect JVM crash reports (hs_err_pid*.log) and launcher logs.',
+					'en-US':
+						'Crash logs now also collect JVM crash reports (hs_err_pid*.log) and launcher logs.',
 					'zh-CN': '崩溃日志现在也会收集 JVM 崩溃报告（hs_err_pid*.log）与启动器日志。',
 				},
 				{
@@ -207,12 +259,16 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		changes: {
 			added: [
 				{
-					'en-US': 'Added a remote announcements center: a bell in the top bar opens a panel listing launcher announcements fetched from the Starlight skin site.',
-					'zh-CN': '新增远程公告中心：顶栏的铃铛可打开公告面板，展示从 Starlight 皮肤站拉取的启动器公告。',
+					'en-US':
+						'Added a remote announcements center: a bell in the top bar opens a panel listing launcher announcements fetched from the Starlight skin site.',
+					'zh-CN':
+						'新增远程公告中心：顶栏的铃铛可打开公告面板，展示从 Starlight 皮肤站拉取的启动器公告。',
 				},
 				{
-					'en-US': 'Added a custom Minecraft window title option: set a global toggle and default title, and let each instance override it. The game window is renamed on Windows.',
-					'zh-CN': '新增自定义 Minecraft 窗口标题：可设置全局开关与默认标题，并允许各实例单独覆盖；Windows 下会重命名游戏窗口。',
+					'en-US':
+						'Added a custom Minecraft window title option: set a global toggle and default title, and let each instance override it. The game window is renamed on Windows.',
+					'zh-CN':
+						'新增自定义 Minecraft 窗口标题：可设置全局开关与默认标题，并允许各实例单独覆盖；Windows 下会重命名游戏窗口。',
 				},
 			],
 			fixed: [
@@ -234,24 +290,31 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		changes: {
 			added: [
 				{
-					'en-US': 'Added armor and armor-trim rendering to the skin preview, letting you try on armor pieces and trim patterns directly in the skin editor.',
-					'zh-CN': '皮肤预览新增盔甲与盔甲纹饰渲染，可在皮肤编辑器内直接试穿各部位盔甲并调整纹饰图案。',
+					'en-US':
+						'Added armor and armor-trim rendering to the skin preview, letting you try on armor pieces and trim patterns directly in the skin editor.',
+					'zh-CN':
+						'皮肤预览新增盔甲与盔甲纹饰渲染，可在皮肤编辑器内直接试穿各部位盔甲并调整纹饰图案。',
 				},
 				{
-					'en-US': 'Armor preview selections in the skin editor are now saved locally, so they persist across sessions.',
+					'en-US':
+						'Armor preview selections in the skin editor are now saved locally, so they persist across sessions.',
 					'zh-CN': '皮肤编辑器中的盔甲预览选择现在会保存在本地，跨会话保留。',
 				},
 			],
 			changed: [
 				{
-					'en-US': 'Improved download scheduling to reduce concurrency automatically when tasks are waiting for capacity, making large Minecraft installations more reliable on constrained connections.',
-					'zh-CN': '优化下载任务调度：任务因容量不足排队时会自动降低并发，提升大型 Minecraft 版本在受限网络环境下的安装稳定性。',
+					'en-US':
+						'Improved download scheduling to reduce concurrency automatically when tasks are waiting for capacity, making large Minecraft installations more reliable on constrained connections.',
+					'zh-CN':
+						'优化下载任务调度：任务因容量不足排队时会自动降低并发，提升大型 Minecraft 版本在受限网络环境下的安装稳定性。',
 				},
 			],
 			fixed: [
 				{
-					'en-US': 'Fixed downloads timing out while waiting for internal connection capacity, which could cause Minecraft installations to fail even when the network was available.',
-					'zh-CN': '修复下载任务等待内部连接容量时过早超时，导致网络正常的情况下 Minecraft 安装仍可能失败的问题。',
+					'en-US':
+						'Fixed downloads timing out while waiting for internal connection capacity, which could cause Minecraft installations to fail even when the network was available.',
+					'zh-CN':
+						'修复下载任务等待内部连接容量时过早超时，导致网络正常的情况下 Minecraft 安装仍可能失败的问题。',
 				},
 				{
 					'en-US': 'Fixed instance group changes not saving for some instances.',
@@ -271,8 +334,10 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		changes: {
 			fixed: [
 				{
-					'en-US': 'Fixed the anniversary celebration banner not showing above the window title bar, and made the banner background semi-transparent so the content behind it stays visible.',
-					'zh-CN': '修复周年庆庆祝横幅被窗口标题栏遮挡、无法显示的问题，并将横幅背景改为半透明，避免遮住下方内容。',
+					'en-US':
+						'Fixed the anniversary celebration banner not showing above the window title bar, and made the banner background semi-transparent so the content behind it stays visible.',
+					'zh-CN':
+						'修复周年庆庆祝横幅被窗口标题栏遮挡、无法显示的问题，并将横幅背景改为半透明，避免遮住下方内容。',
 				},
 			],
 		},
@@ -288,8 +353,10 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		changes: {
 			fixed: [
 				{
-					'en-US': 'Fixed the launcher failing to start with "no such table: synced_pack_catalog": the cross-instance sync migration was missing the synced_pack_catalog and synced_pack_instances tables.',
-					'zh-CN': '修复启动器因 "no such table: synced_pack_catalog" 无法启动的问题：跨实例同步迁移遗漏了 synced_pack_catalog 与 synced_pack_instances 两张表。',
+					'en-US':
+						'Fixed the launcher failing to start with "no such table: synced_pack_catalog": the cross-instance sync migration was missing the synced_pack_catalog and synced_pack_instances tables.',
+					'zh-CN':
+						'修复启动器因 "no such table: synced_pack_catalog" 无法启动的问题：跨实例同步迁移遗漏了 synced_pack_catalog 与 synced_pack_instances 两张表。',
 				},
 			],
 		},
@@ -305,15 +372,20 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		changes: {
 			added: [
 				{
-					'en-US': 'Cross-instance sync: share game options, resource packs, data packs, multiplayer servers, command history, and creative hotbars across instances, with per-option toggles and a fine-grained game-settings editor.',
-					'zh-CN': '跨实例同步：可跨实例共享游戏选项、资源包、数据包、多人服务器、命令历史与创造模式快捷栏，支持逐项开关与精细的游戏设置编辑器。',
+					'en-US':
+						'Cross-instance sync: share game options, resource packs, data packs, multiplayer servers, command history, and creative hotbars across instances, with per-option toggles and a fine-grained game-settings editor.',
+					'zh-CN':
+						'跨实例同步：可跨实例共享游戏选项、资源包、数据包、多人服务器、命令历史与创造模式快捷栏，支持逐项开关与精细的游戏设置编辑器。',
 				},
 				{
-					'en-US': 'Starlight turns 12! On October 4th every year the launcher now shows a celebration banner and falling confetti. The anniversary number is computed from 2014.',
-					'zh-CN': 'Starlight 十二周年！每年 10 月 4 日，启动器会显示庆祝横幅与飘落的彩带、蛋糕，周年数按 2014 年起算。',
+					'en-US':
+						'Starlight turns 12! On October 4th every year the launcher now shows a celebration banner and falling confetti. The anniversary number is computed from 2014.',
+					'zh-CN':
+						'Starlight 十二周年！每年 10 月 4 日，启动器会显示庆祝横幅与飘落的彩带、蛋糕，周年数按 2014 年起算。',
 				},
 				{
-					'en-US': 'Added a developer feature flag to preview the anniversary celebration at any time.',
+					'en-US':
+						'Added a developer feature flag to preview the anniversary celebration at any time.',
 					'zh-CN': '新增开发者功能开关，可随时预览周年庆效果。',
 				},
 			],
@@ -330,8 +402,10 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		changes: {
 			added: [
 				{
-					'en-US': 'Instance backups: create deduplicated snapshots of an instance while it is closed, preview and restore them, exclude specific files or folders, and move the backup repository.',
-					'zh-CN': '实例备份：在实例关闭时创建去重快照，可预览与恢复，支持排除指定文件或文件夹，并可迁移备份仓库。',
+					'en-US':
+						'Instance backups: create deduplicated snapshots of an instance while it is closed, preview and restore them, exclude specific files or folders, and move the backup repository.',
+					'zh-CN':
+						'实例备份：在实例关闭时创建去重快照，可预览与恢复，支持排除指定文件或文件夹，并可迁移备份仓库。',
 				},
 				{
 					'en-US': "Customize the launcher's UI font and monospace font in appearance settings.",
@@ -340,12 +414,16 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 			],
 			fixed: [
 				{
-					'en-US': 'Fixed beta builds not auto-updating from beta9 to beta10 (prerelease versions were compared as text instead of by number).',
-					'zh-CN': '修复 beta 版本无法从 beta9 自动更新到 beta10 的问题（预发布版本此前按文本而非数字比较）。',
+					'en-US':
+						'Fixed beta builds not auto-updating from beta9 to beta10 (prerelease versions were compared as text instead of by number).',
+					'zh-CN':
+						'修复 beta 版本无法从 beta9 自动更新到 beta10 的问题（预发布版本此前按文本而非数字比较）。',
 				},
 				{
-					'en-US': 'Fixed a cross-crate visibility issue that prevented the launcher from compiling with the ignore-SSL-errors option.',
-					'zh-CN': '修复因跨 crate 可见性导致的编译失败，此前启用“忽略 SSL 证书错误”选项时无法编译。',
+					'en-US':
+						'Fixed a cross-crate visibility issue that prevented the launcher from compiling with the ignore-SSL-errors option.',
+					'zh-CN':
+						'修复因跨 crate 可见性导致的编译失败，此前启用“忽略 SSL 证书错误”选项时无法编译。',
 				},
 			],
 		},
@@ -361,11 +439,13 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		changes: {
 			added: [
 				{
-					'en-US': 'Reworked the instance-page tour into four steps covering content, files, worlds, and logs.',
+					'en-US':
+						'Reworked the instance-page tour into four steps covering content, files, worlds, and logs.',
 					'zh-CN': '重做实例页导览，分为内容、文件、世界、日志四步。',
 				},
 				{
-					'en-US': 'When the install location is a drive root, the installer now creates a Starlight subfolder automatically.',
+					'en-US':
+						'When the install location is a drive root, the installer now creates a Starlight subfolder automatically.',
 					'zh-CN': '安装位置选到盘符根目录时，安装器会自动创建 Starlight 子文件夹。',
 				},
 			],
@@ -379,11 +459,13 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 					'zh-CN': '修复开发者功能开关无法保存的问题。',
 				},
 				{
-					'en-US': 'Fixed instance group edits not saving for instances without an applied content set.',
+					'en-US':
+						'Fixed instance group edits not saving for instances without an applied content set.',
 					'zh-CN': '修复没有应用内容集的实例无法保存分组修改的问题。',
 				},
 				{
-					'en-US': 'Fixed the launcher crashing on startup when feature flags were out of sync between the frontend and backend.',
+					'en-US':
+						'Fixed the launcher crashing on startup when feature flags were out of sync between the frontend and backend.',
 					'zh-CN': '修复前后端功能开关不同步导致启动器启动崩溃的问题。',
 				},
 				{
@@ -500,12 +582,10 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 				{
 					'en-US':
 						'Fixed the onboarding tour skipping steps automatically, getting stuck, or not navigating between steps; the tour bubble no longer covers the left navigation bar.',
-					'zh-CN':
-						'修复新手导览自动跳过、卡住或不跳转的问题；导览气泡不再遮挡左侧导航栏。',
+					'zh-CN': '修复新手导览自动跳过、卡住或不跳转的问题；导览气泡不再遮挡左侧导航栏。',
 				},
 				{
-					'en-US':
-						'Fixed the onboarding tour target on the minimal home layout.',
+					'en-US': 'Fixed the onboarding tour target on the minimal home layout.',
 					'zh-CN': '修复精简主页下导览目标找不到的问题。',
 				},
 			],
@@ -536,13 +616,11 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 			],
 			fixed: [
 				{
-					'en-US':
-						'Fixed the developer feature flags page rendering blank.',
+					'en-US': 'Fixed the developer feature flags page rendering blank.',
 					'zh-CN': '修复开发者“功能开关”页面空白的问题。',
 				},
 				{
-					'en-US':
-						'Fixed a build error that prevented the launcher from compiling.',
+					'en-US': 'Fixed a build error that prevented the launcher from compiling.',
 					'zh-CN': '修复导致启动器无法编译的构建错误。',
 				},
 			],
@@ -559,8 +637,7 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		changes: {
 			fixed: [
 				{
-					'en-US':
-						'Fixed a build error in 1.0.1-beta3 that prevented the launcher from compiling.',
+					'en-US': 'Fixed a build error in 1.0.1-beta3 that prevented the launcher from compiling.',
 					'zh-CN': '修复 1.0.1-beta3 中导致启动器无法编译的构建错误。',
 				},
 			],
@@ -619,8 +696,7 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 			],
 			fixed: [
 				{
-					'en-US':
-						'Improved the reliability of live logs and database switching.',
+					'en-US': 'Improved the reliability of live logs and database switching.',
 					'zh-CN': '提高实时日志与数据库切换的可靠性。',
 				},
 			],
@@ -712,15 +788,13 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 					'zh-CN': '修复更新清单的下载地址与发布顺序，更新检查现在可以成功。',
 				},
 				{
-					'en-US':
-						'Updated the signing key pair used to sign update packages.',
+					'en-US': 'Updated the signing key pair used to sign update packages.',
 					'zh-CN': '更新了用于签名更新包的密钥对。',
 				},
 			],
 			changed: [
 				{
-					'en-US':
-						'Removed upstream release announcements prior to 1.0.0-beta1.',
+					'en-US': 'Removed upstream release announcements prior to 1.0.0-beta1.',
 					'zh-CN': '移除了 1.0.0-beta1 之前的上游版本公告。',
 				},
 			],
@@ -737,13 +811,11 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 		changes: {
 			added: [
 				{
-					'en-US':
-						'Installing a modpack now lets you choose the game directory.',
+					'en-US': 'Installing a modpack now lets you choose the game directory.',
 					'zh-CN': '一键安装整合包时现在可以选择游戏目录。',
 				},
 				{
-					'en-US':
-						'Approved (hosted) modpack sync and StarLight instance mode were added.',
+					'en-US': 'Approved (hosted) modpack sync and StarLight instance mode were added.',
 					'zh-CN': '新增获批整合包同步与 StarLight 实例模式。',
 				},
 				{
@@ -754,8 +826,7 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 			],
 			changed: [
 				{
-					'en-US':
-						'The about page now plays a looping wither victory animation.',
+					'en-US': 'The about page now plays a looping wither victory animation.',
 					'zh-CN': '关于页现在会播放循环的凋灵胜利动画。',
 				},
 			],
@@ -767,8 +838,7 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 						'修复从 .minecraft 文件夹导入实例的多项问题（内容复制、版本隔离、符号链接、加载器版本识别等）。',
 				},
 				{
-					'en-US':
-						'Fixed the instance log view stopping updates and overlapping log lines.',
+					'en-US': 'Fixed the instance log view stopping updates and overlapping log lines.',
 					'zh-CN': '修复实例日志窗口停更与日志行重叠的问题。',
 				},
 				{
@@ -787,8 +857,7 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 					'zh-CN': '修复未登录皮肤站时启动卡住且不再弹出玩家选择的问题。',
 				},
 				{
-					'en-US':
-						'Fixed various skin site login, player list sync, and display issues.',
+					'en-US': 'Fixed various skin site login, player list sync, and display issues.',
 					'zh-CN': '修复皮肤站登录、玩家列表同步及若干显示问题。',
 				},
 			],
@@ -807,7 +876,8 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 				{
 					'en-US':
 						'The launcher has been rebranded from Axolotl Launcher to Starlight Launcher, with a new icon and a refreshed about page.',
-					'zh-CN': '启动器已从 Axolotl Launcher 更名为 Starlight Launcher，并更换了全新图标与关于页。',
+					'zh-CN':
+						'启动器已从 Axolotl Launcher 更名为 Starlight Launcher，并更换了全新图标与关于页。',
 				},
 				{
 					'en-US':
@@ -821,7 +891,8 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 			],
 			added: [
 				{
-					'en-US': 'A "Starlight" entry was added to the sidebar, which embeds the StarLight skin site.',
+					'en-US':
+						'A "Starlight" entry was added to the sidebar, which embeds the StarLight skin site.',
 					'zh-CN': '侧边栏新增「斯达莱特」入口，内嵌 StarLight 皮肤站。',
 				},
 				{
@@ -840,10 +911,12 @@ export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 				{
 					'en-US':
 						'The hard-coded Starlight official server was removed from "Pinned servers"; only servers you favorite yourself are shown now.',
-					'zh-CN': '移除了「固定的服务器」中写死的 Starlight 官方服务器，现在只显示你自己收藏的服务器。',
+					'zh-CN':
+						'移除了「固定的服务器」中写死的 Starlight 官方服务器，现在只显示你自己收藏的服务器。',
 				},
 				{
-					'en-US': 'The swimming axolotl animation on the about page was replaced with a static nether star.',
+					'en-US':
+						'The swimming axolotl animation on the about page was replaced with a static nether star.',
 					'zh-CN': '关于页中游动的美西螈动画已替换为静止的下界之星。',
 				},
 			],
