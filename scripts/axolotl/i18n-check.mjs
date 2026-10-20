@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises'
 import { parse, TYPE } from '@formatjs/icu-messageformat-parser'
+import { collectSkinSiteMessages } from './skin-site-messages.mjs'
 
 const localePairs = [
 	[
@@ -10,6 +11,22 @@ const localePairs = [
 ]
 
 const failures = []
+const skinSiteCatalogs = Object.fromEntries(
+	await Promise.all(
+		['en-US', 'zh-CN'].map(async (locale) => [
+			locale,
+			JSON.parse(await readFile(`apps/app-frontend/src/locales/${locale}/index.json`, 'utf8')),
+		]),
+	),
+)
+for (const { id, file } of collectSkinSiteMessages()) {
+	for (const locale of ['en-US', 'zh-CN']) {
+		const catalogPath = `apps/app-frontend/src/locales/${locale}/index.json`
+		const catalog = skinSiteCatalogs[locale]
+		if (!catalog[id]?.message)
+			failures.push(`${catalogPath}: missing source message ${id} (${file})`)
+	}
+}
 const allowedUntranslatedMessages = new Set([
 	'Chaos Cubed',
 	'MINECON Earth 2017',

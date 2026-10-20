@@ -689,6 +689,46 @@ fn bounded_diagnostic_text(value: impl AsRef<str>, max_chars: usize) -> String {
     value.as_ref().chars().take(max_chars).collect()
 }
 
+fn sanitize_download_error_text(value: &str) -> String {
+    static URLS: LazyLock<regex::Regex> = LazyLock::new(|| {
+        regex::Regex::new(r"(?i)\b(?:https?|socks4a?|socks5h?)://[^\s]+")
+            .expect("download diagnostic URL pattern should be valid")
+    });
+    let sanitized = URLS.replace_all(value, |matched: &regex::Captures<'_>| {
+        let url = &matched[0];
+        // A malformed URL must not fall back to logging its userinfo. The
+        // normal helper also strips signed query strings and fragments.
+        if Url::parse(url).is_ok() {
+            sanitize_url_for_log(url)
+        } else {
+            "[redacted URL]".to_string()
+        }
+    });
+    bounded_diagnostic_text(sanitized, 256)
+}
+
+fn download_transport_error_detail(source: &reqwest::Error) -> String {
+    // reqwest's Display stops before the useful DNS/TLS/socket cause and can
+    // include a signed request URL. Walk only its underlying causes instead.
+    let mut details = Vec::new();
+    let mut cause = source.source();
+    while let Some(error) = cause {
+        let detail = sanitize_download_error_text(&error.to_string());
+        if details.last() != Some(&detail) {
+            details.push(detail);
+        }
+        if details.len() == 8 {
+            break;
+        }
+        cause = error.source();
+    }
+    if details.is_empty() {
+        sanitize_download_error_text(&source.to_string())
+    } else {
+        bounded_diagnostic_text(details.join(": "), 256)
+    }
+}
+
 fn download_error_category(error: &crate::Error) -> &'static str {
     match error.raw.as_ref() {
         ErrorKind::FetchError(source) => {
@@ -750,7 +790,16 @@ fn download_error_category(error: &crate::Error) -> &'static str {
 fn download_error_detail(error: &crate::Error) -> String {
     match error.raw.as_ref() {
         ErrorKind::FetchError(source) => source.status().map_or_else(
-            || format!("{} failure", download_error_category(error)),
+            || {
+                bounded_diagnostic_text(
+                    format!(
+                        "{} failure: {}",
+                        download_error_category(error),
+                        download_transport_error_detail(source)
+                    ),
+                    256,
+                )
+            },
             |status| format!("HTTP {}", status.as_u16()),
         ),
         ErrorKind::LabrinthError(error) => error.status.map_or_else(
@@ -929,8 +978,10 @@ fn add_starlight_direct_recovery_route(routes: &mut Vec<DownloadRoute>) {
         .filter(|route| {
             route.proxy == ProxyPolicy::System
                 && Url::parse(&route.url).ok().is_some_and(|url| {
-                    url.host_str() == Some("skin.starlight.cool")
-                        && url.path().starts_with("/starlight/mod/packs/files/")
+                    matches!(
+                        url.host_str(),
+                        Some("skin.starlight.cool" | "download.starlight.cool")
+                    ) && url.path().starts_with("/starlight/mod/packs/files/")
                 })
         })
         .cloned()
@@ -6308,7 +6359,9 @@ async fn download_to_path_inner(
                             source = route.source.as_str(),
                             attempt = attempts,
                             max_attempts = file_attempt_budget,
-                            error = %error,
+                            proxy = ?route.proxy,
+                            category = download_error_category(&error),
+                            error = %download_error_detail(&error),
                             "File download request failed; trying the next source or retry"
                         );
                         last_error = Some(error);
@@ -8857,18 +8910,86 @@ mod tests {
 
     #[test]
     fn starlight_hosted_files_have_a_direct_recovery_route() {
-        let mut routes = vec![official_route(
+        for url in [
             "https://skin.starlight.cool/starlight/mod/packs/files/release/hash",
-            ResourceClass::Modpack,
-        )];
+            "https://download.starlight.cool:20443/starlight/mod/packs/files/4/hash",
+        ] {
+            let mut routes = vec![official_route(url, ResourceClass::Modpack)];
+            add_starlight_direct_recovery_route(&mut routes);
+            add_starlight_direct_recovery_route(&mut routes);
 
-        add_starlight_direct_recovery_route(&mut routes);
+            assert_eq!(routes.len(), 2, "{url}");
+            assert_eq!(routes[0].proxy, ProxyPolicy::System);
+            assert_eq!(routes[1].proxy, ProxyPolicy::Direct);
+            assert_eq!(routes[0].url, routes[1].url);
+            assert!(routes[1].allow_sensitive_headers);
+        }
+    }
 
-        assert_eq!(routes.len(), 2);
-        assert_eq!(routes[0].proxy, ProxyPolicy::System);
-        assert_eq!(routes[1].proxy, ProxyPolicy::Direct);
-        assert_eq!(routes[0].url, routes[1].url);
-        assert!(routes[1].allow_sensitive_headers);
+    #[test]
+    fn starlight_direct_recovery_excludes_other_paths_and_lookalike_hosts() {
+        for url in [
+            "https://download.starlight.cool:20443/starlight/mod/packs",
+            "https://download.starlight.cool.evil.example/starlight/mod/packs/files/4/hash",
+            "https://evil.example/starlight/mod/packs/files/4/hash",
+            "https://skin.starlight.cool/yggdrasil",
+        ] {
+            let mut routes = vec![official_route(url, ResourceClass::Modpack)];
+            add_starlight_direct_recovery_route(&mut routes);
+            assert_eq!(routes.len(), 1, "{url}");
+        }
+    }
+
+    #[tokio::test]
+    async fn download_transport_diagnostic_preserves_causes_without_url_secrets()
+     {
+        let listener =
+            tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        drop(listener);
+        let url = format!(
+            "http://username:password@{address}/file?token=secret#fragment"
+        );
+        let error: crate::Error = reqwest::Client::builder()
+            .no_proxy()
+            .build()
+            .unwrap()
+            .get(url)
+            .send()
+            .await
+            .unwrap_err()
+            .into();
+        let detail = download_error_detail(&error);
+        assert_eq!(download_error_category(&error), "connect");
+        assert!(detail.contains("connect"), "{detail}");
+        assert!(
+            detail.contains("tcp") || detail.contains("os error"),
+            "{detail}"
+        );
+        for secret in ["username", "password", "token", "secret", "fragment"] {
+            assert!(!detail.contains(secret), "{detail}");
+        }
+    }
+
+    #[test]
+    fn download_transport_diagnostic_scrubs_embedded_urls() {
+        let detail = sanitize_download_error_text(
+            "request https://username:password@example.com/file?token=secret#fragment failed: connecting to http://proxyuser:proxypass@proxy.example:8080/?key=proxysecret: connection refused",
+        );
+        assert!(detail.contains("https://example.com/file"), "{detail}");
+        assert!(detail.contains("http://proxy.example:8080/"), "{detail}");
+        assert!(detail.contains("connection refused"), "{detail}");
+        for secret in [
+            "username",
+            "password",
+            "token",
+            "secret",
+            "fragment",
+            "proxyuser",
+            "proxypass",
+        ] {
+            assert!(!detail.contains(secret), "{detail}");
+        }
     }
 
     #[test]

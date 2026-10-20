@@ -232,11 +232,88 @@ pub fn fail_hosted_loading(key: &LoadingBarId, error: &str) {
         && let Some(mut bar) = state.loading_bars.get_mut(&key.0)
     {
         match &mut bar.bar_type {
-            LoadingBarType::HostedPackSync { error: failure, .. }
-            | LoadingBarType::HostedModDownload { error: failure, .. } => {
+            LoadingBarType::HostedPackSync {
+                error: failure,
+                state,
+                can_pause,
+                can_cancel,
+                ..
+            } => {
+                use crate::api::pack::hosted::HostedTaskState;
+                *state = if *state == HostedTaskState::Canceling {
+                    HostedTaskState::Canceled
+                } else {
+                    HostedTaskState::Failed
+                };
+                *can_pause = false;
+                *can_cancel = false;
+                *failure = Some(error.to_owned());
+            }
+            LoadingBarType::HostedModDownload { error: failure, .. } => {
                 *failure = Some(error.to_owned())
             }
             _ => {}
+        }
+    }
+}
+
+/// Update the authoritative snapshot and notify observers even while all
+/// transfer futures are paused and no byte-progress event can be produced.
+pub fn set_hosted_loading_state(
+    instance_id: &str,
+    next: crate::api::pack::hosted::HostedTaskState,
+) {
+    use crate::api::pack::hosted::HostedTaskState;
+    let Ok(event_state) = crate::EventState::get() else {
+        return;
+    };
+    for mut bar in event_state.loading_bars.iter_mut() {
+        let LoadingBarType::HostedPackSync {
+            instance_id: id,
+            state,
+            can_pause,
+            can_cancel,
+            ..
+        } = &mut bar.bar_type
+        else {
+            continue;
+        };
+        if id != instance_id {
+            continue;
+        }
+        *state = next;
+        let controllable =
+            matches!(next, HostedTaskState::Running | HostedTaskState::Paused);
+        *can_pause = controllable;
+        *can_cancel = controllable;
+        match next {
+            HostedTaskState::Paused => {
+                bar.message = "已暂停，点击继续以恢复下载".into()
+            }
+            HostedTaskState::Canceling => {
+                bar.message = "正在停止整合包下载".into()
+            }
+            HostedTaskState::Running => {
+                bar.message = "正在继续整合包下载".into()
+            }
+            _ => {}
+        }
+        #[cfg(feature = "tauri")]
+        {
+            let _ = event_state.app.emit(
+                "loading",
+                LoadingPayload {
+                    fraction: Some(if bar.total > 0.0 {
+                        bar.current / bar.total
+                    } else {
+                        0.0
+                    }),
+                    message: bar.message.clone(),
+                    event: bar.bar_type.clone(),
+                    loader_uuid: bar.loading_bar_uuid,
+                    total: Some(bar.total),
+                },
+            );
         }
     }
 }

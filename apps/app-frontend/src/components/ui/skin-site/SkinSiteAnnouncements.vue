@@ -1,8 +1,13 @@
 <script setup lang="ts">
 import { SpinnerIcon } from '@modrinth/assets'
-import { defineMessages, useVIntl } from '@modrinth/ui'
-import { onMounted, ref } from 'vue'
+import { commonMessages, defineMessages, useVIntl } from '@modrinth/ui'
+import { onUnmounted, ref, watch } from 'vue'
 
+import {
+	reloadSkinSiteSession,
+	skinSiteStatus,
+	skinSiteUser,
+} from '@/composables/skin-site-session'
 import { type SkinSiteAnnouncement, skinSiteAnnouncements } from '@/helpers/skin-site-api'
 
 const { formatMessage } = useVIntl()
@@ -18,11 +23,16 @@ const messages = defineMessages({
 		id: 'app.skin-site.home.announcements.failed',
 		defaultMessage: 'Could not load announcements.',
 	},
+	signedOut: {
+		id: 'app.skin-site.home.announcements.signed-out',
+		defaultMessage: 'Sign in to view announcements.',
+	},
 })
 
 const announcements = ref<SkinSiteAnnouncement[]>([])
 const loading = ref(true)
 const failed = ref(false)
+let requestId = 0
 
 function formatDate(ts: number): string {
 	try {
@@ -32,9 +42,16 @@ function formatDate(ts: number): string {
 	}
 }
 
-onMounted(async () => {
+async function load() {
+	const currentRequest = ++requestId
+	announcements.value = []
+	failed.value = skinSiteStatus.value === 'error'
+	loading.value = skinSiteStatus.value === 'checking'
+	if (skinSiteStatus.value !== 'signed-in') return
+	loading.value = true
 	try {
 		const result = await skinSiteAnnouncements()
+		if (currentRequest !== requestId) return
 		if (result.success) {
 			announcements.value = [...(result.payload ?? [])]
 				.sort((a, b) => {
@@ -46,10 +63,20 @@ onMounted(async () => {
 			failed.value = true
 		}
 	} catch {
-		failed.value = true
+		if (currentRequest === requestId) failed.value = true
 	} finally {
-		loading.value = false
+		if (currentRequest === requestId) loading.value = false
 	}
+}
+
+async function retry() {
+	if (skinSiteStatus.value === 'error') await reloadSkinSiteSession()
+	else await load()
+}
+
+watch([skinSiteStatus, () => skinSiteUser.value?.uuid], load, { immediate: true })
+onUnmounted(() => {
+	requestId++
 })
 </script>
 
@@ -63,8 +90,14 @@ onMounted(async () => {
 			<SpinnerIcon class="size-4 animate-spin" />
 			{{ formatMessage(messages.loading) }}
 		</div>
-		<p v-else-if="failed" class="m-0 text-sm text-secondary">
-			{{ formatMessage(messages.failed) }}
+		<div v-else-if="failed" class="flex items-center gap-2 text-sm text-secondary">
+			<p class="m-0">{{ formatMessage(messages.failed) }}</p>
+			<button type="button" class="text-brand hover:underline" @click="retry">
+				{{ formatMessage(commonMessages.retryButton) }}
+			</button>
+		</div>
+		<p v-else-if="skinSiteStatus === 'signed-out'" class="m-0 text-sm text-secondary">
+			{{ formatMessage(messages.signedOut) }}
 		</p>
 		<p v-else-if="!announcements.length" class="m-0 text-sm text-secondary">
 			{{ formatMessage(messages.empty) }}

@@ -7,6 +7,16 @@ import {
 	skinSiteWikiAudit,
 	type SkinSiteWikiAuditInfo,
 	type SkinSiteWikiEditPolicy,
+	type SkinSiteWikiMigrationCandidate,
+	skinSiteWikiMigrationCandidates,
+	skinSiteWikiMigrationDecide,
+	skinSiteWikiMigrationDelete,
+	type SkinSiteWikiMigrationJobInfo,
+	skinSiteWikiMigrationJobs,
+	skinSiteWikiMigrationPublish,
+	skinSiteWikiMigrationRollback,
+	skinSiteWikiMigrationStartAutomatic,
+	skinSiteWikiMigrationStartXml,
 	skinSiteWikiPage,
 	type SkinSiteWikiPageDetail,
 	skinSiteWikiProtectPage,
@@ -16,22 +26,18 @@ import {
 	type SkinSiteWikiSettings,
 	skinSiteWikiSettings,
 	skinSiteWikiUpdateSettings,
-	skinSiteWikiMigrationCandidates,
-	skinSiteWikiMigrationDecide,
-	skinSiteWikiMigrationDelete,
-	skinSiteWikiMigrationJobs,
-	skinSiteWikiMigrationPublish,
-	skinSiteWikiMigrationRollback,
-	skinSiteWikiMigrationStartAutomatic,
-	skinSiteWikiMigrationStartXml,
-	type SkinSiteWikiMigrationCandidate,
-	type SkinSiteWikiMigrationJobInfo,
 } from '@/helpers/skin-site-api'
 
 const { formatMessage } = useVIntl()
 const { handleError, addNotification } = injectNotificationManager()
 
 const messages = defineMessages({
+	policyPublic: { id: 'app.skin-site.admin.wiki.policy-public', defaultMessage: 'Everyone' },
+	policyMember: { id: 'app.skin-site.admin.wiki.policy-member', defaultMessage: 'Members' },
+	policyAdmin: {
+		id: 'app.skin-site.admin.wiki.policy-admin',
+		defaultMessage: 'Website administrators',
+	},
 	title: { id: 'app.skin-site.admin.wiki.title', defaultMessage: 'Wiki' },
 	tabPage: { id: 'app.skin-site.admin.wiki.tab-page', defaultMessage: 'Page' },
 	tabAudit: { id: 'app.skin-site.admin.wiki.tab-audit', defaultMessage: 'Audit log' },
@@ -61,7 +67,8 @@ const messages = defineMessages({
 	},
 	credentialsHint: {
 		id: 'app.skin-site.admin.wiki.credentials-hint',
-		defaultMessage: 'Credentials stay in memory for this job only. HTTPS is required when supplied.',
+		defaultMessage:
+			'Credentials stay in memory for this job only. HTTPS is required when supplied.',
 	},
 	allowPrivate: {
 		id: 'app.skin-site.admin.wiki.allow-private',
@@ -529,8 +536,7 @@ async function loadMigrationJobs() {
 		if (!res.success) throw new Error(res.errorMessage)
 		migrationJobs.value = res.payload ?? []
 		if (selectedJob.value) {
-			selectedJob.value =
-				migrationJobs.value.find((j) => j.id === selectedJob.value!.id) ?? null
+			selectedJob.value = migrationJobs.value.find((j) => j.id === selectedJob.value!.id) ?? null
 		}
 	} catch (error) {
 		handleError(error)
@@ -821,8 +827,8 @@ onMounted(() => void loadSettings())
 							v-model="protectRead"
 							class="rounded-lg border border-solid border-surface-5 bg-bg px-2 py-1 text-xs text-contrast"
 						>
-							<option value="PUBLIC">PUBLIC</option>
-							<option value="MEMBER">MEMBER</option>
+							<option value="PUBLIC">{{ formatMessage(messages.policyPublic) }}</option>
+							<option value="MEMBER">{{ formatMessage(messages.policyMember) }}</option>
 						</select>
 					</label>
 					<label class="flex flex-col gap-1">
@@ -833,8 +839,8 @@ onMounted(() => void loadSettings())
 							v-model="protectEdit"
 							class="rounded-lg border border-solid border-surface-5 bg-bg px-2 py-1 text-xs text-contrast"
 						>
-							<option value="MEMBER">MEMBER</option>
-							<option value="WEB_ADMIN">WEB_ADMIN</option>
+							<option value="MEMBER">{{ formatMessage(messages.policyMember) }}</option>
+							<option value="WEB_ADMIN">{{ formatMessage(messages.policyAdmin) }}</option>
 						</select>
 					</label>
 					<button
@@ -1045,24 +1051,60 @@ onMounted(() => void loadSettings())
 						</summary>
 						<div class="mt-3 grid gap-2 sm:grid-cols-3">
 							<label class="flex flex-col gap-1">
-								<span class="text-[11px] text-secondary">{{ formatMessage(messages.staleDays) }}</span>
-								<input v-model.number="automaticForm.rules.staleDays" type="number" min="1" max="36500" class="rounded-lg border border-solid border-surface-5 bg-bg px-2 py-1 text-xs text-contrast" />
+								<span class="text-[11px] text-secondary">{{
+									formatMessage(messages.staleDays)
+								}}</span>
+								<input
+									v-model.number="automaticForm.rules.staleDays"
+									type="number"
+									min="1"
+									max="36500"
+									class="rounded-lg border border-solid border-surface-5 bg-bg px-2 py-1 text-xs text-contrast"
+								/>
 							</label>
 							<label class="flex flex-col gap-1">
-								<span class="text-[11px] text-secondary">{{ formatMessage(messages.maintainerWindow) }}</span>
-								<input v-model.number="automaticForm.rules.maintainerWindowDays" type="number" min="1" max="36500" class="rounded-lg border border-solid border-surface-5 bg-bg px-2 py-1 text-xs text-contrast" />
+								<span class="text-[11px] text-secondary">{{
+									formatMessage(messages.maintainerWindow)
+								}}</span>
+								<input
+									v-model.number="automaticForm.rules.maintainerWindowDays"
+									type="number"
+									min="1"
+									max="36500"
+									class="rounded-lg border border-solid border-surface-5 bg-bg px-2 py-1 text-xs text-contrast"
+								/>
 							</label>
 							<label class="flex flex-col gap-1">
-								<span class="text-[11px] text-secondary">{{ formatMessage(messages.maxMaintainers) }}</span>
-								<input v-model.number="automaticForm.rules.maximumMaintainers" type="number" min="0" max="100" class="rounded-lg border border-solid border-surface-5 bg-bg px-2 py-1 text-xs text-contrast" />
+								<span class="text-[11px] text-secondary">{{
+									formatMessage(messages.maxMaintainers)
+								}}</span>
+								<input
+									v-model.number="automaticForm.rules.maximumMaintainers"
+									type="number"
+									min="0"
+									max="100"
+									class="rounded-lg border border-solid border-surface-5 bg-bg px-2 py-1 text-xs text-contrast"
+								/>
 							</label>
 							<label class="flex flex-col gap-1 sm:col-span-3">
-								<span class="text-[11px] text-secondary">{{ formatMessage(messages.staleMarkers) }}</span>
-								<input v-model="staleMarkersText" type="text" :placeholder="formatMessage(messages.staleMarkersHint)" class="rounded-lg border border-solid border-surface-5 bg-bg px-2 py-1 text-xs text-contrast" />
+								<span class="text-[11px] text-secondary">{{
+									formatMessage(messages.staleMarkers)
+								}}</span>
+								<input
+									v-model="staleMarkersText"
+									type="text"
+									:placeholder="formatMessage(messages.staleMarkersHint)"
+									class="rounded-lg border border-solid border-surface-5 bg-bg px-2 py-1 text-xs text-contrast"
+								/>
 							</label>
 						</div>
 					</details>
-					<button type="button" class="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-contrast hover:brightness-110 disabled:opacity-50" :disabled="startingMigration" @click="startAutomaticMigration">
+					<button
+						type="button"
+						class="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-contrast hover:brightness-110 disabled:opacity-50"
+						:disabled="startingMigration"
+						@click="startAutomaticMigration"
+					>
 						{{ formatMessage(messages.startAuto) }}
 					</button>
 				</div>
@@ -1075,9 +1117,19 @@ onMounted(() => void loadSettings())
 						<span class="text-xs font-semibold text-secondary">
 							{{ formatMessage(messages.xmlFile) }}
 						</span>
-						<input ref="xmlInput" type="file" accept=".xml,text/xml,application/xml" class="text-xs text-contrast" />
+						<input
+							ref="xmlInput"
+							type="file"
+							accept=".xml,text/xml,application/xml"
+							class="text-xs text-contrast"
+						/>
 					</label>
-					<button type="button" class="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-contrast hover:brightness-110 disabled:opacity-50" :disabled="startingMigration" @click="startXmlMigration">
+					<button
+						type="button"
+						class="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-contrast hover:brightness-110 disabled:opacity-50"
+						:disabled="startingMigration"
+						@click="startXmlMigration"
+					>
 						{{ formatMessage(messages.startXml) }}
 					</button>
 				</div>
@@ -1087,16 +1139,27 @@ onMounted(() => void loadSettings())
 						<h4 class="m-0 text-sm font-bold text-contrast">
 							{{ formatMessage(messages.jobs) }}
 						</h4>
-						<button type="button" class="rounded-lg bg-button-bg px-3 py-1 text-xs font-semibold text-contrast hover:brightness-110 disabled:opacity-50" :disabled="jobsLoading" @click="loadMigrationJobs">
+						<button
+							type="button"
+							class="rounded-lg bg-button-bg px-3 py-1 text-xs font-semibold text-contrast hover:brightness-110 disabled:opacity-50"
+							:disabled="jobsLoading"
+							@click="loadMigrationJobs"
+						>
 							{{ formatMessage(messages.refreshJobs) }}
 						</button>
 					</div>
 
-					<div v-if="jobsLoading" class="flex min-h-24 items-center justify-center gap-2 text-sm text-secondary">
+					<div
+						v-if="jobsLoading"
+						class="flex min-h-24 items-center justify-center gap-2 text-sm text-secondary"
+					>
 						<SpinnerIcon class="size-4 animate-spin" />
 						{{ formatMessage(messages.loading) }}
 					</div>
-					<p v-else-if="!migrationJobs.length" class="m-0 rounded-lg bg-bg-raised p-3 text-xs text-secondary">
+					<p
+						v-else-if="!migrationJobs.length"
+						class="m-0 rounded-lg bg-bg-raised p-3 text-xs text-secondary"
+					>
 						{{ formatMessage(messages.jobsEmpty) }}
 					</p>
 					<div v-else class="flex flex-col gap-2">
@@ -1107,21 +1170,43 @@ onMounted(() => void loadSettings())
 							:class="selectedJob?.id === job.id ? 'border-brand bg-brand/5' : 'border-surface-5'"
 						>
 							<div class="flex flex-wrap items-center justify-between gap-2">
-								<span class="text-sm font-semibold text-contrast">#{{ job.id }} · {{ job.source }}</span>
-								<span class="rounded-full px-2 py-0.5 text-[10px] font-semibold" :class="jobStateClass(job.state)">
+								<span class="text-sm font-semibold text-contrast"
+									>#{{ job.id }} · {{ job.source }}</span
+								>
+								<span
+									class="rounded-full px-2 py-0.5 text-[10px] font-semibold"
+									:class="jobStateClass(job.state)"
+								>
 									{{ jobStateLabel(job.state) }}
 								</span>
 							</div>
 							<div class="mt-2 h-1.5 overflow-hidden rounded-full bg-button-bg">
-								<div class="h-full bg-brand transition-all" :style="{ width: (job.total ? (job.reviewed / job.total) * 100 : 0) + '%' }"></div>
+								<div
+									class="h-full bg-brand transition-all"
+									:style="{ width: (job.total ? (job.reviewed / job.total) * 100 : 0) + '%' }"
+								></div>
 							</div>
 							<div class="mt-2 flex flex-wrap justify-between gap-2 text-[11px] text-secondary">
-								<span>{{ formatMessage(messages.reviewedCount, { reviewed: job.reviewed, total: job.total }) }}</span>
-								<span>{{ formatMessage(messages.importedExcluded, { imported: job.imported, excluded: job.excluded }) }}</span>
+								<span>{{
+									formatMessage(messages.reviewedCount, {
+										reviewed: job.reviewed,
+										total: job.total,
+									})
+								}}</span>
+								<span>{{
+									formatMessage(messages.importedExcluded, {
+										imported: job.imported,
+										excluded: job.excluded,
+									})
+								}}</span>
 							</div>
 							<p v-if="job.error" class="m-0 mt-2 text-xs text-red">{{ job.error }}</p>
 							<div class="mt-2 flex flex-wrap justify-end gap-2">
-								<button type="button" class="rounded-lg bg-button-bg px-3 py-1 text-xs font-semibold text-contrast hover:brightness-110" @click="selectJob(job)">
+								<button
+									type="button"
+									class="rounded-lg bg-button-bg px-3 py-1 text-xs font-semibold text-contrast hover:brightness-110"
+									@click="selectJob(job)"
+								>
 									{{ formatMessage(messages.viewJob) }}
 								</button>
 								<button
@@ -1139,10 +1224,19 @@ onMounted(() => void loadSettings())
 									{{ formatMessage(messages.confirmDeleteJob, { id: job.id }) }}
 								</p>
 								<div class="mt-2 flex justify-end gap-2">
-									<button type="button" class="rounded-lg bg-button-bg px-3 py-1 text-xs font-semibold text-secondary" @click="confirmingDeleteId = null">
+									<button
+										type="button"
+										class="rounded-lg bg-button-bg px-3 py-1 text-xs font-semibold text-secondary"
+										@click="confirmingDeleteId = null"
+									>
 										{{ formatMessage(messages.cancel) }}
 									</button>
-									<button type="button" class="rounded-lg bg-red px-3 py-1 text-xs font-semibold text-contrast disabled:opacity-50" :disabled="deletingJob" @click="deleteJob(job)">
+									<button
+										type="button"
+										class="rounded-lg bg-red px-3 py-1 text-xs font-semibold text-contrast disabled:opacity-50"
+										:disabled="deletingJob"
+										@click="deleteJob(job)"
+									>
 										{{ formatMessage(messages.deleteJob) }}
 									</button>
 								</div>
@@ -1151,7 +1245,10 @@ onMounted(() => void loadSettings())
 					</div>
 				</div>
 
-				<div v-if="selectedJob" class="flex flex-col gap-3 rounded-xl border border-solid border-surface-5 p-4">
+				<div
+					v-if="selectedJob"
+					class="flex flex-col gap-3 rounded-xl border border-solid border-surface-5 p-4"
+				>
 					<div class="flex flex-wrap items-center justify-between gap-2">
 						<h4 class="m-0 text-sm font-bold text-contrast">
 							{{ formatMessage(messages.candidates) }}
@@ -1180,20 +1277,35 @@ onMounted(() => void loadSettings())
 					<div v-if="confirmingRollbackId === selectedJob.id" class="rounded-lg bg-yellow/10 p-2">
 						<p class="m-0 text-xs text-yellow">{{ formatMessage(messages.confirmRollback) }}</p>
 						<div class="mt-2 flex justify-end gap-2">
-							<button type="button" class="rounded-lg bg-button-bg px-3 py-1 text-xs font-semibold text-secondary" @click="confirmingRollbackId = null">
+							<button
+								type="button"
+								class="rounded-lg bg-button-bg px-3 py-1 text-xs font-semibold text-secondary"
+								@click="confirmingRollbackId = null"
+							>
 								{{ formatMessage(messages.cancel) }}
 							</button>
-							<button type="button" class="rounded-lg bg-yellow px-3 py-1 text-xs font-semibold text-contrast disabled:opacity-50" :disabled="rollingBack" @click="rollbackMigration">
+							<button
+								type="button"
+								class="rounded-lg bg-yellow px-3 py-1 text-xs font-semibold text-contrast disabled:opacity-50"
+								:disabled="rollingBack"
+								@click="rollbackMigration"
+							>
 								{{ formatMessage(messages.rollback) }}
 							</button>
 						</div>
 					</div>
 
-					<div v-if="candidatesLoading && !candidates.length" class="flex min-h-24 items-center justify-center gap-2 text-sm text-secondary">
+					<div
+						v-if="candidatesLoading && !candidates.length"
+						class="flex min-h-24 items-center justify-center gap-2 text-sm text-secondary"
+					>
 						<SpinnerIcon class="size-4 animate-spin" />
 						{{ formatMessage(messages.loading) }}
 					</div>
-					<p v-else-if="!candidates.length" class="m-0 rounded-lg bg-bg-raised p-3 text-xs text-secondary">
+					<p
+						v-else-if="!candidates.length"
+						class="m-0 rounded-lg bg-bg-raised p-3 text-xs text-secondary"
+					>
 						{{ formatMessage(messages.candidatesEmpty) }}
 					</p>
 					<div v-else class="flex flex-col gap-2">
@@ -1203,20 +1315,38 @@ onMounted(() => void loadSettings())
 							class="flex flex-col gap-2 rounded-lg border border-solid border-surface-5 p-3"
 						>
 							<div class="flex flex-wrap items-center gap-2">
-								<span class="min-w-0 flex-1 truncate text-sm font-semibold text-contrast">{{ candidate.title }}</span>
-								<span class="rounded-full px-2 py-0.5 text-[10px] font-semibold" :class="decisionClass(candidate.decision)">
+								<span class="min-w-0 flex-1 truncate text-sm font-semibold text-contrast">{{
+									candidate.title
+								}}</span>
+								<span
+									class="rounded-full px-2 py-0.5 text-[10px] font-semibold"
+									:class="decisionClass(candidate.decision)"
+								>
 									{{ decisionLabel(candidate.decision) }}
 								</span>
-								<span v-if="candidate.conflict" class="rounded-full bg-yellow/20 px-2 py-0.5 text-[10px] font-semibold text-yellow">
+								<span
+									v-if="candidate.conflict"
+									class="rounded-full bg-yellow/20 px-2 py-0.5 text-[10px] font-semibold text-yellow"
+								>
 									{{ formatMessage(messages.conflict) }}
 								</span>
 							</div>
 							<div class="flex flex-wrap gap-3 text-[11px] text-secondary">
-								<span>{{ formatMessage(messages.lastUpdated, { date: new Date(candidate.lastUpdatedAt).toLocaleDateString() }) }}</span>
-								<span>{{ formatMessage(messages.maintainerCount, { count: candidate.maintainerCount }) }}</span>
+								<span>{{
+									formatMessage(messages.lastUpdated, {
+										date: new Date(candidate.lastUpdatedAt).toLocaleDateString(),
+									})
+								}}</span>
+								<span>{{
+									formatMessage(messages.maintainerCount, { count: candidate.maintainerCount })
+								}}</span>
 							</div>
 							<div v-if="candidate.suspiciousReasons.length" class="flex flex-wrap gap-1">
-								<span v-for="reason in candidate.suspiciousReasons" :key="reason" class="rounded bg-bg px-1.5 py-0.5 text-[10px] text-secondary">
+								<span
+									v-for="reason in candidate.suspiciousReasons"
+									:key="reason"
+									class="rounded bg-bg px-1.5 py-0.5 text-[10px] text-secondary"
+								>
 									{{ reason }}
 								</span>
 							</div>
@@ -1228,13 +1358,25 @@ onMounted(() => void loadSettings())
 									class="min-w-0 flex-1 rounded-lg border border-solid border-surface-5 bg-bg-raised px-2 py-1 text-xs text-contrast outline-none focus:border-brand"
 								/>
 								<label class="flex cursor-pointer items-center gap-1.5 text-[11px] text-contrast">
-									<input v-model="candidateOverwrite[candidate.id]" type="checkbox" class="size-3" />
+									<input
+										v-model="candidateOverwrite[candidate.id]"
+										type="checkbox"
+										class="size-3"
+									/>
 									{{ formatMessage(messages.overwrite) }}
 								</label>
-								<button type="button" class="rounded-lg bg-green/20 px-3 py-1 text-xs font-semibold text-green hover:brightness-110" @click="decideCandidate(candidate, 'IMPORT')">
+								<button
+									type="button"
+									class="rounded-lg bg-green/20 px-3 py-1 text-xs font-semibold text-green hover:brightness-110"
+									@click="decideCandidate(candidate, 'IMPORT')"
+								>
 									{{ formatMessage(messages.importAction) }}
 								</button>
-								<button type="button" class="rounded-lg bg-red/20 px-3 py-1 text-xs font-semibold text-red hover:brightness-110" @click="decideCandidate(candidate, 'EXCLUDE')">
+								<button
+									type="button"
+									class="rounded-lg bg-red/20 px-3 py-1 text-xs font-semibold text-red hover:brightness-110"
+									@click="decideCandidate(candidate, 'EXCLUDE')"
+								>
 									{{ formatMessage(messages.excludeAction) }}
 								</button>
 							</div>
@@ -1251,8 +1393,6 @@ onMounted(() => void loadSettings())
 					</div>
 				</div>
 			</div>
-
-
-</template>
+		</template>
 	</div>
 </template>

@@ -8,6 +8,7 @@ import {
 	skinSiteUser,
 	waitForSkinSiteSession,
 } from '../composables/skin-site-session.ts'
+import { type HostedDownloadControl, runHostedDownloadControl } from './hosted-download-controls.ts'
 import { authenticateInstancePlayer } from './instance-player.ts'
 
 export const HOSTED_ACCOUNT_REQUIRED_MESSAGE = '您需要登录正版或皮肤站账号后才能操作'
@@ -146,6 +147,11 @@ export const hostedCreate = async (gameDirRoot?: string | null) => {
 }
 export const hostedBinding = (instanceId: string) =>
 	invokeHosted<HostedBinding | null>('plugin:install|hosted_binding', { instanceId })
+export const controlHostedDownload = (action: HostedDownloadControl, instanceId: string) =>
+	runHostedDownloadControl(action, instanceId, {
+		prepareSession: prepareHostedSession,
+		invoke: invokeHosted<void>,
+	})
 export const hostedSync = async (instanceId: string) => {
 	await requireHostedGameAccount()
 	startHostedPackAttempt(instanceId)

@@ -70,6 +70,13 @@ const messages = defineMessages({
 		defaultMessage: 'Selected',
 	},
 	idLabel: { id: 'app.skin-site.chat.user-picker.id', defaultMessage: 'ID' },
+	emailLabel: { id: 'app.skin-site.chat.user-picker.email', defaultMessage: 'Email' },
+	registeredLabel: {
+		id: 'app.skin-site.chat.user-picker.registered',
+		defaultMessage: 'Registered',
+	},
+	bannedStatus: { id: 'app.skin-site.chat.user-picker.banned-status', defaultMessage: 'Banned' },
+	activeStatus: { id: 'app.skin-site.chat.user-picker.active-status', defaultMessage: 'Active' },
 })
 
 const keyword = ref('')
@@ -82,9 +89,7 @@ let timer: ReturnType<typeof setTimeout> | undefined
 let requestId = 0
 
 const currentLabel = computed(() => props.label ?? formatMessage(messages.label))
-const currentPlaceholder = computed(
-	() => props.placeholder ?? formatMessage(messages.placeholder),
-)
+const currentPlaceholder = computed(() => props.placeholder ?? formatMessage(messages.placeholder))
 
 watch([keyword, searchMode], () => {
 	clearTimeout(timer)
@@ -174,13 +179,19 @@ function formatTime(ts: number): string {
 					v-model.trim="keyword"
 					type="text"
 					maxlength="100"
-					:placeholder="searchMode === 'player' ? formatMessage(messages.playerHint) : currentPlaceholder"
+					:placeholder="
+						searchMode === 'player' ? formatMessage(messages.playerHint) : currentPlaceholder
+					"
 					class="min-w-0 flex-1 rounded-lg border border-solid border-surface-5 bg-bg-raised px-3 py-1.5 text-xs text-contrast outline-none focus:border-brand"
 					autocomplete="off"
 				/>
 			</div>
 			<span class="text-[11px] text-secondary">
-				{{ searchMode === 'player' ? formatMessage(messages.playerHint) : formatMessage(messages.hint) }}
+				{{
+					searchMode === 'player'
+						? formatMessage(messages.playerHint)
+						: formatMessage(messages.hint)
+				}}
 			</span>
 		</div>
 
@@ -201,7 +212,9 @@ function formatTime(ts: number): string {
 				@click="preview = user"
 			>
 				<span class="flex min-w-0 items-center gap-2">
-					<span class="grid size-8 shrink-0 place-items-center rounded-lg bg-brand/15 text-xs font-bold text-brand">
+					<span
+						class="grid size-8 shrink-0 place-items-center rounded-lg bg-brand/15 text-xs font-bold text-brand"
+					>
 						{{ user.username.slice(0, 1).toUpperCase() }}
 					</span>
 					<span class="min-w-0">
@@ -244,7 +257,7 @@ function formatTime(ts: number): string {
 					class="rounded-full px-2 py-0.5 text-[10px] font-semibold"
 					:class="preview.banned ? 'bg-red text-contrast' : 'bg-green text-contrast'"
 				>
-					{{ preview.banned ? 'Banned' : 'OK' }}
+					{{ formatMessage(preview.banned ? messages.bannedStatus : messages.activeStatus) }}
 				</span>
 			</div>
 			<div class="grid gap-2 text-[11px] sm:grid-cols-2">
@@ -253,7 +266,7 @@ function formatTime(ts: number): string {
 					<span class="block break-all font-mono text-contrast">{{ preview.uuid }}</span>
 				</div>
 				<div>
-					<span class="block text-secondary">Email</span>
+					<span class="block text-secondary">{{ formatMessage(messages.emailLabel) }}</span>
 					<span class="block break-all text-contrast">{{ preview.email }}</span>
 				</div>
 				<div>
@@ -261,7 +274,7 @@ function formatTime(ts: number): string {
 					<span class="block text-contrast">{{ preview.qq ?? '—' }}</span>
 				</div>
 				<div>
-					<span class="block text-secondary">Registered</span>
+					<span class="block text-secondary">{{ formatMessage(messages.registeredLabel) }}</span>
 					<span class="block text-contrast">{{ formatTime(preview.registerTime) }}</span>
 				</div>
 			</div>
@@ -283,7 +296,11 @@ function formatTime(ts: number): string {
 				:disabled="Boolean(unavailableReason(preview))"
 				@click="selectPreview"
 			>
-				{{ model?.uuid === preview.uuid ? formatMessage(messages.selected) : formatMessage(messages.select) }}
+				{{
+					model?.uuid === preview.uuid
+						? formatMessage(messages.selected)
+						: formatMessage(messages.select)
+				}}
 			</button>
 		</section>
 	</div>

@@ -1,0 +1,49 @@
+name: Diagnose skin site CI authentication
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Inspect token format without revealing credentials
+        env:
+          SKIN_SITE_TOKEN: ${{ secrets.SKIN_SITE_CI_UPLOAD_TOKEN }}
+          SKIN_SITE_URL: ${{ vars.SKIN_SITE_URL || 'https://skin.starlight.cool' }}
+        run: |
+          node --input-type=module <<'NODE'
+          const token = process.env.SKIN_SITE_TOKEN || ''
+          const checks = {
+            configured: token.length > 0,
+            containsWhitespace: /\s/.test(token),
+            containsComma: token.includes(','),
+            containsQuotes: /["']/.test(token),
+            containsBearerPrefix: /^Bearer\s/i.test(token),
+            bearerTokenFormatValid: /^[A-Za-z0-9._~+/-]+=*$/.test(token),
+          }
+          console.log(JSON.stringify(checks))
+          if (!checks.bearerTokenFormatValid) {
+            console.error('::error::CI secret is not a valid Bearer token. No credential value has been logged.')
+            process.exitCode = 1
+          } else {
+            const base = process.env.SKIN_SITE_URL.replace(/\/$/, '')
+            if (new URL(base).protocol !== 'https:') throw new Error('HTTPS is required')
+            try {
+              const response = await fetch(base + '/starlight/launcher/admin', {
+                headers: { Authorization: 'Bearer ' + token, Accept: 'application/json' },
+                redirect: 'error', signal: AbortSignal.timeout(30000),
+              })
+              console.log('Read-only CI authentication HTTP status: ' + response.status)
+              await response.body?.cancel()
+              if (!response.ok) process.exitCode = 1
+            } catch {
+              console.error('::error::Read-only CI authentication request failed; credentials have not been logged.')
+              process.exitCode = 1
+            }
+          }
+          NODE

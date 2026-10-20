@@ -84,7 +84,7 @@
 					</TagItem>
 					<Badge
 						:color="bar.bar_type?.error ? 'red' : 'orange'"
-						:type="statusLabel(bar.bar_type?.error ? 'failed' : 'running')"
+						:type="statusLabel(hostedDownloadState(bar))"
 					/>
 				</div>
 				<ProgressBar
@@ -94,16 +94,35 @@
 					:progress="legacyPercent(bar)"
 					:max="100"
 					:label="formatMessage(messages.progress)"
-					:waiting="!bar.total"
+					:waiting="!bar.total && hostedDownloadState(bar) !== 'paused'"
 					:show-progress="Boolean(bar.total)"
 				/>
-				<RouterLink
-					v-else
-					:to="hostedRetryRoute(bar.bar_type?.instance_id ?? '')"
-					class="mt-3 inline-block text-brand hover:underline"
+				<div
+					v-if="hostedDownloadActions(bar).length"
+					class="mt-3 flex flex-wrap items-center gap-2"
 				>
-					{{ formatMessage(messages.hostedRetry) }}
-				</RouterLink>
+					<ButtonStyled
+						v-for="action in hostedDownloadActions(bar)"
+						:key="action"
+						:color="action === 'retry' ? 'brand' : action === 'cancel' ? 'red' : 'standard'"
+						:type="action === 'retry' ? 'standard' : 'outlined'"
+						size="small"
+					>
+						<button
+							:disabled="busy.has(hostedBusyKey(bar, action))"
+							@click="hostedAction(bar, action)"
+						>
+							{{ formatMessage(hostedActionMessages[action]) }}
+						</button>
+					</ButtonStyled>
+					<RouterLink
+						v-if="bar.bar_type?.error"
+						:to="hostedRetryRoute(bar.bar_type.instance_id ?? '')"
+						class="text-brand hover:underline"
+					>
+						{{ formatMessage(messages.openInstance) }}
+					</RouterLink>
+				</div>
 			</Card>
 
 			<Card
@@ -471,7 +490,14 @@ import { useRoute, useRouter } from 'vue-router'
 import MissingModpackContentModal from '@/components/ui/modal/MissingModpackContentModal.vue'
 import { listPendingCurseForgeManualDownloads } from '@/helpers/curseforge'
 import type { CurseForgeManualDownloadItem } from '@/helpers/curseforge-manual'
+import {
+	type HostedDownloadAction,
+	hostedDownloadActions,
+	hostedDownloadState,
+	runHostedDownloadAction,
+} from '@/helpers/hosted-download-controls'
 import { hostedRetryRoute } from '@/helpers/hosted-install-retry'
+import { controlHostedDownload } from '@/helpers/hosted-packs'
 import {
 	download_job_support_details,
 	type InstallJobSnapshot,
@@ -517,10 +543,6 @@ const focusedJobId = computed(() => focusedDownloadJobId(route.query.job))
 const focusState = ref(createDownloadFocusState(focusedJobId.value))
 
 const messages = defineMessages({
-	hostedRetry: {
-		id: 'app.hosted-packs.progress.retry',
-		defaultMessage: 'Return to the instance to retry',
-	},
 	newDownload: { id: 'app.downloads.new-download', defaultMessage: 'New download' },
 	inProgress: { id: 'app.downloads.in-progress', defaultMessage: 'In progress' },
 	history: { id: 'app.downloads.history', defaultMessage: 'History' },
@@ -653,7 +675,15 @@ const messages = defineMessages({
 	unknownPhase: { id: 'app.downloads.phase.unknown', defaultMessage: 'Working' },
 })
 
+const hostedActionMessages = defineMessages({
+	pause: { id: 'app.hosted-packs.progress.pause', defaultMessage: 'Pause' },
+	resume: { id: 'app.hosted-packs.progress.resume', defaultMessage: 'Resume' },
+	cancel: { id: 'app.hosted-packs.progress.stop', defaultMessage: 'Stop' },
+	retry: { id: 'app.downloads.retry', defaultMessage: 'Retry' },
+})
+
 const statusMessages = defineMessages({
+	paused: { id: 'app.downloads.status.paused', defaultMessage: 'Paused' },
 	queued: { id: 'app.downloads.status.queued', defaultMessage: 'Queued' },
 	running: { id: 'app.downloads.status.running', defaultMessage: 'Running' },
 	canceling: { id: 'app.downloads.status.canceling', defaultMessage: 'Canceling' },
@@ -1262,6 +1292,7 @@ function toggleExpanded(jobId: string) {
 }
 
 async function withBusy(jobId: string, action: () => Promise<void>) {
+	if (busy.value.has(jobId)) return
 	busy.value = new Set([...busy.value, jobId])
 	try {
 		await action()
@@ -1276,6 +1307,21 @@ async function withBusy(jobId: string, action: () => Promise<void>) {
 
 async function cancel(job: InstallJobSnapshot) {
 	await withBusy(job.job_id, () => manager.cancel(job.job_id))
+}
+
+function hostedBusyKey(bar: LoadingBar, action: HostedDownloadAction) {
+	return `hosted-${action === 'retry' ? 'retry' : 'control'}:${bar.bar_type?.instance_id}`
+}
+
+async function hostedAction(bar: LoadingBar, action: HostedDownloadAction) {
+	const instanceId = bar.bar_type?.instance_id
+	if (!instanceId || !hostedDownloadActions(bar).includes(action)) return
+	await withBusy(hostedBusyKey(bar, action), () =>
+		runHostedDownloadAction(action, instanceId, {
+			retryHosted: manager.retryHosted,
+			control: controlHostedDownload,
+		}),
+	)
 }
 
 async function retry(job: InstallJobSnapshot) {
@@ -1293,12 +1339,14 @@ async function resolveMissing(job: InstallJobSnapshot) {
 				(item) =>
 					item.status === 'skipped' && item.manual_url && item.project_id && item.version_id,
 			)
-			.map((item): CurseForgeManualDownloadItem => ({
-				projectId: Number(item.project_id),
-				fileId: Number(item.version_id),
-				fileName: item.name,
-				websiteUrl: item.manual_url ?? undefined,
-			}))
+			.map(
+				(item): CurseForgeManualDownloadItem => ({
+					projectId: Number(item.project_id),
+					fileId: Number(item.version_id),
+					fileName: item.name,
+					websiteUrl: item.manual_url ?? undefined,
+				}),
+			)
 		const instanceId = job.instance_id
 		const hasGeneralMissingItems = job.items.some((item) => item.status === 'failed')
 		if (instanceId && (job.provider === 'curse_forge' || fallbackCurseForgeItems.length > 0)) {

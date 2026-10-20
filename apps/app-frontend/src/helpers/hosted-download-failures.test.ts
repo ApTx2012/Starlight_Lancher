@@ -3,6 +3,27 @@ import test from 'node:test'
 
 import { createHostedDownloadFailures } from './hosted-download-failures.ts'
 
+test('stopped hosted downloads retain their state and instance for direct retry', () => {
+	const state = createHostedDownloadFailures()
+	state.update({
+		fraction: null,
+		loader_uuid: 'stopped',
+		event: {
+			type: 'hosted_pack_sync',
+			instance_id: 'existing-instance',
+			state: 'canceled',
+			error: 'Stopped by user',
+			can_pause: false,
+			can_cancel: false,
+		},
+	})
+	assert.equal(state.values()[0]?.bar_type?.state, 'canceled')
+	assert.equal(state.values()[0]?.bar_type?.instance_id, 'existing-instance')
+	state.begin('existing-instance', state.values())
+	assert.equal(state.has('existing-instance'), false)
+	assert.equal(state.isRetired('stopped'), true)
+})
+
 test('retry clears only its own failure before progress arrives and ignores late old events', () => {
 	const state = createHostedDownloadFailures()
 	const failed = (instanceId: string, loader: string, error: string) => ({
