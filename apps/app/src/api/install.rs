@@ -20,6 +20,9 @@ pub fn init<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
             hosted_create,
             hosted_binding,
             hosted_sync,
+            hosted_pause,
+            hosted_resume,
+            hosted_cancel,
             hosted_instance_mode,
             hosted_set_instance_mode,
             install_get_modpack_preview,
@@ -103,6 +106,21 @@ pub async fn hosted_sync(
     instance_id: String,
 ) -> Result<theseus::pack::hosted::SyncResult> {
     Ok(theseus::pack::hosted::synchronize(&instance_id).await?)
+}
+
+#[tauri::command]
+pub async fn hosted_pause(instance_id: String) -> Result<()> {
+    Ok(theseus::pack::hosted::pause(&instance_id).await?)
+}
+
+#[tauri::command]
+pub async fn hosted_resume(instance_id: String) -> Result<()> {
+    Ok(theseus::pack::hosted::resume(&instance_id).await?)
+}
+
+#[tauri::command]
+pub async fn hosted_cancel(instance_id: String) -> Result<()> {
+    Ok(theseus::pack::hosted::cancel(&instance_id).await?)
 }
 
 #[derive(Deserialize)]

@@ -1,4 +1,8 @@
 {
+  "app.hosted-packs.progress.pause": { "message": "Pause" },
+  "app.hosted-packs.progress.resume": { "message": "Resume" },
+  "app.hosted-packs.progress.stop": { "message": "Stop" },
+  "app.downloads.status.paused": { "message": "Paused" },
   "app.skin-site.captcha.loading": { "message": "Loading captcha…" },
   "app.skin-site.captcha.submit": { "message": "Submit" },
   "app.skin-site.captcha.subtitle": {

@@ -142,6 +142,12 @@ pub enum LoadingBarType {
         instance_id: String,
         instance_name: String,
         error: Option<String>,
+        #[serde(default)]
+        state: crate::api::pack::hosted::HostedTaskState,
+        #[serde(default)]
+        can_pause: bool,
+        #[serde(default)]
+        can_cancel: bool,
     },
     HostedModDownload {
         instance_id: String,

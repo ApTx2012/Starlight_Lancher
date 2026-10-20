@@ -1,4 +1,8 @@
 {
+  "app.hosted-packs.progress.pause": { "message": "暂停" },
+  "app.hosted-packs.progress.resume": { "message": "继续" },
+  "app.hosted-packs.progress.stop": { "message": "停止" },
+  "app.downloads.status.paused": { "message": "已暂停" },
   "app.skin-site.captcha.loading": { "message": "正在加载验证码…" },
   "app.skin-site.captcha.submit": { "message": "验证" },
   "app.skin-site.captcha.subtitle": {

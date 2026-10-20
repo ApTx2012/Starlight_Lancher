@@ -1,5 +1,7 @@
 //! Administrator-approved skin-site packs. Only content-addressed changed files cross the network.
+mod control;
 mod progress;
+pub use control::{HostedTaskState, cancel, pause, resume};
 mod tagged;
 mod transport;
 use crate::{
@@ -938,10 +940,20 @@ async fn synchronize_locked(instance_id: &str) -> crate::Result<SyncResult> {
     let metadata = crate::instance::get(instance_id)
         .await?
         .ok_or_else(|| invalid("Unknown instance"))?;
+    let task = control::Registration::new(instance_id)?;
     let progress =
         PackProgress::new(instance_id, &metadata.instance.name).await?;
-    let result =
-        synchronize_with_progress(instance_id, metadata, &progress).await;
+    let result = task
+        .control
+        .run(|| {
+            synchronize_with_progress(
+                instance_id,
+                metadata.clone(),
+                &progress,
+                &task.control,
+            )
+        })
+        .await;
     if let Err(error) = &result {
         progress.fail(error);
     }
@@ -952,6 +964,7 @@ async fn synchronize_with_progress(
     instance_id: &str,
     metadata: crate::state::InstanceMetadata,
     progress: &PackProgress,
+    control: &control::Control,
 ) -> crate::Result<SyncResult> {
     if metadata.instance.linked_launcher.is_some()
         || metadata.instance.symlink_target.is_some()
@@ -1275,7 +1288,7 @@ async fn synchronize_with_progress(
             &format!("文件 0/{total_files}"),
             true,
         );
-        let results = stream::iter(pending_downloads.into_values().map(
+        downloaded += control::collect_downloads(stream::iter(pending_downloads.into_values().map(
             |(file, url, object)| {
                 let current = &current;
                 let completed = &completed;
@@ -1342,34 +1355,14 @@ async fn synchronize_with_progress(
                         request = request
                             .with_header("Authorization", auth.clone());
                     }
-                    let first_result = download_to_path(
+                    download_to_path(
                         request.clone(),
                         &object,
                         &state.fetch_semaphore,
                         &state.pool,
                         Some(&mut on_progress),
                     )
-                    .await;
-                    if let Err(error) = first_result {
-                        tracing::warn!(
-                            path = %file_path,
-                            %error,
-                            "Parallel StarLight file download failed; retrying after the batch load has eased"
-                        );
-                        ensure_session(auth).await?;
-                        tokio::time::sleep(std::time::Duration::from_millis(
-                            750,
-                        ))
-                        .await;
-                        download_to_path(
-                            request,
-                            &object,
-                            &state.fetch_semaphore,
-                            &state.pool,
-                            Some(&mut on_progress),
-                        )
-                        .await?;
-                    }
+                    .await.map_err(|error| error.with_context(format!("下载整合包文件失败：{file_path}")))?;
                     let completed_files =
                         completed.fetch_add(1, Ordering::Relaxed) + 1;
                     let completed_bytes = {
@@ -1391,12 +1384,7 @@ async fn synchronize_with_progress(
                 }
             },
         ))
-        .buffer_unordered(concurrency)
-        .collect::<Vec<_>>()
-        .await;
-        downloaded += results.into_iter().try_fold(0, |sum, result| {
-            Ok::<u64, crate::Error>(sum + result?)
-        })?;
+        .buffer_unordered(concurrency)).await?;
     }
     ensure_session(&auth).await?;
     downloaded += tagged::download(
@@ -1446,6 +1434,8 @@ async fn synchronize_with_progress(
         previous,
         metadata,
     };
+    // From this atomic boundary onward the rollback/runtime transaction must finish.
+    control.begin_finalizing()?;
     write_json(&root, JOURNAL, &journal)?;
     let result = async {
         progress.update(0, 0, "正在安装游戏组件", true);

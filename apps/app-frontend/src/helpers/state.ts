@@ -9,6 +9,9 @@ export interface LoadingBarType {
 	batch_id?: string
 	file_name?: string
 	error?: string | null
+	state?: 'running' | 'paused' | 'canceling' | 'canceled' | 'failed' | 'finalizing'
+	can_pause?: boolean
+	can_cancel?: boolean
 	type?: string
 	version?: string
 	instance_id?: string
@@ -28,7 +31,12 @@ export interface LoadingBar {
 }
 
 export type OpeningCommandEvent =
-	'RunMRPack' | 'InstallServer' | 'InstallVersion' | 'InstallMod' | 'InstallModpack' | string
+	| 'RunMRPack'
+	| 'InstallServer'
+	| 'InstallVersion'
+	| 'InstallMod'
+	| 'InstallModpack'
+	| string
 
 export interface OpeningCommand {
 	event: OpeningCommandEvent

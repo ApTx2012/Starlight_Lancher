@@ -681,7 +681,7 @@ pub(super) async fn download(
         set_loading(&bar, 0, file.size, "等待下载")?;
         work.push((file, url, object, bar));
     }
-    let results =
+    control::collect_downloads(
         stream::iter(work.into_iter().map(|(file, url, object, bar)| {
             let current = &current;
             let state = &state;
@@ -740,10 +740,7 @@ pub(super) async fn download(
                 result
             }
         }))
-        .buffer_unordered(concurrency)
-        .collect::<Vec<_>>()
-        .await;
-    results
-        .into_iter()
-        .try_fold(0, |sum, result| Ok(sum + result?))
+        .buffer_unordered(concurrency),
+    )
+    .await
 }
