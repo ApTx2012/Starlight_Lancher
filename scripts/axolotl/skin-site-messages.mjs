@@ -6,7 +6,7 @@ const require = createRequire(new URL('../../apps/app-frontend/package.json', im
 const ts = require('typescript')
 const { parse } = require('vue/compiler-sfc')
 
-/** Read the message IDs actually used by skin-site UI, including uncatalogued messages. */
+/** Read the message IDs actually used by skin-site UI, including uncataloged messages. */
 export function collectSkinSiteMessages(root = 'apps/app-frontend/src') {
 	const messages = new Map()
 	function walk(directory) {
