@@ -1,0 +1,56 @@
+name: Sync release to skin site
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing GitHub release tag to sync (for example v1.0.2-beta10)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: skin-site-${{ inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Upload and activate existing release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - name: Check out publisher
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version-file: .nvmrc
+
+      - name: Download complete update package
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          if [[ ! "${RELEASE_TAG}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo '::error::Expected a semantic version tag beginning with v'
+            exit 1
+          fi
+          version="${RELEASE_TAG#v}"
+          gh release download "${RELEASE_TAG}" \
+            --pattern "Starlight_Launcher_${version}_skin-site-update.zip" \
+            --dir release-check
+
+      - name: Publish to skin site
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+          SKIN_SITE_TOKEN: ${{ secrets.SKIN_SITE_CI_UPLOAD_TOKEN }}
+          SKIN_SITE_URL: ${{ vars.SKIN_SITE_URL || 'https://skin.starlight.cool' }}
+        run: |
+          set -euo pipefail
+          version="${RELEASE_TAG#v}"
+          node scripts/axolotl/publish-skin-site.mjs \
+            "release-check/Starlight_Launcher_${version}_skin-site-update.zip" "${RELEASE_TAG}"
