@@ -33,6 +33,49 @@ export const ANNOUNCEMENT_CHANGE_TYPES: readonly AnnouncementChangeType[] = [
 
 export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 	{
+		id: 'launcher-1.0.2-beta11',
+		version: '1.0.2-beta11',
+		publishedAt: '2026-10-20',
+		title: {
+			'en-US': 'Starlight Launcher 1.0.2-beta11',
+			'zh-CN': 'Starlight Launcher 1.0.2-beta11',
+		},
+		changes: {
+			fixed: [
+				{
+					'en-US':
+						'Filled missing Chinese translations across skin site sign-in, announcements, verification, registration, account settings, downloads and maps, and localized remaining user and Wiki labels.',
+					'zh-CN':
+						'补齐皮肤站登录、公告、验证、注册、账号设置、下载和地图等界面的中文翻译，并修复用户信息与维基权限选项中的英文标签。',
+				},
+				{
+					'en-US':
+						'Renew the saved skin site JWT on launcher startup before loading the user and announcements. Fixed overlapping refresh, sign-in and sign-out requests that could leave the account in an incorrect state.',
+					'zh-CN':
+						'启动启动器时先刷新已保存的皮肤站 JWT，再加载用户与公告；修复刷新、登录和退出请求交错时可能导致的账号状态异常。',
+				},
+				{
+					'en-US':
+						'Announcements now reload after sign-in, show a sign-in hint when signed out, and offer a retry action after a loading failure.',
+					'zh-CN': '公告在登录后自动重新加载，未登录时显示登录提示，加载失败时可直接重试。',
+				},
+			],
+			changed: [
+				{
+					'en-US':
+						'Skin site release publishing now uses chunked uploads and reports synchronization failures explicitly. Localization checks also scan message IDs used in source to catch missing catalog entries.',
+					'zh-CN':
+						'皮肤站自动发布改用分片上传，同步失败会明确报错；国际化检查新增源码词条扫描，防止再次遗漏语言包内容。',
+				},
+			],
+		},
+		notes: {
+			'en-US':
+				'If the previously saved JWT has already expired, sign in again once to restore the session.',
+			'zh-CN': '如果此前保存的 JWT 已经过期，需要重新登录一次以恢复会话。',
+		},
+	},
+	{
 		id: 'launcher-1.0.2-beta10',
 		version: '1.0.2-beta10',
 		publishedAt: '2026-10-20',
