@@ -43,6 +43,7 @@ export async function publishSkinSite({
 				response = await fetchImpl(`${baseUrl.replace(/\/$/, '')}/starlight/${route}`, {
 					method,
 					headers: {
+						Accept: 'application/json',
 						Authorization: `Bearer ${token}`,
 						...(body && !chunk ? { 'Content-Type': 'application/json' } : {}),
 					},
@@ -72,7 +73,7 @@ export async function publishSkinSite({
 			} catch {
 				throw new Error(`Skin site ${route}: invalid JSON response`)
 			}
-			if (result?.success !== true || !result.payload) {
+			if (result?.success === false || result?.error || !result?.payload) {
 				throw new Error(
 					`Skin site ${route}: ${result?.errorMessage || 'request was rejected or payload is missing'}`,
 				)

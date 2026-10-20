@@ -33,7 +33,8 @@ function apiFixture(bytes, options = {}) {
 		...(state === 'ready' ? { release } : {}),
 		...(state === 'failed' ? { errorMessage: 'Invalid archive manifest' } : {}),
 	})
-	const reply = (payload) => Response.json({ success: true, payload })
+	// The frontend derives success from HTTP status; the wire envelope only needs payload.
+	const reply = (payload) => Response.json({ payload })
 	return {
 		chunks,
 		events,
