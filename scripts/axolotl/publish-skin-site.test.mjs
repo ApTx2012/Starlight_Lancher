@@ -170,3 +170,16 @@ test('CLI emits a GitHub error and exits nonzero when credentials are missing', 
 	assert.equal(result.status, 1)
 	assert.match(result.stderr, /::error::.*SKIN_SITE_CI_UPLOAD_TOKEN/)
 })
+
+test('reports structured server errors when creating the upload session fails', async (t) => {
+	const { archivePath } = await fixture(t)
+	await assert.rejects(
+		publishSkinSite(
+			settings(archivePath, {
+				fetch: async () =>
+					Response.json({ errorMessage: 'Upload storage unavailable' }, { status: 500 }),
+			}),
+		),
+		/HTTP 500 - Upload storage unavailable/,
+	)
+})

@@ -57,12 +57,14 @@ export async function publishSkinSite({
 				continue
 			}
 			if (!response.ok) {
-				await response.body?.cancel()
+				const details = await response.json().catch(() => null)
 				if ((response.status === 429 || response.status >= 500) && attempt + 1 < attempts) {
 					await sleep(500 * (attempt + 1))
 					continue
 				}
-				throw new Error(`Skin site ${route}: HTTP ${response.status}`)
+				throw new Error(
+					`Skin site ${route}: HTTP ${response.status}${typeof details?.errorMessage === 'string' ? ` - ${details.errorMessage.slice(0, 1000)}` : ''}`,
+				)
 			}
 			let result
 			try {
