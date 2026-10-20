@@ -65,13 +65,54 @@ function clearSessionState() {
 // ---------------------------------------------------------------------------
 
 let initialized: Promise<void> | null = null
+let sessionRevision = 0
+let loginRevision = 0
+let refreshRequest: { token: string; revision: number; promise: Promise<boolean> } | null = null
+
+/** Share renewals and discard results from a session that has since changed. */
+function renewSkinSiteToken(): Promise<boolean> {
+	const token = getSkinSiteToken()
+	if (!token) return Promise.resolve(false)
+	const revision = sessionRevision
+	if (refreshRequest?.token === token && refreshRequest.revision === revision) {
+		return refreshRequest.promise
+	}
+	const request = {
+		token,
+		revision,
+		promise: (async () => {
+			let result: SkinSiteResponse<{ username: string; jwt: string }>
+			try {
+				result = await skinSiteRefresh()
+			} catch {
+				return false
+			}
+			if (revision !== sessionRevision || getSkinSiteToken() !== token) return false
+			if (result.success) {
+				if (typeof result.payload?.jwt !== 'string' || !result.payload.jwt.trim()) return false
+				setSkinSiteToken(result.payload.jwt)
+				return true
+			}
+			if (result.errorCode === 401 || result.errorCode === 403) invalidateSkinSiteSession()
+			return false
+		})(),
+	}
+	refreshRequest = request
+	const clearRequest = () => {
+		if (refreshRequest === request) refreshRequest = null
+	}
+	void request.promise.then(clearRequest, clearRequest)
+	return request.promise
+}
 
 /**
- * Resolve the current session from the stored JWT. Safe to call repeatedly;
+ * Renew the saved JWT on each launcher startup before loading the user.
+ * Safe to call repeatedly;
  * the first call performs the actual work and later ones reuse it.
  */
 export function initSkinSiteSession(): Promise<void> {
 	if (initialized) return initialized
+	const revision = sessionRevision
 	initialized = (async () => {
 		const token = getSkinSiteToken()
 		if (!token) {
@@ -79,7 +120,13 @@ export function initSkinSiteSession(): Promise<void> {
 			return
 		}
 		status.value = 'checking'
+		if (!(await renewSkinSiteToken())) {
+			if (revision === sessionRevision) status.value = 'error'
+			return
+		}
+		if (revision !== sessionRevision) return
 		const result = await skinSiteCurrentUser()
+		if (revision !== sessionRevision) return
 		if (result.success) {
 			user.value = toUser(result.payload)
 			status.value = 'signed-in'
@@ -92,11 +139,18 @@ export function initSkinSiteSession(): Promise<void> {
 			status.value = 'error'
 		}
 	})()
+		.catch(() => {
+			if (revision === sessionRevision) status.value = 'error'
+		})
+		.finally(() => {
+			if (revision === sessionRevision && status.value === 'error') initialized = null
+		})
 	return initialized
 }
 
 /** Force a re-check (e.g. after the user signs in from another view). */
 export function reloadSkinSiteSession(): Promise<void> {
+	sessionRevision++
 	initialized = null
 	return initSkinSiteSession()
 }
@@ -106,10 +160,14 @@ export async function signInSkinSite(payload: {
 	password: string
 	clientId: string
 }): Promise<SkinSiteResponse<{ username: string; jwt: string }>> {
+	const attemptRevision = ++loginRevision
 	const result = await skinSiteLogin(payload)
-	if (result.success) {
+	if (result.success && attemptRevision === loginRevision) {
+		const revision = ++sessionRevision
+		initialized = null
 		setSkinSiteToken(result.payload.jwt)
 		const current = await skinSiteCurrentUser()
+		if (revision !== sessionRevision) return result
 		if (current.success) {
 			user.value = toUser(current.payload)
 			status.value = 'signed-in'
@@ -122,23 +180,25 @@ export async function signInSkinSite(payload: {
 	return result
 }
 
-export function signOutSkinSite() {
+/** Reject an old credential without cancelling a newer explicit login attempt. */
+function invalidateSkinSiteSession() {
+	sessionRevision++
+	refreshRequest = null
 	clearSkinSiteToken()
 	clearSessionState()
 	status.value = 'signed-out'
 	initialized = null
 }
 
+export function signOutSkinSite() {
+	loginRevision++
+	invalidateSkinSiteSession()
+}
+
 /** Refresh the JWT; returns true when a new token was stored. */
 export async function refreshSkinSiteSession(): Promise<boolean> {
 	if (status.value !== 'signed-in') return false
-	const result = await skinSiteRefresh()
-	if (result.success) {
-		setSkinSiteToken(result.payload.jwt)
-		return true
-	}
-	if (result.errorCode === 401 || result.errorCode === 403) signOutSkinSite()
-	return false
+	return renewSkinSiteToken()
 }
 
 // ---------------------------------------------------------------------------
@@ -157,6 +217,9 @@ export function receiveSkinSiteMessage(_event: MessageEvent, _frame: Window | nu
 export function openSkinSiteLogin() {}
 
 export function resetSkinSiteSession() {
+	loginRevision++
+	sessionRevision++
+	refreshRequest = null
 	clearSessionState()
 	status.value = getSkinSiteToken() ? 'checking' : 'signed-out'
 	initialized = null
