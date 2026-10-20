@@ -5197,19 +5197,9 @@ fn modpack_zip_error(error: zip::result::ZipError) -> crate::Error {
 }
 
 fn safe_archive_relative_path(value: &str) -> crate::Result<String> {
-    let path = Path::new(value);
-    if value.is_empty()
-        || path.is_absolute()
-        || path
-            .components()
-            .any(|component| !matches!(component, Component::Normal(_)))
-    {
-        return Err(ErrorKind::InputError(
-            "CurseForge modpack contains an invalid override path".to_string(),
-        )
-        .into());
-    }
-    Ok(path.to_string_lossy().replace('\\', "/"))
+    let normalized = value.replace('\\', "/");
+    crate::util::io::safe_relative_join(Path::new(""), &normalized)?;
+    Ok(normalized)
 }
 
 pub(crate) fn loader_family(loader_id: &str) -> &str {
@@ -10933,6 +10923,21 @@ mod tests {
         );
         assert!(safe_archive_relative_path("../options.txt").is_err());
         assert!(safe_archive_relative_path("/options.txt").is_err());
+        for path in [
+            r"..\options.txt",
+            "config/.. /outside",
+            "config/file:stream",
+            "C:/outside",
+            "C:outside",
+            "config/NUL",
+            "config/file.",
+        ] {
+            assert!(safe_archive_relative_path(path).is_err(), "{path}");
+        }
+        assert_eq!(
+            safe_archive_relative_path(r"config\example.toml").unwrap(),
+            "config/example.toml"
+        );
     }
 
     #[test]

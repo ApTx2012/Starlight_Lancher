@@ -891,6 +891,12 @@ pub(crate) async fn install_zipped_mrpack_files_with_reporter(
         num_files,
         content_total_bytes,
     };
+    for file in &pack.files {
+        io::join_within_root(
+            &content_context.instance_full_path,
+            &content_context.resolve_install_path(file),
+        )?;
+    }
     let skipped_missing_content_paths = Arc::new(
         reporter
             .current_state()
@@ -1039,8 +1045,14 @@ pub(crate) async fn install_zipped_mrpack_files_with_reporter(
                 let project_size = project.file_size as u64;
                 let project_path =
                     content_context.resolve_install_path(&project);
-                let target_path =
-                    content_context.instance_full_path.join(&project_path);
+                let target_path = io::join_within_root(
+                    &content_context.instance_full_path,
+                    &project_path,
+                ).map_err(|error| RequiredFileFailure::new(
+                    manifest_index,
+                    &project_path,
+                    &error.to_string(),
+                ))?;
                 let context =
                     InstallErrorContext::new("download modpack content file")
                         .maybe_project_id(
@@ -1451,7 +1463,10 @@ pub(crate) async fn install_zipped_mrpack_files_with_reporter(
                     entry_name: filename.to_string(),
                     crc32: file.crc32(),
                     uncompressed_size: file.uncompressed_size(),
-                    target_path: instance_full_path.join(&relative_path),
+                    target_path: io::safe_relative_join(
+                        &instance_full_path,
+                        &relative_path,
+                    )?,
                     relative_path,
                 })
             })
@@ -1739,6 +1754,7 @@ fn override_relative_path(
                 "Invalid modpack override path: {relative}"
             ))
         })?;
+    io::safe_relative_join(Path::new(""), relative.as_str())?;
     Ok(relative.as_str().to_string())
 }
 
@@ -1885,7 +1901,11 @@ pub async fn remove_all_related_files(
     // Iterate over all Modrinth project file paths in the json, and remove them
     // (There should be few, but this removes any files the .mrpack intended as Modrinth projects but were unrecognized)
     for file in pack.files {
-        match io::remove_file(instance_full_path.join(file.path.as_str())).await
+        match io::remove_file(io::safe_relative_join(
+            &instance_full_path,
+            file.path.as_str(),
+        )?)
+        .await
         {
             Ok(_) => (),
             Err(err) if err.kind() == ErrorKind::NotFound => (),
@@ -1904,23 +1924,14 @@ pub async fn remove_all_related_files(
 
     for file in override_file_entries {
         let entry_name = file.filename().as_str().unwrap();
-        let entry_name =
-            entry_name.strip_prefix(&archive_base).unwrap_or(entry_name);
         let relative_override_file_path =
-            SafeRelativeUtf8UnixPathBuf::try_from(entry_name.to_string())?;
-        let relative_override_file_path = relative_override_file_path
-            .strip_prefix("overrides")
-            .or_else(|_| relative_override_file_path.strip_prefix("client-overrides"))
-            .map_err(|_| {
-                crate::Error::from(crate::ErrorKind::OtherError(
-                    format!("Failed to strip override prefix from override file path: {relative_override_file_path}")
-                ))
-            })?;
+            override_relative_path(entry_name, &archive_base)?;
 
         // Remove this file if a corresponding one exists in the filesystem
-        match io::remove_file(
-            instance_full_path.join(relative_override_file_path.as_str()),
-        )
+        match io::remove_file(io::safe_relative_join(
+            &instance_full_path,
+            &relative_override_file_path,
+        )?)
         .await
         {
             Ok(_) => (),
@@ -1938,6 +1949,35 @@ mod tests {
     use async_zip::tokio::write::ZipFileWriter;
     use async_zip::{Compression, ZipEntryBuilder};
     use std::sync::Mutex as StdMutex;
+
+    #[test]
+    fn override_paths_reject_portable_traversal_and_windows_aliases() {
+        for prefix in ["overrides/", "client-overrides/"] {
+            assert_eq!(
+                override_relative_path(
+                    &format!("{prefix}config/example.toml"),
+                    ""
+                )
+                .unwrap(),
+                "config/example.toml"
+            );
+            for relative in [
+                "../outside",
+                "config/.. /outside",
+                "config/file:stream",
+                "C:/outside",
+                "C:outside",
+                "config/NUL",
+                "config/file.",
+            ] {
+                assert!(
+                    override_relative_path(&format!("{prefix}{relative}"), "")
+                        .is_err(),
+                    "{prefix}{relative}"
+                );
+            }
+        }
+    }
 
     fn override_spec(index: usize, target: &str) -> OverrideExtractionSpec {
         OverrideExtractionSpec {
