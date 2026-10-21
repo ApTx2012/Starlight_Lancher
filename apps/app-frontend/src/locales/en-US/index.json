@@ -74,10 +74,12 @@
   "app.skin-site.profile-view.confirm": { "message": "Confirm" },
   "app.skin-site.profile-view.default-set": { "message": "Default player updated." },
   "app.skin-site.profile-view.delete": { "message": "Delete" },
+  "app.skin-site.profile-view.delete-confirm": { "message": "Delete this player? This cannot be undone." },
   "app.skin-site.profile-view.deleted": { "message": "Player deleted." },
   "app.skin-site.profile-view.elytra": { "message": "Elytra" },
   "app.skin-site.profile-view.is-default": { "message": "Default" },
   "app.skin-site.profile-view.loading": { "message": "Loading players…" },
+  "app.skin-site.profile-view.mojang-confirm": { "message": "Toggle Mojang status for this player?" },
   "app.skin-site.profile-view.mojang-toggled": { "message": "Mojang status updated." },
   "app.skin-site.profile-view.no-players": { "message": "No players yet." },
   "app.skin-site.profile-view.player-name-placeholder": { "message": "Player name" },
@@ -87,6 +89,7 @@
   "app.skin-site.profile-view.remove": { "message": "Remove" },
   "app.skin-site.profile-view.removed": { "message": "Texture removed." },
   "app.skin-site.profile-view.rename": { "message": "Rename" },
+  "app.skin-site.profile-view.rename-confirm": { "message": "Rename this player?" },
   "app.skin-site.profile-view.renamed": { "message": "Player renamed." },
   "app.skin-site.profile-view.select-hint": {
     "message": "Select a player to preview and edit its textures."

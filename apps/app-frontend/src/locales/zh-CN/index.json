@@ -70,10 +70,12 @@
   "app.skin-site.profile-view.confirm": { "message": "确认" },
   "app.skin-site.profile-view.default-set": { "message": "默认角色已更新。" },
   "app.skin-site.profile-view.delete": { "message": "删除" },
+  "app.skin-site.profile-view.delete-confirm": { "message": "删除此角色？此操作不可撤销。" },
   "app.skin-site.profile-view.deleted": { "message": "角色已删除。" },
   "app.skin-site.profile-view.elytra": { "message": "鞘翅" },
   "app.skin-site.profile-view.is-default": { "message": "默认" },
   "app.skin-site.profile-view.loading": { "message": "正在加载角色…" },
+  "app.skin-site.profile-view.mojang-confirm": { "message": "切换此角色的正版状态？" },
   "app.skin-site.profile-view.mojang-toggled": { "message": "正版状态已更新。" },
   "app.skin-site.profile-view.no-players": { "message": "暂无角色。" },
   "app.skin-site.profile-view.player-name-placeholder": { "message": "角色名" },
@@ -83,6 +85,7 @@
   "app.skin-site.profile-view.remove": { "message": "移除" },
   "app.skin-site.profile-view.removed": { "message": "材质已移除。" },
   "app.skin-site.profile-view.rename": { "message": "重命名" },
+  "app.skin-site.profile-view.rename-confirm": { "message": "重命名此角色？" },
   "app.skin-site.profile-view.renamed": { "message": "角色已重命名。" },
   "app.skin-site.profile-view.select-hint": {
     "message": "选择角色以预览和修改其材质。"
