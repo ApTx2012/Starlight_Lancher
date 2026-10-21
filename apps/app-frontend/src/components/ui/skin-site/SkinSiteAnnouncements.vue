@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { SpinnerIcon } from '@modrinth/assets'
+import { NewspaperIcon, SpinnerIcon, StarIcon } from '@modrinth/assets'
 import { commonMessages, defineMessages, useVIntl } from '@modrinth/ui'
 import { onUnmounted, ref, watch } from 'vue'
 
@@ -81,43 +81,80 @@ onUnmounted(() => {
 </script>
 
 <template>
-	<div class="flex flex-col gap-2">
-		<h3 class="m-0 text-base font-semibold text-contrast">
-			{{ formatMessage(messages.title) }}
-		</h3>
+	<section class="announcements">
+		<header class="flex items-center gap-2 border-0 border-b border-solid border-surface-5 pb-4">
+			<NewspaperIcon class="size-5 text-brand" />
+			<h2 class="m-0 text-base font-semibold text-contrast">{{ formatMessage(messages.title) }}</h2>
+			<span
+				v-if="announcements.length"
+				class="ml-auto rounded-full bg-button-bg px-2 py-0.5 text-xs text-secondary"
+				>{{ announcements.length }}</span
+			>
+		</header>
 
-		<div v-if="loading" class="flex items-center gap-2 text-sm text-secondary">
+		<div v-if="loading" class="announcement-feedback" role="status">
 			<SpinnerIcon class="size-4 animate-spin" />
 			{{ formatMessage(messages.loading) }}
 		</div>
-		<div v-else-if="failed" class="flex items-center gap-2 text-sm text-secondary">
+		<div v-else-if="failed" class="announcement-feedback">
 			<p class="m-0">{{ formatMessage(messages.failed) }}</p>
 			<button type="button" class="text-brand hover:underline" @click="retry">
 				{{ formatMessage(commonMessages.retryButton) }}
 			</button>
 		</div>
-		<p v-else-if="skinSiteStatus === 'signed-out'" class="m-0 text-sm text-secondary">
+		<p v-else-if="skinSiteStatus === 'signed-out'" class="announcement-feedback">
 			{{ formatMessage(messages.signedOut) }}
 		</p>
-		<p v-else-if="!announcements.length" class="m-0 text-sm text-secondary">
+		<p v-else-if="!announcements.length" class="announcement-feedback">
 			{{ formatMessage(messages.empty) }}
 		</p>
-		<div v-else class="flex flex-col gap-2">
-			<div
-				v-for="item in announcements"
-				:key="item.id"
-				class="flex flex-col gap-1 rounded-xl border border-solid border-surface-5 bg-bg-raised p-3"
-			>
+		<div v-else class="flex flex-col">
+			<article v-for="item in announcements" :key="item.id" class="announcement-entry">
 				<div class="flex items-start gap-2">
+					<StarIcon v-if="item.star" class="mt-0.5 size-4 shrink-0 text-brand" />
 					<span class="min-w-0 flex-1 truncate text-sm font-semibold text-contrast">
 						{{ item.title }}
 					</span>
 					<span class="shrink-0 text-xs text-secondary">{{ formatDate(item.updateAt) }}</span>
 				</div>
-				<span v-if="item.subtitle" class="truncate text-xs text-secondary">{{
-					item.subtitle
-				}}</span>
-			</div>
+				<p v-if="item.subtitle" class="m-0 text-sm leading-relaxed text-secondary">
+					{{ item.subtitle }}
+				</p>
+			</article>
 		</div>
-	</div>
+	</section>
 </template>
+
+<style scoped>
+.announcements {
+	display: flex;
+	min-width: 0;
+	flex-direction: column;
+	gap: 0.5rem;
+	padding: 1.5rem;
+	border: 1px solid var(--color-divider);
+	border-radius: var(--radius-xl);
+	background: var(--color-raised-bg);
+}
+.announcement-entry {
+	display: flex;
+	flex-direction: column;
+	gap: 0.625rem;
+	padding: 1.25rem 0;
+	border-bottom: 1px solid var(--color-divider);
+}
+.announcement-entry:last-child {
+	border-bottom: 0;
+	padding-bottom: 0.25rem;
+}
+.announcement-feedback {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.625rem;
+	margin: 0;
+	padding: 1.5rem 0 0.5rem;
+	color: var(--color-secondary);
+	font-size: 0.875rem;
+}
+</style>

@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { CopyIcon } from '@modrinth/assets'
-import { defineMessages, injectNotificationManager, useVIntl } from '@modrinth/ui'
-import { ref } from 'vue'
+import { ButtonStyled, defineMessages, useVIntl } from '@modrinth/ui'
+import { computed, ref } from 'vue'
 
-import SkinSiteAccountCard from './SkinSiteAccountCard.vue'
+import { skinSiteUser } from '@/composables/skin-site-session'
+
 import SkinSiteAdminView from './SkinSiteAdminView.vue'
 import SkinSiteAnnouncements from './SkinSiteAnnouncements.vue'
 import SkinSiteBugCreateModal from './SkinSiteBugCreateModal.vue'
@@ -12,30 +12,26 @@ import SkinSiteBugListView from './SkinSiteBugListView.vue'
 import SkinSiteBugNotificationsView from './SkinSiteBugNotificationsView.vue'
 import SkinSiteDonationCard from './SkinSiteDonationCard.vue'
 import SkinSiteDownloadsView from './SkinSiteDownloadsView.vue'
-import SkinSiteLoginModal from './SkinSiteLoginModal.vue'
 import SkinSiteMapView from './SkinSiteMapView.vue'
 import SkinSiteNavCards from './SkinSiteNavCards.vue'
+import SkinSitePlayerPreview from './SkinSitePlayerPreview.vue'
 import SkinSiteProfileModal from './SkinSiteProfileModal.vue'
 import SkinSiteProfileView from './SkinSiteProfileView.vue'
 import SkinSiteReviewView from './SkinSiteReviewView.vue'
 import WikiView from './WikiView.vue'
 
 const { formatMessage } = useVIntl()
-const { addNotification } = injectNotificationManager()
-
 const messages = defineMessages({
-	title: { id: 'app.skin-site.home.title', defaultMessage: 'StarLight Skin Site' },
-	subtitle: {
-		id: 'app.skin-site.home.subtitle',
-		defaultMessage: 'The wardrobe for StarLight Server players.',
-	},
-	address: { id: 'app.skin-site.home.address', defaultMessage: 'Skin site address' },
-	copied: { id: 'app.skin-site.home.copied', defaultMessage: 'Address copied.' },
+	account: { id: 'app.skin-site.home.settings', defaultMessage: 'Account' },
+	admin: { id: 'app.skin-site.home.admin', defaultMessage: 'Admin' },
 })
-
-const YGGDRASIL_URL = 'https://skin.starlight.cool/yggdrasil'
-const loginModal = ref<InstanceType<typeof SkinSiteLoginModal>>()
 const profileModal = ref<InstanceType<typeof SkinSiteProfileModal>>()
+const isAdmin = computed(() =>
+	skinSiteUser.value?.permissions.some(
+		(permission) => permission === 'WEB_ADMIN' || permission === 'SERVER_ADMIN',
+	),
+)
+
 const view = ref<
 	| 'home'
 	| 'players'
@@ -69,21 +65,26 @@ function openBugNotifications() {
 function onBugCreated(id: number) {
 	openBug(id)
 }
-
-async function copyAddress() {
-	try {
-		await navigator.clipboard.writeText(YGGDRASIL_URL)
-		addNotification({ type: 'success', title: formatMessage(messages.copied) })
-	} catch {
-		// Clipboard may be unavailable; the address stays selectable.
-	}
-}
 </script>
 
 <template>
 	<div class="flex h-full min-h-0 w-full flex-col overflow-y-auto">
-		<div class="mx-auto flex w-full max-w-5xl flex-col gap-6 p-6">
-			<SkinSiteProfileView v-if="view === 'players'" @back="view = 'home'" />
+		<div class="skin-site-home mx-auto flex w-full max-w-6xl flex-col gap-6 p-6">
+			<template v-if="view === 'players'">
+				<div v-if="skinSiteUser" class="flex flex-wrap justify-end gap-2">
+					<ButtonStyled
+						><button type="button" @click="profileModal?.show()">
+							{{ formatMessage(messages.account) }}
+						</button></ButtonStyled
+					>
+					<ButtonStyled v-if="isAdmin"
+						><button type="button" @click="view = 'admin'">
+							{{ formatMessage(messages.admin) }}
+						</button></ButtonStyled
+					>
+				</div>
+				<SkinSiteProfileView @back="view = 'home'" />
+			</template>
 			<SkinSiteDownloadsView v-else-if="view === 'downloads'" @back="view = 'home'" />
 			<SkinSiteMapView v-else-if="view === 'map'" @back="view = 'home'" />
 			<SkinSiteReviewView v-else-if="view === 'review'" @back="view = 'home'" />
@@ -109,46 +110,49 @@ async function copyAddress() {
 			/>
 
 			<template v-else>
-				<header class="flex flex-col items-center gap-1 text-center">
-					<h1 class="m-0 text-2xl font-bold text-contrast">{{ formatMessage(messages.title) }}</h1>
-					<p class="m-0 text-sm text-secondary">{{ formatMessage(messages.subtitle) }}</p>
-				</header>
-
-				<SkinSiteAccountCard
-					@sign-in="loginModal?.show()"
-					@open-settings="profileModal?.show()"
-					@open-players="view = 'players'"
-					@open-admin="view = 'admin'"
-				/>
-
-				<div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-					<SkinSiteNavCards @navigate="(v) => (view = v)" />
+				<div class="home-overview">
+					<SkinSitePlayerPreview />
 					<SkinSiteAnnouncements />
 				</div>
 
 				<SkinSiteDonationCard />
-
-				<div
-					class="flex flex-wrap items-center gap-2 rounded-xl border border-solid border-surface-5 bg-bg-raised px-4 py-3"
-				>
-					<span class="text-sm font-semibold text-contrast">{{
-						formatMessage(messages.address)
-					}}</span>
-					<code class="min-w-0 flex-1 truncate text-xs text-secondary">{{ YGGDRASIL_URL }}</code>
-					<button
-						type="button"
-						class="flex shrink-0 items-center gap-1 rounded-full bg-button-bg px-3 py-1 text-xs font-semibold text-contrast hover:brightness-110"
-						@click="copyAddress"
-					>
-						<CopyIcon class="size-3.5" />
-						{{ formatMessage({ id: 'app.skin-site.home.copy', defaultMessage: 'Copy' }) }}
-					</button>
-				</div>
 			</template>
+			<div class="home-toolbar">
+				<SkinSiteNavCards
+					:active="view === 'bug-detail' || view === 'bug-notifications' ? 'bugs' : view"
+					@navigate="(target) => (view = target === view ? 'home' : target)"
+				/>
+			</div>
 		</div>
-
-		<SkinSiteLoginModal ref="loginModal" />
-		<SkinSiteProfileModal ref="profileModal" />
 		<SkinSiteBugCreateModal ref="bugCreateModal" @created="onBugCreated" />
+		<SkinSiteProfileModal ref="profileModal" />
 	</div>
 </template>
+
+<style scoped>
+.skin-site-home {
+	box-sizing: border-box;
+	min-height: 100%;
+	container-type: inline-size;
+}
+.home-overview {
+	display: grid;
+	grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+	gap: 2rem;
+	align-items: start;
+}
+.home-toolbar {
+	position: sticky;
+	bottom: 0;
+	z-index: 10;
+	margin-top: auto;
+	padding-top: 0.75rem;
+	background: var(--color-bg);
+}
+@container (max-width: 48rem) {
+	.home-overview {
+		grid-template-columns: minmax(0, 1fr);
+		gap: 1.5rem;
+	}
+}
+</style>

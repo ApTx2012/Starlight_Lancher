@@ -49,7 +49,11 @@ try {
 			tag,
 			outputPath,
 		],
-		{ cwd: root, encoding: 'utf8' },
+		{
+			cwd: root,
+			encoding: 'utf8',
+			env: { ...process.env, GITHUB_REPOSITORY: 'Mystic-Stars/Axolotl' },
+		},
 	)
 	assert.equal(create.status, 0, create.stderr)
 

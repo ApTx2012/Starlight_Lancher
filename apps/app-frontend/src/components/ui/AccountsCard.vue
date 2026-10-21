@@ -373,7 +373,6 @@ const accounts = computed(() => {
 	)
 	if (skinSiteStatus.value === 'signed-in' && skinSiteUser.value) {
 		for (const player of skinSitePlayers.value) {
-			if (player.isMojang) continue
 			const id = player.uuid.replaceAll('-', '').toLowerCase()
 			const stored = byId.get(id)
 			if (stored && stored.account_type !== 'yggdrasil') continue
@@ -409,8 +408,12 @@ async function refreshSkinSitePlayers() {
 	await requestSkinSitePlayers().catch(() => {})
 }
 
-function setSkinSitePlayer(playerId: string) {
-	selectSkinSitePlayer(playerId)
+async function setSkinSitePlayer(playerId: string) {
+	const normalizedId = playerId.replaceAll('-', '').toLowerCase()
+	const account = accounts.value.find(
+		(candidate) => candidate.profile.id.replaceAll('-', '').toLowerCase() === normalizedId,
+	)
+	if (account) await setAccount(account)
 }
 
 const HEAD_REFRESH_RETRY_DELAYS = [1500, 5000, 15000, 30000] as const
@@ -531,6 +534,12 @@ function setLoginDisabled(value: boolean) {
 }
 
 defineExpose({
+	accounts,
+	defaultUser,
+	accountSelectionPending,
+	setAccount,
+	getAccountSkin,
+	getAccountAvatarUrl,
 	accountChangeRevision,
 	login,
 	refreshValues,
@@ -669,7 +678,15 @@ async function setAccount(account: MinecraftCredential) {
 			})
 		}
 		await persistDefaultUser(userId)
-		selectSkinSitePlayer(null)
+		const sitePlayer =
+			account.account_type === 'yggdrasil'
+				? skinSitePlayers.value.find(
+						(player) =>
+							player.uuid.replaceAll('-', '').toLowerCase() ===
+							userId.replaceAll('-', '').toLowerCase(),
+					)
+				: undefined
+		selectSkinSitePlayer(sitePlayer?.uuid ?? null)
 		defaultUser.value = userId
 		equippedSkin.value = null
 		notifyAccountChange()
@@ -682,9 +699,20 @@ async function setAccount(account: MinecraftCredential) {
 }
 
 watch(
-	[skinSitePlayers, defaultUser, skinSiteUser],
+	[skinSitePlayers, defaultUser, skinSiteUser, accounts],
 	([availablePlayers, selectedLocalUser]) => {
-		if (!selectedLocalUser && !selectedSkinSitePlayerId.value && availablePlayers.length > 0) {
+		if (selectedLocalUser) {
+			const account = accounts.value.find((candidate) => candidate.profile.id === selectedLocalUser)
+			const match =
+				account?.account_type === 'yggdrasil'
+					? availablePlayers.find(
+							(player) =>
+								player.uuid.replaceAll('-', '').toLowerCase() ===
+								selectedLocalUser.replaceAll('-', '').toLowerCase(),
+						)
+					: undefined
+			selectSkinSitePlayer(match?.uuid ?? null)
+		} else if (!selectedSkinSitePlayerId.value && availablePlayers.length > 0) {
 			selectSkinSitePlayer(availablePlayers[0].uuid)
 		}
 	},

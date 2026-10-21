@@ -414,8 +414,8 @@ export function skinSitePublicDonationSummary(): Promise<
 	return skinSiteRequest<SkinSitePublicDonationSummary>('donation/summary', { auth: false })
 }
 
-export function skinSiteDonationList(offset = 0): Promise<SkinSiteResponse<SkinSiteDonationPage>> {
-	return skinSiteRequest<SkinSiteDonationPage>(`donation/list?limit=20&offset=${offset}`, {
+export function skinSiteDonationList(offset = 0): Promise<SkinSiteResponse<SkinSitePublicDonationPage>> {
+	return skinSiteRequest<SkinSitePublicDonationPage>(`donation/list?limit=20&offset=${offset}`, {
 		auth: false,
 	})
 }
@@ -1212,6 +1212,10 @@ export function skinSiteActivateLauncherRelease(
 	return skinSiteRequest<SkinSiteLauncherRelease>('launcher/admin/' + id + '/activate', {
 		method: 'POST',
 	})
+}
+
+export function skinSiteDeleteLauncherRelease(id: number): Promise<SkinSiteResponse<boolean>> {
+	return skinSiteRequest<boolean>('launcher/admin/' + id, { method: 'DELETE' })
 }
 
 export interface SkinSiteLauncherUploadStatus {

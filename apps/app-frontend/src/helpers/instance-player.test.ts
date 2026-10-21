@@ -1,20 +1,32 @@
 import assert from 'node:assert/strict'
+import { registerHooks } from 'node:module'
 import test from 'node:test'
 
-import {
-	receiveSkinSiteMessage,
-	resetSkinSiteSession,
-	setSkinSiteFrame,
-	SKIN_SITE_ORIGIN,
-} from '../composables/skin-site-session.ts'
+const hooks = registerHooks({
+	resolve(specifier, context, nextResolve) {
+		if (specifier === '@tauri-apps/plugin-http') {
+			return {
+				url: `data:text/javascript,${encodeURIComponent(`export const fetch=async url=>Response.json({payload:url.endsWith('/user/refresh')?{jwt:'fixture.jwt'}:url.endsWith('/user')?{uuid:'owner',username:'Owner',permissions:[]}:[]})`)}`,
+				shortCircuit: true,
+			}
+		}
+		if (specifier.startsWith('@/')) {
+			return nextResolve(new URL(`../${specifier.slice(2)}.ts`, import.meta.url).href, context)
+		}
+		return nextResolve(specifier, context)
+	},
+})
+const { initSkinSiteSession, resetSkinSiteSession, setSkinSiteFrame } =
+	await import('../composables/skin-site-session.ts')
+hooks.deregister()
 import { useNetworkStatus } from '../composables/useNetworkStatus.ts'
-import {
-	type InstancePlayer,
+const {
 	onInstancePlayerChanged,
 	prepareInstancePlayer,
 	registerInstancePlayerPicker,
 	saveInstancePlayer,
-} from './instance-player.ts'
+} = await import('./instance-player.ts')
+import type { InstancePlayer } from './instance-player.ts'
 
 test('instance player selection persists independently from the globally selected account', async () => {
 	const previousNavigator = Object.getOwnPropertyDescriptor(globalThis, 'navigator')
@@ -84,23 +96,16 @@ test('signed-in skin site renews the saved player without prompting and only not
 	}
 	const calls: string[] = []
 	let failSave = false
-	const frame = {
-		postMessage(data: { type: string; requestId: string }) {
-			if (data.type === 'starlight-pack-token-request')
-				receiveSkinSiteMessage(
-					{
-						origin: SKIN_SITE_ORIGIN,
-						source: frame,
-						data: {
-							type: 'starlight-pack-token-result',
-							requestId: data.requestId,
-							token: 'fixture.jwt',
-						},
-					} as unknown as MessageEvent,
-					frame,
-				)
+	const previousStorage = Object.getOwnPropertyDescriptor(globalThis, 'localStorage')
+	const storage = new Map([['starlight-skin-site-token', 'old.jwt']])
+	Object.defineProperty(globalThis, 'localStorage', {
+		configurable: true,
+		value: {
+			getItem: (key: string) => storage.get(key) ?? null,
+			setItem: (key: string, value: string) => storage.set(key, value),
+			removeItem: (key: string) => storage.delete(key),
 		},
-	} as unknown as Window
+	})
 	Object.defineProperty(globalThis, 'window', {
 		configurable: true,
 		value: {
@@ -128,19 +133,7 @@ test('signed-in skin site renews the saved player without prompting and only not
 	const stop = onInstancePlayerChanged((id) => changes.push(id))
 	try {
 		resetSkinSiteSession()
-		setSkinSiteFrame(frame)
-		receiveSkinSiteMessage(
-			{
-				origin: SKIN_SITE_ORIGIN,
-				source: frame,
-				data: {
-					type: 'starlight-skin-session',
-					status: 'signed-in',
-					user: { uuid: 'owner', username: 'Owner' },
-				},
-			} as unknown as MessageEvent,
-			frame,
-		)
+		await initSkinSiteSession()
 		await prepareInstancePlayer('one')
 		assert.equal(prompts, 0)
 		assert.ok(calls.includes('plugin:auth|login_skin_site_player'))
@@ -149,6 +142,7 @@ test('signed-in skin site renews the saved player without prompting and only not
 		failSave = true
 		await assert.rejects(saveInstancePlayer('two', player), /Save failed/)
 		assert.deepEqual(changes, ['one'])
+		storage.clear()
 		resetSkinSiteSession()
 		await prepareInstancePlayer('one')
 		assert.equal(prompts, 1)
@@ -157,6 +151,8 @@ test('signed-in skin site renews the saved player without prompting and only not
 		unregister()
 		resetSkinSiteSession()
 		setSkinSiteFrame(null)
+		if (previousStorage) Object.defineProperty(globalThis, 'localStorage', previousStorage)
+		else Reflect.deleteProperty(globalThis, 'localStorage')
 		if (previous) Object.defineProperty(globalThis, 'window', previous)
 		else Reflect.deleteProperty(globalThis, 'window')
 		if (previousNavigator) Object.defineProperty(globalThis, 'navigator', previousNavigator)

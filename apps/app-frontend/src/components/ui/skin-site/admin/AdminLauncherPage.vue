@@ -5,6 +5,7 @@ import { computed, onMounted, ref } from 'vue'
 
 import {
 	skinSiteActivateLauncherRelease,
+	skinSiteDeleteLauncherRelease,
 	type SkinSiteLauncherAdminState,
 	skinSiteLauncherAdminState,
 	type SkinSiteLauncherRelease,
@@ -32,6 +33,19 @@ const messages = defineMessages({
 	active: { id: 'app.skin-site.admin.launcher.active', defaultMessage: 'Active' },
 	activate: { id: 'app.skin-site.admin.launcher.activate', defaultMessage: 'Activate' },
 	activated: { id: 'app.skin-site.admin.launcher.activated', defaultMessage: 'Release activated.' },
+	deleteRelease: {
+		id: 'app.skin-site.admin.launcher.delete',
+		defaultMessage: 'Delete release',
+	},
+	confirmDelete: {
+		id: 'app.skin-site.admin.launcher.confirm-delete',
+		defaultMessage:
+			'Permanently delete launcher {version} and all its installation files from the server? This version will no longer be available for download or rollback. Installed launchers will not be affected.',
+	},
+	deleted: {
+		id: 'app.skin-site.admin.launcher.deleted',
+		defaultMessage: 'Release and its installation files deleted.',
+	},
 	upload: { id: 'app.skin-site.admin.launcher.upload', defaultMessage: 'Upload release' },
 	uploadHint: {
 		id: 'app.skin-site.admin.launcher.upload-hint',
@@ -64,6 +78,10 @@ const uploadPercent = ref(0)
 const forceUpdate = ref(false)
 const fileInput = ref<HTMLInputElement | null>(null)
 const activatingId = ref<number | null>(null)
+const deletingId = ref<number | null>(null)
+const mutating = computed(
+	() => uploading.value || activatingId.value !== null || deletingId.value !== null,
+)
 
 const releases = computed(() => state.value?.releases ?? [])
 const total = computed(() => releases.value.length)
@@ -105,7 +123,7 @@ function nextPage() {
 }
 
 async function activate(release: SkinSiteLauncherRelease) {
-	if (activatingId.value !== null) return
+	if (release.active || mutating.value || loading.value) return
 	activatingId.value = release.id
 	try {
 		const result = await skinSiteActivateLauncherRelease(release.id)
@@ -119,6 +137,24 @@ async function activate(release: SkinSiteLauncherRelease) {
 	}
 }
 
+async function remove(release: SkinSiteLauncherRelease) {
+	if (release.active || mutating.value || loading.value) return
+	if (!window.confirm(formatMessage(messages.confirmDelete, { version: release.version }))) return
+	deletingId.value = release.id
+	try {
+		const result = await skinSiteDeleteLauncherRelease(release.id)
+		if (!result.success) throw new Error(result.errorMessage)
+		if (state.value)
+			state.value.releases = state.value.releases.filter((item) => item.id !== release.id)
+		offset.value = Math.min(offset.value, Math.max(0, (pageCount.value - 1) * PAGE_SIZE))
+		addNotification({ type: 'success', title: formatMessage(messages.deleted) })
+	} catch (error) {
+		handleError(error)
+	} finally {
+		deletingId.value = null
+	}
+}
+
 function pickFile() {
 	fileInput.value?.click()
 }
@@ -127,7 +163,7 @@ async function onFileChosen(event: Event) {
 	const input = event.target as HTMLInputElement
 	const file = input.files?.[0]
 	input.value = ''
-	if (!file || uploading.value) return
+	if (!file || mutating.value || loading.value) return
 	uploading.value = true
 	uploadPercent.value = 0
 	try {
@@ -180,7 +216,7 @@ onMounted(() => void load())
 			<button
 				type="button"
 				class="rounded-full bg-brand px-4 py-2 text-sm font-semibold text-contrast hover:brightness-110 disabled:opacity-50"
-				:disabled="uploading"
+				:disabled="mutating || loading"
 				@click="pickFile"
 			>
 				{{ formatMessage(messages.upload) }}
@@ -244,10 +280,20 @@ onMounted(() => void load())
 					v-if="!release.active"
 					type="button"
 					class="shrink-0 rounded-full bg-brand px-3 py-1 text-xs font-semibold text-contrast hover:brightness-110 disabled:opacity-50"
-					:disabled="activatingId !== null"
+					:disabled="mutating"
 					@click="activate(release)"
 				>
 					{{ formatMessage(messages.activate) }}
+				</button>
+				<button
+					v-if="!release.active"
+					type="button"
+					class="flex shrink-0 cursor-pointer items-center gap-1 rounded-full bg-button-bg px-3 py-1 text-xs font-semibold text-red hover:brightness-110 active:brightness-90 disabled:cursor-not-allowed disabled:opacity-50"
+					:disabled="mutating"
+					@click="remove(release)"
+				>
+					<SpinnerIcon v-if="deletingId === release.id" class="size-3 animate-spin" />
+					{{ formatMessage(messages.deleteRelease) }}
 				</button>
 			</div>
 

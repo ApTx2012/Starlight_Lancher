@@ -5,12 +5,6 @@ import test from 'node:test'
 
 import { createRenderer, h, nextTick, Suspense } from 'vue'
 
-import {
-	receiveSkinSiteMessage,
-	resetSkinSiteSession,
-	setSkinSiteFrame,
-	SKIN_SITE_ORIGIN,
-} from '../../composables/skin-site-session.ts'
 import { useNetworkStatus } from '../../composables/useNetworkStatus.ts'
 
 // Exercise the real component's setup and reactive account list. Only platform,
@@ -19,6 +13,7 @@ const require = createRequire(import.meta.url)
 const { parse, compileScript } = require('vue/compiler-sfc')
 const componentUrl = new URL('./AccountsCard.vue', import.meta.url).href
 const stubs: Record<string, string> = {
+	'@tauri-apps/plugin-http': `export const fetch=(...args)=>globalThis.accountTestFetch(...args)`,
 	'@modrinth/assets': `export const CopyIcon={}, LogInIcon={}, PlusIcon={}, RadioButtonCheckedIcon={}, RadioButtonIcon={}, RefreshCwIcon={}, SpinnerIcon={}, TrashIcon={}`,
 	'@modrinth/ui': `export const Accordion={}, Avatar={}, ButtonStyled={}; export const defineMessages=x=>x; export const injectNotificationManager=()=>({handleError:()=>{}}); export const useVIntl=()=>({formatMessage:x=>x.defaultMessage})`,
 	'@tanstack/vue-query': `export const useQueryClient=()=>({refetchQueries:async()=>{}})`,
@@ -26,6 +21,7 @@ const stubs: Record<string, string> = {
 	'vue-router': `export const useRoute=()=>({fullPath:'/'}); export const useRouter=()=>({push:async()=>{}})`,
 	'@/assets/netherstar.png': `export default 'logo'`,
 	'@/components/ui/MinecraftLoginModal.vue': `export default {}`,
+	'@/components/ui/skin-site/SkinSiteLoginModal.vue': `export default {}`,
 	'@/helpers/events': `export const process_listener=async()=>()=>{}`,
 	'@/helpers/rendering/batch-skin-renderer.ts': `export const getPlayerHeadUrl=async()=> 'head'`,
 	'@/helpers/skins': `export const get_available_skins=async()=>[]`,
@@ -59,6 +55,13 @@ const hooks = registerHooks({
 	},
 })
 const { default: AccountsCard } = await import(componentUrl)
+const {
+	resetSkinSiteSession,
+	signInSkinSite,
+	signOutSkinSite,
+	selectedSkinSitePlayerId,
+	SKIN_SITE_ORIGIN,
+} = await import('../../composables/skin-site-session.ts')
 hooks.deregister()
 
 type TestNode = Record<string, unknown>
@@ -72,6 +75,7 @@ type CardState = {
 	defaultUser: string | undefined
 	selectedAccount: TestAccount | undefined
 	setAccount: (account: TestAccount) => Promise<void>
+	setSkinSitePlayer: (id: string) => Promise<void>
 	getAccountAvatarUrl: (account: TestAccount) => string | undefined
 }
 const renderer = createRenderer<TestNode, TestNode>({
@@ -93,37 +97,39 @@ const flush = async () => {
 const firstId = '12345678-1234-1234-1234-123456789abc'
 const secondId = '22345678-1234-1234-1234-123456789abc'
 
-async function fixture(hasOfficial = true) {
+async function fixture(hasOfficial = true, officialId = 'official', linkedMojang = false) {
 	const previousWindow = Object.getOwnPropertyDescriptor(globalThis, 'window')
 	const previousNavigator = Object.getOwnPropertyDescriptor(globalThis, 'navigator')
 	const stored: TestAccount[] = hasOfficial
-		? [{ account_type: 'microsoft', profile: { id: 'official', name: 'Official' } }]
+		? [{ account_type: 'microsoft', profile: { id: officialId, name: 'Official' } }]
 		: []
-	let selected: string | undefined = hasOfficial ? 'official' : undefined
+	let selected: string | undefined = hasOfficial ? officialId : undefined
 	let rejectLogin = false
 	let loginCalls = 0
-	const frame = {
-		postMessage(data: { type: string; requestId: string }) {
-			if (data.type === 'starlight-pack-token-request')
-				message({
-					type: 'starlight-pack-token-result',
-					requestId: data.requestId,
-					token: 'fixture.jwt',
-				})
-			if (data.type === 'starlight-skin-players-request')
-				message({
-					type: 'starlight-skin-players-result',
-					requestId: data.requestId,
-					ok: true,
-					players: [
-						{ uuid: firstId, name: 'First', isMojang: false, skinState: 'empty' },
-						{ uuid: secondId, name: 'Second', isMojang: false, skinState: 'empty' },
-					],
-				})
+	const storage = new Map<string, string>()
+	Object.defineProperty(globalThis, 'localStorage', {
+		configurable: true,
+		value: {
+			getItem: (key: string) => storage.get(key) ?? null,
+			setItem: (key: string, value: string) => storage.set(key, value),
+			removeItem: (key: string) => storage.delete(key),
 		},
-	} as unknown as Window
-	function message(data: unknown) {
-		receiveSkinSiteMessage({ origin: SKIN_SITE_ORIGIN, source: frame, data } as MessageEvent, frame)
+	})
+	;(
+		globalThis as unknown as { accountTestFetch: (url: string) => Promise<Response> }
+	).accountTestFetch = async (url) => {
+		const path = new URL(url).pathname
+		const payload = path.endsWith('/login')
+			? { username: 'Owner', jwt: 'fixture.jwt' }
+			: path.endsWith('/user')
+				? { uuid: 'owner', username: 'Owner', permissions: [] }
+				: path.endsWith('/player')
+					? [
+							{ uuid: firstId, name: 'First', isMojang: linkedMojang || firstId === officialId },
+							{ uuid: secondId, name: 'Second', isMojang: false },
+						]
+					: {}
+		return Response.json({ payload })
 	}
 	Object.defineProperty(globalThis, 'navigator', { configurable: true, value: { onLine: true } })
 	useNetworkStatus().refreshBrowserOffline()
@@ -163,22 +169,18 @@ async function fixture(hasOfficial = true) {
 		},
 	})
 	resetSkinSiteSession()
-	setSkinSiteFrame(frame)
 	const node = h({ ...AccountsCard, render: () => null })
 	const app = renderer.createApp({ render: () => h(Suspense, null, { default: () => node }) })
 	app.mount({})
 	await flush()
 	return {
 		state: (node.component! as unknown as { setupState: CardState }).setupState,
-		login() {
-			message({
-				type: 'starlight-skin-session',
-				status: 'signed-in',
-				user: { uuid: 'owner', username: 'Owner' },
-			})
+		async login() {
+			await signInSkinSite({ username: 'Owner', password: 'password', clientId: 'test' })
+			await flush()
 		},
 		signOut() {
-			message({ type: 'starlight-skin-session', status: 'signed-out' })
+			signOutSkinSite()
 		},
 		failLogin(value: boolean) {
 			rejectLogin = value
@@ -192,7 +194,7 @@ async function fixture(hasOfficial = true) {
 		close() {
 			app.unmount()
 			resetSkinSiteSession()
-			setSkinSiteFrame(null)
+			Reflect.deleteProperty(globalThis, 'localStorage')
 			if (previousWindow) Object.defineProperty(globalThis, 'window', previousWindow)
 			else Reflect.deleteProperty(globalThis, 'window')
 			if (previousNavigator) Object.defineProperty(globalThis, 'navigator', previousNavigator)
@@ -205,7 +207,7 @@ test('sidebar offers every skin-site player before any game authentication or la
 	const view = await fixture(false)
 	try {
 		view.failLogin(true)
-		view.login()
+		await view.login()
 		await flush()
 		assert.deepEqual(
 			view.state.accounts.map((account) => account.profile.id),
@@ -221,7 +223,7 @@ test('sidebar offers every skin-site player before any game authentication or la
 test('choosing an unused skin-site player authenticates and persists the default without a launch', async () => {
 	const view = await fixture()
 	try {
-		view.login()
+		await view.login()
 		await flush()
 		await view.state.setAccount(
 			view.state.accounts.find((account) => account.profile.id === secondId)!,
@@ -238,7 +240,7 @@ test('choosing an unused skin-site player authenticates and persists the default
 test('failed player authentication preserves the default and allows retry', async () => {
 	const view = await fixture()
 	try {
-		view.login()
+		await view.login()
 		await flush()
 		view.failLogin(true)
 		await view.state.setAccount(
@@ -259,7 +261,7 @@ test('failed player authentication preserves the default and allows retry', asyn
 test('signing out removes unregistered choices while keeping saved accounts', async () => {
 	const view = await fixture()
 	try {
-		view.login()
+		await view.login()
 		await flush()
 		await view.state.setAccount(
 			view.state.accounts.find((account) => account.profile.id === firstId)!,
@@ -271,7 +273,7 @@ test('signing out removes unregistered choices while keeping saved accounts', as
 			[firstId, 'official'],
 		)
 		assert.equal(view.selected, firstId)
-		view.login()
+		await view.login()
 		await flush()
 		assert.equal(view.state.accounts.length, 3)
 		assert.equal(view.loginCalls, 1)
@@ -283,9 +285,70 @@ test('signing out removes unregistered choices while keeping saved accounts', as
 test('a new player without a skin can render the shared empty avatar', async () => {
 	const view = await fixture(false)
 	try {
-		view.login()
+		await view.login()
 		await flush()
 		assert.equal(view.state.getAccountAvatarUrl(view.state.accounts[0]), undefined)
+	} finally {
+		view.close()
+	}
+})
+
+test('choosing a player from the home avatar rail switches the persisted account and shared skin selection', async () => {
+	const view = await fixture()
+	try {
+		await view.login()
+		await view.state.setSkinSitePlayer(secondId)
+		assert.equal(view.selected, secondId)
+		assert.equal(view.state.selectedAccount?.profile.id, secondId)
+		assert.equal(selectedSkinSitePlayerId.value, secondId)
+		await view.state.setAccount(
+			view.state.accounts.find((account) => account.profile.id === 'official')!,
+		)
+		assert.equal(view.selected, 'official')
+		assert.equal(selectedSkinSitePlayerId.value, null)
+	} finally {
+		view.close()
+	}
+})
+
+test('failed home player selection keeps the current skin selection as well as the account', async () => {
+	const view = await fixture()
+	try {
+		await view.login()
+		await view.state.setSkinSitePlayer(firstId)
+		view.failLogin(true)
+		await view.state.setSkinSitePlayer(secondId)
+		assert.equal(view.selected, firstId)
+		assert.equal(selectedSkinSitePlayerId.value, firstId)
+	} finally {
+		view.close()
+	}
+})
+
+test('a Microsoft player linked on the skin site keeps official skin and cape management', async () => {
+	const view = await fixture(true, firstId)
+	try {
+		await view.login()
+		assert.equal(selectedSkinSitePlayerId.value, null)
+		await view.state.setSkinSitePlayer(secondId)
+		await view.state.setAccount(
+			view.state.accounts.find((account) => account.profile.id === firstId)!,
+		)
+		assert.equal(view.selected, firstId)
+		assert.equal(selectedSkinSitePlayerId.value, null)
+	} finally {
+		view.close()
+	}
+})
+
+test('site players linked to Mojang remain selectable without a saved Microsoft credential', async () => {
+	const view = await fixture(false, 'official', true)
+	try {
+		await view.login()
+		assert.equal(view.state.accounts.length, 2)
+		await view.state.setSkinSitePlayer(firstId)
+		assert.equal(view.selected, firstId)
+		assert.equal(selectedSkinSitePlayerId.value, firstId)
 	} finally {
 		view.close()
 	}

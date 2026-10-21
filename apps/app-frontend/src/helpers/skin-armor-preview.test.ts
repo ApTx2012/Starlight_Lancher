@@ -1,7 +1,23 @@
 import assert from 'node:assert/strict'
+import { registerHooks } from 'node:module'
 import test from 'node:test'
 
-import { loadSkinArmorPreview, saveSkinArmorPreview } from './skin-armor-preview.ts'
+const hooks = registerHooks({
+	resolve(specifier, context, nextResolve) {
+		if (specifier === '@modrinth/ui') {
+			return nextResolve(
+				new URL(
+					'../../../../packages/ui/src/composables/skin-rendering/armor-preview-types.ts',
+					import.meta.url,
+				).href,
+				context,
+			)
+		}
+		return nextResolve(specifier, context)
+	},
+})
+const { loadSkinArmorPreview, saveSkinArmorPreview } = await import('./skin-armor-preview.ts')
+hooks.deregister()
 
 const originalStorage = Object.getOwnPropertyDescriptor(globalThis, 'localStorage')
 
