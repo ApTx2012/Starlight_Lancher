@@ -131,26 +131,38 @@ jobs:
       - name: Set up Rust
         uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30 # stable
 
+      - name: Restore Rust dependencies
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          shared-key: desktop-${{ runner.os }}-${{ runner.arch }}
+
       - name: Set up Rust compiler cache
-        if: runner.os == 'Windows'
-        uses: mozilla-actions/sccache-action@2df7dbab909c49ab7d3382d05da469f3f975c2d6 # v0.0.7
+        id: sccache-setup
+        continue-on-error: true
+        uses: mozilla-actions/sccache-action@fc920bf0ec8de6ee65d409111f7ec508035751ba # v0.0.11
+        with:
+          version: v0.18.0
 
       - name: Check Rust compiler cache availability
         id: sccache
-        if: runner.os == 'Windows'
+        if: steps.sccache-setup.outcome == 'success'
         continue-on-error: true
         shell: bash
         env:
           SCCACHE_GHA_ENABLED: 'true'
-        run: ${SCCACHE_PATH} rustc -vV
+        run: '"${SCCACHE_PATH}" "$(rustup which rustc)" -vV'
 
       - name: Enable Rust compiler cache
-        if: runner.os == 'Windows' && steps.sccache.outcome == 'success'
+        if: steps.sccache.outcome == 'success'
         shell: bash
         run: |
           echo 'RUSTC_WRAPPER=sccache' >> "$GITHUB_ENV"
           echo 'SCCACHE_GHA_ENABLED=true' >> "$GITHUB_ENV"
-          echo 'SCCACHE_CACHE_SIZE=4G' >> "$GITHUB_ENV"
+
+      - name: Report unavailable Rust compiler cache
+        if: steps.sccache-setup.outcome == 'failure' || steps.sccache.outcome == 'failure'
+        shell: bash
+        run: echo '::warning::Rust compiler cache is unavailable; this build will continue without compiler caching.'
 
       - name: Add macOS universal targets
         if: runner.os == 'macOS'
@@ -192,11 +204,6 @@ jobs:
           includeUpdaterJson: false
           updaterJsonPreferNsis: true
           retryAttempts: 2
-
-      - name: Show Rust compiler cache statistics
-        if: runner.os == 'Windows' && steps.sccache.outcome == 'success' && always()
-        shell: bash
-        run: ${SCCACHE_PATH} --show-stats
 
       - name: Publish Windows distribution variants
         if: runner.os == 'Windows'
@@ -282,6 +289,12 @@ jobs:
           } else {
             throw "Binary not found at $appExe"
           }
+
+      - name: Show Rust compiler cache statistics
+        if: always() && steps.sccache.outcome == 'success'
+        continue-on-error: true
+        shell: bash
+        run: '"${SCCACHE_PATH}" --show-stats'
 
   verify-and-publish:
     name: Verify and publish
