@@ -10,6 +10,7 @@ export interface AppUpdate {
 	currentVersion?: string
 	publishedAt?: string
 	forceUpdate?: boolean
+	rollback?: boolean
 }
 
 interface UpdatePromptState {

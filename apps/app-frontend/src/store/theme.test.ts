@@ -1,7 +1,17 @@
 import assert from 'node:assert/strict'
+import { registerHooks } from 'node:module'
 import test from 'node:test'
 
-import { applySystemAccentHue, DEFAULT_CUSTOM_ACCENT_COLOR, hexToHsl } from './theme.ts'
+const hooks = registerHooks({
+	resolve(specifier, context, nextResolve) {
+		if (specifier === '@/helpers/font-family.ts') {
+			return nextResolve(new URL('../helpers/font-family.ts', import.meta.url).href, context)
+		}
+		return nextResolve(specifier, context)
+	},
+})
+const { applySystemAccentHue, DEFAULT_CUSTOM_ACCENT_COLOR, hexToHsl } = await import('./theme.ts')
+hooks.deregister()
 
 test('applies the system hue with the custom accent saturation and lightness', () => {
 	const system = hexToHsl('#0078d4')

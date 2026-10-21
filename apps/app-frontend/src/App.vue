@@ -134,6 +134,7 @@ import {
 import { getSidebarExpanded, setSidebarExpanded } from '@/helpers/sidebar-state.ts'
 import { get_opening_command, initialize_state } from '@/helpers/state'
 import { installUiScale, setUiScale } from '@/helpers/ui-scale'
+import { shouldDelayAppUpdate } from '@/helpers/app-update-policy'
 import {
 	areUpdatesEnabled,
 	backupAppDbForUpdate,
@@ -1998,34 +1999,55 @@ function showDelayedUpdatePopup() {
 }
 
 let lastUpdateChannel = 'release'
+let updateCheckRevision = 0
+
+async function clearAvailableUpdate(isCurrent) {
+	const unlisten = unlistenUpdateDownload
+	unlistenUpdateDownload = null
+	await unlisten?.()
+	if (!isCurrent()) return
+	availableUpdate.value = null
+	updateSize.value = null
+	appUpdateDownload.progress.value = 0
+	finishedDownloading.value = false
+	downloading.value = false
+	clearDelayedUpdatePopup()
+}
 
 async function performUpdateCheck() {
+	const revision = ++updateCheckRevision
+	const isLatestCheck = () => revision === updateCheckRevision
+	const currentResult = () => (availableUpdate.value ? 'available' : 'up-to-date')
 	const channel = await getUpdateChannel()
 	const preferences = await getUpdatePreferences()
+	if (!isLatestCheck()) return currentResult()
 	updatesPaused.value = preferences.updatesPaused
 	if (updatesPaused.value) return 'paused'
 	if (channel !== lastUpdateChannel) {
-		availableUpdate.value = null
-		updateSize.value = null
-		appUpdateDownload.progress.value = 0
-		finishedDownloading.value = false
-		downloading.value = false
+		await clearAvailableUpdate(isLatestCheck)
+		if (!isLatestCheck()) return currentResult()
 		lastUpdateChannel = channel
 	}
 
-	const update = await checkAppUpdate(channel)
+	let update
+	try {
+		update = await checkAppUpdate(channel)
+	} catch (error) {
+		if (!isLatestCheck()) return currentResult()
+		throw error
+	}
+	if (!isLatestCheck()) return currentResult()
+	if (!update || update.version !== availableUpdate.value?.version) {
+		await clearAvailableUpdate(isLatestCheck)
+	}
+	if (!isLatestCheck()) return currentResult()
 	if (!update) {
 		console.log('No update available')
 		return 'up-to-date'
 	}
 
 	const publishedAt = Date.parse(update.publishedAt ?? '')
-	if (
-		channel === 'release' &&
-		!preferences.immediateUpdateFetch &&
-		!update.forceUpdate &&
-		(!Number.isFinite(publishedAt) || Date.now() < publishedAt + 24 * 60 * 60 * 1000)
-	) {
+	if (shouldDelayAppUpdate(update, channel, preferences.immediateUpdateFetch)) {
 		console.warn(
 			Number.isFinite(publishedAt)
 				? `Update ${update.version} is waiting for the release delay.`
@@ -2042,6 +2064,9 @@ async function performUpdateCheck() {
 		return 'available'
 	}
 
+	const meteredNetwork = await isNetworkMetered()
+	if (!isLatestCheck()) return currentResult()
+
 	appUpdateDownload.progress.value = 0
 	finishedDownloading.value = false
 	downloading.value = false
@@ -2050,7 +2075,7 @@ async function performUpdateCheck() {
 
 	console.log(`Update ${update.version} is available.`)
 
-	metered.value = await isNetworkMetered()
+	metered.value = meteredNetwork
 
 	if (!metered.value) {
 		console.log('Starting download of update')
@@ -2062,7 +2087,9 @@ async function performUpdateCheck() {
 	}
 
 	getUpdateSize(update.rid)
-		.then((size) => (updateSize.value = size))
+		.then((size) => {
+			if (availableUpdate.value?.rid === update.rid) updateSize.value = size
+		})
 		.catch((error) => console.warn('Failed to fetch update size', error))
 	return 'available'
 }
@@ -2092,6 +2119,7 @@ async function downloadUpdate(versionToDownload) {
 		handleError(`Failed to download update: no version available`)
 		return
 	}
+	if (availableUpdate.value?.rid !== versionToDownload.rid) return
 
 	if (downloading.value || appUpdateDownload.progress.value !== 0) {
 		console.error(`Update ${versionToDownload.version} already downloading`)
@@ -2100,35 +2128,27 @@ async function downloadUpdate(versionToDownload) {
 
 	console.log(`Downloading update ${versionToDownload.version} from Update Server`)
 	downloading.value = true
+	const isCurrent = () => availableUpdate.value?.rid === versionToDownload.rid
+	let unlisten
 
 	try {
-		enqueueUpdateForInstallation(versionToDownload.rid)
-			.then(() => {
-				downloading.value = false
-				finishedDownloading.value = true
-				unlistenUpdateDownload?.().then(() => {
-					unlistenUpdateDownload = null
-				})
-				console.log('Finished downloading!')
-				markAppUpdateActionable(versionToDownload.version, 'downloaded')
-				scheduleDelayedUpdatePopup()
-			})
-			.catch((error) => {
-				downloading.value = false
-				appUpdateDownload.progress.value = 0
-				unlistenUpdateDownload?.().then(() => {
-					unlistenUpdateDownload = null
-				})
-				handleError(error)
-			})
-		unlistenUpdateDownload = await subscribeToDownloadProgress(
-			appUpdateDownload,
-			versionToDownload.version,
-		)
+		unlisten = await subscribeToDownloadProgress(appUpdateDownload, versionToDownload.version)
+		if (!isCurrent()) return
+		unlistenUpdateDownload = unlisten
+		await enqueueUpdateForInstallation(versionToDownload.rid)
+		if (!isCurrent()) return
+		downloading.value = false
+		finishedDownloading.value = true
+		markAppUpdateActionable(versionToDownload.version, 'downloaded')
+		scheduleDelayedUpdatePopup()
 	} catch (error) {
+		if (!isCurrent()) return
 		downloading.value = false
 		appUpdateDownload.progress.value = 0
 		handleError(error)
+	} finally {
+		await unlisten?.()
+		if (unlistenUpdateDownload === unlisten) unlistenUpdateDownload = null
 	}
 }
 

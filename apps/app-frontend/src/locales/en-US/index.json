@@ -3,6 +3,7 @@
   "app.hosted-packs.progress.resume": { "message": "Resume" },
   "app.hosted-packs.progress.stop": { "message": "Stop" },
   "app.downloads.status.paused": { "message": "Paused" },
+
   "app.skin-site.captcha.loading": { "message": "Loading captcha…" },
   "app.skin-site.captcha.submit": { "message": "Submit" },
   "app.skin-site.captcha.subtitle": {
@@ -12331,6 +12332,13 @@
   "app.skin-site.admin.launcher.active": { "message": "Active" },
   "app.skin-site.admin.launcher.activate": { "message": "Activate" },
   "app.skin-site.admin.launcher.activated": { "message": "Release activated." },
+  "app.skin-site.admin.launcher.delete": { "message": "Delete release" },
+  "app.skin-site.admin.launcher.confirm-delete": {
+    "message": "Permanently delete launcher {version} and all its installation files from the server? This version will no longer be available for download or rollback. Installed launchers will not be affected."
+  },
+  "app.skin-site.admin.launcher.deleted": {
+    "message": "Release and its installation files deleted."
+  },
   "app.skin-site.admin.launcher.upload": { "message": "Upload release" },
   "app.skin-site.admin.launcher.upload-hint": {
     "message": "Choose a release ZIP (max 4 GiB)."
@@ -13067,5 +13075,25 @@
   },
   "app.skin-site.wiki.revision": { "message": "Revision #{id}" },
   "app.skin-site.wiki.categories": { "message": "Categories" },
-  "app.skin-site.wiki.back": { "message": "Back" }
+  "app.skin-site.wiki.back": { "message": "Back" },
+  "app.skin-site.home.donation.thanks": {
+    "message": "Thank you to everyone who helps keep StarLight running."
+  },
+  "app.skin-site.home.donation.empty": { "message": "No donations yet." },
+  "app.skin-site.home.donation.list-failed": {
+    "message": "Could not load donations."
+  },
+  "app.skin-site.home.donation.more": { "message": "Load more" },
+  "app.skin-site.home.preview.players": { "message": "Players" },
+  "app.skin-site.home.preview.empty": { "message": "No players yet" },
+  "app.skin-site.home.preview.empty-hint": {
+    "message": "Sign in or add a Minecraft account in the sidebar to see your skin here."
+  },
+  "app.skin-site.home.preview.unavailable": {
+    "message": "This player has no skin to preview."
+  },
+  "app.skin-site.home.preview.loading": { "message": "Loading players…" },
+  "app.skin-site.home.preview.failed": {
+    "message": "Could not load skin-site players."
+  }
 }

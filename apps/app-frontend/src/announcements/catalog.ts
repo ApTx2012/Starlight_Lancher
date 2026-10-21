@@ -33,6 +33,34 @@ export const ANNOUNCEMENT_CHANGE_TYPES: readonly AnnouncementChangeType[] = [
 
 export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 	{
+		id: 'launcher-1.0.2-beta12',
+		version: '1.0.2-beta12',
+		publishedAt: '2026-10-21',
+		title: {
+			'en-US': 'Starlight Launcher 1.0.2-beta12',
+			'zh-CN': 'Starlight Launcher 1.0.2-beta12',
+		},
+		changes: {
+			fixed: [
+				{
+					'en-US':
+						'Fixed automatic updates ignoring server rollbacks to an earlier launcher version.',
+					'zh-CN': '修复启动器忽略服务端旧版本回滚的问题，回滚后可自动下载并在退出或重启时安装。',
+				},
+				{
+					'en-US':
+						'Fixed outdated update checks and downloads overriding a newly selected update version.',
+					'zh-CN': '修复旧的更新检查或下载结果覆盖新目标版本的问题。',
+				},
+			],
+		},
+		notes: {
+			'en-US':
+				'Install this version once to enable automatic rollback support for subsequent updates.',
+			'zh-CN': '需要先安装一次此版本，之后才能自动跟随服务端回滚。',
+		},
+	},
+	{
 		id: 'launcher-1.0.2-beta11',
 		version: '1.0.2-beta11',
 		publishedAt: '2026-10-20',

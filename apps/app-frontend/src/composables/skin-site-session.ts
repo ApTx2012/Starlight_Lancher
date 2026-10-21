@@ -275,10 +275,8 @@ async function buildPlayer(entry: {
 	if (!texture.skin) return base
 
 	try {
-		const [headDataUrl, skinDataUrl] = await Promise.all([
-			renderSkinHead(texture.skin),
-			fetchImageAsDataUrl(texture.skin),
-		])
+		const skinDataUrl = await fetchImageAsDataUrl(texture.skin)
+		const headDataUrl = await renderSkinHead(skinDataUrl)
 		return {
 			...base,
 			skinState: 'ready',

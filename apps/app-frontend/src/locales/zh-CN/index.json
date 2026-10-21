@@ -3,6 +3,7 @@
   "app.hosted-packs.progress.resume": { "message": "继续" },
   "app.hosted-packs.progress.stop": { "message": "停止" },
   "app.downloads.status.paused": { "message": "已暂停" },
+
   "app.skin-site.captcha.loading": { "message": "正在加载验证码…" },
   "app.skin-site.captcha.submit": { "message": "验证" },
   "app.skin-site.captcha.subtitle": {
@@ -12700,6 +12701,13 @@
   "app.skin-site.admin.launcher.active": { "message": "当前版本" },
   "app.skin-site.admin.launcher.activate": { "message": "设为当前" },
   "app.skin-site.admin.launcher.activated": { "message": "已设为当前版本。" },
+  "app.skin-site.admin.launcher.delete": { "message": "删除版本" },
+  "app.skin-site.admin.launcher.confirm-delete": {
+    "message": "确定永久删除启动器 {version} 及服务器上的全部安装文件吗？此版本将无法下载或回滚，已安装的启动器不受影响。"
+  },
+  "app.skin-site.admin.launcher.deleted": {
+    "message": "已删除该版本及服务器上的安装文件。"
+  },
   "app.skin-site.admin.launcher.upload": { "message": "上传版本" },
   "app.skin-site.admin.launcher.upload-hint": {
     "message": "选择发布包 ZIP（最大 4 GiB）。"
@@ -13328,5 +13336,19 @@
   },
   "app.skin-site.wiki.revision": { "message": "修订 #{id}" },
   "app.skin-site.wiki.categories": { "message": "分类" },
-  "app.skin-site.wiki.back": { "message": "返回" }
+  "app.skin-site.wiki.back": { "message": "返回" },
+  "app.skin-site.home.donation.thanks": {
+    "message": "感谢每一位支持 StarLight 运行的朋友。"
+  },
+  "app.skin-site.home.donation.empty": { "message": "暂无捐赠记录。" },
+  "app.skin-site.home.donation.list-failed": { "message": "无法加载捐赠记录。" },
+  "app.skin-site.home.donation.more": { "message": "加载更多" },
+  "app.skin-site.home.preview.players": { "message": "玩家" },
+  "app.skin-site.home.preview.empty": { "message": "暂无玩家" },
+  "app.skin-site.home.preview.empty-hint": {
+    "message": "登录或在侧栏添加 Minecraft 账号，即可在这里预览皮肤。"
+  },
+  "app.skin-site.home.preview.unavailable": { "message": "此玩家没有可预览的皮肤。" },
+  "app.skin-site.home.preview.loading": { "message": "正在加载玩家…" },
+  "app.skin-site.home.preview.failed": { "message": "无法加载皮肤站玩家。" }
 }

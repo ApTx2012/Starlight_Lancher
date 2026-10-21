@@ -18,7 +18,7 @@ const require = createRequire(import.meta.url)
 const { parse, compileScript } = require('vue/compiler-sfc')
 const componentUrl = new URL('./SkinSiteAnnouncements.vue', import.meta.url).href
 const stubs: Record<string, string> = {
-	'@modrinth/assets': 'export const SpinnerIcon={}',
+	'@modrinth/assets': 'export const NewspaperIcon={}, SpinnerIcon={}, StarIcon={}',
 	'@modrinth/ui':
 		'export const commonMessages={retryButton:{defaultMessage:"Retry"}}; export const defineMessages=x=>x; export const useVIntl=()=>({formatMessage:x=>x.defaultMessage})',
 	'@/helpers/skin-site-api':

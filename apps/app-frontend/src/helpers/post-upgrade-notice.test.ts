@@ -72,7 +72,7 @@ test('notice query uses the target instance value and registered Tauri command',
 	)
 	const helperSource = readFileSync(new URL('./instance.ts', import.meta.url), 'utf8')
 	const tauriSource = readFileSync(
-		new URL('../../../app/src/api/instance.rs', import.meta.url),
+		new URL('../../../app/src/api/instance/mod.rs', import.meta.url),
 		'utf8',
 	)
 	assert.match(querySource, /\['post-upgrade-notice', instanceId\]/)

@@ -3,9 +3,19 @@ import { registerHooks } from 'node:module'
 import test from 'node:test'
 
 type FetchHandler = (url: string, options: RequestInit) => Promise<Response>
-const testGlobal = globalThis as unknown as { skinSiteTestFetch: FetchHandler }
+const testGlobal = globalThis as unknown as {
+	skinSiteTestFetch: FetchHandler
+	skinSiteTestHead: (texture: string) => Promise<string>
+}
 const hooks = registerHooks({
 	resolve(specifier, context, nextResolve) {
+		if (specifier === '@/helpers/skin-site-render') {
+			const renderer = new URL('../helpers/skin-site-render.ts', import.meta.url).href
+			return {
+				url: `data:text/javascript,${encodeURIComponent(`export { fetchImageAsDataUrl } from ${JSON.stringify(renderer)}; export const renderSkinHead=texture=>globalThis.skinSiteTestHead(texture)`)}`,
+				shortCircuit: true,
+			}
+		}
 		if (specifier === '@tauri-apps/plugin-http') {
 			return {
 				url: 'data:text/javascript,export const fetch=(...args)=>globalThis.skinSiteTestFetch(...args)',
@@ -44,7 +54,7 @@ test.beforeEach(() => {
 		if (url.endsWith('/user')) return ok(user)
 		return ok([])
 	}
-	testGlobal.skinSiteTestFetch = async (url, options) => {
+	testGlobal.skinSiteTestFetch = async (url, options = {}) => {
 		calls.push({
 			path: new URL(url).pathname,
 			token: (options.headers as Record<string, string>)?.Authorization,
@@ -205,4 +215,51 @@ test('explicit sign-out discards a late successful login', async () => {
 	await signingIn
 	assert.equal(session.skinSiteStatus.value, 'signed-out')
 	assert.equal(storage.has(tokenKey), false)
+})
+
+test('player heads are cropped from one downloaded local texture rather than a cross-origin image', async (t) => {
+	const textureUrl = 'https://skin.starlight.cool/yggdrasil/textures/test'
+	const textureData = 'data:image/png;base64,iVBORw=='
+	const previousReader = Object.getOwnPropertyDescriptor(globalThis, 'FileReader')
+	Object.defineProperty(globalThis, 'FileReader', {
+		configurable: true,
+		value: class {
+			result: string | null = null
+			onload?: () => void
+			readAsDataURL(blob: Blob) {
+				void blob.arrayBuffer().then((bytes) => {
+					this.result = `data:${blob.type};base64,${Buffer.from(bytes).toString('base64')}`
+					this.onload?.()
+				})
+			}
+		},
+	})
+	t.after(() => {
+		if (previousReader) Object.defineProperty(globalThis, 'FileReader', previousReader)
+		else Reflect.deleteProperty(globalThis, 'FileReader')
+	})
+	t.mock.method(globalThis, 'fetch', async () => {
+		throw new TypeError('Cross-origin image request blocked')
+	})
+	testGlobal.skinSiteTestHead = async (source) => {
+		if (source !== textureData) throw new Error('Cross-origin canvas image blocked')
+		return 'data:image/png;base64,local-head'
+	}
+	respond = async (url) => {
+		if (url === textureUrl)
+			return new Response(new Uint8Array([137, 80, 78, 71]), {
+				headers: { 'Content-Type': 'image/png' },
+			})
+		if (url.endsWith('/player/skin/player')) return ok({ skin: textureUrl, model: 'slim' })
+		if (url.endsWith('/player')) return ok([{ uuid: 'player', name: 'Player', isMojang: false }])
+		return url.endsWith('/user') ? ok(user) : ok({ jwt: 'token' })
+	}
+	storage.set(tokenKey, 'old-token')
+	await session.initSkinSiteSession()
+	const [player] = await session.requestSkinSitePlayers()
+	assert.equal(player.skinState, 'ready')
+	assert.equal(player.skinDataUrl, textureData)
+	assert.equal(player.headDataUrl, 'data:image/png;base64,local-head')
+	assert.equal(player.model, 'slim')
+	assert.equal(calls.filter((call) => call.path === '/yggdrasil/textures/test').length, 1)
 })

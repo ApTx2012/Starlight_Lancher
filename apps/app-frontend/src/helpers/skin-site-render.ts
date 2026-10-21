@@ -1,3 +1,5 @@
+import { fetch as tauriFetch } from '@tauri-apps/plugin-http'
+
 /**
  * Renders a player's skin into a base64 head image, mirroring the skin site's
  * own head cropper (front face at 8,8 plus the hat overlay at 40,8).
@@ -28,9 +30,9 @@ function loadImage(src: string): Promise<HTMLImageElement> {
 	})
 }
 
-/** Crop the head (and hat overlay) out of a skin image URL. Returns a data URL. */
-export async function renderSkinHead(skinUrl: string, scale = 2): Promise<string> {
-	const img = await loadImage(skinUrl)
+/** Crop the head (and hat overlay) from a locally downloaded skin data URL. */
+export async function renderSkinHead(skinDataUrl: string, scale = 2): Promise<string> {
+	const img = await loadImage(skinDataUrl)
 	const { canvas, ctx } = getBuffer()
 
 	canvas.width = HEAD_BUFFER_SIZE
@@ -74,7 +76,7 @@ export async function renderSkinHead(skinUrl: string, scale = 2): Promise<string
 
 /** Fetch an image URL as a data URL (used to keep full skin textures local). */
 export async function fetchImageAsDataUrl(url: string): Promise<string> {
-	const response = await fetch(url)
+	const response = await tauriFetch(url)
 	if (!response.ok) throw new Error(`无法加载图片（HTTP ${response.status}）`)
 	const blob = await response.blob()
 	return await new Promise<string>((resolve, reject) => {

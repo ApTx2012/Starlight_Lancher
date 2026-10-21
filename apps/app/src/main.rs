@@ -44,6 +44,8 @@ struct UpdatePreferences {
 mod macos;
 
 #[cfg(feature = "updater")]
+mod update_policy;
+#[cfg(feature = "updater")]
 mod updater_impl;
 #[cfg(not(feature = "updater"))]
 mod updater_impl_noop;
@@ -1024,7 +1026,8 @@ fn main() {
                             s.restart_after_pending_update.load(Ordering::Relaxed)
                         })
                         .unwrap_or(false);
-                    if let Some((update, data)) = &*update_data.0.lock().unwrap()
+                    if let Some((update, data)) =
+                        &update_data.0.lock().unwrap().pending
                     {
                         fn set_changelog_toast(version: Option<String>) {
                             let toast_result: theseus::Result<()> = tauri::async_runtime::block_on(async move {

@@ -8,12 +8,16 @@ import {
 	UserIcon,
 } from '@modrinth/assets'
 import { defineMessages, useVIntl } from '@modrinth/ui'
-import type { Component } from 'vue'
+import { computed } from 'vue'
+
+import SkinSiteSelectionRail from './SkinSiteSelectionRail.vue'
+
+defineProps<{ active: string }>()
 
 const { formatMessage } = useVIntl()
 
 const emit = defineEmits<{
-	(e: 'navigate', view: 'downloads' | 'review' | 'bugs' | 'map' | 'wiki'): void
+	(e: 'navigate', view: 'downloads' | 'review' | 'bugs' | 'map' | 'wiki' | 'players'): void
 }>()
 
 const messages = defineMessages({
@@ -50,96 +54,56 @@ const messages = defineMessages({
 	},
 })
 
-interface NavItem {
-	id: string
-	title: string
-	description: string
-	icon: Component
-	href: string
-}
-
-const SKIN_SITE = 'https://skin.starlight.cool'
-
-const items: NavItem[] = [
+const destinations = ['downloads', 'review', 'wiki', 'bugs', 'map', 'players'] as const
+const items = computed(() => [
 	{
-		id: 'download',
-		title: formatMessage(messages.download),
+		id: 'downloads',
+		label: formatMessage(messages.download),
 		description: formatMessage(messages.downloadDesc),
 		icon: DownloadIcon,
-		href: `${SKIN_SITE}/download`,
 	},
 	{
 		id: 'review',
-		title: formatMessage(messages.review),
+		label: formatMessage(messages.review),
 		description: formatMessage(messages.reviewDesc),
 		icon: ShieldCheckIcon,
-		href: `${SKIN_SITE}/review`,
 	},
 	{
 		id: 'wiki',
-		title: formatMessage(messages.wiki),
+		label: formatMessage(messages.wiki),
 		description: formatMessage(messages.wikiDesc),
 		icon: BookIcon,
-		href: `${SKIN_SITE}/wiki`,
 	},
 	{
 		id: 'bugs',
-		title: formatMessage(messages.bugs),
+		label: formatMessage(messages.bugs),
 		description: formatMessage(messages.bugsDesc),
 		icon: BugIcon,
-		href: `${SKIN_SITE}/bugs`,
 	},
 	{
 		id: 'map',
-		title: formatMessage(messages.map),
+		label: formatMessage(messages.map),
 		description: formatMessage(messages.mapDesc),
 		icon: MapIcon,
-		href: `${SKIN_SITE}/map`,
 	},
 	{
-		id: 'profile',
-		title: formatMessage(messages.profile),
+		id: 'players',
+		label: formatMessage(messages.profile),
 		description: formatMessage(messages.profileDesc),
 		icon: UserIcon,
-		href: `${SKIN_SITE}/profile`,
 	},
-]
-
-function open(item: NavItem) {
-	if (
-		item.id === 'download' ||
-		item.id === 'review' ||
-		item.id === 'bugs' ||
-		item.id === 'map' ||
-		item.id === 'wiki'
-	) {
-		emit(
-			'navigate',
-			item.id === 'download'
-				? 'downloads'
-				: (item.id as 'review' | 'bugs' | 'map' | 'wiki'),
-		)
-		return
-	}
-	void import('@tauri-apps/plugin-opener').then(({ openUrl }) => openUrl(item.href))
+])
+function navigate(id: string) {
+	const destination = destinations.find((value) => value === id)
+	if (destination) emit('navigate', destination)
 }
 </script>
 
 <template>
-	<div class="flex flex-col gap-3">
-		<h3 class="m-0 text-base font-semibold text-contrast">{{ formatMessage(messages.title) }}</h3>
-		<div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
-			<button
-				v-for="item in items"
-				:key="item.id"
-				type="button"
-				class="flex flex-col items-start gap-1 rounded-xl border border-solid border-surface-5 bg-bg-raised p-3 text-left transition-colors hover:bg-button-bg"
-				@click="open(item)"
-			>
-				<component :is="item.icon" class="size-5 text-brand" />
-				<span class="text-sm font-semibold text-contrast">{{ item.title }}</span>
-				<span class="text-xs text-secondary">{{ item.description }}</span>
-			</button>
-		</div>
-	</div>
+	<SkinSiteSelectionRail
+		:items="items"
+		:selected="active"
+		:label="formatMessage(messages.title)"
+		@select="navigate"
+	/>
 </template>

@@ -15,7 +15,7 @@ test('all skin-site messages used in source exist in both release language catal
 		assert.deepEqual(
 			missing.map(({ id }) => id),
 			[],
-			`${locale} has uncatalogued UI messages`,
+			`${locale} has uncataloged UI messages`,
 		)
 	}
 })

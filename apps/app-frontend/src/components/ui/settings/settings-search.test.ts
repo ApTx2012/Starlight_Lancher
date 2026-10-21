@@ -21,6 +21,7 @@ import {
 const settingsComponentFiles = {
 	interface: ['./AppearanceSettings.vue'],
 	'home-navigation': ['./AppearanceSettings.vue'],
+	'shortcut-settings': ['./KeybindSettings.vue'],
 	'language-translation': ['./LanguageSettings.vue', './TranslationSettings.vue'],
 	ai: ['./AISettings.vue'],
 	'java-performance': ['./JavaSettings.vue'],
@@ -30,6 +31,7 @@ const settingsComponentFiles = {
 	'storage-backups': ['./ResourceManagementSettings.vue', './StorageSettings.vue'],
 	updates: ['./UpdateSettings.vue'],
 	about: ['./AboutSettings.vue'],
+	logs: ['./LogsSettings.vue'],
 	'feature-flags': ['./FeatureFlagSettings.vue'],
 } as const
 
@@ -168,8 +170,7 @@ test('developer-only settings stay out of the normal search categories', () => {
 	)
 })
 
-
-	test('settings navigation groups preserve the intended Starlight information architecture', () => {
+test('settings navigation groups preserve the intended Starlight information architecture', () => {
 	const categoriesForGroup = (
 		group: 'launcher' | 'game' | 'data-privacy' | 'support' | 'developer',
 		developerMode = false,
@@ -181,6 +182,7 @@ test('developer-only settings stay out of the normal search categories', () => {
 	assert.deepEqual(categoriesForGroup('launcher'), [
 		'interface',
 		'home-navigation',
+		'shortcut-settings',
 		'language-translation',
 		'ai',
 	])
@@ -191,7 +193,7 @@ test('developer-only settings stay out of the normal search categories', () => {
 		'network-multiplayer',
 	])
 	assert.deepEqual(categoriesForGroup('data-privacy'), ['storage-backups'])
-	assert.deepEqual(categoriesForGroup('support'), ['updates', 'about'])
+	assert.deepEqual(categoriesForGroup('support'), ['updates', 'about', 'logs'])
 	assert.deepEqual(categoriesForGroup('developer'), [])
 	assert.deepEqual(categoriesForGroup('developer', true), ['feature-flags'])
 })
