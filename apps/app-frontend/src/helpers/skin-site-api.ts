@@ -336,6 +336,40 @@ export function skinSiteRenamePlayer(
 		{ method: 'POST', type: 'skin' },
 	)
 }
+
+/** Mark a player as the account default (used by launcher login). */
+export function skinSiteSetDefaultPlayer(uuid: string): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>(`player/default/set?uuid=${encodeURIComponent(uuid)}`, {
+		method: 'POST',
+		type: 'skin',
+	})
+}
+
+/** Clear the account default player. */
+export function skinSiteClearDefaultPlayer(): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>('player/default', { method: 'DELETE', type: 'skin' })
+}
+
+/** Fetch the account default player, if one is set. */
+export function skinSiteDefaultPlayer(): Promise<SkinSiteResponse<SkinSitePlayerInfo | null>> {
+	return skinSiteRequest<SkinSitePlayerInfo | null>('player/default', { type: 'skin' })
+}
+
+/** Toggle the Mojang (official) status of a player and resync its profile. */
+export function skinSiteSwitchMojang(uuid: string): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>(`player/${encodeURIComponent(uuid)}/switchMojang`, {
+		method: 'GET',
+		type: 'skin',
+	})
+}
+
+/** Convert a legacy internal player so it can log in through the modern flow. */
+export function skinSiteAdaptLegacyInternal(uuid: string): Promise<SkinSiteResponse<string>> {
+	return skinSiteRequest<string>(`player/${encodeURIComponent(uuid)}/adaptLegacyInternal`, {
+		method: 'POST',
+		type: 'skin',
+	})
+}
 // ---------------------------------------------------------------------------
 // Registration & password reset
 // ---------------------------------------------------------------------------
@@ -414,8 +448,8 @@ export function skinSitePublicDonationSummary(): Promise<
 	return skinSiteRequest<SkinSitePublicDonationSummary>('donation/summary', { auth: false })
 }
 
-export function skinSiteDonationList(offset = 0): Promise<SkinSiteResponse<SkinSitePublicDonationPage>> {
-	return skinSiteRequest<SkinSitePublicDonationPage>(`donation/list?limit=20&offset=${offset}`, {
+export function skinSiteDonationList(offset = 0): Promise<SkinSiteResponse<SkinSiteDonationPage>> {
+	return skinSiteRequest<SkinSiteDonationPage>(`donation/list?limit=20&offset=${offset}`, {
 		auth: false,
 	})
 }
@@ -1217,7 +1251,6 @@ export function skinSiteActivateLauncherRelease(
 export function skinSiteDeleteLauncherRelease(id: number): Promise<SkinSiteResponse<boolean>> {
 	return skinSiteRequest<boolean>('launcher/admin/' + id, { method: 'DELETE' })
 }
-
 export interface SkinSiteLauncherUploadStatus {
 	id: string
 	chunkSize: number
@@ -1865,7 +1898,6 @@ export function skinSiteWikiUpdateSettings(
 	})
 }
 
-
 export interface SkinSiteReviewPaperSummary {
 	id: string
 	enabled: boolean
@@ -1908,9 +1940,7 @@ export interface SkinSiteReviewConfigData {
 	prerequisitePermissions: string[]
 }
 
-export function skinSiteReviewPaperList(): Promise<
-	SkinSiteResponse<SkinSiteReviewPaperSummary[]>
-> {
+export function skinSiteReviewPaperList(): Promise<SkinSiteResponse<SkinSiteReviewPaperSummary[]>> {
 	return skinSiteRequest<SkinSiteReviewPaperSummary[]>('review/admin/papers')
 }
 
@@ -1991,9 +2021,7 @@ export interface SkinSiteInviteCode {
 	code: string
 }
 
-export function skinSiteAdminBotInfo(
-	userUuid: string,
-): Promise<SkinSiteResponse<SkinSiteBotInfo>> {
+export function skinSiteAdminBotInfo(userUuid: string): Promise<SkinSiteResponse<SkinSiteBotInfo>> {
 	return skinSiteRequest<SkinSiteBotInfo>('admin/users/' + encodeURIComponent(userUuid) + '/bot')
 }
 
@@ -2047,7 +2075,9 @@ export function skinSiteAdminUserAudit(params?: {
 	return skinSiteRequest<SkinSiteUserAdminAuditPage>('admin/users/audit' + suffix)
 }
 
-export function skinSiteAdminInviteUser(email: string): Promise<SkinSiteResponse<SkinSiteInviteCode>> {
+export function skinSiteAdminInviteUser(
+	email: string,
+): Promise<SkinSiteResponse<SkinSiteInviteCode>> {
 	return skinSiteRequest<SkinSiteInviteCode>('admin/inviteCode', {
 		method: 'POST',
 		body: { email },
@@ -2381,10 +2411,10 @@ export function skinSiteChatVoiceConfig(): Promise<
 export function skinSiteChatVoiceConfigUpdate(
 	data: SkinSiteChatVoiceGlobalConfig,
 ): Promise<SkinSiteResponse<SkinSiteChatVoiceGlobalConfigUpdateResult>> {
-	return skinSiteRequest<SkinSiteChatVoiceGlobalConfigUpdateResult>(
-		'chat/voice/admin/config',
-		{ method: 'PUT', body: data },
-	)
+	return skinSiteRequest<SkinSiteChatVoiceGlobalConfigUpdateResult>('chat/voice/admin/config', {
+		method: 'PUT',
+		body: data,
+	})
 }
 
 export function skinSiteChatVoiceLogs(
@@ -2503,7 +2533,11 @@ export function skinSiteWikiMigrationCandidates(
 
 export function skinSiteWikiMigrationDecide(
 	candidateId: number,
-	data: { decision: SkinSiteWikiMigrationDecision; targetTitle?: string | null; overwrite?: boolean },
+	data: {
+		decision: SkinSiteWikiMigrationDecision
+		targetTitle?: string | null
+		overwrite?: boolean
+	},
 ): Promise<SkinSiteResponse<void>> {
 	return skinSiteRequest<void>('wiki/admin/migration/candidates/' + candidateId, {
 		method: 'POST',
@@ -2520,9 +2554,7 @@ export function skinSiteWikiMigrationPublish(
 	)
 }
 
-export function skinSiteWikiMigrationRollback(
-	jobId: number,
-): Promise<SkinSiteResponse<void>> {
+export function skinSiteWikiMigrationRollback(jobId: number): Promise<SkinSiteResponse<void>> {
 	return skinSiteRequest<void>('wiki/admin/migration/' + jobId + '/rollback', {
 		method: 'POST',
 	})
@@ -2672,7 +2704,9 @@ export function skinSiteWikiPages(
 	return skinSiteRequest<SkinSiteWikiPageList>('wiki/pages?' + query.toString())
 }
 
-export function skinSiteWikiRecent(before?: number): Promise<SkinSiteResponse<SkinSiteWikiSearchPage>> {
+export function skinSiteWikiRecent(
+	before?: number,
+): Promise<SkinSiteResponse<SkinSiteWikiSearchPage>> {
 	const query = new URLSearchParams()
 	if (before != null) query.set('before', String(before))
 	return skinSiteRequest<SkinSiteWikiSearchPage>('wiki/recent?' + query.toString())
