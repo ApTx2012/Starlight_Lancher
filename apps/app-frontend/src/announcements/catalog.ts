@@ -33,6 +33,33 @@ export const ANNOUNCEMENT_CHANGE_TYPES: readonly AnnouncementChangeType[] = [
 
 export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 	{
+		id: 'launcher-1.0.2-beta13',
+		version: '1.0.2-beta13',
+		publishedAt: '2026-10-21',
+		title: {
+			'en-US': 'Starlight Launcher 1.0.2-beta13',
+			'zh-CN': 'Starlight Launcher 1.0.2-beta13',
+		},
+		changes: {
+			changed: [
+				{
+					'en-US':
+						'The redesigned home page brings together the 3D skin preview, skin site and Microsoft player selection, announcements, donation acknowledgements and a compact navigation toolbar.',
+					'zh-CN':
+						'新版首页集中展示 3D 皮肤预览、皮肤站与微软玩家切换、公告、捐赠鸣谢及底部功能工具栏。',
+				},
+			],
+			fixed: [
+				{
+					'en-US':
+						'The home page keeps the current 3D skin preview stable when accounts or avatars refresh in the background, avoiding unnecessary texture reloads and model flicker.',
+					'zh-CN':
+						'后台刷新账号或头像时保持当前 3D 皮肤预览稳定，避免无关刷新导致纹理重新加载和模型闪烁。',
+				},
+			],
+		},
+	},
+	{
 		id: 'launcher-1.0.2-beta12',
 		version: '1.0.2-beta12',
 		publishedAt: '2026-10-21',
