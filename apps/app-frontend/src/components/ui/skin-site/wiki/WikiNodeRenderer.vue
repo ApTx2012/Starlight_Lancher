@@ -13,7 +13,7 @@ function headingTag(level?: number | null): string {
 }
 
 function navigate(title?: string | null) {
-	emit('navigate', (title ?? '').replaceAll('_', ' '))
+	emit('navigate', title ?? '')
 }
 </script>
 

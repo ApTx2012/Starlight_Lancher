@@ -12724,6 +12724,7 @@
   "app.skin-site.admin.users.status": { "message": "Status" },
   "app.skin-site.admin.users.status-banned": { "message": "Banned" },
   "app.skin-site.admin.users.status-normal": { "message": "Normal" },
+  "app.skin-site.admin.users.permission-groups": { "message": "Groups" },
   "app.skin-site.admin.mods.upload": { "message": "Upload" },
   "app.skin-site.admin.mods.select-mode": { "message": "Select multiple" },
   "app.skin-site.admin.mods.exit-select": { "message": "Done selecting" },
