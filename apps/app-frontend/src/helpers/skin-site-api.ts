@@ -556,22 +556,18 @@ export function skinSitePublicDownloadList(options?: {
 		offset: String(options?.offset ?? 0),
 	})
 	if (options?.category) query.set('category', options.category)
-	return skinSiteRequest<SkinSitePublicDownloadItem[]>(`download/list?${query.toString()}`, {
-		auth: false,
-	})
+	return skinSiteRequest<SkinSitePublicDownloadItem[]>(`download/list?${query.toString()}`)
 }
 
 export function skinSitePublicDownloadCount(category?: string): Promise<SkinSiteResponse<number>> {
 	const suffix = category ? `?category=${encodeURIComponent(category)}` : ''
-	return skinSiteRequest<number>(`download/count${suffix}`, { auth: false })
+	return skinSiteRequest<number>(`download/count${suffix}`)
 }
 
 export function skinSitePublicDownloadCategories(): Promise<
 	SkinSiteResponse<SkinSitePublicDownloadCategory[]>
 > {
-	return skinSiteRequest<SkinSitePublicDownloadCategory[]>('download/category/list', {
-		auth: false,
-	})
+	return skinSiteRequest<SkinSitePublicDownloadCategory[]>('download/category/list')
 }
 // ---------------------------------------------------------------------------
 // Maps
