@@ -26,6 +26,7 @@
   },
   "app.skin-site.downloads.title": { "message": "资源下载" },
   "app.skin-site.downloads.uploader": { "message": "上传者：{name}" },
+  "app.skin-site.downloads.signed-out": { "message": "登录后浏览资源下载。" },
   "app.skin-site.home.announcements.empty": { "message": "暂无公告。" },
   "app.skin-site.home.announcements.failed": { "message": "加载公告失败。" },
   "app.skin-site.home.announcements.loading": { "message": "正在加载…" },

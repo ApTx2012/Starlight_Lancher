@@ -26,6 +26,7 @@
   },
   "app.skin-site.downloads.title": { "message": "Downloads" },
   "app.skin-site.downloads.uploader": { "message": "by {name}" },
+  "app.skin-site.downloads.signed-out": { "message": "Sign in to browse downloads." },
   "app.skin-site.home.announcements.empty": {
     "message": "No announcements right now."
   },
