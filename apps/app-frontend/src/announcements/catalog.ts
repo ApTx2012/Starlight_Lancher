@@ -33,6 +33,39 @@ export const ANNOUNCEMENT_CHANGE_TYPES: readonly AnnouncementChangeType[] = [
 
 export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 	{
+		id: 'launcher-1.0.2-beta15',
+		version: '1.0.2-beta15',
+		publishedAt: '2026-10-24',
+		title: {
+			'en-US': 'Starlight Launcher 1.0.2-beta15',
+			'zh-CN': 'Starlight Launcher 1.0.2-beta15',
+		},
+		changes: {
+			fixed: [
+				{
+					'en-US':
+						'Fixed the announcement center failing to open and blank pages in the wiki and profile views caused by it.',
+					'zh-CN': '修复公告中心无法打开，以及由此导致的维基与个人资料页面空白。',
+				},
+				{
+					'en-US':
+						'Fixed the skin preview showing garbled textures after switching between players.',
+					'zh-CN': '修复切换玩家后皮肤预览出现纹理错乱的问题。',
+				},
+				{
+					'en-US':
+						'Fixed instance group changes only showing up after refreshing the page.',
+					'zh-CN': '修复实例分组修改后需要刷新页面才能生效的问题。',
+				},
+				{
+					'en-US':
+						'Fixed server maps not loading because the map iframe was blocked by the content security policy.',
+					'zh-CN': '修复服务器地图因 iframe 被内容安全策略拦截而无法显示的问题。',
+				},
+			],
+		},
+	},
+	{
 		id: 'launcher-1.0.2-beta14',
 		version: '1.0.2-beta14',
 		publishedAt: '2026-10-23',
