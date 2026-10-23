@@ -236,6 +236,7 @@ async function refresh() {
 		if (parsed && !disposed) {
 			sync(parsed, true)
 			saveCache(parsed)
+			for (const item of parsed) void loadImage(item, token)
 		}
 	} catch {
 		// Remote fetch failed; previously cached items remain displayed
@@ -316,6 +317,7 @@ onUnmounted(() => {
 	if (interval) clearInterval(interval)
 	if (advanceTimer) clearTimeout(advanceTimer)
 	window.removeEventListener(OPEN_REMOTE_ANNOUNCEMENT_CENTER_EVENT, handleOpenCenter)
+	revokeImages()
 })
 </script>
 
@@ -378,6 +380,12 @@ onUnmounted(() => {
 							class="mt-1.5 size-2 shrink-0 rounded-full"
 							:class="read.has(announcementKey(item)) ? 'opacity-0' : 'bg-red'"
 						/>
+						<img
+							v-if="imageUrls[item.id]"
+							:src="imageUrls[item.id]"
+							alt=""
+							class="size-10 shrink-0 rounded object-cover"
+						/>
 						<span class="min-w-0 flex-1">
 							<span class="block truncate font-medium text-[var(--color-text-primary)]">{{
 								item.title
@@ -393,6 +401,12 @@ onUnmounted(() => {
 				<h2 class="mb-4 text-xl font-semibold text-[var(--color-text-primary)]">
 					{{ selected.title }}
 				</h2>
+				<img
+					v-if="imageUrls[selected.id]"
+					:src="imageUrls[selected.id]"
+					alt=""
+					class="mb-4 max-h-80 w-full rounded-lg object-contain"
+				/>
 				<div
 					class="markdown-body break-words"
 					@click="contentClick"
