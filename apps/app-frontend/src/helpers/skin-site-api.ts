@@ -692,6 +692,24 @@ export interface SkinSiteBugImage {
 	[key: string]: unknown
 }
 
+/** Download a bug attachment image. The endpoint requires auth, so the image
+ * must be fetched as a blob and rendered through an object URL. */
+export async function skinSiteBugImageFetch(hash: string): Promise<Blob | null> {
+	const url = `${SKIN_SITE_ORIGIN}${REQUEST_TYPE_PATH.starlight}/bug/images/${encodeURIComponent(hash)}`
+	const headers: Record<string, string> = { Accept: 'image/*' }
+	const token = getSkinSiteToken()
+	if (token) headers['Authorization'] = `Bearer ${token}`
+	try {
+		const response = await tauriFetch(url, { method: 'GET', headers })
+		if (!response.ok) return null
+		const type = response.headers.get('content-type') ?? ''
+		if (type.includes('application/json') || type.includes('text/')) return null
+		return await response.blob()
+	} catch {
+		return null
+	}
+}
+
 export interface SkinSiteBugIssue {
 	id: number
 	type: SkinSiteBugIssueType
