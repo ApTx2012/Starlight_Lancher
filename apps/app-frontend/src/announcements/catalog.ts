@@ -33,6 +33,88 @@ export const ANNOUNCEMENT_CHANGE_TYPES: readonly AnnouncementChangeType[] = [
 
 export const launcherAnnouncements: readonly LauncherAnnouncement[] = [
 	{
+		id: 'launcher-1.0.2-beta14',
+		version: '1.0.2-beta14',
+		publishedAt: '2026-10-23',
+		title: {
+			'en-US': 'Starlight Launcher 1.0.2-beta14',
+			'zh-CN': 'Starlight Launcher 1.0.2-beta14',
+		},
+		changes: {
+			added: [
+				{
+					'en-US':
+						'Skin-site players can now be created, renamed and deleted, and one can be marked as the default account.',
+					'zh-CN': '皮肤站玩家支持新建、重命名与删除，并可设置默认角色。',
+				},
+				{
+					'en-US':
+						'The wiki gained search, recent changes and category browsing, plus page watching and title moves.',
+					'zh-CN': '维基支持搜索、最近更新与分类浏览，页面可关注并修改标题。',
+				},
+				{
+					'en-US':
+						'Wiki pages now support reading revision history, diffing versions and reverting to an older revision.',
+					'zh-CN': '维基页面支持查看历史修订、版本对比与撤销到指定版本。',
+				},
+				{
+					'en-US': 'Announcements now display the images attached on the skin site.',
+					'zh-CN': '公告中心可显示皮肤站公告附带的图片。',
+				},
+				{
+					'en-US': 'Bug reports now render their attached screenshots instead of file hashes.',
+					'zh-CN': '问题追踪的附件图片改为直接展示，不再显示文件哈希。',
+				},
+			],
+			changed: [
+				{
+					'en-US': 'The downloads page shows a sign-in prompt instead of an error when signed out.',
+					'zh-CN': '未登录时资源下载页改为提示登录，不再弹出错误。',
+				},
+			],
+			fixed: [
+				{
+					'en-US': 'Fixed the downloads page reporting a sign-in error even when already signed in.',
+					'zh-CN': '修复资源下载页在已登录状态下仍提示未登录的问题。',
+				},
+				{
+					'en-US':
+						'Fixed the admin panel missing user permission groups, showing UUIDs instead of names for announcement authors, and showing option IDs in review answers.',
+					'zh-CN':
+						'修复管理面板不显示用户权限组、公告发布人显示为 UUID、审核作答显示选项 ID 的问题。',
+				},
+				{
+					'en-US': 'Fixed the wiki opening a blank page and internal links not navigating correctly.',
+					'zh-CN': '修复维基首次打开为空白、内部链接跳转异常的问题。',
+				},
+				{
+					'en-US': 'Skin-site player login errors now surface the server-provided reason.',
+					'zh-CN': '皮肤站玩家登录失败时改为显示服务端给出的具体原因。',
+				},
+				{
+					'en-US': 'Fixed server maps being blocked by CSP and font commands missing permission.',
+					'zh-CN': '修复服务器地图被 CSP 拦截、字体命令缺少权限的问题。',
+				},
+				{
+					'en-US': 'Backups now support instances that use an external game directory.',
+					'zh-CN': '备份支持使用外部游戏目录的实例。',
+				},
+				{
+					'en-US': 'The online-player tooltip now renders MOTD colour codes.',
+					'zh-CN': '在线玩家提示可渲染 MOTD 颜色代码。',
+				},
+				{
+					'en-US': 'Fixed captcha images being cropped and missing the rotation hint.',
+					'zh-CN': '修复验证码图片被裁切、缺少旋转提示的问题。',
+				},
+				{
+					'en-US': 'The skin-site player list now retries automatically and shows an error state after failures.',
+					'zh-CN': '皮肤站玩家列表加载失败后自动重试，并显示错误状态。',
+				},
+			],
+		},
+	},
+	{
 		id: 'launcher-1.0.2-beta13',
 		version: '1.0.2-beta13',
 		publishedAt: '2026-10-21',
