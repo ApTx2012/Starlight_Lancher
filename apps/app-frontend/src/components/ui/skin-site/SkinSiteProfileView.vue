@@ -622,7 +622,7 @@ watch(signedIn, (value) => {
 						</div>
 						<SkinPreviewRenderer
 							v-else
-							:key="`${selectedPlayer.uuid}:${texture.skin ?? ''}:${texture.cape ?? ''}`"
+							:key="selectedId ?? ''"
 							:texture-src="texture.skin ?? ''"
 							:cape-src="texture.cape"
 							:variant="skinVariant"

@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { type SkinSiteWikiNode } from '@/helpers/skin-site-api'
 
+import WikiAttachmentNode from './WikiAttachmentNode.vue'
+import WikiNotice from './WikiNotice.vue'
 import { safeExternalUrl, safeWikiColor } from './wiki-color'
 
 defineOptions({ name: 'WikiNodeRenderer' })
